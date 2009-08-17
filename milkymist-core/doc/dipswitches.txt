@@ -1,0 +1,8 @@
+DIP1		Use alternative boot image.
+DIP2		Set up serial line at 230400bps.
+DIP3		Skip initialization of the HD44780 LCD in 4-bit mode.
+DIP4
+DIP5
+DIP6
+DIP7
+DIP8

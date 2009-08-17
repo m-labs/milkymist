@@ -1,0 +1,527 @@
+\documentclass[a4paper,11pt]{journal}
+\usepackage[T1]{fontenc}
+\usepackage{bera}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage[normalem]{ulem}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{enumitem}
+
+\title{MTK Library documentation}
+\author{\copyright 2008, 2009 S\'ebastien Bourdeauducq}
+\date{2009}
+\begin{document}
+\maketitle{}
+
+\section{Introduction}
+MTK is a GUI library specifically designed for embedded systems. Unlike toolkits like GTK or Qt, it has been designed for making simple interfaces and using few system resources, while being able to produce superior quality graphics with features like anti-aliased fonts and alpha blending, possibly taking advantage of available hardware acceleration.
+
+\paragraph{Typical applications}
+\begin{itemize}[noitemsep,topsep=0mm]
+\item Set-top boxes : satellite receivers, digital terrestrial television receivers, ...
+\item Handhelds : mobile phones, PDAs, ...
+\item Traffic information systems
+\item Vending machines
+\end{itemize}
+
+\paragraph{Features}
+\begin{itemize}[noitemsep,topsep=0mm]
+\item Portable library written in C++
+\item Extensive widget collection
+\item Supports popular graphics formats such as PNG and JPEG
+\item Supports TrueType fonts
+\item Can run without operating system
+\item Low resource usage
+\item X server not required anymore on embedded Linux
+\end{itemize}
+
+\paragraph{Target device support}
+\begin{itemize}[noitemsep,topsep=0mm]
+\item STi5100/STi7100 with full compositing hardware acceleration
+\item Milkymist with full compositing hardware acceleration
+\item Texas Instruments OMAP
+\item Generic SDL (Simple Directmedia Layer) surface
+\item Generic Linux framebuffer
+\item Generic virtual framebuffer
+\item Other device support can be developed on request
+\end{itemize}
+\hbox{}
+\textit{Some targets are not included in the eGPL release. See the ``Licensing'' section at the end of this document.}
+
+\section{Architecture}
+\subsection{Screen composition}
+MTK divides the screen area into \textit{regions}, which are rectangular areas into which all GUI elements (\textit{widgets}) are drawn.
+
+Regions can overlap with a defined Z order, with possible composition effects between them such as translucency or blurring. Regions can have an alpha channel which allows the application to display a region which can have any shape on the screen.
+
+The whole screen area is not required to be completely covered by regions. It is actually common to have just a small region on the screen, for example when displaying an audio volume bar on top of the video in a set-top-box.
+
+\subsection{Widget model}
+MTK supports automatic widget positioning and sizing using a simple container-based widget model.
+
+Each widget is responsible for and only for its allocated area within a screen region. Widgets cannot overlap -- but this could be a requirement, for instance when implementing a windowing system. This limitation can be worked around by using several screen regions, which can then be overlapped and even support composition effects like alpha blending and blurring.
+
+A widget can allocate all of a part of this area to a \textit{child} widget. A widget which can embed another child widget is called a \textit{container} widget. A container can have an arbitrary number of non-overlapping children.
+
+\subsection{Repainting schema}
+MTK implements a fine-grained repainting schema to avoid drawing parts of the screen that have not changed.
+
+\subsubsection{For non-container widgets} Each non-container widget has one ``\textit{invalid}'' flag that tells if that widget should be repainted. This flag is set when a property of the widget is changed (since widgets are non-overlapping, there cannot be damaged areas because there cannot be moved or deleted widget that could be on top of this one).
+
+When the invalid flag is set, a repaint event is also emitted. The handling of that event is special : it is always at the end of the queue (so that all pending events are processed before repainting occurs, in order to avoid redrawing several times a widget that would be affected by several events).
+
+When the widget is repainted, the invalid flag is cleared.
+
+When created, a widget emits the repaint event, and has the invalid flag set.
+
+\subsubsection{For container widgets} In addition to the invalid flag inherited from normal widgets, container widgets also have a ``child invalid'' flag. If either flag is set, the widget should be repainted.
+
+The difference is meaning between those two flags is that the invalid flag tells if areas that belong to the container (for instance borders around a child) should be redrawn, whereas the child invalid flag tells if one or more children of the container should be redrawn.
+
+When a container widget is repainted, it first checks if its invalid flag is set. If yes, it redraws all its own areas. Then, if the child invalid flag is set, it iterates through its children (which can also be containers) and repaints them. Both flags are then cleared.
+
+When either of these flags are set, a repaint event is emitted. The handling of this event is the same as for non-container widgets.
+
+When a child widget registers or unregisters with a container, the child invalid flag is set in the container.
+
+A container widget is created with both flags set, and emits a repaint event.
+
+\subsection{Event model}
+MTK implements a queue-based event processing system. Each event has a code identifying it, and two optional integer parameters.
+
+Events are queued with a FIFO discipline. The only exception is the repaint event, which is always at the end of the queue and can be queued only once. Events posted after the repaint event will be inserted before it until the repaint event is processed and removed from the queue. Posting a repaint event when one is already in the queue has no effect.
+
+\section{Dependencies}
+MTK depends on the following libraries :
+\begin{itemize}[noitemsep,topsep=0mm]
+\item STL (libstdc++ for instance)
+\item FreeType
+\item libpng for PNG image support (optional)
+\item libjpeg for JPEG image support (optional)
+\end{itemize}
+
+\section{Color handling}
+MTK handles all colors through a dedicated type named ``color'', defined in \verb!color.h!. The color type depends on the color space chosen at compile-time.
+
+There is currently no possibility to switch between color spaces at runtime.
+
+The selection of the color space is made by defining one of these macros :
+\begin{itemize}[noitemsep,topsep=0mm]
+\item \verb!WEBPALETTE! : 8-bit color space, using the 216-color Web palette.
+\item \verb!RGB565! : 16-bit color space, with the first 5 bits used for red, the next 6 for green and the last 5 for blue.
+\item \verb!RGBA8888! : 32-bit color space, with 8 bits used for red, green, blue and alpha channels respectively.
+\end{itemize}
+
+\section{Class reference}
+\subsection{Events}
+\subsubsection{CEvents}
+The CEvents class implements a GUI event queue. There is typically only one event queue by application.\\
+\begin{verbatimtab}virtual void postEvent(int message, int param1=0, int param2=0);\end{verbatimtab}
+Adds a message in the FIFO event queue. The \verb!MSG_INVALIDATE! (repaint request) message has a special processing (see the ``Event model'' section).\\
+\begin{verbatimtab}virtual bool getEvent(int &message, int &param1, int &param2);\end{verbatimtab}
+Tries to pull a message from the event queue for processing. Returns true if a message has been retreived, false if the FIFO was empty. The message is removed from the queue.
+
+\subsection{Drawing schemas}
+Every widget has a relationship with drawing schema classes, which provide methods for retreiving default values for colors and fonts that should be used.
+
+Those values are retreived at widget creation and not updated when they change. In particular, in most cases fonts should be loaded into the font schema before other widgets are created, so that they can be able to render text.
+
+\subsubsection{CColorSchema}
+\begin{verbatimtab}virtual color getBackground();\end{verbatimtab}
+Gets the generic background color.\\
+\begin{verbatimtab}virtual color getBorder();\end{verbatimtab}
+Gets the color used for borders around widgets. Typically used by CPadder. \\
+\begin{verbatimtab}virtual color getWidgetForeground();\end{verbatimtab}
+Gets the widget foreground color (for example the color of text on a widget). \\
+\begin{verbatimtab}virtual color getWidgetForegroundShadow();\end{verbatimtab}
+Gets the shadow color of widget elements (for example the color of text shadows). \\
+\begin{verbatimtab}virtual color getWidgetBackground();\end{verbatimtab}
+Gets the background color of widgets (the color widgets are filled with).
+
+\subsubsection{CFontSchema}
+\begin{verbatimtab}
+void setGeneralFont(fontHandle font, int size);
+fontHandle getGeneralFont();
+int getGeneralFontSize();
+\end{verbatimtab}
+Sets/gets the general purpose fonts, used for instance in buttons and labels. \\
+\begin{verbatimtab}
+void setFixedFont(fontHandle font, int size);
+fontHandle getFixedFont();
+int getFixedFontSize();
+\end{verbatimtab}
+Sets/gets the fixed width font. \\
+\begin{verbatimtab}
+void setIconFont(fontHandle font, int size);
+fontHandle getIconFont();
+int getIconFontSize();
+\end{verbatimtab}
+Sets/gets the font used for icon legend. \\
+\begin{verbatimtab}
+void setTitleFont(fontHandle font, int size);
+fontHandle getTitleFont();
+int getTitleFontSize();
+\end{verbatimtab}
+Sets/gets the font used for window titles.
+
+\subsection{Renderers}
+\subsubsection{CFontRenderer}
+\begin{verbatimtab}fontHandle loadFont(const char *filename);\end{verbatimtab}
+This method loads a font from a file and returns a handle to it. The format can be any format supported by FreeType (for instance, a TrueType font). This handle can then be used in most functions that manipulate fonts. When the font is not needed anymore, the method unloadFont should be called.\\
+\begin{verbatimtab}void unloadFont(fontHandle font);\end{verbatimtab}
+Frees resources allocated to a font handle. The handle should not be used anymore. It is the responsibility of the caller to check that nothing has kept a reference on the handler when it is destroyed.\\
+\begin{verbatimtab}
+int renderString(CRegion *region, const string s, fontHandle font,
+int size, int x, int y, int w, int h, color c, int shadowX=0, int shadowY=0,
+color shadowColor=DEFAULT_COLOR);
+\end{verbatimtab}
+Renders a string to a region using the specified font.
+If shadowX or shadowY are not 0, the text will have a shadow, shifted by the specified number of pixels.
+
+\subsubsection{CImageLoader}
+CImageLoader is an abstract class which is used as a base by all classes that load images from various sources and formats. \\
+\begin{verbatimtab}virtual bool blit(CRegion *region, int x, int y, int w, int h)=0;\end{verbatimtab}
+Blit the image to the region at the specified coordinates. The image can be clipped using the w and h parameters. Those parameters must be less or equal to the image dimensions.\\
+\begin{verbatimtab}
+int getW();
+int getH();
+\end{verbatimtab}
+Retreives the dimensions of the image.\\
+\begin{verbatimtab}virtual bool getAlpha()=0;\end{verbatimtab}
+Tells whether the image has an alpha channel.
+
+\subsubsection{CPNGLoader}
+This class derives from CImageLoader and loads PNG images from the filesystem.
+\begin{verbatimtab}CPNGLoader(string filename);\end{verbatimtab}
+Loads and decompresses a PNG image and creates an instance of the class. The image can then be blitted into a region.
+
+\subsubsection{CJPEGLoader}
+This class derives from CImageLoader and loads JPEG images from the filesystem.
+\begin{verbatimtab}CJPEGLoader(string filename);\end{verbatimtab}
+Loads and decompresses a JPEG image and creates an instance of the class. The image can then be blitted into a region.
+
+\subsubsection{CDC}
+The drawing context (DC) class provides graphic primitives that target a particular region and are clipped to a rectangular area.
+
+They are used in the repainting process of the whole interface. A container widget typically creates a DC for painting each of its children based on its own DC, but with a clipping area adapted to the area allocated to the child.
+
+The CDC class is normally not used directly by the application.
+
+The graphic primitives X and Y coordinates are always relative to the clipping region.\\
+\begin{verbatimtab}CDC(CRegion *region, CFontRenderer *fontRenderer, int x, int y, int w, int h);\end{verbatimtab}
+Creates a new drawing context using the specified region and font renderer. The X and Y coordinates are relative to the region.\\
+\begin{verbatimtab}CDC(CDC *parentDC, int x, int y, int w, int h);\end{verbatimtab}
+Creates a new drawing context based on the specified parent drawing context, of which it inherits the parameters. The DC is clipped to the parent drawing context. The X and Y coordinates are relative to the parent DC coordinates.\\
+\begin{verbatimtab}CRegion *getRegion()\end{verbatimtab}
+Retreives the region object the DC operates with.\\
+\begin{verbatimtab}CFontRenderer *getFontRenderer();\end{verbatimtab}
+Retreives the font renderer the DC operates with.\\
+\begin{verbatimtab}
+int getX();
+int getY();
+int getW();
+int getH();
+\end{verbatimtab}
+Retreives the coordinates of the clipping area inside the screen region.\\
+\begin{verbatimtab}void setPixel(int x, int y, color c);\end{verbatimtab}
+Sets a single pixel. This method is slow as it checks that each pixel is inside the clipping region and computes its address, so it is always better to use higher level primitives when possible.\\
+\begin{verbatimtab}void fillRect(int x, int y, int w, int h, color c);\end{verbatimtab}
+Fills a rectangle.\\
+\begin{verbatimtab}
+int renderString(const string s, fontHandle font, int size, int x, int y, int w,
+int h, color c, int shadowX=0, int shadowY=0, color shadowColor=DEFAULT_COLOR);
+\end{verbatimtab}
+Renders text using the specified font and size in pixels. The text is contained between the specified rectangle. The function returns the number of characters read that fit in the rectangle. The text has a shadow if shadowX or shadowY is not null. In this case, the shadow is moved by the specified number of pixels in the X and Y directions, and is drawn using the specified shadowColor.\\
+\begin{verbatimtab}
+void blendHLine(int x, int y, int blendLength, int totalLength, color c);
+void blendVLine(int x, int y, int blendLength, int totalLength, color c);
+\end{verbatimtab}
+Draws a horizontal or a vertical line. It is possible to make the line extremities gradually transparent to obtain nice effects. This is controlled by the blendLength parameter, which, when non-null, is used to specify the length of the gradient on each extremity of the line.
+
+If blendLength > 0, the gradient (blend) length is in pixels. If blendLength < 0, the blend length is in 1/1024ths of the total length (the absolute value of the parameter is taken).\\
+\begin{verbatimtab}bool blitImage(int x, int y, CImageLoader *image);\end{verbatimtab}
+Blits the specified image.
+
+\subsection{Screen}
+\subsubsection{CScreen}
+The CScreen class is an abstract base class for classes that manage the screen output on a particular platform.\\
+\begin{verbatimtab}virtual CRegion *createRegion(int x, int y, int w, int h, bool visible=true,
+int z=0, int alpha=255, int blur=0)=0;\end{verbatimtab}
+This method creates a new region attached to the screen. When the region is not used anymore, the application should free it using the \verb!delete! operator.
+
+This is the preferred portable method for creating regions instead of directly calling their constructor. Derived screen classes can automatically create the region objects that are appropriate to them without the application knowing which screen and region implementation is used.\\
+\begin{verbatimtab}virtual void registerRegion(CRegion *region)=0;\end{verbatimtab}
+Register a new region with the screen. This method is not directly used by the application. Region classes call it when they are created.\\
+\begin{verbatimtab}virtual void unregisterRegion(CRegion *region)=0;\end{verbatimtab}
+Unregister a region with the screen. This method is not directly used by the application. Region classes call it when they are destroyed.\\
+\begin{verbatimtab}virtual void paint()=0;\end{verbatimtab}
+Iterate through all the registered regions, and call the paint method of their top-level widgets. This redraws all invalid areas of the screen.\\
+\begin{verbatimtab}virtual void compose()=0;\end{verbatimtab}
+Blend the region contents into the screen framebuffer. This method is hardware accelerated on most platforms.\\
+\begin{verbatimtab}virtual void setPosition(CRegion *region, int x, int y);\end{verbatimtab}
+Set the position of a region within the screen.\\
+\begin{verbatimtab}virtual void setVisible(CRegion *region, bool visible);\end{verbatimtab}
+Sets if a region should be displayed or not.\\
+\begin{verbatimtab}virtual void setZ(CRegion *region, int z);\end{verbatimtab}
+Sets the Z parameter of a region, which is used to determine which region should go on top of others. When the screen is composed, regions are drawn by increasing Z parameter. Therefore, regions with a bigger Z will be drawn later, and will appear in front of the others. If two regions have the same Z, their drawing order is not specified.\\
+\begin{verbatimtab}
+virtual int getComposeCapabilities();
+\end{verbatimtab}
+Returns a bitmask of the composition effects supported on the platform. This is a bitwise OR combination of the following flags :
+\begin{itemize}[noitemsep,topsep=0mm]
+\item \verb!CAP_COMPOSE_ALPHA! : the region can have an alpha parameter that determines its transparency.
+\item \verb!CAP_COMPOSE_BLUR! : the region can have a blur parameter that determines if it blurs the contents of possible overlapping region under it.
+\end{itemize}
+
+\begin{verbatimtab}virtual void setAlpha(CRegion *region, int alpha);\end{verbatimtab}
+Sets the alpha parameter of the region. This parameter is between 0 and 255, with 0 being a nearly completely transparent region and 255 a completely opaque region.\\
+\begin{verbatimtab}virtual void setBlur(CRegion *region, int blur);\end{verbatimtab}
+Sets the blur parameter of the region. The value is between 0 and 255, with 0 meaning no blurring (blur effect completely disabled) and 255 heavy blurring. When enabled in conjunction with a translucent region, this effect causes the contents of the regions underneath to appear blurred when they are behind this region. A similar effect can be seen in the window borders in Microsoft Vista, even though on this latter platform its rendering takes many more CPU cycles.
+
+\subsubsection{CRegion}
+The region is an abstract base class that encapsulates a region on a screen.\\
+\begin{verbatimtab}CRegion(CScreen *screen, int x, int y, int w, int h, bool visible, int z,
+int alpha, int blur);\end{verbatimtab}
+Create a new region attached to a screen. This is not the preferred way of creating regions, the application should use the createRegion method of CScreen instead.\\
+\begin{verbatimtab}
+int getX();
+int getY();
+int getW();
+int getH();
+
+bool getVisible();
+int getZ();
+int getAlpha();
+int getBlur();
+
+void setPosition(int x, int y);
+void setVisible(bool visible);
+void setZ(int z);
+void setAlpha(int alpha);
+void setBlur(int blur);
+\end{verbatimtab}
+Gets/sets the position, dimension, visible, Z, alpha and blur parameters of the region. See the CScreen section for their meanings. The ``set'' methods are freely interchangeable with the equivalent methods of CScreen.\\
+\begin{verbatimtab}virtual color *getFramebuffer()=0;\end{verbatimtab}
+Retreives the framebuffer that holds the current contents of the region.\\
+\begin{verbatimtab}CWidget *getTopWidget();\end{verbatimtab}
+Gets the top-level widget of the region.\\
+\begin{verbatimtab}void setTopWidget(CWidget *widget);\end{verbatimtab}
+Sets the top-level widget of the region. This transfers ownership of the widget to the region, meaning that the region will free the widget when it is destroyed or when another top-level widget is selected.\\
+When this function is called with a NULL parameter, this removes the top-level widget from the region and does not destroy it. The application should use getTopWidget before in order to retreive the widget object and destroy it or perform some other operation with it (like moving it to another region).
+
+\subsection{Abstract widget classes}
+\subsubsection{CWidget}
+The CWidget class is the base class for all graphics elements.\\
+\begin{verbatimtab}CWidget(CEvents *events, CColorSchema *colorSchema, CFontSchema *fontSchema);\end{verbatimtab}
+Creates a new widget with no parent, and using the specified event manager, and color and font schemas.\\
+\begin{verbatimtab}CWidget(CContainer *parent);\end{verbatimtab}
+Creates a new widget with the specified parent. It inherits the parameters of its parent.\\
+\begin{verbatimtab}virtual void paint(CDC *dc)=0;\end{verbatimtab}
+Draws the invalid widget areas using the specified drawing context.\\
+\begin{verbatimtab}virtual void invalidate();\end{verbatimtab}
+Sets the invalid flag on the widget (meaning that it should be redrawn), and post a repaint event into the event manager.\\
+\begin{verbatimtab}virtual void invalidateAll();\end{verbatimtab}
+With non-container widget, this method is equivalent to invalidate.\\
+\begin{verbatimtab}virtual bool isInvalid();\end{verbatimtab}
+Retreives the invalid flag of the widget.\\
+\begin{verbatimtab}CEvents *getEvents();\end{verbatimtab}
+Retreives the event manager associated with the widget.\\
+\begin{verbatimtab}
+CColorSchema *getColorSchema();
+void setColorSchema(CColorSchema *colorSchema);
+CFontSchema *getFontSchema();
+void setFontSchema(CFontSchema *fontSchema);
+\end{verbatimtab}
+Sets or gets the color and font schemas used by the widget. Calling the set methods automatically invalidates the widget.
+
+\subsubsection{CContainer}
+\begin{verbatimtab}
+CContainer(CEvents *events, CColorSchema *colorSchema,
+CFontSchema *fontSchema);
+CContainer(CContainer *parent);
+\end{verbatimtab}
+Those constructors are equivalent to the CWidget constructors.\\
+\begin{verbatimtab}virtual void registerChild(CWidget *child)=0;\end{verbatimtab}
+Register a new child with the container. This transfers ownership of the child to the container, meaning that the container will free the child when it is destroyed. If there is no room in the container, the container will destroy an already existing child and replace it with the specified one. This behaviour is relevant to enable single-line-of-code updates of containers that can hold only one widget (for example the CWindow and CPadder containers).
+
+After calling this method, the container displays the child and is automatically invalidated.\\
+\begin{verbatimtab}virtual void unregisterChild(CWidget *child)=0;\end{verbatimtab}
+Unregisters the specified child from the container. The container will not display the child anymore and is automatically invalidated. The caller takes back ownership of the child widget.\\
+\begin{verbatimtab}virtual void invalidate();\end{verbatimtab}
+Invalidates the areas belonging to the container (and not to any of its children). For example, calling this method for a container whose purpose is to draw borders around a child could mean that the borders have changed color and should be redrawn, but the child remains identical.\\
+\begin{verbatimtab}virtual void invalidateChildren();\end{verbatimtab}
+Invalidates the areas belonging to child widgets (and not to the container itself). To take again the example of the container that draws border around a widget, the use of this method avoids redrawing the borders every time the child has changed.\\
+\begin{verbatimtab}virtual void invalidateAll()=0;\end{verbatimtab}
+This method invalidates all areas of the container, and recursively calls itself on the children of the container. The effect is that the whole screen area where the container and its children lie is redrawn. Again with the same example, this invalidation function should be called when the border widthes are changed, which would mean that the contained widget (and possibly its children) have been resized.\\
+\begin{verbatimtab}virtual bool isInvalid();\end{verbatimtab}
+Returns whether the container or one or more of its children should be redrawn.\\
+\begin{verbatimtab}
+void setEmptyColor(color c);
+color getEmptyColor();
+\end{verbatimtab}
+Set and get the color used in place of any missing child.
+
+\subsection{Layout widgets}
+\subsubsection{CWindow}
+The window widget is the widget that should be used as a top-level widget for the regions. It does nothing except host a single child widget to ease access to the region.\\
+\begin{verbatimtab}CWindow(CRegion *region, CEvents *events, CColorSchema *colorSchema,
+CFontSchema *fontSchema);\end{verbatimtab}
+Creates a new window hosted by the specified region, and using the specified event manager and font and color schema.\\
+\subsubsection{CPadder}
+The padder container draws a border around a single widget.\\
+\begin{verbatimtab}CPadder(CContainer *parent, int borderR=1, int borderT=1, int borderL=1,
+int borderB=1);\end{verbatimtab}
+Creates a new instance of the padder widget. The parameters specify the widthes of the right, top, left and bottom borders, respectively.
+
+If a width is negative, this means that it is expressed in 1/1024ths of the padder widget width or height (the absolute value is taken). If the width is positive, it is expressed in pixels.\\
+\begin{verbatimtab}
+void setBorders(int borderR, int borderT, int borderL, int borderB);
+int getBorderR();
+int getBorderT();
+int getBorderL();
+int getBorderB();
+\end{verbatimtab}
+Sets or gets the border widthes.\\
+\begin{verbatimtab}void setBorderColor(color c);
+color getBorderColor();\end{verbatimtab}
+Sets or gets the color the borders are drawn with.
+
+\subsubsection{CColumn}
+The column container is used to pack several widgets in a column. It can be combined with the row container to create complex layouts. The column container does not insert separation between widgets ; the application should use the padder widget if it wants to insert blank spaces between widgets.\\
+\begin{verbatimtab}CColumn(CContainer *parent, int rows);\end{verbatimtab}
+Create a column container with the specified number of rows.\\
+\begin{verbatimtab}void setNextPosition(int row);\end{verbatimtab}
+Selects the number of the row into which the next child widget which registers will be packed in.
+
+Valid row numbers are between 0 and the total number of rows minus one. Row 0 is displayed at the top of the column container, and the row with the higher number is at the bottom.
+
+When a new child widget is registered, the number of the next row position is automatically incremented by one. If widgets are packed into the column widget in order from top to bottom, there is no need to call this function.
+
+This function can also be used to replace an existing widget with another one. When the new widget registers, the old one is automatically destroyed.\\
+\begin{verbatimtab}CWidget *getRow(int row);\end{verbatimtab}
+Returns a pointer to the widget packed at the specified row. Valid row numbers are between 0 and the total number of rows minus one.\\
+\begin{verbatimtab}
+void setHeight(int row, int height);
+int getHeight(int row);
+\end{verbatimtab}
+Set or get the height of a particular row. Valid row numbers are between 0 and the total number of rows minus one.
+
+If height > 0, the height is expressed in pixels. If height < 0, it is expressed in 1/1024ths of the column container height minus the space occupied by all rows whose height is expressed in pixels.\\
+\begin{verbatimtab}void setNextHeight(int height);\end{verbatimtab}
+Works like setHeight on the next row position.
+
+\subsubsection{CRow}
+\begin{verbatimtab}
+CRow(CContainer *parent, int rows);
+
+void setNextPosition(int column);
+CWidget *getColumn(int column);
+
+void setWidth(int column, int width);
+void setNextWidth(int width);
+int getWidth(int column);
+\end{verbatimtab}
+CRow works exactly like CColumn, but packs widgets in a row, from left to right.
+
+\subsection{Static widgets}
+\subsubsection{CSeparator}
+The separator widget draws a horizontal or vertical line which can be used in the application to show separation between GUI elements.\\
+\begin{verbatimtab}CSeparator(CContainer *parent, bool vertical);\end{verbatimtab}
+Creates a new separator. The separator can have any dimensions, and will center the line in the middle of its allocated space. The vertical parameters tells if the separation line should be drawn vertically or horizontally.\\
+\begin{verbatimtab}
+void setVertical(bool vertical);
+bool getVertical();
+\end{verbatimtab}
+Sets or gets the separation line orientation.\\
+\begin{verbatimtab}
+void setBlendLength(int blendLength);
+bool getBlendLength();
+\end{verbatimtab}
+The widget supports the option of blending the extremities of the separation line for a better visual effect. These functions set and get a parameter that controls this feature. If the blendLength parameter is greater than 0, there will be a gradient of blendLength pixels at both extremities of the line. If it is negative, the gradient length is expressed in 1/1024ths of the separator widget width or height (depending on the line orientation).\\
+\begin{verbatimtab}
+void setBackgroundColor(color c);
+color getBackgroundColor();
+
+void setColor(color c);
+color getColor();
+\end{verbatimtab}
+Sets or gets the background and the line color.\\
+\subsubsection{CLabel}
+The label widget is used to display static text.\\
+\begin{verbatimtab}CLabel(CContainer *parent, const string text);\end{verbatimtab}
+Creates a new label widget that displays the specified text.\\
+\begin{verbatimtab}
+void setText(const string text);
+const string getText();
+\end{verbatimtab}
+Sets/gets the displayed text.\\
+\begin{verbatimtab}
+void setTextColor(color c);
+color getTextColor();
+
+void setBackgroundColor(color c);
+color getBackgroundColor();
+\end{verbatimtab}
+Sets/gets the text and background colors.\\
+\begin{verbatimtab}
+void setFont(fontHandle font);
+fontHandle getFont();
+
+void setFontSize(int size);
+int getFontSize();
+\end{verbatimtab}
+Sets/gets the font used to render text.\\
+\begin{verbatimtab}
+void setShadow(int shadowX, int shadowY);
+int getShadowX();
+int getShadowY();
+
+void setShadowColor(color c);
+color getShadowColor();
+\end{verbatimtab}
+Sets/gets the shadow color and shift. If the shift is null (shadowX = 0 and shadowY = 0), the shadow is disabled.\\
+\subsubsection{CIcon}
+The icon widget displays an image.\\
+\begin{verbatimtab}CIcon(CContainer *parent, CImageLoader *image);\end{verbatimtab}
+Creates a new icon widget that displays the specified image. If image is NULL, no image is displayed.\\
+\begin{verbatimtab}void setImage(CImageLoader *image);\end{verbatimtab}
+Sets the image to display.\\
+\begin{verbatimtab}
+void setHAlignment(int alignment);
+int getHAlignment();
+void setVAlignment(int alignment);
+int getVAlignment();
+\end{verbatimtab}
+Sets/gets the horizontal and vertical alignment inside the widget area.
+
+An alignment is one of the following :
+\begin{itemize}[noitemsep,topsep=0mm]
+\item \verb!ICON_ALIGNMENT_TOP_LEFT! : when used in horizontal alignment, aligns the image to the left. When used in vertical alignment, aligns the image to the top.
+\item \verb!ICON_ALIGNMENT_CENTER! : aligns the image to the center.
+\item \verb!ICON_ALIGNMENT_BOTTOM_RIGHT! : when used in horizontal alignment, aligns the image to the right. When used in vertical alignment, aligns the image to the bottom.
+\end{itemize}
+
+\begin{verbatimtab}
+void setBackgroundColor(color c);
+color getBackgroundColor();
+\end{verbatimtab}
+Sets/gets the background color which is used to draw borders around the image and to blend with its possible alpha channel.
+
+\pagebreak
+
+\section{Contact and licensing}
+MTK is licensed under eGPL (\verb!http://www.egpl.info!) as part of the Milkymist project. Support for some target devices is not included in the eGPL release.
+
+Contact : \\
+\begin{itemize}[noitemsep,topsep=0mm]
+\item by email: \verb!sebastien.bourdeauducq at lekernel.net!
+\item by phone: \verb!+46(0)765829261!
+\item via the web: \verb!http://lekernel.net!
+\end{itemize}
+Bug reports and requests for help integrating MTK into an interesting free software project are also welcome.
+
+\end{document}

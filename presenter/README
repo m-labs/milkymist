@@ -1,0 +1,48 @@
+[> Milkymist(tm) Presenter
+--------------------------------------
+
+This very simple firmware for the Milkymist visual synthesizer has two purposes:
+* exemplify how to write a custom firmware
+* make presentations about Milkymist using itself :o)
+
+Milkymist is an opensource VJing system-on-chip for FPGA boards,
+compatible with MilkDrop presets.
+For the latest releases, binary distributions and more:
+  http://www.milkymist.org
+
+[> Generating the files for your talk
+To keep the firmware really simple, it takes raw 640x480 RGB565 pictures from the
+memory card (and just writes them to the framebuffer).
+You will therefore need to convert them using the supplied "makeraw" tool.
+
+To compile the tool:
+install libgd (http://www.libgd.org) and cmake (http://www.cmake.org),
+go to the "makeraw/build" directory and type:
+cmake ..
+make
+
+To convert a PDF file (from Beamer for example) to a set of 640x480 PNG files:
+gs -SDEVICE=png16m -r127x127 -sOutputFile=PR%04d.PNG -dNOPAUSE -dBATCH \
+	-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -- slides.pdf
+
+To convert the PNGs to raw RGB565 images for use with Presenter:
+for i in *.PNG; do /path/makeraw $i; done
+
+The files must be placed at the root of the memory card, and named PR0001.RAW,
+PR0002.RAW, and so forth.
+
+[> Compiling the firmware
+You need a source distribution of Milkymist, a Mico32 toolchain, and the library
+must be compiled (go to software/lib in the Milkymist distribution and type "make")
+
+Then, cd to the "firmware" directory of Presenter, and type
+make MMDIR=path_to_milkymist_sources
+
+MMDIR must point to the "milkymist-core" directory (if you downloaded a complete package).
+
+This will generate a "BOOT.BIN" file, that can be loaded using the usual techniques (placed
+at the root of the memory card, using flterm, etc.)
+
+[> Using Presenter
+At startup, Presenter will automatically display the PR0001.RAW image.
+Use the left and right keys of your FPGA board to switch between images.

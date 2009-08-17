@@ -1,0 +1,118 @@
+# ==== Clock input ====
+NET "clkin" LOC = AE14 | IOSTANDARD = LVCMOS33;
+
+# ==== Linear Flash ====
+NET flash_adr<0> LOC = T20;
+NET flash_adr<1> LOC = Y1;
+NET flash_adr<2> LOC = Y2;
+NET flash_adr<3> LOC = AA1;
+NET flash_adr<4> LOC = AB1;
+NET flash_adr<5> LOC = AB2;
+NET flash_adr<6> LOC = AC1;
+NET flash_adr<7> LOC = AC2;
+NET flash_adr<8> LOC = AD1;
+NET flash_adr<9> LOC = AD2;
+NET flash_adr<10> LOC = AE3;
+NET flash_adr<11> LOC = AF3;
+NET flash_adr<12> LOC = W3;
+NET flash_adr<13> LOC = W6;
+NET flash_adr<14> LOC = W5;
+NET flash_adr<15> LOC = AA3;
+NET flash_adr<16> LOC = AA4;
+NET flash_adr<17> LOC = AB3;
+NET flash_adr<18> LOC = AB4;
+NET flash_adr<19> LOC = AC4;
+NET flash_adr<20> LOC = AB5;
+NET flash_adr<21> LOC = AC5;
+NET flash_adr<22> LOC = T19;
+NET flash_adr<23> LOC = U20;
+NET flash_adr<24> LOC = T21;
+
+NET flash_adr<*> IOSTANDARD = LVDCI_33;
+NET flash_adr<*> SLEW = SLOW;
+NET flash_adr<*> DRIVE = 4;
+
+NET flash_d<0> LOC = AD13;
+NET flash_d<1> LOC = AC13;
+NET flash_d<2> LOC = AC15;
+NET flash_d<3> LOC = AC16;
+NET flash_d<4> LOC = AA11;
+NET flash_d<5> LOC = AA12;
+NET flash_d<6> LOC = AD14;
+NET flash_d<7> LOC = AC14;
+NET flash_d<8> LOC = AA13;
+NET flash_d<9> LOC = AB13;
+NET flash_d<10> LOC = AA15;
+NET flash_d<11> LOC = AA16;
+NET flash_d<12> LOC = AC11;
+NET flash_d<13> LOC = AC12;
+NET flash_d<14> LOC = AB14;
+NET flash_d<15> LOC = AA14;
+NET flash_d<16> LOC = D12;
+NET flash_d<17> LOC = E13;
+NET flash_d<18> LOC = C16;
+NET flash_d<19> LOC = D16;
+NET flash_d<20> LOC = D11;
+NET flash_d<21> LOC = C11;
+NET flash_d<22> LOC = E14;
+NET flash_d<23> LOC = D15;
+NET flash_d<24> LOC = D13;
+NET flash_d<25> LOC = D14;
+NET flash_d<26> LOC = F15;
+NET flash_d<27> LOC = F16;
+NET flash_d<28> LOC = F11;
+NET flash_d<29> LOC = F12;
+NET flash_d<30> LOC = F13;
+NET flash_d<31> LOC = F14;
+
+NET flash_d<*> IOSTANDARD = LVCMOS33;
+NET flash_d<*> DRIVE = 4;
+NET flash_d<*> SLEW = SLOW;
+NET flash_d<*> PULLDOWN;
+
+NET flash_byte_n LOC = N22;
+NET flash_byte_n IOSTANDARD = LVDCI_33;
+NET flash_byte_n SLEW = SLOW;
+NET flash_byte_n DRIVE = 4;
+
+NET flash_oe_n LOC = AC6;
+NET flash_oe_n IOSTANDARD = LVDCI_33;
+NET flash_oe_n SLEW = SLOW;
+NET flash_oe_n DRIVE = 4;
+
+NET flash_we_n LOC = AB6;
+NET flash_we_n IOSTANDARD = LVDCI_33;
+NET flash_we_n SLEW = SLOW;
+NET flash_we_n DRIVE = 4;
+
+NET flash_ce LOC = W7;
+NET flash_ce IOSTANDARD = LVDCI_33;
+NET flash_ce SLEW = SLOW;
+NET flash_ce DRIVE = 4;
+
+NET flash_ac97_reset_n LOC = AD10;
+NET flash_ac97_reset_n IOSTANDARD = LVCMOS33;
+
+# We do not use the SRAM, but we need
+# to get the clock and select signals
+# to disable it in a non-Murphy-prone way.
+NET sram_clk LOC = AF7;
+NET sram_clk IOSTANDARD = LVCMOS33;
+NET sram_clk DRIVE = 16;
+NET sram_clk SLEW = FAST;
+
+NET sram_ce_n LOC = V7;
+NET sram_ce_n IOSTANDARD = LVDCI_33;
+NET sram_ce_n SLEW = FAST;
+NET sram_ce_n DRIVE = 8;
+
+NET sram_zz LOC = V25;
+NET sram_zz IOSTANDARD = LVDCI_33;
+NET sram_zz SLEW = FAST;
+NET sram_zz DRIVE = 8;
+
+# ==== LEDs ====
+NET "led<0>" LOC = G5 | IOSTANDARD = LVCMOS25 | SLEW = SLOW | DRIVE = 8;
+NET "led<1>" LOC = G6 | IOSTANDARD = LVCMOS25 | SLEW = SLOW | DRIVE = 8;
+NET "led<2>" LOC = A11 | IOSTANDARD = LVCMOS25 | SLEW = SLOW | DRIVE = 8;
+NET "led<3>" LOC = A12 | IOSTANDARD = LVCMOS25 | SLEW = SLOW | DRIVE = 8;

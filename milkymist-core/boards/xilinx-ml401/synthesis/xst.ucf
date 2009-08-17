@@ -1,0 +1,12 @@
+# LOC the DCMs related to SDRAM and the input BUFG
+# to prevent tools from randomly screwing up
+# the DDR timings when the design is changed.
+INST "clkbuf" LOC = BUFGCTRL_X0Y9;
+INST "ddram/clkgen_sdram" LOC = DCM_ADV_X0Y3;
+INST "ddram/clkgen_dqs" LOC = DCM_ADV_X0Y4;
+
+# 25MHz pixel clock only for now
+NET "vga/fcounter(1)" TNM_NET = "clkvga";
+TIMESPEC "TSclkvga" = PERIOD "clkvga" 40 HIGH 50%;
+
+CONFIG STEPPING="ES";

@@ -1,0 +1,9 @@
+INCLUDE_DIRECTORIES(${MTK_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
+
+ADD_DEFINITIONS(-DRESOURCEDIR="${MTK_SOURCE_DIR}/sample/resources")
+
+ADD_EXECUTABLE(sample timersdl regionpurefb screenpurefb environmentsdl sampleappfactory languageapp menuapp main)
+
+TARGET_LINK_LIBRARIES(sample MTK ${FREETYPE_LIBRARY} ${SDL_LIBRARY} ${PNG_LIBRARIES})

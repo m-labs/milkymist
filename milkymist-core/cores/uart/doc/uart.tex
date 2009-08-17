@@ -1,0 +1,60 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{amsmath}
+\usepackage{url}
+
+\title{Simple UART}
+\author{S\'ebastien Bourdeauducq}
+\date{\today}
+\begin{document}
+\maketitle{}
+\section{Specifications}
+The UART is based on a very simple design from Das Labor. Its purpose is basically to provide a debug console.
+
+The UART operates with 8 bits per character, no parity, and 1 stop bit. The default baudrate is configured during synthesis and can be modified at runtime using the divisor register.
+
+The divisor is computed as follows :
+\begin{equation*}
+divisor = \frac{Clock frequency (Hz)}{16 \cdot Bitrate (bps)}
+\end{equation*}
+
+\section{Registers}
+
+\begin{tabular}{|l|l|l|p{8cm}|}
+\hline
+\bf{Offset} & \bf{Read/Write} & \bf{Default} & \bf{Description} \\
+\hline
+0x0 & RW & 0x00 & Control/status register.\\
+& & & Bit 0 (read-only): RX data available.\\
+& & & Bit 1 (read-only): RX error.\\
+& & & Bit 2 (write-only): RX ack.\\
+& & & Bit 3 (read-only): TX busy.\\
+& & & Bit 4 (read-only): TX done.\\
+& & & Bit 5 (write-only): TX ack. \\
+\hline
+0x4 & RW & 0x00 & Data register. Received bytes and bytes to transmit are read/written from/to this register. \\
+\hline
+0x8 & RW & for default bitrate & Divisor register (for bitrate selection). \\
+\hline
+\end{tabular}\\
+
+Upon reception of a byte, the register 0 should be written with the ``RX ack'' bit set to acknowledge the transmission (and clear the ``data available'' and ``error'' bits).
+
+Upon transmission of a byte, the register 0 can be written with the ``TX ack'' bit set to clear the ``TX done'' bit. This is not mandatory if the transmission is not operating in an interrupt-driven mode (it is possible to busy-wait on the ``TX busy'' bit instead).
+
+\section{Interrupts}
+The core has two interrupts outputs. The ``RX'' interrupt is asserted whenever the ``RX data available'' or ``RX error'' bits are set. The ``TX'' interrupt is asserted whenever the ``TX done'' bit is set.
+
+
+\section{Using the core}
+Connect the CSR signals and the interrupts to the system bus and the interrupt controller. The \verb!uart_txd! and \verb!uart_rxd! signals should go to the FPGA pads. You must also provide the desired default baudrate and the system clock frequency in Hz using the parameters.
+
+\end{document}

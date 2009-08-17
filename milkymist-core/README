@@ -1,0 +1,164 @@
+[> Milkymist(tm) Visual Synthesizer
+--------------------------------------
+
+This is the complete core source code and documentation for Milkymist(tm),
+an opensource VJing system-on-chip for FPGA boards,
+compatible with MilkDrop presets.
+
+For the latest releases, binary distributions and more:
+  http://www.milkymist.org
+
+
+[> Directory Structure
+ /cores/      Cores library, with Verilog sources, test benches and documentation.
+ /boards/     Top-level design files, constraint files and Makefiles
+              for supported FPGA boards.
+ /software/   Software for the SoC.
+ /std/        Definitions for Milkymist protocols and formats.
+ /doc/        System documentation.
+ /tools/      Small tools for developers.
+ /presets/    Example presets.
+
+
+[> Building tools
+You will need:
+ - GNU Make,
+ - Bourne Again Shell (bash),
+ - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
+ - native GCC toolchain for the host-side tools,
+ - LatticeMico32 toolchain for building the SoC software,
+For the demonstration firmware:
+ - RE2C,
+ - Lemon parser generator,
+ - Scilab.
+
+For better synthesis performance (optional):
+ - Synplify Pro (Synopsys),
+ - or Precision RTL (Mentor Graphics).
+
+NB. Before switching synthesis tools, don't forget to run "make clean" in the
+synthesis directory.
+
+
+[> Scripts
+[>> Building
+ /boards/xxx/synthesis/build/system.bit build_bitstream.sh FPGA bitstream.
+ /software/bios/image.bin               build_bios.sh      BIOS image.
+ /software/demo/image.bin               build_demo.sh      Demonstration firmware image.
+ /doc/xxx.pdf                           build_doc.sh       System-wide documentation.
+ /cores/xxx/doc/xxx.pdf                 build_doc.sh       Core-specific documentation.
+
+[>> Loading
+ - load_bitstream.sh  : loads bitstream in volatile memory.
+ - flash_bitstream.sh : loads bitstream in non-volatile memory.
+ - flash_bios.sh      : loads BIOS into NOR flash (currently no way of storing it
+                        in volatile memory).
+ - load_demo.sh       : runs a SFL server and terminal program that downloads the
+                        demo firmware at device boot.
+
+
+[> Quickstart
+1- connect serial and JTAG cables
+2- connect VGA monitor
+3- build & load:
+./build_bitstream.sh
+./build_bios.sh
+./build_demo.sh
+./flash_bios.sh
+./load_demo.sh # will stay attached to display system debug messages
+./load_bitstream.sh # from another terminal
+
+# if you like it
+./flash_bitstream.sh
+cp software/demo/image.bin /memory_card/
+
+
+[> Development
+For Verilog simulations, the scripts (usually Makefiles) shipped with the test benches 
+take care of running the simulator.
+
+Depending on the IP core, one or more of these free simulators are supported:
+ - Icarus Verilog (http://www.icarus.com/eda/verilog/)
+ - GPL Cver (http://www.pragmatic-c.com/gpl-cver/)
+ - Verilator (http://www.veripool.org/wiki/verilator)
+
+For firmware development, a serial console program compatible with automatic firmware
+loading over the serial line (SFL boot) is provided in the /tools/ directory.
+
+
+[> Credits
+Most of the code is (c) Copyright 2007, 2008, 2009 Sebastien Bourdeauducq
+and licensed under eGPL (www.egpl.info). See the LICENSE file for more information.
+The software support library (software/baselib + software/include)
+is licensed under LGPLv3. See LICENSE.LGPL.
+Milkymist is a trademark of Sebastien Bourdeauducq.
+
+The SoC design uses:
+ - the Mico32 soft-processor by Lattice Semiconductor. See the LICENSE.LATTICE file.
+ - a modified version of wb_conbus by Johny Chi and Rudolf Usselmann. See LICENSE.LGPL.
+
+The directory organization and build scripts were inspired by soc-lm32 by the German
+hackerspace Das Labor. Some of the UART and timer code also comes from there.
+
+The demonstration firmware includes:
+ - the SoftFloat IEC/IEEE Floating-point Arithmetic Package, Release 2,
+   written by John R. Hauser. See source files headers for license.
+ - fundamental functions library by Jesus Calvino-Fraga. See the LICENSE.LGPL file.
+ - line drawing code from the GD library. See the LICENSE.GD file.
+
+Special thanks to the people who did significant things which made this project possible:
+ - Lattice Semiconductor for the Mico32 processor,
+ - Shawn Tan for the AEMB processor (used earlier),
+ - Stephen Williams for Icarus Verilog,
+ - Pragmatic C Software for GPL Cver,
+ - Wilson Snyder for Verilator,
+ - Henry from Xilinx,
+ - Das Labor for providing neat build scripts for SoCs (soc-lm32).
+
+
+[> Contact
+E-mail: sebastien.bourdeauducq at lekernel daaht net
+Phone:  +46(0)765829261
+PGP:    0x9277FCF2
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+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
+lRHoJGwiAJ9JnmgPtl71/XVNcFxNQqUxVTOvjg==
+=NnZi
+-----END PGP PUBLIC KEY BLOCK-----

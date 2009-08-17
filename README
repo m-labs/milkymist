@@ -1,0 +1,18 @@
+[> Milkymist(tm) Visual Synthesizer
+--------------------------------------
+
+This is the complete (source) snapshot of the Milkymist(tm) development repository.
+Milkymist is an opensource VJing system-on-chip for FPGA boards,
+compatible with MilkDrop presets.
+
+For the latest releases, binary distributions and more:
+  http://www.milkymist.org
+
+[> Subdirectories
+ /milkymist-core/       SoC design and demo firmware. Where you probably want to go.
+ /ml401-flasher/        JTAG Flasher tool for the Xilinx ML401 development board.
+ /mtk/                  C++ embedded GUI toolkit. Will be integrated in the Milkymist
+                         firmware in the future.
+ /presenter/            Slide-show sample application.
+ /projectm/             Stand-alone software preset renderer based on projectM.
+                         For understanding how MilkDrop works and "rapid prototyping".
