@@ -15,6 +15,8 @@
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Introduction}
 The AC'97 controller core enables a system-on-chip (SoC) to interface directly with off-the-shelf AC'97 codecs popular in PCs.
@@ -27,7 +29,8 @@ Those registers are used to read and write the registers inside the off-chip AC'
 
 Register 0x04 holds the current register address, while registers 0x08 and 0x0c contain data respectively written to and read from the AC'97 codec.
 
-Register 0x00 controls the transfers to and from the AC'97 codec registers. Its bits are mapped as follows:\\
+Register 0x00 controls the transfers to and from the AC'97 codec registers. Its bits are mapped as follows:
+
 \begin{tabularx}{\textwidth}{|l|X|}
 \hline
 \textbf{Bit} & \textbf{Description} \\
@@ -54,7 +57,8 @@ The register 0x18 (counter register) holds the number of bytes that can still be
 
 The DMA address must be aligned on a 32-bit boundary, and the number of bytes must be a multiple of 4.
 
-The register 0x10 controls the stream of data:\\
+The register 0x10 controls the stream of data:
+
 \begin{tabularx}{\textwidth}{|l|X|}
 \hline
 \textbf{Bit} & \textbf{Description} \\
@@ -86,7 +90,7 @@ The downstream and upstream DMA engines work exactly the same, and can be enable
 Once your buffer has been transferred, the AC'97 will send an interrupt to request another buffer.
 \begin{itemize}
 \item Prepare a new buffer.
-\item Program the new buffer address \underline{then} the buffer length\footnote{The AC'97 controller starts making transfers on the bus as soon as the counter register is non-zero.}.
+\item Program the new buffer address \underline{then} the buffer length\footnote{When the stream is enabled, the AC'97 controller starts making transfers on the bus as soon as the counter register is non-zero.}.
 \item Write any value to the stream control register to ack the interrupt (however, the bit 0 must still be set so that the stream continues).
 \end{itemize}
 

@@ -10,11 +10,14 @@
 \usepackage{moreverb}
 \usepackage{url}
 \usepackage{float}
+\usepackage{tabularx}
 
 \title{High Performance Dynamic Memory Controller}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Specifications}
 This controller is targeted at high bandwidth applications such as live video processing.
@@ -45,7 +48,7 @@ This mode should be used at system boot-up to perform the SDRAM initialization s
 The mapped registers are the following (addresses are in bytes to match the addresses seen by the CPU when the CSR bus is bridged to Wishbone) :
 
 \subsubsection{System register, offset 0x00}
-\begin{tabular}{|p{1.5cm}|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf Bits & \bf Access & \bf Default & \bf Description \\
 \hline
@@ -57,7 +60,7 @@ The mapped registers are the following (addresses are in bytes to match the addr
 \hline
 31 -- 3 & --- & 0 & Reserved. \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsubsection{Bypass register, offset 0x04}
 The bypass register gives the system CPU low-level access to the SDRAM. It must be used at system power-up to initialize the SDRAM, as the controller does not provide this initialization. Such software initialization of the SDRAM provides greater flexibility and saves valuable hardware resources.
@@ -66,7 +69,7 @@ Writing once to this register issues \textbf{one} transaction to the SDRAM comma
 
 The values written to this register have an effect on the SDRAM only if the controller is put in bypass mode using the system register.\\
 
-\begin{tabular}{|p{1.5cm}|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf Bits & \bf Access & \bf Default & \bf Description \\
 \hline
@@ -84,7 +87,7 @@ The values written to this register have an effect on the SDRAM only if the cont
 \hline
 31 -- 19 & --- & 0 & Reserved. \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 \textit{NB. When this register is written, the address pins change synchronously at the same time as the command pins, so there is no need to pre-position the address bits before issuing a command. Commands like loading the mode register can therefore be performed with a single write to this register.}
 
@@ -93,7 +96,7 @@ This register allows the CPU to tune the behaviour of HPDMC so that it meets SDR
 
 The controller must be held in reset using the system register when the timing register is modified.\\
 
-\begin{tabular}{|p{1.5cm}|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf Bits & \bf Access & \bf Default & \bf Description \\
 \hline
@@ -111,7 +114,7 @@ The controller must be held in reset using the system register when the timing r
 \hline
 31 -- 24 & --- & 0 & Reserved. \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 \textit{NB. The default values are example only, and must be adapted to your particular setup.}
 
@@ -124,7 +127,7 @@ This register also controls the amount of phase shift that is introduced between
 
 The enable and incrementation bits work the same as for \verb!IDELAY!. They should only be used when the ready bit (5) is set.\\
 
-\begin{tabular}{|p{1.5cm}|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf Bits & \bf Access & \bf Default & \bf Description \\
 \hline
@@ -140,11 +143,11 @@ The enable and incrementation bits work the same as for \verb!IDELAY!. They shou
 \hline
 5 & R & 0 & When this bit is set, the DCM used to generate DQS is ready for phase shift. \\
 \hline
-7 -- 6 & R & 0 & Retreives the values of the \verb!pll_stat! inputs of the core. These inputs are internally double-latched so that they can directly accept asynchronous signals. They are intended to monitor the lock status of the DCMs used to generate the SDRAM and DQS clocks. \\
+7--6 & R & 0 & Retreives the values of the pll\_stat inputs of the core. These inputs are internally double-latched so that they can directly accept asynchronous signals. They are intended to monitor the lock status of the DCMs used to generate the SDRAM and DQS clocks. \\
 \hline
-31 -- 8 & --- & 0 & Reserved. \\
+31--8 & --- & 0 & Reserved. \\
 \hline
-\end{tabular}\\
+\end{tabularx}
 
 This register can be written to at any time.
 
@@ -220,8 +223,6 @@ Once the SDRAM is initialized and the timing registers are programmed, the contr
 
 You may also need to tune the data capture delay. Reset the tap count to 0 by writing bit 0 to the delay register, then increment the delay to the desired value by repeatedly writing bits 1 and 2 simultaneously.
 
-The DQS phase shift may also be adjusted. The procedure is the same, except that the delay cannot be reset and that the ready bit should be set when writing the enable and incrementation bits.
-
-The memory is now ready to be accessed over the FML interface.
+The DQS phase shift may also be adjusted. The procedure is the same, except that the delay cannot be reset and that the ready bit should be set when writing the enable and incrementation bits. The memory is now ready to be accessed over the FML interface.
 
 \end{document}

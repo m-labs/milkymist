@@ -11,11 +11,14 @@
 \usepackage{url}
 \usepackage{amsmath}
 \usepackage{float}
+\usepackage{tabularx}
 
 \title{Texture Mapping Unit}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 
 \section{Presentation}
@@ -35,7 +38,7 @@ Registers can be read at any time, and written when the core is not busy. Write 
 Addresses are in bytes to match the addresses seen by the CPU when the CSR bus is bridged to Wishbone.
 
 \subsection{Parameters and control}
-\begin{tabular}{|l|l|l|p{10.5cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf{Offset} & \bf{Access} & \bf{Default} & \bf{Description} \\
 \hline
@@ -66,7 +69,7 @@ Addresses are in bytes to match the addresses seen by the CPU when the CSR bus i
 \hline
 0x2C & RW & 480 & Destination vertical resolution. \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsection{Performance counters}
 In order to help tracking down performance bugs, the core has built-in performance counters.
@@ -75,7 +78,7 @@ Those counters are automatically reset when a new frame is submitted for process
 
 These registers are read-only. Attempting to write them results in undefined behaviour.
 
-\begin{tabular}{|l|l|l|p{10.5cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf{Offset} & \bf{Access} & \bf{Default} & \bf{Description} \\
 \hline
@@ -93,7 +96,7 @@ These registers are read-only. Attempting to write them results in undefined beh
 \hline
 0x48 & R & 0 & Number of misses in the source image (texture) cache. \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \section{Encoding the vertex data}
 The core supports a maximum mesh of 128x128 points. The address of the point at indices $ (x, y) $ in the mesh is, regardless of the actual the number of mesh points:
@@ -129,19 +132,19 @@ The situation is the same between all stages: an upstream stage is registering d
 
 Appropriate handling of these cases is done using standardized \verb!stb! and \verb!ack! signals. The meaning of these is summarized in this table:\\
 
-\begin{tabular}{|l|l|p{12cm}|}
+\begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
-\verb!stb! & \bf \verb!ack! & \bf Situation \\
+\bf stb & \bf ack & \bf Situation \\
 \hline
 0 & 0 & The upstream stage does not have data to send, and the downstream stage is not ready to accept data. \\
 \hline
-0 & 1 & The downstream stage is ready to accept data, but the upstream stage has currently no data to send. The downstream stage is not required to keep its \verb!ack! signal asserted. \\
+0 & 1 & The downstream stage is ready to accept data, but the upstream stage has currently no data to send. The downstream stage is not required to keep its ack signal asserted. \\
 \hline
-1 & 0 & The upstream stage is trying to send data to the downstream stage, which is currently not ready to accept it. The transaction is \textit{stalled}. The upstream stage must keep \verb!stb! asserted and continue to present valid data until the transaction is completed. \\
+1 & 0 & The upstream stage is trying to send data to the downstream stage, which is currently not ready to accept it. The transaction is \textit{stalled}. The upstream stage must keep stb asserted and continue to present valid data until the transaction is completed. \\
 \hline
 1 & 1 & The upstream stage is sending data to the downstream stage which is ready to accept it. The transaction is \textit{completed}. The downstream stage must register the incoming data, as the upstream stage is not required to hold it valid at the next cycle. \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 It is not allowed to generate \verb!ack! combinatorially from \verb!stb!. The \verb!ack! signal must always represent the current state of the downstream stage, ie. whether or not it will accept whatever data we present to it.
 

@@ -10,11 +10,14 @@
 \usepackage{moreverb}
 \usepackage{amsmath}
 \usepackage{url}
+\usepackage{tabularx}
 
 \title{Simple UART}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Specifications}
 The UART is based on a very simple design from Das Labor. Its purpose is basically to provide a debug console.
@@ -28,7 +31,7 @@ divisor = \frac{Clock frequency (Hz)}{16 \cdot Bitrate (bps)}
 
 \section{Registers}
 
-\begin{tabular}{|l|l|l|p{8cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf{Offset} & \bf{Read/Write} & \bf{Default} & \bf{Description} \\
 \hline
@@ -44,7 +47,7 @@ divisor = \frac{Clock frequency (Hz)}{16 \cdot Bitrate (bps)}
 \hline
 0x8 & RW & for default bitrate & Divisor register (for bitrate selection). \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 Upon reception of a byte, the register 0 should be written with the ``RX ack'' bit set to acknowledge the transmission (and clear the ``data available'' and ``error'' bits).
 

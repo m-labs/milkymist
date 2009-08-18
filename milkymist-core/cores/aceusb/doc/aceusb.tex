@@ -10,24 +10,26 @@
 \usepackage{moreverb}
 \usepackage{url}
 
-\title{WISHBONE to SystemACE MPU + CY7C67300 bridge}
+\title{Wishbone to SystemACE MPU interface bridge}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Specifications}
-This IP core is designed to allow a WISHBONE interface to access the bus with the SystemACE MPU interface and the CY7C67300 USB chip on the ML401 development board. The SystemACE chip must be used to access the CF card slot of the board.
+This IP core bridges a Wishbone interface to the SystemACE MPU interface on the ML401 development board. The SystemACE chip must be used to access the CF card slot of the board.
 
-It maps the registers of these chips to the WISHBONE address space, and handles resynchronizing the signals between the WISHBONE and the on-board 30MHz clock domains.
+It maps the registers of this chip to the Wishbone address space, and takes care of resynchronizing the signals between the Wishbone and the on-board 30MHz clock domains.
 
-Accent has been put on simplicity and low resource usage rather than performance. With a 100MHz WISHBONE clock, the write latency is typically 10 cycles, and the read latency 14 cycles.
+Accent has been put on simplicity and low resource usage rather than performance. With a 100MHz Wishbone clock, the write latency is typically 10 cycles, and the read latency 14 cycles.
 
-Currently, the core only supports talking to the SystemACE chip. It will disable the USB chip. The 16-bit SystemACE registers are mapped to the WISHBONE bus, with each register expanded to 32 bits (the 16 most significant bits are always zero).
+On the ML401, the core will disable the USB chip. The 16-bit SystemACE registers are mapped to the Wishbone bus, with each register expanded to 32 bits (the 16 most significant bits are always zero).
 
 The SystemACE registers are documented in Xilinx datasheet DS080.
 
 \section{Using the core}
-Connecting the core is very simple. The WISHBONE signals are standard, and the other signals should go the the FPGA pads.
+Connecting the core is very simple. The Wishbone signals are standard, and the other signals should go the the FPGA pads.
 
 Only attention should be paid to the clock signal. It must be generated externally (with the on-board oscillator on the ML401) and is an input to the core, and also to the FPGA in the ML401 case.
 

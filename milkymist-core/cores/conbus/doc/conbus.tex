@@ -10,13 +10,15 @@
 \usepackage{moreverb}
 \usepackage{url}
 
-\title{Simple Wishbone bus arbiter and address decoder}
+\title{Wishbone bus arbiter and address decoder}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Specifications}
-This core allows up to several masters to communicate with up to several slaves on a shared WISHBONE bus.
+This core allows up to several masters to communicate with up to several slaves on a shared Wishbone bus.
 
 It takes care of bus arbitration and remapping of the slave base addresses. It is very simple and does not take care of priorities. Scheduling occurs when a master releases the bus, and then the next master which requested the bus takes ownership.
 

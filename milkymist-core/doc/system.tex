@@ -10,6 +10,7 @@
 \usepackage{moreverb}
 \usepackage{float}
 \usepackage{url}
+\usepackage{tabularx}
 
 \title{Milkymist system reference manual}
 \author{S\'ebastien Bourdeauducq}
@@ -33,7 +34,7 @@ Currently, Milkymist only supports the Xilinx ML401 development board.
 This board is equipped with a Virtex-4 FPGA (XC4VLX25). Milkymist can use the on-board peripherals of the ML401:
 \begin{itemize}
 \item VGA output (Analog Devices ADV7125KST50 3x8-bit D/A converter)
-\item AC97 audio codec (National Semiconductor LM4550)
+\item AC'97 audio codec (National Semiconductor LM4550)
 \item DDRAM (two Infineon HYB25D256160BT-7 chips)
 \item CF card slot (through Xilinx SystemACE)
 \item RS232 port
@@ -83,7 +84,7 @@ On the ML401, the CF card is accessed through the Xilinx SystemACE chip. The reg
 Milkymist uses a VGA signal generator which reads from a RGB565 framebuffer, and implements an FML master to fetch data from the memory. The VGA generator is controlled using a CSR interface.
 
 \subsection{Audio}
-Milkymist can record and play audio through an AC97 codec. The core that drives the codec is controlled via a CSR interface and supports DMA reads and writes of the PCM data over WISHBONE.
+Milkymist can record and play audio through an AC'97 codec. The core that drives the codec is controlled via a CSR interface and supports DMA reads and writes of the PCM data over Wishbone.
 
 \subsection{Programmable Floating Point Unit (PFPU)}
 The PFPU is a simple and high-speed floating point microprocessor, designed to do the bulk vertex data generation for each frame in little time.
@@ -99,7 +100,7 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 
 \subsubsection{Inputs}
 
-\begin{tabular}{|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
 \bf{PIO bit} & \bf{Direction} & \bf{Description} \\
 \hline
@@ -129,11 +130,11 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 12 & Input & DIP switch 8 \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsubsection{Outputs}
 
-\begin{tabular}{|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
 \bf{PIO bit} & \bf{Direction} & \bf{Description} \\
 \hline
@@ -165,11 +166,11 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 13 & Output & HD44780-compatible LCD -- D7 pin \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \section{Address map}
 
-\begin{tabular}{|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
 \bf{Base address} & \bf{Cacheable} & \bf{Peripheral} \\
 \hline
@@ -193,7 +194,7 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 \hspace{5mm} 0x80003000 & No & \hspace{5mm} VGA \\
 \hline
-\hspace{5mm} 0x80004000 & No & \hspace{5mm} AC97 \\
+\hspace{5mm} 0x80004000 & No & \hspace{5mm} AC'97 \\
 \hline
 \hspace{5mm} 0x80005000 & No & \hspace{5mm} PFPU \\
 \hline
@@ -201,10 +202,10 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 0xa0000000 & No & SystemACE \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \section{IRQ map}
-\begin{tabular}{|l|p{13cm}|}
+\begin{tabularx}{\textwidth}{|l|X|}
 \hline
 \bf{IRQ} & \bf{Peripheral} \\
 \hline
@@ -218,19 +219,19 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 4 & UART (TX)\\
 \hline
-5 & AC97 (codec configuration registers, request sent)\\
+5 & AC'97 (codec configuration registers, request sent)\\
 \hline
-6 & AC97 (codec configuration registers, reply received)\\
+6 & AC'97 (codec configuration registers, reply received)\\
 \hline
-7 & AC97 (DMA read)\\
+7 & AC'97 (DMA read)\\
 \hline
-8 & AC97 (DMA write)\\
+8 & AC'97 (DMA write)\\
 \hline
 9 & Programmable Floating Point Unit\\
 \hline
 10 & Texture Mapping Unit\\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \section{BIOS and boot process}
 Using an ``execute-in-place'' schema, the system boots from the NOR flash, mapped at address 0x00000000 (the reset vector for the softcore CPU). It contains a BIOS which is in charge of booting the board as well as providing debugging features.
@@ -289,25 +290,25 @@ The length field is the length of the payload. The CRC16 is computed on the comm
 
 The following commands are implemented:\\
 
-\begin{tabular}{|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|X|}
 \hline
 \textbf{Command ID} & \textbf{Description} \\
 \hline
-\verb!0x00! & Abort session. No payload. The BIOS continues to the next boot medium. \\
+0x00 & Abort session. No payload. The BIOS continues to the next boot medium. \\
 \hline
-\verb!0x01! & Load to memory. The payload is a 32-bit start address followed by the data. \\
+0x01 & Load to memory. The payload is a 32-bit start address followed by the data. \\
 \hline
-\verb!0x02! & Jump. The payload is the 32-bit jump address. \\
+0x02 & Jump. The payload is the 32-bit jump address. \\
 \hline
 \multicolumn{2}{|c|}{\textbf{Linux-specific commands}} \\
 \hline
-\verb!0x03! & Set Linux kernel command line parameters address. The payload is the 32-bit address. This address is written to the CPU register \verb!r1! before the kernel is started (using a jump command). \\
+0x03 & Set Linux kernel command line parameters address. The payload is the 32-bit address. This address is written to the CPU register r1 before the kernel is started (using a jump command). \\
 \hline
-\verb!0x04! & Set Linux kernel initrd start address. The payload is the 32-bit address. This address is written to the CPU register \verb!r2!. \\
+0x04 & Set Linux kernel initrd start address. The payload is the 32-bit address. This address is written to the CPU register r2. \\
 \hline
-\verb!0x05! & Set Linux kernel initrd end address. The payload is the 32-bit address. This address is written to the CPU register \verb!r3!. \\
+0x05 & Set Linux kernel initrd end address. The payload is the 32-bit address. This address is written to the CPU register r3. \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsection{Boot from the CF card}
 If the device has not received an acknowledgement for UART boot after a certain period of time, it then attempts to boot from the CF card.

@@ -10,11 +10,14 @@
 \usepackage{moreverb}
 \usepackage{float}
 \usepackage{url}
+\usepackage{tabularx}
 
 \title{Configuration and Status Register (CSR) bus specifications}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Introduction}
 The CSR bus is designed to provide a lightweight interface to the configuration and status registers (CSRs) of peripherals.
@@ -31,19 +34,19 @@ It is built on the following principles:
 \subsection{Signals}
 A CSR interface is made up of the following signals:
 
-\begin{tabular}{|l|l|l|p{9cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf{Signal} & \bf{Width} & \bf{Direction} & \bf{Description} \\
 \hline
-\verb!a! & 14 & Master to slave & Address signals. The upper 4 bits are used to select a slave, and the lower 10 to select a register within that slave. \\
+a & 14 & Master to slave & Address signals. The upper 4 bits are used to select a slave, and the lower 10 to select a register within that slave. \\
 \hline
-\verb!we! & 1 & Master to slave & Write enable signal. \\
+we & 1 & Master to slave & Write enable signal. \\
 \hline
-\verb!dw! & 32 & Master to slave & Write data. \\
+dw & 32 & Master to slave & Write data. \\
 \hline
-\verb!dr! & 32 & Slave to master & Read data. \\
+dr & 32 & Slave to master & Read data. \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 The operation is the same as that of a synchronous SRAM; except that it only responds when the upper 4 address bits are set to a particular value. The read and write cycles are detailed below.
 
@@ -60,13 +63,13 @@ Here is an example timing diagram of read cycles to a slave responding to addres
 
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
-\verb!a! & 5.2 & 3.1 & 6.1 & 3.1 & 6.42 & 6.12 & 12.321 \\
+a & 5.2 & 3.1 & 6.1 & 3.1 & 6.42 & 6.12 & 12.321 \\
 \hline
-\verb!we! & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+we & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!dw! & X & X & X & X & X & X & X \\
+dw & X & X & X & X & X & X & X \\
 \hline
-\verb!dr! & 0 & 0 & 0 & Reg 1 & 0 & Reg 42 & Reg 12 \\
+dr & 0 & 0 & 0 & Reg 1 & 0 & Reg 42 & Reg 12 \\
 \hline
 \end{tabular}
 
@@ -89,13 +92,13 @@ Here is an example timing diagram of write and read cycles to a slave responding
 
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
-\verb!a! & 5.2 & 3.1 & 6.1 & 3.1 & 6.42 & 6.12 & 12.321 \\
+a & 5.2 & 3.1 & 6.1 & 3.1 & 6.42 & 6.12 & 12.321 \\
 \hline
-\verb!we! & 1 & 0 & 1 & 0 & 1 & 0 & 0 \\
+we & 1 & 0 & 1 & 0 & 1 & 0 & 0 \\
 \hline
-\verb!dw! & 32 & X & 12 & X & 143 & X & X \\
+dw & 32 & X & 12 & X & 143 & X & X \\
 \hline
-\verb!dr! & 0 & X & 0 & X & 0 & X & Reg 12 \\
+dr & 0 & X & 0 & X & 0 & X & Reg 12 \\
 \hline
 Writes & -- & -- & -- & $12\to1$ & -- & $143\to42$ & -- \\
 \hline

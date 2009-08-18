@@ -10,11 +10,14 @@
 \usepackage{moreverb}
 \usepackage{float}
 \usepackage{url}
+\usepackage{tabularx}
 
 \title{FastMemoryLink (FML) bus specifications}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 
 \section{Introduction}
@@ -33,23 +36,23 @@ Its main features are the following:
 \subsection{Signals}
 A FastMemoryLink interface is made up of the following signals:
 
-\begin{tabular}{|l|l|l|p{7.5cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf{Signal} & \bf{Width} & \bf{Direction} & \bf{Description} \\
 \hline
-\verb!a! & User-spec. & Master to slave & Address signals. They are used to specify the location in DRAM to be accessed. \\
+a & User-spec. & Master to slave & Address signals. They are used to specify the location in DRAM to be accessed. \\
 \hline
-\verb!stb! & 1 & Master to slave & Strobe signal. This signal qualifies a cycle. Once it has been asserted, it cannot be deasserted until the cycle has been acknowledged by the slave. \\
+stb & 1 & Master to slave & Strobe signal. This signal qualifies a cycle. Once it has been asserted, it cannot be deasserted until the cycle has been acknowledged by the slave. \\
 \hline
-\verb!we! & 1 & Master to slave & Write enable signal. \\
+we & 1 & Master to slave & Write enable signal. \\
 \hline
-\verb!ack! & 1 & Slave to master & Acknowledgement signal. This signal is asserted for one cycle by the slave when it is ready to begin the data phase. \\
+ack & 1 & Slave to master & Acknowledgement signal. This signal is asserted for one cycle by the slave when it is ready to begin the data phase. \\
 \hline
-\verb!dw! & User-spec. (w) & Master to slave & Write data. \\
+dw & User-spec. (w) & Master to slave & Write data. \\
 \hline
-\verb!dr! & User-spec. (w) & Slave to master & Read data. \\
+dr & User-spec. (w) & Slave to master & Read data. \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsection{Single read cycle}
 The master initiates a read cycle by presenting a valid address, deasserting \verb!we!, and asserting \verb!stb!.
@@ -60,17 +63,17 @@ Here is an example single read timing diagram for a bus using a burst length of 
 
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
-\verb!a! & X & A & A & X & X & X & X \\
+a & X & A & A & X & X & X & X \\
 \hline
-\verb!stb! & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+stb & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!we! & X & 0 & 0 & X & X & X & X \\
+we & X & 0 & 0 & X & X & X & X \\
 \hline
-\verb!ack! & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+ack & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!dw! & X & X & X & X & X & X & X \\
+dw & X & X & X & X & X & X & X \\
 \hline
-\verb!dr! & X & X & A+0 & A+1 & A+2 & A+3 & X \\
+dr & X & X & A+0 & A+1 & A+2 & A+3 & X \\
 \hline
 \end{tabular}
 
@@ -85,17 +88,17 @@ Here is an example single write timing diagram for a bus using a burst length of
 
 \begin{tabular}{|l|c|c|c|c|c|c|c|}
 \hline
-\verb!a! & X & A & A & X & X & X & X \\
+a & X & A & A & X & X & X & X \\
 \hline
-\verb!stb! & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+stb & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!we! & X & 1 & 1 & X & X & X & X \\
+we & X & 1 & 1 & X & X & X & X \\
 \hline
-\verb!ack! & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+ack & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!dw! & X & A+0 & A+0 & A+1 & A+2 & A+3 & X \\
+dw & X & A+0 & A+0 & A+1 & A+2 & A+3 & X \\
 \hline
-\verb!dr! & X & X & X & X & X & X & X \\
+dr & X & X & X & X & X & X & X \\
 \hline
 \end{tabular}
 
@@ -115,17 +118,17 @@ Here is an example timing diagram.
 
 \begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-\verb!a! & X & A & A & B & B & B & B & X & X & X & X\\
+a & X & A & A & B & B & B & B & X & X & X & X\\
 \hline
-\verb!stb! & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 \\
+stb & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!we! & X & 0 & 0 & 0 & 0 & 0 & 0 & X & X & X & X \\
+we & X & 0 & 0 & 0 & 0 & 0 & 0 & X & X & X & X \\
 \hline
-\verb!ack! & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+ack & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!dw! & X & X & X & X & X & X & X & X & X & X & X \\
+dw & X & X & X & X & X & X & X & X & X & X & X \\
 \hline
-\verb!dr! & X & X & A+0 & A+1 & A+2 & A+3 & B+0 & B+1 & B+2 & B+3 & X \\
+dr & X & X & A+0 & A+1 & A+2 & A+3 & B+0 & B+1 & B+2 & B+3 & X \\
 \hline
 \end{tabular}
 
@@ -136,17 +139,17 @@ Here is an example timing diagram.
 
 \begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|}
 \hline
-\verb!a! & X & A & A & B & B & B & B & X & X & X & X\\
+a & X & A & A & B & B & B & B & X & X & X & X\\
 \hline
-\verb!stb! & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 \\
+stb & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!we! & X & 1 & 1 & 1 & 1 & 1 & 1 & X & X & X & X \\
+we & X & 1 & 1 & 1 & 1 & 1 & 1 & X & X & X & X \\
 \hline
-\verb!ack! & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+ack & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
 \hline
-\verb!dw! & X & A+0 & A+0 & A+1 & A+2 & A+3 & B+0 & B+1 & B+2 & B+3 & X \\
+dw & X & A+0 & A+0 & A+1 & A+2 & A+3 & B+0 & B+1 & B+2 & B+3 & X \\
 \hline
-\verb!dr! & X & X & X & X & X & X & X & X & X & X & X \\
+dr & X & X & X & X & X & X & X & X & X & X & X \\
 \hline
 \end{tabular}
 
@@ -159,17 +162,17 @@ The following timing diagram shows a read cycle which is overlapped by a write c
 
 \begin{tabular}{|l|c|c|c|c|c|c|c|c|}
 \hline
-\verb!a! & X & A & A & B & B & X & X & X\\
+a & X & A & A & B & B & X & X & X\\
 \hline
-\verb!stb! & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0\\
+stb & 0 & 1 & 1 & 1 & 1 & 0 & 0 & 0\\
 \hline
-\verb!we! & X & 0 & 0 & 1 & 1 & X & X & X \\
+we & X & 0 & 0 & 1 & 1 & X & X & X \\
 \hline
-\verb!ack! & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 \\
+ack & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0 \\
 \hline
-\verb!dw! & X & X & X & X & B+0 & B+1 & B+2 & B+3 \\
+dw & X & X & X & X & B+0 & B+1 & B+2 & B+3 \\
 \hline
-\verb!dr! & X & X & A+0 & A+1 & A+2 & A+3 & X & X \\
+dr & X & X & A+0 & A+1 & A+2 & A+3 & X & X \\
 \hline
 \end{tabular}
 

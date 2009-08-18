@@ -28,6 +28,10 @@ confslides_overview.dvi: confslides_overview.tex
 	latex confslides_overview.tex
 	latex confslides_overview.tex
 
+milkdrop.dvi: milkdrop.tex
+	latex milkdrop.tex
+	latex milkdrop.tex
+
 %.dvi: %.tex
 	latex $<
 

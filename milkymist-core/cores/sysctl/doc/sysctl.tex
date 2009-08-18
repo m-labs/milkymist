@@ -9,11 +9,14 @@
 \usepackage{graphicx}
 \usepackage{moreverb}
 \usepackage{url}
+\usepackage{tabularx}
 
 \title{System controller}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Overview}
 
@@ -30,7 +33,7 @@ The GPIO controller can support a maximum of 32 inputs and 32 outputs. Bidirecti
 
 It is possible to generate an interrupt when an input changes. The interrupt will be generated on both rising and falling edges of the input.
 
-\begin{tabular}{|l|l|l|p{8cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf{Offset} & \bf{Read/Write} & \bf{Default} & \bf{Description} \\
 \hline
@@ -42,13 +45,13 @@ It is possible to generate an interrupt when an input changes. The interrupt wil
 \hline
 0x0C & RW & 0 & Interrupt enable. Lists the input pins whose level changes (bit set in the 0x08 register) generate an interrupt. \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 \section{Dual timer}
 The system controller provides two independent timers. Timer 0 uses registers 0x10, 0x14 and 0x18, while timer 1 uses registers 0x20, 0x24 and 0x28.
 
 \subsection{Timer control register, offset 0x10/0x20}
-\begin{tabular}{|p{1.5cm}|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf Bits & \bf Access & \bf Default & \bf Description \\
 \hline
@@ -60,7 +63,7 @@ The system controller provides two independent timers. Timer 0 uses registers 0x
 \hline
 31 -- 3 & --- & 0 & Reserved. \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsection{Compare register, offset 0x14/0x24}
 This register holds the value to which the counter is compared to, in order to stop/restart the timer and possibly generate an interrupt.

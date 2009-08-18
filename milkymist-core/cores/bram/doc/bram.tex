@@ -10,19 +10,21 @@
 \usepackage{moreverb}
 \usepackage{url}
 
-\title{WISHBONE Block RAM}
+\title{Wishbone Block RAM}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Specifications}
-This core creates 32-bit storage RAM on the WISHBONE bus by using FPGA Block RAM. Its contents can be initialized and byte-wide writes are supported. Burst access is not supported. The typical use is to provide boot ROM for softcore CPUs.
+This core creates 32-bit storage RAM on the Wishbone bus by using FPGA Block RAM.
+
+Byte-wide writes are supported. Burst access is not supported.
+
+The typical use case is to provide initial memory for softcore CPUs.
 
 \section{Using the core}
 You should specify the block RAM storage depth, in bytes, by using the \verb!adr_width! parameter.
-
-For initialization, four files must be provided, using the \verb!mem0_file_name!, \verb!mem1_file_name!, \verb!mem2_file_name! and \verb!mem3_file_name! parameters. When these files are read, the word \verb!x! in the 32-bit memory is initalized with the value formed by the 8-bit ASCII hexadecimal values read at line \verb!x! in each file, with \verb!mem3_file_name! providing the most significant byte and \verb!mem0_file_name! the least significant one.
-
-If these parameters are set to the particular value \verb!none!, then the memory is not initialized.
 
 \end{document}

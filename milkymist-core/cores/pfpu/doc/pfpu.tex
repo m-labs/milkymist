@@ -11,11 +11,14 @@
 \usepackage{url}
 \usepackage{amsmath}
 \usepackage{float}
+\usepackage{tabularx}
 
 \title{Programmable Floating Point Unit}
 \author{S\'ebastien Bourdeauducq}
 \date{\today}
 \begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
 \maketitle{}
 \section{Overview}
 The Programmable Floating Point Unit (PFPU) is a floating point microprocessor optimized for fast computation of triangle strip vertices (mesh) used by the Milkymist texture mapping unit.
@@ -33,7 +36,7 @@ It is designed for repetitive evaluation of the same mathematical function on a 
 \subsection{Register file}
 The PFPU implements 128 registers, which are accessed by its microcode, the address generator and the CSR interface.\\
 
-\begin{tabular}{|l|p{1.5cm}|p{1.5cm}|p{1.5cm}|p{7.2cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|l|X|}
 \hline
 \bf Register & \multicolumn{3}{|c|}{\bf Access} & \bf Description \\
 \hline
@@ -45,11 +48,11 @@ R1 & R & W & -- & Mesh Y coordinate of the currently computed point (same remark
 \hline
 R2 & RW & -- & RW & ALU flags (typically comparison result). \\
 \hline
-R3 -- R30 & RW & -- & RW & General purpose 32-bit registers. \\
+R3--R30 & RW & -- & RW & General purpose 32-bit registers. \\
 \hline
 R127 & W & -- & -- & Output register. Writing to this register stores the value into system memory via DMA, and restarts the microcode to compute the next point. \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 The compiler can use the general purpose registers to store inputs of the function to be evaluated, and to store intermediate computation results.
 
@@ -94,37 +97,37 @@ Each computation unit can have one, two or three arguments. If the unit has one 
 
 \subsubsection{Table of operations}
 
-\begin{tabular}{|l|l|l|l|p{6cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|l|X|}
 \hline
 \bf Mnemonic & \bf Opcode & \bf Type & \bf Latency & \bf Description \\
 \hline
-\verb!NOP! & \verb!0! & -- & -- & No operation (use as filler). \\
+NOP & 0 & -- & -- & No operation (use as filler). \\
 \hline
-\verb!FADD! & \verb!1! & Parallel & 4 & Floating point addition. \\
+FADD & 1 & Parallel & 4 & Floating point addition. \\
 \hline
-\verb!FSUB! & \verb!2! & Parallel & 4 & Floating point subtraction (A-B). \\
+FSUB & 2 & Parallel & 4 & Floating point subtraction (A-B). \\
 \hline
-\verb!FMUL! & \verb!3! & Parallel & 5 & Floating point multiplication. \\
+FMUL & 3 & Parallel & 5 & Floating point multiplication. \\
 \hline
-\verb!FDIV! & \verb!4! & Sequential & TBD & Floating point division (A/B). \\
+FDIV & 4 & Sequential & TBD & Floating point division (A/B). \\
 \hline
-\verb!F2I! & \verb!5! & Parallel & 2 & Convert float to integer. \\
+F2I & 5 & Parallel & 2 & Convert float to integer. \\
 \hline
-\verb!I2F! & \verb!6! & Parallel & 3 & Convert integer to float. \\
+I2F & 6 & Parallel & 3 & Convert integer to float. \\
 \hline
-\verb!VECT! & \verb!7! & Parallel & 2 & Make vector. \\
+VECT & 7 & Parallel & 2 & Make vector. \\
 \hline
-\verb!SIN! & \verb!8! & Parallel & 4 & Sine table look-up. \\
+SIN & 8 & Parallel & 4 & Sine table look-up. \\
 \hline
-\verb!COS! & \verb!9! & Parallel & 4 & Cosine table look-up. \\
+COS & 9 & Parallel & 4 & Cosine table look-up. \\
 \hline
-\verb!ABOVE! & \verb!a! & Parallel & 2 & Result is 1.0 is A>B, 0.0 otherwise. \\
+ABOVE & a & Parallel & 2 & Result is 1.0 is A>B, 0.0 otherwise. \\
 \hline
-\verb!EQUAL! & \verb!b! & Parallel & 2 & Result is 1.0 is A=B, 0.0 otherwise. \\
+EQUAL & b & Parallel & 2 & Result is 1.0 is A=B, 0.0 otherwise. \\
 \hline
-\verb!COPY! & \verb!c! & Parallel & 2 & Result is A. \\
+COPY & c & Parallel & 2 & Result is A. \\
 \hline
-\end{tabular}\\
+\end{tabularx}\\
 
 \subsubsection{Relationship with IEEE754}
 When using floating point numbers, the PFPU uses the same number representation as IEEE754 (1-bit sign, 8-bit biased exponent, 23-bit mantissa). This is made to ease interfacing with IEEE754-compliant systems and software ; however, the PFPU does not comply with IEEE754 and notoriously differs from the norm in the following points :
@@ -169,7 +172,7 @@ The PFPU is equipped with a CSR slave bus used for control, and a Wishbone maste
 The CSR bus gives access to configuration and status registers, to the contents of the 128 data registers, and to the microcode memory.
 
 \subsection{Register 0x000 -- Control register}
-\begin{tabular}{|p{1.5cm}|l|l|p{10cm}|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf Bits & \bf Access & \bf Default & \bf Description \\
 \hline
@@ -177,9 +180,9 @@ The CSR bus gives access to configuration and status registers, to the contents 
 \hline
 1 & RW & 0 & IRQ status. This bit is set to 1 when an interrupt is pending (because the microcode has finished execution). This bit is cleared when the register is written. \\
 \hline
-31 -- 2 & --- & 0 & Reserved. \\
+31--2 & --- & 0 & Reserved. \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsection{Register 0x004 -- DMA base register}
 This register sets the base address for DMA transfers, expressed in bytes. DMA transfers must be aligned to a 32-bit boundary.
