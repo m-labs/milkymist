@@ -20,6 +20,7 @@
 #include <console.h>
 #include <irq.h>
 #include <system.h>
+#include <math.h>
 #include <hw/interrupts.h>
 
 #include "renderer.h"
@@ -124,12 +125,83 @@ int rpipe_input(struct rpipe_frame *frame)
 	return 1;
 }
 
-static void rpipe_bottom_half()
+/* TODO: implement missing wave modes */
+
+static int wave_mode_0(struct wave_vertex *vertices)
 {
-	struct wave_vertex vertices[100];
-	struct wave_params params;
+	return 0;
+}
+
+static int wave_mode_1(struct wave_vertex *vertices)
+{
+	return 0;
+}
+
+static int wave_mode_2(struct wave_vertex *vertices)
+{
+	return 0;
+}
+
+static int wave_mode_3(struct wave_vertex *vertices)
+{
+	return 0;
+}
+
+static int wave_mode_4(struct wave_vertex *vertices)
+{
+	return 0;
+}
+
+static int wave_mode_5(struct wave_vertex *vertices)
+{
+	int nvertices;
 	int i;
-	unsigned int oldmask;
+	float s1, s2;
+	float x0, y0;
+	float cos_rot, sin_rot;
+	int x, y;
+
+	nvertices = 256-64;
+
+	cos_rot = cosf(bh_frame->time*0.3f);
+	sin_rot = sinf(bh_frame->time*0.3f);
+
+	for(i=0;i<nvertices;i++) {
+		s1 = bh_frame->samples[4*i     ]/32768.0;
+		s2 = bh_frame->samples[4*i+64+1]/32768.0;
+		x0 = 2.0*s1*s2;
+		y0 = s1*s1 - s2*s2;
+
+		x = (float)vga_hres*((x0*cos_rot - y0*sin_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_x);
+		y = (float)vga_vres*((x0*sin_rot + y0*cos_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_y);
+
+		if(x < 0) x = 0;
+		if(x >= vga_hres) x = vga_hres - 1;
+		if(y < 0) y = 0;
+		if(y >= vga_vres) y = vga_vres - 1;
+
+		vertices[i].x = x;
+		vertices[i].y = y;
+	}
+
+	return nvertices;
+}
+
+static int wave_mode_6(struct wave_vertex *vertices)
+{
+	return 0;
+}
+
+static int wave_mode_7(struct wave_vertex *vertices)
+{
+	return 0;
+}
+
+static void rpipe_draw_waves()
+{
+	struct wave_params params;
+	struct wave_vertex vertices[256];
+	int nvertices;
 
 	/*
 	 * We assume that the VGA back buffer is not in any cache
@@ -137,57 +209,88 @@ static void rpipe_bottom_half()
 	 * has just written it, straight to SDRAM).
 	 */
 
-	/* Draw waves */
-	params.wave_mode = 5;
+	params.wave_mode = bh_frame->wave_mode;
+	params.wave_additive = bh_frame->wave_additive;
+	params.wave_dots = bh_frame->wave_usedots;
+	params.wave_maximize_color = bh_frame->wave_maximize_color;
+	params.wave_thick = bh_frame->wave_thick;
+	
 	params.wave_r = bh_frame->wave_r;
 	params.wave_g = bh_frame->wave_g;
 	params.wave_b = bh_frame->wave_b;
-	params.wave_alpha = bh_frame->wave_a;
-	params.maximize_wave_color = 1;
-	params.wave_dots = bh_frame->wave_usedots;
-	params.wave_thick = 1;
-	params.additive_waves = bh_frame->wave_additive;
-	params.wave_loop = 0;
-	params.treb = 0.2;
+	params.wave_a = bh_frame->wave_a;
+	
+	params.treb = bh_frame->treb;
 
-	for(i=0;i<40;i++) {
-		int a;
-		vertices[i].x = 639*i/39;
-		a = 240 + 200*(int)bh_frame->samples[16*i]/32768;
-		if(a < 0) a = 0;
-		if(a > 479) a = 479;
-		vertices[i].y = a;
+	switch(bh_frame->wave_mode) {
+		case 0:
+			nvertices = wave_mode_0(vertices);
+			break;
+		case 1:
+			nvertices = wave_mode_1(vertices);
+			break;
+		case 2:
+			nvertices = wave_mode_2(vertices);
+			break;
+		case 3:
+			nvertices = wave_mode_3(vertices);
+			break;
+		case 4:
+			nvertices = wave_mode_4(vertices);
+			break;
+		case 5:
+			nvertices = wave_mode_5(vertices);
+			break;
+		case 6:
+			nvertices = wave_mode_6(vertices);
+			break;
+		case 7:
+			nvertices = wave_mode_7(vertices);
+			break;
+		default:
+			nvertices = 0;
+			break;
 	}
 
-	wave_draw(vga_backbuffer, vga_hres, vga_vres, &params, vertices, 40);
-	
-	/* Draw spam */
+	wave_draw(vga_backbuffer, vga_hres, vga_vres, &params, vertices, nvertices);
+}
+
+static void rpipe_draw_spam()
+{
+	int dx, dy;
+	int x, y;
+
 	spam_counter++;
 	if(spam_counter > SPAM_PERIOD) {
-		int dx, dy;
-		int x, y;
-		
 		dx = (vga_hres-SPAM_W)/2;
 		dy = vga_vres/2-SPAM_H;
-		
+
 		for(y=0;y<SPAM_H;y++)
 			for(x=0;x<SPAM_W;x++) {
 				if(spam_xpm[y+3][x] == SPAM_ON)
 					vga_backbuffer[vga_hres*(dy+y)+dx+x] = 0xffff;
 		}
-		
+
 		spam_counter = 0;
 	}
+}
+
+static void rpipe_bottom_half()
+{
+	unsigned int oldmask;
+
+	rpipe_draw_waves();
+	rpipe_draw_spam();
+
+	/* Update display */
+	flush_bridge_cache();
+	vga_swap_buffers();
 
 	/* Update statistics */
 	oldmask = irq_getmask();
 	irq_setmask(oldmask & ~(IRQ_TIMER0));
 	frames++;
 	irq_setmask(oldmask);
-
-	/* Update display */
-	flush_bridge_cache();
-	vga_swap_buffers();
 }
 
 void rpipe_service()

@@ -21,7 +21,7 @@
 
 #define NDEBUG
 
-#define IDENTIFIER_SIZE 16
+#define IDENTIFIER_SIZE 24
 
 struct preset_equation;
 

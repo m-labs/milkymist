@@ -26,15 +26,14 @@ struct wave_vertex {
 
 struct wave_params {
 	unsigned int wave_mode;
+	int wave_additive;
+	int wave_dots;
+	int wave_maximize_color;
+	int wave_thick;
 	float wave_r;
 	float wave_g;
 	float wave_b;
-	float wave_alpha;
-	int maximize_wave_color;
-	int wave_dots;
-	int wave_thick;
-	int additive_waves;
-	int wave_loop;
+	float wave_a;
 	float treb;
 };
 

@@ -28,8 +28,16 @@ typedef void (*rpipe_callback)(struct rpipe_frame *frame);
 struct rpipe_frame {
 	struct tmu_vertex vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 	unsigned int brightness;
+	unsigned int wave_mode;
+	float wave_scale;
+	int wave_additive;
+	int wave_usedots;
+	int wave_maximize_color;
+	int wave_thick;
+	float wave_x, wave_y;
 	float wave_r, wave_b, wave_g, wave_a;
-	int wave_additive, wave_usedots;
+	float treb;
+	float time;
 	unsigned int nsamples; /* < audio samples */
 	short *samples;
 	rpipe_callback callback;

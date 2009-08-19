@@ -144,12 +144,19 @@ static void pfv_callback(struct pfpu_td *td)
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
 	rpipe_frame->brightness = 63.0f*eval_read_pfv(eval, pfv_decay);
+
+	rpipe_frame->wave_mode = eval_read_pfv(eval, pfv_wave_mode);
+	rpipe_frame->wave_scale = eval_read_pfv(eval, pfv_wave_scale);
+	rpipe_frame->wave_additive = eval_read_pfv(eval, pfv_wave_additive) != 0.0f;
+	rpipe_frame->wave_usedots = eval_read_pfv(eval, pfv_wave_usedots) != 0.0f;
+	rpipe_frame->wave_maximize_color = eval_read_pfv(eval, pfv_wave_maximize_color) != 0.0f;
+	rpipe_frame->wave_thick = eval_read_pfv(eval, pfv_wave_thick) != 0.0f;
+	rpipe_frame->wave_x = eval_read_pfv(eval, pfv_wave_x);
+	rpipe_frame->wave_y = eval_read_pfv(eval, pfv_wave_y);
 	rpipe_frame->wave_r = eval_read_pfv(eval, pfv_wave_r);
 	rpipe_frame->wave_g = eval_read_pfv(eval, pfv_wave_g);
 	rpipe_frame->wave_b = eval_read_pfv(eval, pfv_wave_b);
 	rpipe_frame->wave_a = eval_read_pfv(eval, pfv_wave_a);
-	rpipe_frame->wave_additive = eval_read_pfv(eval, pfv_wave_additive) != 0.0f;
-	rpipe_frame->wave_usedots = eval_read_pfv(eval, pfv_wave_usedots) != 0.0f;
 
 	eval_pfv_to_pvv(eval);
 	eval_pvv_fill_td(eval, &pfpu_td, &rpipe_frame->vertices[0][0], pvv_callback, rpipe_frame);
@@ -205,6 +212,9 @@ static void analyzer_bottom_half()
 	eval_write_pfv(eval, pfv_bass_att, bass_att);
 	eval_write_pfv(eval, pfv_mid_att, mid_att);
 	eval_write_pfv(eval, pfv_treb_att, treb_att);
+
+	rpipe_frame->time = time;
+	rpipe_frame->treb = ftreb;
 
 	eval_pfv_fill_td(eval, &pfpu_td, pfv_callback, rpipe_frame);
 	pfpu_submit_task(&pfpu_td);

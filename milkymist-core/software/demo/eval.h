@@ -41,6 +41,8 @@ enum {
 	pfv_wave_scale,
 	pfv_wave_additive,
 	pfv_wave_usedots,
+	pfv_wave_maximize_color,
+	pfv_wave_thick,
 	pfv_wave_x,
 	pfv_wave_y,
 	pfv_wave_r,

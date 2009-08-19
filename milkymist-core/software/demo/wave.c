@@ -40,7 +40,7 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 	line_init_context(&ctx, framebuffer, hres, vres);
 
 	//TODO: implement modulate_opacity_by_volume
-	wave_o = params->wave_alpha;
+	wave_o = params->wave_a;
 	// Original code: maximize_colors
 	wave_r = params->wave_r;
 	wave_g = params->wave_g;
@@ -63,7 +63,7 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 		wave_o *= params->treb*params->treb;
 	}
 
-	if(params->maximize_wave_color) {
+	if(params->wave_maximize_color) {
 		// WARNING: softfloat ">=" operator is broken (says 0.5 >= 0.8)
 		// ">" works fine
 		if((wave_r > wave_g) && (wave_r > wave_b)) {
@@ -112,7 +112,7 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 	//  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// else
 	//  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	if(params->additive_waves)
+	if(params->wave_additive)
 		ctx.additive = 1;
 
 	// Original code:
@@ -125,7 +125,8 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 	for(i=0;i<(nvertices-1);i++)
 		line(&ctx, vertices[i].x, vertices[i].y, vertices[i+1].x, vertices[i+1].y);
 
-	if(params->wave_loop)
+	// draw_wave_as_loop
+	if(params->wave_mode == 0)
 		line(&ctx, vertices[0].x, vertices[0].y, vertices[nvertices-1].x, vertices[nvertices-1].y);
 
 	// TODO: implement two_waves

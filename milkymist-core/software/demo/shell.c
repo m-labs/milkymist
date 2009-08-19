@@ -363,33 +363,6 @@ static void echo()
 	}
 }
 
-static void wavetest()
-{
-	int i;
-	struct wave_vertex vertices[100];
-	struct wave_params params;
-
-	params.wave_mode = 5;
-	params.wave_r = 0.5;
-	params.wave_g = 0.5;
-	params.wave_b = 0.8;
-	params.wave_alpha = 3.299999;
-	params.maximize_wave_color = 1;
-	params.wave_dots = 1;
-	params.wave_thick = 1;
-	params.additive_waves = 1;
-	params.wave_loop = 0;
-	params.treb = 0.2;
-
-	for(i=0;i<100;i++) {
-		vertices[i].x = 640*i/100;
-		vertices[i].y = 240 + 200.0*cosf(4.0*6.28*(float)i/100.0f);
-	}
-
-	wave_draw(vga_frontbuffer, vga_hres, vga_vres, &params, vertices, 100);
-	flush_bridge_cache();
-}
-
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -425,8 +398,7 @@ static void do_command(char *c)
 	else if(strcmp(token, "pfputest") == 0) pfputest();
 	else if(strcmp(token, "tmutest") == 0) tmutest();
 	else if(strcmp(token, "echo") == 0) echo();
-	else if(strcmp(token, "wavetest") == 0) wavetest();
-	
+
 	else if(strcmp(token, "") != 0) printf("Command not found: '%s'\n", token);
 }
 

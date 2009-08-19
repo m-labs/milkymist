@@ -19,7 +19,7 @@
 #ifndef __BRD_H
 #define __BRD_H
 
-extern struct board_desc *brd_desc;
+extern const struct board_desc *brd_desc;
 
 void brd_init();
 

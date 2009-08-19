@@ -22,7 +22,7 @@
 
 #include "brd.h"
 
-struct board_desc *brd_desc;
+const struct board_desc *brd_desc;
 
 void brd_init()
 {
