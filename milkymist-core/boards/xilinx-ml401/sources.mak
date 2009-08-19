@@ -2,7 +2,6 @@ BOARD_SRC=$(wildcard $(BOARD_DIR)/*.v)
 
 CONBUS_SRC=$(wildcard $(CORES_DIR)/conbus/rtl/*.v)
 LM32_SRC=						\
-	$(CORES_DIR)/lm32/rtl/lm32_include.v		\
 	$(CORES_DIR)/lm32/rtl/lm32_cpu.v		\
 	$(CORES_DIR)/lm32/rtl/lm32_instruction_unit.v	\
 	$(CORES_DIR)/lm32/rtl/lm32_decoder.v		\
