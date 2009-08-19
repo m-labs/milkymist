@@ -17,7 +17,7 @@
 #include <libc.h>
 #include <board.h>
 
-static const struct board_desc boards[1] = {
+static const struct board_desc boards[2] = {
 	{
 		.id = 0x58343031, /* X401 */
 		.name = "Xilinx ML401 development board",
@@ -26,6 +26,12 @@ static const struct board_desc boards[1] = {
 		.ddr_clkphase = 0,
 		.ddr_idelay = 0,
 		.ddr_dqsdelay = 244
+	},
+	{
+		.id = 0x53334145, /* S3AE */
+		.name = "Avnet Spartan-3A evaluation kit",
+		.clk_frequency = 64000000,
+		.sdram_size = 0
 	}
 };
 

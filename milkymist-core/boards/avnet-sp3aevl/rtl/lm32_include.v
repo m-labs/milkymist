@@ -45,23 +45,7 @@
 `define CFG_SIGN_EXTEND_ENABLED
 `define CFG_MC_DIVIDE_ENABLED
 
-// Bug in Mico32/Xst ?
-// CFG_ICACHE_ASSOCIATIVITY=2 => works fine
-// CFG_ICACHE_ASSOCIATIVITY=1 => disaster
-// TODO: try with the expensive synthesizers
-`define CFG_ICACHE_ENABLED
-`define CFG_ICACHE_ASSOCIATIVITY   2
-`define CFG_ICACHE_SETS            512
-`define CFG_ICACHE_BYTES_PER_LINE  16
-`define CFG_ICACHE_BASE_ADDRESS    32'h0
-`define CFG_ICACHE_LIMIT           32'h7fffffff
-
-`define CFG_DCACHE_ENABLED
-`define CFG_DCACHE_ASSOCIATIVITY   2
-`define CFG_DCACHE_SETS            512
-`define CFG_DCACHE_BYTES_PER_LINE  16
-`define CFG_DCACHE_BASE_ADDRESS    32'h0
-`define CFG_DCACHE_LIMIT           32'h7fffffff
+// Caches disabled
 
 //
 // End of common configuration options

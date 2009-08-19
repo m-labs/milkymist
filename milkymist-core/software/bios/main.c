@@ -33,6 +33,8 @@
 
 #include "boot.h"
 
+static const struct board_desc *brd_desc;
+
 /* SDRAM functions */
 
 static int dqs_ps;
@@ -40,9 +42,6 @@ static int dqs_ps;
 static void ddrinit()
 {
 	volatile unsigned int i;
-	const struct board_desc *b;
-	
-	b = get_board_desc();
 	
 	putsnonl("I: Initializing SDRAM [DDR200 CL=2 BL=8]...");
 	/* Bring CKE high */
@@ -67,11 +66,11 @@ static void ddrinit()
 	
 	/* Set up pre-programmed data bus timings */
 	CSR_HPDMC_IODELAY = HPDMC_IDELAY_RST;
-	for(i=0;i<b->ddr_idelay;i++)
+	for(i=0;i<brd_desc->ddr_idelay;i++)
 		CSR_HPDMC_IODELAY = HPDMC_IDELAY_CE|HPDMC_IDELAY_INC;
 	
-	dqs_ps = b->ddr_dqsdelay;
-	for(i=0;i<b->ddr_dqsdelay;i++) {
+	dqs_ps = brd_desc->ddr_dqsdelay;
+	for(i=0;i<brd_desc->ddr_dqsdelay;i++) {
 		CSR_HPDMC_IODELAY = HPDMC_DQSDELAY_CE|HPDMC_DQSDELAY_INC;
 		while(!(CSR_HPDMC_IODELAY & HPDMC_DQSDELAY_RDY));
 	}
@@ -93,16 +92,14 @@ static int plltest()
 
 static int memtest(unsigned int div)
 {
-	const struct board_desc *b;
 	unsigned int *testbuf = (unsigned int *)SDRAM_BASE;
 	unsigned int expected;
 	unsigned int i;
 	unsigned int size;
 	
 	putsnonl("I: SDRAM test...");
-	
-	b = get_board_desc();
-	size = b->sdram_size*1024*1024/(4*div);
+
+	size = brd_desc->sdram_size*1024*1024/(4*div);
 	for(i=0;i<size;i++)
 		testbuf[i] = i;
 
@@ -123,7 +120,7 @@ static int memtest(unsigned int div)
 		}
 	}
 
-	printf("%u/%uMB tested OK\n", b->sdram_size/div, b->sdram_size);
+	printf("%u/%uMB tested OK\n", brd_desc->sdram_size/div, brd_desc->sdram_size);
 	return 1;
 }
 
@@ -511,14 +508,11 @@ static void crcbios()
 
 static void display_board()
 {
-	const struct board_desc *b;
-	
-	b = get_board_desc();
-	if(b == NULL) {
+	if(brd_desc == NULL) {
 		printf("E: Running on unknown board (ID=0x%08x), startup aborted.\n", CSR_SYSTEM_ID);
 		while(1);
 	}
-	printf("I: Running on %s\n", b->name);
+	printf("I: Running on %s\n", brd_desc->name);
 }
 
 static const char banner[] =
@@ -533,9 +527,13 @@ int main()
 {
 	char buffer[64];
 
+	brd_desc = get_board_desc();
+
 	/* Check for double baud rate */
-	if(CSR_GPIO_IN & GPIO_DIP2)
-		CSR_UART_DIVISOR = 100000000/230400/16; /* TODO: adjust to system clock */
+	if(brd_desc != NULL) {
+		if(CSR_GPIO_IN & GPIO_DIP2)
+			CSR_UART_DIVISOR = brd_desc->clk_frequency/230400/16;
+	}
 
 	/* Display a banner as soon as possible to show that the system is alive */
 	putsnonl(banner);
@@ -543,23 +541,26 @@ int main()
 	crcbios();
 	display_board();
 
-	if(plltest()) {
-		ddrinit();
-		flush_bridge_cache();
+	if(brd_desc->sdram_size > 0) {
+		if(plltest()) {
+			ddrinit();
+			flush_bridge_cache();
 
-		if(memtest(8)) {
-			if(test_user_abort()) {
-				serialboot(1);
-				if(CSR_GPIO_IN & GPIO_DIP1)
-					cardboot(1);
-				else
-					cardboot(0);
-				printf("E: No boot medium found\n");
-			}
+			if(memtest(8)) {
+				if(test_user_abort()) {
+					serialboot(1);
+					if(CSR_GPIO_IN & GPIO_DIP1)
+						cardboot(1);
+					else
+						cardboot(0);
+					printf("E: No boot medium found\n");
+				}
+			} else
+				printf("E: Aborted boot on memory error\n");
 		} else
-			printf("E: Aborted boot on memory error\n");
+			printf("E: Faulty SDRAM clocking\n");
 	} else
-		printf("E: Faulty SDRAM clocking\n");
+		printf("I: No SDRAM on this evaluation board, not booting\n");
 	
 	while(1) {
 		putsnonl("\e[1mBIOS>\e[0m ");
@@ -568,4 +569,3 @@ int main()
 	}
 	return 0;
 }
-
