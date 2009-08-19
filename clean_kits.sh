@@ -12,5 +12,9 @@ cd ..
 cd host
 make clean
 cd ../..
+
 rm -rf binkit
-rm -f binkit-ml401.tar.bz2
+rm -f milkymist_binkit_ml401.tar.bz2
+
+rm -rf dockit
+rm -f milkymist_dockit.tar.bz2

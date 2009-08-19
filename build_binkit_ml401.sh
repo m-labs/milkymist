@@ -73,8 +73,8 @@ echo "OK"
 
 # Make a tarball
 echo -n "Generating tarball..."
-rm -f binkit_ml401.tar.bz2
-tar cjf binkit_ml401.tar.bz2 binkit
+rm -f milkymist_binkit_ml401.tar.bz2
+tar cjf milkymist_binkit_ml401.tar.bz2 binkit
 echo "OK"
 
 echo ""
