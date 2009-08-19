@@ -215,7 +215,7 @@ static void answer_magic(int serialfd,
 
 		printf("[FLTERM] Setting kernel command line: '%s'.\n", cmdline);
 
-		len = strlen(cmdline);
+		len = strlen(cmdline)+1;
 		if(len > (254-4)) {
 			fprintf(stderr, "[FLTERM] Kernel command line too long, load aborted.\n");
 			close(initrdfd);

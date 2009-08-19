@@ -31,18 +31,28 @@ initial begin
 	#200 resetin = 1'b1;
 end
 
-wire [24:0] flash_adr;
+wire [21:0] flash_adr;
 reg [31:0] flash_d;
 reg [31:0] flash[0:32767];
 initial $readmemh("bios.rom", flash);
-always @(flash_adr) #110 flash_d = flash[flash_adr/2];
+always @(flash_adr) #110 flash_d = flash[flash_adr/4];
+
+reg [7:0] flash_d8;
+always @(flash_d) begin
+	case(flash_adr[1:0])
+		2'b00: flash_d8 = flash_d[31:24];
+		2'b01: flash_d8 = flash_d[23:16];
+		2'b10: flash_d8 = flash_d[15:8];
+		2'b11: flash_d8 = flash_d[7:0];
+	endcase
+end
 
 system system(
 	.clkin(sys_clk),
 	.resetin(resetin),
 
 	.flash_adr(flash_adr),
-	.flash_d(flash_d),
+	.flash_d(flash_d8),
 
 	.uart_rxd(),
 	.uart_txd()
