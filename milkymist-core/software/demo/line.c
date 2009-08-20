@@ -131,7 +131,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 			/* 2.0.12: Michael Schwartz: divide rather than multiply;
 			 * TBB: but watch out for /0!
 			 */
-			float ac = cosf (atan2f (dy, dx));
+			float ac = cosf(atan2f (dy, dx));
 			if(ac != 0) {
 				wid = thick / ac;
 			} else {
@@ -395,8 +395,62 @@ static void line_dashed(struct line_context *ctx, int x1, int y1, int x2, int y2
 	}
 }
 
+/* clip_1d function from GD */
+static int clip_1d(int *x0, int *y0, int *x1, int *y1, int mindim, int maxdim)
+{
+	float m; /* gradient of line */
+
+	if(*x0 < mindim) { /* start of line is left of window */
+		if (*x1 < mindim) /* as is the end, so the line never cuts the window */
+			return 0;
+		m = (*y1 - *y0) / (float) (*x1 - *x0); /* calculate the slope of the line */
+		/* adjust x0 to be on the left boundary (ie to be zero), and y0 to match */
+		*y0 -= m * (*x0 - mindim);
+		*x0 = mindim;
+		/* now, perhaps, adjust the far end of the line as well */
+		if(*x1 > maxdim) {
+			*y1 += m * (maxdim - *x1);
+			*x1 = maxdim;
+		}
+		return 1;
+	}
+	if(*x0 > maxdim) { /* start of line is right of window - complement of above */
+		if(*x1 > maxdim) /* as is the end, so the line misses the window */
+			return 0;
+		m = (*y1 - *y0) / (float) (*x1 - *x0); /* calculate the slope of the line */
+		*y0 += m * (maxdim - *x0); /* adjust so point is on the right boundary */
+		*x0 = maxdim;
+		/* now, perhaps, adjust the end of the line */
+		if(*x1 < mindim) {
+			*y1 -= m * (*x1 - mindim);
+			*x1 = mindim;
+		}
+		return 1;
+	}
+	/* the final case - the start of the line is inside the window */
+	if(*x1 > maxdim) { /* other end is outside to the right */
+		m = (*y1 - *y0) / (float) (*x1 - *x0); /* calculate the slope of the line */
+		*y1 += m * (maxdim - *x1);
+		*x1 = maxdim;
+		return 1;
+	}
+	if(*x1 < mindim) { /* other end is outside to the left */
+		m = (*y1 - *y0) / (float) (*x1 - *x0); /* calculate the slope of the line */
+		*y1 -= m * (*x1 - mindim);
+		*x1 = mindim;
+		return 1;
+	}
+	/* only get here if both points are inside the window */
+	return 1;
+}
+
+
 void line(struct line_context *ctx, int x1, int y1, int x2, int y2)
 {
+	if(clip_1d (&x1, &y1, &x2, &y2, 0, ctx->hres) == 0)
+		return;
+	if(clip_1d (&y1, &x1, &y2, &x2, 0, ctx->vres) == 0)
+		return;
 	if(ctx->dash_size != 0)
 		line_dashed(ctx, x1, y1, x2, y2);
 	else

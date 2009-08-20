@@ -159,9 +159,8 @@ static int wave_mode_5(struct wave_vertex *vertices)
 	float s1, s2;
 	float x0, y0;
 	float cos_rot, sin_rot;
-	int x, y;
 
-	nvertices = 256-64;
+	nvertices = 172-64;
 
 	cos_rot = cosf(bh_frame->time*0.3f);
 	sin_rot = sinf(bh_frame->time*0.3f);
@@ -172,16 +171,8 @@ static int wave_mode_5(struct wave_vertex *vertices)
 		x0 = 2.0*s1*s2;
 		y0 = s1*s1 - s2*s2;
 
-		x = (float)vga_hres*((x0*cos_rot - y0*sin_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_x);
-		y = (float)vga_vres*((x0*sin_rot + y0*cos_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_y);
-
-		if(x < 0) x = 0;
-		if(x >= vga_hres) x = vga_hres - 1;
-		if(y < 0) y = 0;
-		if(y >= vga_vres) y = vga_vres - 1;
-
-		vertices[i].x = x;
-		vertices[i].y = y;
+		vertices[i].x = (float)vga_hres*((x0*cos_rot - y0*sin_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_x);
+		vertices[i].y = (float)vga_vres*((x0*sin_rot + y0*cos_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_y);
 	}
 
 	return nvertices;

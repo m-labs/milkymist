@@ -20,8 +20,8 @@
 #define __WAVE_H
 
 struct wave_vertex {
-	unsigned int x;
-	unsigned int y;
+	int x;
+	int y;
 };
 
 struct wave_params {
