@@ -52,6 +52,7 @@ static int run_bottom_half;
 static unsigned int frames;
 static unsigned int fps;
 static unsigned int spam_counter;
+int spam_enabled;
 
 static struct tmu_vertex dst_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 
@@ -67,6 +68,7 @@ void rpipe_init()
 	frames = 0;
 	fps = 0;
 	spam_counter = 0;
+	spam_enabled = 0;
 
 	run_bottom_half = 0;
 
@@ -160,14 +162,14 @@ static int wave_mode_5(struct wave_vertex *vertices)
 	float x0, y0;
 	float cos_rot, sin_rot;
 
-	nvertices = 172-64;
+	nvertices = 128-64;
 
 	cos_rot = cosf(bh_frame->time*0.3f);
 	sin_rot = sinf(bh_frame->time*0.3f);
 
 	for(i=0;i<nvertices;i++) {
-		s1 = bh_frame->samples[4*i     ]/32768.0;
-		s2 = bh_frame->samples[4*i+64+1]/32768.0;
+		s1 = bh_frame->samples[8*i     ]/32768.0;
+		s2 = bh_frame->samples[8*i+64+1]/32768.0;
 		x0 = 2.0*s1*s2;
 		y0 = s1*s1 - s2*s2;
 
@@ -253,13 +255,15 @@ static void rpipe_draw_spam()
 
 	spam_counter++;
 	if(spam_counter > SPAM_PERIOD) {
-		dx = (vga_hres-SPAM_W)/2;
-		dy = vga_vres/2-SPAM_H;
+		if(spam_enabled) {
+			dx = (vga_hres-SPAM_W)/2;
+			dy = vga_vres/2-SPAM_H;
 
-		for(y=0;y<SPAM_H;y++)
-			for(x=0;x<SPAM_W;x++) {
-				if(spam_xpm[y+3][x] == SPAM_ON)
-					vga_backbuffer[vga_hres*(dy+y)+dx+x] = 0xffff;
+			for(y=0;y<SPAM_H;y++)
+				for(x=0;x<SPAM_W;x++) {
+					if(spam_xpm[y+3][x] == SPAM_ON)
+						vga_backbuffer[vga_hres*(dy+y)+dx+x] = 0xffff;
+			}
 		}
 
 		spam_counter = 0;

@@ -165,6 +165,15 @@ static void render(const char *filename)
 	ui_render_from_file(filename);
 }
 
+static void spam()
+{
+	spam_enabled = !spam_enabled;
+	if(spam_enabled)
+		printf("Advertising enabled\n");
+	else
+		printf("Advertising disabled\n");
+}
+
 static void stats()
 {
 	int hours, mins, secs;
@@ -191,6 +200,7 @@ static void help()
 	puts("ls         - list files on the memory card");
 	puts("render     - start rendering a preset");
 	puts("stop       - stop renderer");
+	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
 }
 
@@ -391,6 +401,7 @@ static void do_command(char *c)
 	else if(strcmp(token, "flush") == 0) flush_bridge_cache();
 	else if(strcmp(token, "render") == 0) render(get_token(&c));
 	else if(strcmp(token, "stop") == 0) ui_render_stop();
+	else if(strcmp(token, "spam") == 0) spam();
 	else if(strcmp(token, "stats") == 0) stats();
 	else if(strcmp(token, "help") == 0) help();
 

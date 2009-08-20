@@ -99,9 +99,10 @@ renderer.o: ../../software/include/hw/tmu.h parser_helper.h ast.h pfpu.h
 renderer.o: ../../software/include/hw/pfpu.h vga.h eval.h apipe.h renderer.h
 rpipe.o: ../../software/include/libc.h ../../software/include/console.h
 rpipe.o: ../../software/include/irq.h ../../software/include/system.h
-rpipe.o: ../../software/include/hw/interrupts.h renderer.h vga.h tmu.h
-rpipe.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
-rpipe.o: wave.h cpustats.h rpipe.h spam.xpm
+rpipe.o: ../../software/include/math.h ../../software/include/hw/interrupts.h
+rpipe.o: renderer.h vga.h tmu.h ../../software/include/hw/tmu.h
+rpipe.o: ../../software/include/hw/common.h wave.h cpustats.h rpipe.h
+rpipe.o: spam.xpm
 scanner.o: ../../software/include/libc.h ../../software/include/malloc.h
 scanner.o: scanner.h parser.h
 scheduler.o: ../../software/include/libc.h ../../software/include/console.h

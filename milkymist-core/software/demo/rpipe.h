@@ -44,6 +44,8 @@ struct rpipe_frame {
 	void *user; /* < for application use */
 };
 
+extern int spam_enabled;
+
 void rpipe_init();
 int rpipe_input(struct rpipe_frame *frame);
 void rpipe_service();
