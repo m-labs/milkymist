@@ -447,9 +447,9 @@ static int clip_1d(int *x0, int *y0, int *x1, int *y1, int mindim, int maxdim)
 
 void line(struct line_context *ctx, int x1, int y1, int x2, int y2)
 {
-	if(clip_1d (&x1, &y1, &x2, &y2, 0, ctx->hres) == 0)
+	if(clip_1d(&x1, &y1, &x2, &y2, 0, ctx->hres) == 0)
 		return;
-	if(clip_1d (&y1, &x1, &y2, &x2, 0, ctx->vres) == 0)
+	if(clip_1d(&y1, &x1, &y2, &x2, 0, ctx->vres) == 0)
 		return;
 	if(ctx->dash_size != 0)
 		line_dashed(ctx, x1, y1, x2, y2);

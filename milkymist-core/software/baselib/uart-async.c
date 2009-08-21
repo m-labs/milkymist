@@ -64,7 +64,9 @@ int readchar_nonblock()
 static char tx_buf[UART_RINGBUFFER_SIZE_TX];
 static unsigned int tx_produce;
 static unsigned int tx_consume;
-static int tx_cts;
+static volatile int tx_cts;
+
+static int force_sync;
 
 void uart_async_isr_tx()
 {
@@ -83,12 +85,18 @@ void writechar(char c)
 	/* Synchronization required because of CTS */
 	oldmask = irq_getmask();
 	irq_setmask(oldmask & (~IRQ_UARTTX));
-	if(tx_cts) {
-		tx_cts = 0;
+	if(force_sync) {
 		CSR_UART_RXTX = c;
+		while(CSR_UART_UCR & UART_TXBUSY);
+		CSR_UART_UCR = UART_TXACK;
 	} else {
-		tx_buf[tx_produce] = c;
-		tx_produce = (tx_produce + 1) & UART_RINGBUFFER_MASK_TX;
+		if(tx_cts) {
+			tx_cts = 0;
+			CSR_UART_RXTX = c;
+		} else {
+			tx_buf[tx_produce] = c;
+			tx_produce = (tx_produce + 1) & UART_RINGBUFFER_MASK_TX;
+		}
 	}
 	irq_setmask(oldmask);
 }
@@ -106,4 +114,10 @@ void uart_async_init()
 	mask = irq_getmask();
 	mask |= IRQ_UARTRX|IRQ_UARTTX;
 	irq_setmask(mask);
+}
+
+void uart_force_sync(int f)
+{
+	if(f) while(!tx_cts);
+	force_sync = f;
 }
