@@ -43,7 +43,7 @@ long __modsi3 (long numerator, long denominator)
 	if(denominator < 0)
 		denominator = -denominator;
 
-	res = numerator % denominator;
+	res = (unsigned int)numerator % (unsigned int)denominator;
 
 	if(sign)
 		return -res;
