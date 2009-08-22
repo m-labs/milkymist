@@ -21,7 +21,7 @@ set_option -retiming 1
 set_option -pipe 0
 set_option -disable_io_insertion 0
 
-set_option -include_path "../../../../cores/pfpu/rtl/"
+set_option -include_path "../../../../cores/pfpu/rtl/;../../rtl/"
 
 set_option -write_verilog false
 
