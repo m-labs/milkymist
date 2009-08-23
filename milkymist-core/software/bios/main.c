@@ -404,7 +404,7 @@ static void help()
 	puts("This is the Milkymist BIOS debug shell.");
 	puts("It is used for system development and maintainance, and not");
 	puts("for regular operation.\n");
-	puts("Available commands :");
+	puts("Available commands:");
 	puts("plltest    - print status of the SDRAM clocking PLLs");
 	puts("memtest    - extended SDRAM test");
 	puts("calibrate  - run DDR SDRAM calibration tool");

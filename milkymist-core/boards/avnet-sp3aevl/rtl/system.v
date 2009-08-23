@@ -391,17 +391,6 @@ lm32_top cpu(
 	.D_RTY_I(1'b0)
 );
 
-`ifdef HEAVY_DEBUG
-always @(posedge sys_clk) begin
-	if(cpudbus_cyc & cpudbus_stb) begin
-		$display("DBUS: adr:%x we:%b", cpudbus_adr, cpudbus_we);
-	end
-	if(cpuibus_cyc & cpuibus_stb & cpuibus_ack) begin
-		$display("IBUS: adr:%x dat:%x", cpuibus_adr, cpuibus_dat_r);
-	end
-end
-`endif
-
 //---------------------------------------------------------------------------
 // Boot ROM
 //---------------------------------------------------------------------------
@@ -430,11 +419,11 @@ assign flash_ce_n = 1'b0;
 // BRAM
 //---------------------------------------------------------------------------
 //
-// On this board, we have 32k of SRAM instead of 4k
+// On this board, we have 16k of SRAM instead of 4k
 // so that we have space for loading some programs.
 //
 bram #(
-	.adr_width(15)
+	.adr_width(14)
 ) bram (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
