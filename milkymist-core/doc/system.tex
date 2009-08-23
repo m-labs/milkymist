@@ -29,17 +29,29 @@ Open source components have been used as much as possible, and therefore a syste
 \end{itemize}
 
 \section{Supported boards}
-Currently, Milkymist only supports the Xilinx ML401 development board.
-
+\subsection{Xilinx ML401 development board}
 This board is equipped with a Virtex-4 FPGA (XC4VLX25). Milkymist can use the on-board peripherals of the ML401:
 \begin{itemize}
 \item VGA output (Analog Devices ADV7125KST50 3x8-bit D/A converter)
 \item AC'97 audio codec (National Semiconductor LM4550)
-\item DDRAM (two Infineon HYB25D256160BT-7 chips)
 \item CF card slot (through Xilinx SystemACE)
 \item RS232 port
 \item LCD screen (Lumex LCM-S01602DTR/M, HD44780-compatible)
+\item LEDs
 \item Buttons
+\item Parallel flash
+\item DDRAM (two Infineon HYB25D256160BT-7 chips)
+\end{itemize}
+
+\subsection{Avnet Spartan-3A evaluation kit}
+This board is equipped with a Spartan-3A XC3S400A chip. Because of the limited FPGA capacity and the small number of on-board peripherals, support for this board is only for educational and evaluation purposes.
+
+The following peripherals are supported:
+\begin{itemize}
+\item RS232 port
+\item LEDs
+\item Buttons
+\item Parallel flash
 \end{itemize}
 
 \section{Components and bus architecture}
