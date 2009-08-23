@@ -1,6 +1,6 @@
 setMode -bscan
 setCable -p auto
 identify
-assignfile -p 3 -file system.bit
-program -p 3
+assignfile -p 1 -file system.bit
+program -p 1
 quit

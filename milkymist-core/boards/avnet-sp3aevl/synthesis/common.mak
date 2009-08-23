@@ -8,9 +8,6 @@ usage: build/system-routed.xdl
 load: build/system.bit
 	cd build && impact -batch ../load.cmd
 
-flash: build/system.mcs
-	cd build && impact -batch ../flash.cmd
-
 build/system.ncd: build/system.ngd
 	cd build && map system.ngd
 
@@ -19,9 +16,6 @@ build/system-routed.ncd: build/system.ncd
 
 build/system.bit: build/system-routed.ncd
 	cd build && bitgen -w system-routed.ncd system.bit
-
-build/system.mcs: build/system.bit
-	cd build && promgen -w -u 0 system
 
 build/system-routed.xdl: build/system-routed.ncd
 	cd build && xdl -ncd2xdl system-routed.ncd system-routed.xdl
