@@ -2,7 +2,7 @@ SOURCES=tb_norflash8.v $(wildcard ../rtl/*.v)
 
 all: tb_norflash8
 
-sim: tb_norflash8
+isim: tb_norflash8
 	./tb_norflash8
 
 cversim: $(SOURCES)

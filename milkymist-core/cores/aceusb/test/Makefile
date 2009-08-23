@@ -2,7 +2,7 @@ SOURCES=tb_aceusb.v $(wildcard ../rtl/*.v)
 
 all: tb_aceusb
 
-sim: tb_aceusb
+isim: tb_aceusb
 	./tb_aceusb
 
 cversim: $(SOURCES)

@@ -18,7 +18,7 @@
 
 module norflash8 #(
 	parameter adr_width = 22,
-	parameter timing = 4'd13
+	parameter timing = 4'd12
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -36,7 +36,7 @@ module norflash8 #(
 reg [adr_width-1-2:0] flash_adr_msb;
 reg [1:0] flash_adr_lsb;
 
-assign flash_adr = {flash_adr_msb, flash_adr_lsb};
+assign flash_adr = {flash_adr_msb, flash_adr_lsb[1], ~flash_adr_lsb[0]};
 
 reg load;
 reg reset_flash_adr_lsb;

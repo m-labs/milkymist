@@ -23,6 +23,6 @@ bios.rom: ../../../software/bios/bios.bin
 	../../../tools/bin2hex ../../../software/bios/bios.bin bios.rom 32768
 
 clean:
-	rm -f verilog.log system
+	rm -f verilog.log bios.rom system
 
 .PHONY: clean cversim isim

@@ -27,18 +27,18 @@ initial sys_clk = 1'b0;
 always #5 sys_clk = ~sys_clk;
 
 initial begin
-	resetin = 1'b0;
-	#200 resetin = 1'b1;
+	resetin = 1'b1;
+	#200 resetin = 1'b0;
 end
 
 wire [21:0] flash_adr;
 reg [31:0] flash_d;
+reg [7:0] flash_d8;
 reg [31:0] flash[0:32767];
 initial $readmemh("bios.rom", flash);
-always @(flash_adr) #110 flash_d = flash[flash_adr/4];
-
-reg [7:0] flash_d8;
-always @(flash_d) begin
+always @(flash_adr) begin
+	#110;
+	flash_d = flash[flash_adr[21:2]];
 	case(flash_adr[1:0])
 		2'b00: flash_d8 = flash_d[31:24];
 		2'b01: flash_d8 = flash_d[23:16];

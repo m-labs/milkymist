@@ -46,12 +46,11 @@ module system(
 wire sys_clk;
 
 `ifndef SIMULATION
-wire dcm_o;
 DCM_SP #(
-	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
+	.CLKDV_DIVIDE(1.5), // 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
-	.CLKFX_DIVIDE(1),		// 1 to 32
-	.CLKFX_MULTIPLY(4),		// 2 to 32
+	.CLKFX_DIVIDE(1), // 1 to 32
+	.CLKFX_MULTIPLY(4), // 2 to 32
 
 	.CLKIN_DIVIDE_BY_2("FALSE"),
 	.CLKIN_PERIOD(62.5),
@@ -74,16 +73,12 @@ DCM_SP #(
 	.CLK2X180(),
 
 	.CLKDV(),
-	.CLKFX(dcm_o),
+	.CLKFX(sys_clk),
 	.CLKFX180(),
 	.LOCKED(),
 	.CLKFB(),
 	.CLKIN(clkin),
 	.RST(1'b0)
-);
-BUFG clkbuf(
-	.I(dcm_o),
-	.O(sys_clk)
 );
 `else
 assign sys_clk = clkin;
@@ -96,7 +91,7 @@ reg rst1;
 always @(posedge sys_clk) rst0 <= resetin;
 always @(posedge sys_clk) rst1 <= rst0;
 
-/* Debounce it (counter holds reset for 10.49ms),
+/* Debounce it
  * and generate power-on reset.
  */
 reg [19:0] rst_debounce;
@@ -104,11 +99,11 @@ reg sys_rst;
 initial rst_debounce <= 20'hFFFFF;
 initial sys_rst <= 1'b1;
 always @(posedge sys_clk) begin
-	if(~rst1) /* reset is active low */
+	if(rst1)
 		rst_debounce <= 20'hFFFFF;
-	else if(rst_debounce != 16'd0)
-		rst_debounce <= rst_debounce - 16'd1;
-	sys_rst <= rst_debounce != 16'd0;
+	else if(rst_debounce != 20'd0)
+		rst_debounce <= rst_debounce - 20'd1;
+	sys_rst <= rst_debounce != 20'd0;
 end
 
 /*
@@ -118,26 +113,22 @@ end
  * as soon as the system reset is released.
  * From datasheet, minimum reset pulse width is 100ns
  * and reset-to-read time is 150ns.
- * On the ML401, the reset is combined with the AC97
- * reset, which must be held for 1us.
- * Here we use a 7-bit counter that holds reset
- * for 1.28us and makes everybody happy.
  */
 
 reg [7:0] flash_rstcounter;
 initial flash_rstcounter <= 8'd0;
 always @(posedge sys_clk) begin
-	if(~rst1 & ~sys_rst) /* ~sys_rst is for debouncing */
+	if(~sys_rst)
 		flash_rstcounter <= 8'd0;
 	else if(~flash_rstcounter[7])
 		flash_rstcounter <= flash_rstcounter + 8'd1;
 end
 
-assign flash_reset_n = flash_rstcounter[7];
+assign flash_reset_n = ~flash_rstcounter[7];
 
 `else
 wire sys_rst;
-assign sys_rst = ~resetin;
+assign sys_rst = resetin;
 `endif
 
 //------------------------------------------------------------------
@@ -400,6 +391,17 @@ lm32_top cpu(
 	.D_RTY_I(1'b0)
 );
 
+`ifdef HEAVY_DEBUG
+always @(posedge sys_clk) begin
+	if(cpudbus_cyc & cpudbus_stb) begin
+		$display("DBUS: adr:%x we:%b", cpudbus_adr, cpudbus_we);
+	end
+	if(cpuibus_cyc & cpuibus_stb & cpuibus_ack) begin
+		$display("IBUS: adr:%x dat:%x", cpuibus_adr, cpuibus_dat_r);
+	end
+end
+`endif
+
 //---------------------------------------------------------------------------
 // Boot ROM
 //---------------------------------------------------------------------------
@@ -419,7 +421,7 @@ norflash8 #(
 	.flash_d(flash_d)
 );
 
-assign flash_byte_n = 1'b1;
+assign flash_byte_n = 1'b0;
 assign flash_oe_n = 1'b0;
 assign flash_we_n = 1'b1;
 assign flash_ce_n = 1'b0;
@@ -489,7 +491,7 @@ always @(posedge sys_clk) begin
 	if(~uart_txd)
 		txcounter <= {19{1'b1}};
 	else if(txcounter != 19'd0)
-		txcounter <= txcounter - 20'd1;
+		txcounter <= txcounter - 19'd1;
 	txled <= txcounter != 19'd0;
 end
 
