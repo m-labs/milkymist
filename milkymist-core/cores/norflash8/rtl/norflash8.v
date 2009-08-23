@@ -39,6 +39,7 @@ reg [1:0] flash_adr_lsb;
 assign flash_adr = {flash_adr_msb, flash_adr_lsb};
 
 reg load;
+reg reset_flash_adr_lsb;
 always @(posedge sys_clk) begin
 	/* Use IOB registers to prevent glitches on address lines */
 	if(wb_cyc_i & wb_stb_i) /* register only when needed to reduce EMI */
@@ -52,6 +53,8 @@ always @(posedge sys_clk) begin
 		endcase
 		flash_adr_lsb <= flash_adr_lsb + 2'd1;
 	end
+	if(reset_flash_adr_lsb)
+		flash_adr_lsb <= 2'd0;
 end
 
 /*
@@ -71,8 +74,8 @@ always @(posedge sys_clk) begin
 	end
 end
 
-reg state;
-reg next_state;
+reg [1:0] state;
+reg [1:0] next_state;
 always @(posedge sys_clk) begin
 	if(sys_rst)
 		state <= 1'b0;
@@ -82,25 +85,30 @@ end
 
 always @(*) begin
 	next_state = state;
+	reset_flash_adr_lsb = 1'b0;
 	counter_en = 1'b0;
 	load = 1'b0;
 	wb_ack_o = 1'b0;
 
 	case(state)
-		1'b0: begin
+		2'd0: begin
+			reset_flash_adr_lsb = 1'b1;
 			if(wb_cyc_i & wb_stb_i)
-				next_state = 1'b1;
+				next_state = 2'd1;
 		end
 
-		1'b1: begin
+		2'd1: begin
 			counter_en = 1'b1;
 			if(counter_done) begin
 				load = 1'b1;
-				if(flash_adr_lsb == 2'b11) begin
-					wb_ack_o = 1'b1;
-					next_state = 1'b0;
-				end
+				if(flash_adr_lsb == 2'b11)
+					next_state = 2'd2;
 			end
+		end
+
+		2'd2: begin
+			wb_ack_o = 1'b1;
+			next_state = 2'd0;
 		end
 	endcase
 end
