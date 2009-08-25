@@ -126,9 +126,9 @@ initial sys_rst <= 1'b1;
 always @(posedge sys_clk) begin
 	if(~rst1) /* reset is active low */
 		rst_debounce <= 20'hFFFFF;
-	else if(rst_debounce != 16'd0)
-		rst_debounce <= rst_debounce - 16'd1;
-	sys_rst <= rst_debounce != 16'd0;
+	else if(rst_debounce != 20'd0)
+		rst_debounce <= rst_debounce - 20'd1;
+	sys_rst <= rst_debounce != 20'd0;
 end
 
 /*
