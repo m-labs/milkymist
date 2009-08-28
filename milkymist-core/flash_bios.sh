@@ -8,6 +8,12 @@ BIOSDIR=$BASEDIR/software/bios
 
 echo "================================================================================"
 echo "Flashing Milkymist BIOS"
+if [ -z $NOSPLASH ] ; then
+	BIOSFILE=$BIOSDIR/bios_splash.bin
+else
+	BIOSFILE=$BIOSDIR/bios.bin
+	echo "Splash screen flashing disabled"
+fi
 echo ""
 echo "Board:    $BOARD"
 echo "Log file: $LOGFILE"
@@ -44,7 +50,7 @@ else
 fi
 
 echo -n "  Writing flash..."
-./flasher $BIOSDIR/bios.bin >> $LOGFILE 2>&1
+./flasher $BIOSFILE >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 	exit 1

@@ -1,9 +1,12 @@
-TARGETS=crc32 flterm bin2hex
+TARGETS=bin2hex crc32 flterm makeraw
 
 all: $(TARGETS)
 
 %: %.c
 	gcc -O2 -Wall -I../std -s -o $@ $<
+
+makeraw: makeraw.c
+	gcc -O2 -Wall -s -o $@ $< -lgd
 
 .PHONY: clean
 

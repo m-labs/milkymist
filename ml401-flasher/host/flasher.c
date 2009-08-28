@@ -301,21 +301,21 @@ int main(int argc, char *argv[])
 	
 	usleep(100*1000);
 	
-	printf("Erasing flash :\n");
+	printf("Erasing flash:\n");
 	/* Unprotect flash */
 	write_flash(0x00600060, 0);
 	write_flash(0x00d000d0, 0);
-	usleep(700*1000);
+	usleep(1000*1000);
 	
 	nsectors = (length+256*1024-1)/(256*1024);
 	for(i=0;i<nsectors;i++) {
 		printf("sector %d/%d\n", i+1, nsectors);
 		write_flash(0x00200020, i*64*1024);
 		write_flash(0x00d000d0, i*64*1024);
-		usleep(1000*1000);
+		usleep(2000*1000);
 	}
 	
-	printf("Programming flash - 16KB per '.' :\n");
+	printf("Programming flash - 16KB per '.':\n");
 	for(i=0;i<(length+3)/4;i++) {
 		write_flash(0x00400040, i);
 		write_flash(ENDIAN_CONV(buffer[i]), i);

@@ -32,6 +32,7 @@
 #include <hw/uart.h>
 
 #include "boot.h"
+#include "splash.h"
 
 static const struct board_desc *brd_desc;
 
@@ -189,16 +190,13 @@ static void calibrate()
 				}
 				break;
 			case 't':
-				cffat_init();
-				cffat_load("splash.raw", (char *)SDRAM_BASE, 16*1024*1024, NULL);
-				cffat_done();
-				flush_bridge_cache();
+				splash_display((void *)SDRAM_BASE);
 				break;
 		}
 	}
-	
+
 	CSR_VGA_RESET = VGA_RESET;
-	
+
 	printf("\n");
 }
 
@@ -547,6 +545,7 @@ int main()
 			flush_bridge_cache();
 
 			if(memtest(8)) {
+				splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-4)));
 				if(test_user_abort()) {
 					serialboot(1);
 					if(CSR_GPIO_IN & GPIO_DIP1)
@@ -561,7 +560,8 @@ int main()
 			printf("E: Faulty SDRAM clocking\n");
 	} else
 		printf("I: No SDRAM on this evaluation board, not booting\n");
-	
+
+	splash_showerr();
 	while(1) {
 		putsnonl("\e[1mBIOS>\e[0m ");
 		readstr(buffer, 64);

@@ -25,14 +25,16 @@ You will need:
  - GNU Make,
  - Bourne Again Shell (bash),
  - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
- - native GCC toolchain for the host-side tools,
  - LatticeMico32 toolchain for building the SoC software,
+For the host-side tools:
+ - native GCC toolchain,
+ - libGD,
 For the demonstration firmware:
  - RE2C,
  - Lemon parser generator,
  - Scilab.
 
-For better synthesis performance (optional):
+In case of Xst bugs or to improve timing/area (optional):
  - Synplify Pro (Synopsys),
  - or Precision RTL (Mentor Graphics).
 
@@ -43,8 +45,8 @@ synthesis directory.
 [> Scripts
 [>> Building
  /boards/xxx/synthesis/build/system.bit build_bitstream.sh FPGA bitstream.
- /software/bios/image.bin               build_bios.sh      BIOS image.
- /software/demo/image.bin               build_demo.sh      Demonstration firmware image.
+ /software/bios/bios_splash.bin         build_bios.sh      BIOS image.
+ /software/demo/boot.bin                build_demo.sh      Demonstration firmware image.
  /doc/xxx.pdf                           build_doc.sh       System-wide documentation.
  /cores/xxx/doc/xxx.pdf                 build_doc.sh       Core-specific documentation.
 

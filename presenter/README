@@ -13,13 +13,8 @@ For the latest releases, binary distributions and more:
 [> Generating the files for your talk
 To keep the firmware really simple, it takes raw 640x480 RGB565 pictures from the
 memory card (and just writes them to the framebuffer).
-You will therefore need to convert them using the supplied "makeraw" tool.
-
-To compile the tool:
-install libgd (http://www.libgd.org) and cmake (http://www.cmake.org),
-go to the "makeraw/build" directory and type:
-cmake ..
-make
+You will therefore need to convert them using the "makeraw" tool from the Milkymist
+tools (milkymist-core/tools).
 
 To convert a PDF file (from Beamer for example) to a set of 640x480 PNG files:
 gs -SDEVICE=png16m -r127x127 -sOutputFile=PR%04d.PNG -dNOPAUSE -dBATCH \
