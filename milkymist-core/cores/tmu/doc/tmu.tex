@@ -171,8 +171,50 @@ if(dx1 > dx2) {
 }
 \end{verbatimtab}
 
-The coordinates of vertices are (A.x,A.y), (B.x,B.y), (C.x,C.y) ; we assume that $A.y \leq B.y \leq C.y$ (the points are sorted first). \verb!dx1!, \verb!dx2!, \verb!dx3! are deltas used in interpolation ; in the TMU implementation a variant of the Bresenham algorithm is used to avoid approximation errors associated with fixed point or floating point formats. The \verb!horizline! procedure draws an horizontal segment between points (S.x,Y), (E.x,Y).
+The coordinates of vertices are (A.x,A.y), (B.x,B.y), (C.x,C.y); we assume that $A.y \leq B.y \leq C.y$ (the points are sorted first). \verb!dx1!, \verb!dx2!, \verb!dx3! are deltas used in interpolation; in the TMU implementation a variant of the Bresenham algorithm is used to avoid approximation errors associated with fixed point or floating point formats. The \verb!horizline! procedure draws an horizontal segment between points (S.x,Y), (E.x,Y).
 
 Using a similar algorithm, the TMU interpolates image coordinates at the same time it fills the triangle.
+
+\section{Bilinear filtering}
+\subsection{Principle}
+Bilinear filtering works by adding 5 extra bits of precision to the texture coordinates, which become fixed-point non-integer coordinates.
+
+Those bits are used to compute a weighted average of 4 neighbouring texture pixels when the interpolated texture coordinates are not integer.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=32mm]{bilinear.eps}
+\caption{Principle of bilinear texture filtering.}\label{fig:bilinear}
+\end{figure}
+
+\subsection{Pixel distribution in the cache}
+Because of performance requirements, all four texture pixels must be fetched in one clock cycle. It is therefore relevant to examine their distribution in the cache, to determine what cache architecture should be used.
+
+\subsubsection{General case, middle of texture}
+\begin{figure}[H]
+\centering
+\includegraphics[height=55mm]{dist_common.eps}
+\caption{Most common case, pixels 1 and 2 are in the same cache line.}\label{fig:case1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=55mm]{dist_12lines.eps}
+\caption{Pixels 1 and 2 are in different cache lines.}\label{fig:case2}
+\end{figure}
+
+\subsubsection{With clamping}
+When pixels go out of the texture, clamping can induce cases where two or four pixels merge.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=55mm]{dist_clamp.eps}
+\caption{Example of pixels merging because Y1=-1.}\label{fig:caseclamp}
+\end{figure}
+
+\subsubsection{With wrapping}
+
+\subsection{Chosen cache architecture}
+The case of Figure~\ref{fig:case1} is the most frequent one.
 
 \end{document}
