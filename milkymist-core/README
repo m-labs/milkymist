@@ -89,10 +89,15 @@ loading over the serial line (SFL boot) is provided in the /tools/ directory.
 
 
 [> Credits
-Most of the code is (c) Copyright 2007, 2008, 2009 Sebastien Bourdeauducq
-and licensed under eGPL (www.egpl.info). See the LICENSE file for more information.
-The software support library (software/baselib + software/include)
-is licensed under LGPLv3. See LICENSE.LGPL.
+Most of the work is (C) Copyright 2007, 2008, 2009 Sebastien Bourdeauducq.
+For this work:
+ - The hardware design is licensed under eGPL (www.egpl.info).
+   See the LICENSE file for more information.
+ - The software (software/*) is licensed under GPLv3.
+   See LICENSE.GPL.
+ - The documentation is licensed under FDL.
+   See LICENSE.FDL.
+
 Milkymist is a trademark of Sebastien Bourdeauducq.
 
 The SoC design uses:
@@ -102,7 +107,7 @@ The SoC design uses:
 The directory organization and build scripts were inspired by soc-lm32 by the German
 hackerspace Das Labor. Some of the UART and timer code also comes from there.
 
-The demonstration firmware includes:
+The software and software library include:
  - the SoftFloat IEC/IEEE Floating-point Arithmetic Package, Release 2,
    written by John R. Hauser. See source files headers for license.
  - fundamental functions library by Jesus Calvino-Fraga. See the LICENSE.LGPL file.
