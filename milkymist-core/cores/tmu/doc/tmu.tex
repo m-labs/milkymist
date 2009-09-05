@@ -271,8 +271,21 @@ In the equations above:
 \item csize is the total number of pixels the cache can hold. It is equal to the cache size in bytes (not counting the tag memory) divided by 2.
 \end{itemize}
 
+\subsubsection{Chosen architecture}
+The block diagram of the cache architecture is given in Figure~\ref{fig:carch}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=95mm]{carch.eps}
+\caption{TMU cache architecture for bilinear filtering.}\label{fig:carch}
+\end{figure}
+
+Because cache conflicts can be easily be avoided by choosing the texture resolution carefully, they are not handled by this architecture. \textbf{Having a cache conflict results in a lockup of the cache controller}, that requires a reset of the core.
+
+The four-way cache can be efficently implemented on FPGA targets by using two dual-port block RAMs.
+
 \subsubsection{Summary}
-When using the texture mapping unit, one must make sure that:
+In order to avoid cache conflicts which lock up the core, one must make sure that:
 \begin{equation*}
 \text{hres} \not \equiv 0 \pmod{\text{csize}}
 \end{equation*}
