@@ -213,6 +213,25 @@ When pixels go out of the texture, clamping can induce cases where two or four p
 \end{figure}
 
 \subsubsection{With wrapping}
+Wrapping can cause pixels split across the texture. This can happen horizontally, vertically or both.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=55mm]{dist_wrap1.eps}
+\caption{Vertical wrapping.}\label{fig:casewrap1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=55mm]{dist_wrap2.eps}
+\caption{Horizontal wrapping.}\label{fig:casewrap2}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=55mm]{dist_wrap3.eps}
+\caption{Wrapping in both directions.}\label{fig:casewrap3}
+\end{figure}
 
 \subsection{Chosen cache architecture}
 The case of Figure~\ref{fig:case1} is the most frequent one.
