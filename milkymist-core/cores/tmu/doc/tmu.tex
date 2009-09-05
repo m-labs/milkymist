@@ -233,7 +233,56 @@ Wrapping can cause pixels split across the texture. This can happen horizontally
 \caption{Wrapping in both directions.}\label{fig:casewrap3}
 \end{figure}
 
-\subsection{Chosen cache architecture}
-The case of Figure~\ref{fig:case1} is the most frequent one.
+\subsection{Cache architecture}
+\subsubsection{Design options}
+We have two options for designing the cache:
+\begin{itemize}
+\item four separate caches (one for pixel 1, one for pixel 2, etc.)
+\item a shared cache capable of looking up 4 pixels at a time
+\end{itemize}
+
+Misses between the ways for pixels 1, 2, 3 and 4 are likely to be correlated, so a shared cache architecture is chosen to minimize memory bandwidth.
+
+\subsubsection{Avoiding cache conflicts}
+There could be replacement conflicts that have, at least, a detrimental impact of performance.
+
+Such conflicts happen when:
+\begin{itemize}
+\item (Figure~\ref{fig:case1}) lines A and B collide. This happens when:
+\begin{equation*}
+\text{hres} \equiv 0 \pmod{\text{csize}}
+\end{equation*}
+\item (Figure~\ref{fig:case2}) lines A and B collide or lines C and D collide. This does not happen unless the cache only contains one line, which is not a practical case.
+\item (Figure~\ref{fig:case2}) lines A and C or lines B and D collide. This is the same case as for Figure~\ref{fig:case1}.
+\item (Figure~\ref{fig:casewrap1}) lines A and B collide. This happens when:
+\begin{equation*}
+\text{hres}\cdot(\text{vres}-1) \equiv 0 \pmod{\text{csize}}
+\end{equation*}
+\item (Figure~\ref{fig:casewrap2}) lines A and B or lines B and C collide. This happens when:
+\begin{equation*}
+\text{hres}-1 \equiv 0 \pmod{\text{csize}}
+\end{equation*}
+\end{itemize}
+
+In the equations above:
+\begin{itemize}
+\item hres is the horizontal resolution in pixels
+\item vres is the vertical resolution in pixels
+\item csize is the total number of pixels the cache can hold. It is equal to the cache size in bytes (not counting the tag memory) divided by 2.
+\end{itemize}
+
+\subsubsection{Summary}
+When using the texture mapping unit, one must make sure that:
+\begin{equation*}
+\text{hres} \not \equiv 0 \pmod{\text{csize}}
+\end{equation*}
+Additionally, if texture wrapping is enabled, one must also make sure that:
+\begin{equation*}
+\text{hres}\cdot(\text{vres}-1) \not \equiv 0 \pmod{\text{csize}}
+\end{equation*}
+\begin{equation*}
+\text{hres}-1 \not \equiv 0 \pmod{\text{csize}}
+\end{equation*}
+
 
 \end{document}
