@@ -1,0 +1,34 @@
+BOARD_DIR=../rtl
+CORES_DIR=../../../cores
+
+include ../sources.mak
+SRC=$(BOARD_SRC) $(CORES_SRC)
+
+all: build/system.bit
+
+build/system.ucf: common.ucf synplify.ucf
+	cat common.ucf synplify.ucf > build/system.ucf
+
+build/loadsources.tcl: $(SRC)
+	rm -f build/loadsources.tcl
+	for i in `echo $^`; do \
+	    echo "add_file -verilog -lib work \"../$$i\"" >> build/loadsources.tcl; \
+	done
+
+build/system.sdc: build/system.ucf
+	cd build && ucf2sdc -osdc system.sdc -iucf system.ucf
+
+build/synplicity.ucf: build/system.edf
+
+# YES ! Synplify is dirty enough to put all its bloated crapware in the script
+# directory rather than in the current directory. Work around this.
+build/synplify.prj: synplify.prj
+	cp synplify.prj build/synplify.prj
+
+build/system.edf: build/loadsources.tcl build/synplify.prj build/system.sdc
+	cd build && synplify_pro -batch synplify.prj
+
+build/system.ngd: build/system.edf build/synplicity.ucf
+	cd build && ngdbuild -uc synplicity.ucf system.edf
+
+include common.mak
