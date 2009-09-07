@@ -24,68 +24,73 @@
  */
 
 module hpdmc_oddr4 #(
-	parameter DDR_CLK_EDGE = "SAME_EDGE",
+	parameter DDR_ALIGNMENT = "C0",
 	parameter INIT = 1'b0,
 	parameter SRTYPE = "SYNC"
 ) (
 	output [3:0] Q,
-	input C,
+	input C0,
+	input C1,
 	input CE,
+	input [3:0] D0,
 	input [3:0] D1,
-	input [3:0] D2,
 	input R,
 	input S
 );
 
-ODDR #(
-	.DDR_CLK_EDGE(DDR_CLK_EDGE),
+ODDR2 #(
+	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT(INIT),
 	.SRTYPE(SRTYPE)
 ) oddr0 (
 	.Q(Q[0]),
-	.C(C),
+	.C0(C0),
+	.C1(C1),
 	.CE(CE),
+	.D0(D0[0]),
 	.D1(D1[0]),
-	.D2(D2[0]),
 	.R(R),
 	.S(S)
 );
-ODDR #(
-	.DDR_CLK_EDGE(DDR_CLK_EDGE),
+ODDR2 #(
+	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT(INIT),
 	.SRTYPE(SRTYPE)
 ) oddr1 (
 	.Q(Q[1]),
-	.C(C),
+	.C0(C0),
+	.C1(C1),
 	.CE(CE),
+	.D0(D0[1]),
 	.D1(D1[1]),
-	.D2(D2[1]),
 	.R(R),
 	.S(S)
 );
-ODDR #(
-	.DDR_CLK_EDGE(DDR_CLK_EDGE),
+ODDR2 #(
+	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT(INIT),
 	.SRTYPE(SRTYPE)
 ) oddr2 (
 	.Q(Q[2]),
-	.C(C),
+	.C0(C0),
+	.C1(C1),
 	.CE(CE),
+	.D0(D0[2]),
 	.D1(D1[2]),
-	.D2(D2[2]),
 	.R(R),
 	.S(S)
 );
-ODDR #(
-	.DDR_CLK_EDGE(DDR_CLK_EDGE),
+ODDR2 #(
+	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT(INIT),
 	.SRTYPE(SRTYPE)
 ) oddr3 (
 	.Q(Q[3]),
-	.C(C),
+	.C0(C0),
+	.C1(C1),
 	.CE(CE),
+	.D0(D0[3]),
 	.D1(D1[3]),
-	.D2(D2[3]),
 	.R(R),
 	.S(S)
 );

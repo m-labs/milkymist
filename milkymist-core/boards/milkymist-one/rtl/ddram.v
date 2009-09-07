@@ -164,6 +164,7 @@ hpdmc #(
 	.sdram_columndepth(`SDRAM_COLUMNDEPTH)
 ) hpdmc (
 	.sys_clk(sys_clk),
+	.sys_clk_n(~sys_clk),
 	.dqs_clk(dqs_clk),
 	.sys_rst(sys_rst),
 

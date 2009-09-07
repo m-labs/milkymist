@@ -30,6 +30,7 @@ module hpdmc #(
 	parameter sdram_columndepth = 9
 ) (
 	input sys_clk,
+	input sys_clk_n,
 	/*
 	 * Clock used to generate DQS.
 	 * Typically sys_clk phased out by 90 degrees,
@@ -270,6 +271,7 @@ hpdmc_datactl datactl(
 /* Data path */
 hpdmc_ddrio ddrio(
 	.sys_clk(sys_clk),
+	.sys_clk_n(sys_clk_n),
 	.dqs_clk(dqs_clk),
 	
 	.direction(direction),

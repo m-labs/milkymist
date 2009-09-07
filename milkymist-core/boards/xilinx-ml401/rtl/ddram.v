@@ -164,6 +164,7 @@ hpdmc #(
 	.sdram_columndepth(`SDRAM_COLUMNDEPTH)
 ) hpdmc (
 	.sys_clk(sys_clk),
+	.sys_clk_n(1'b0), /* < not needed on Virtex-4 */
 	.dqs_clk(dqs_clk),
 	.sys_rst(sys_rst),
 
