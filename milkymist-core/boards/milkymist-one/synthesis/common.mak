@@ -12,10 +12,10 @@ flash: build/system.mcs
 	cd build && impact -batch ../flash.cmd
 
 build/system.ncd: build/system.ngd
-	cd build && map system.ngd
+	cd build && map -w system.ngd
 
 build/system-routed.ncd: build/system.ncd
-	cd build && par -ol high -xe n -w system.ncd system-routed.ncd
+	cd build && par -ol high -w system.ncd system-routed.ncd
 
 build/system.bit: build/system-routed.ncd
 	cd build && bitgen -w system-routed.ncd system.bit

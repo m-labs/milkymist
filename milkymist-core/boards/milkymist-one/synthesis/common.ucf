@@ -9,24 +9,28 @@ TIMESPEC "TSclkin" = PERIOD "clkin" 10 ns HIGH 50% INPUT_JITTER 100 ps;
 
 # ==== UART ====
 
-# ==== Push buttons ====
+# ==== SD card ====
 
-# ==== Push button LEDs ====
+# ==== DDR SDRAM ====
 
 # ==== LEDs ====
 
 # ==== DIP switches ====
 
-# ==== Character LCD ====
-
-# ==== DDR SDRAM ====
-
 # ==== VGA output ====
-
-# ==== SystemACE/USB ====
-NET "ace_clkin" TNM_NET = "ace_clkin";
-TIMESPEC "TSace" = PERIOD "ace_clkin" 30 ns HIGH 50% INPUT_JITTER 1 ns;
 
 # ==== AC97 ====
 NET "ac97_clk" TNM_NET = "clkac97";
 TIMESPEC "TSclkac97" = PERIOD "clkac97" 80 HIGH 50%;
+
+# ==== ISP1362 USB ====
+
+# ==== Ethernet ====
+
+# ==== Video input ====
+
+# ==== DMX512 ====
+
+# ==== MIDI ====
+
+# ==== IR ====

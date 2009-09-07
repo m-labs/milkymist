@@ -34,7 +34,16 @@ static const struct board_desc boards[2] = {
 		.name = "Avnet Spartan-3A evaluation kit",
 		.clk_frequency = 64000000,
 		.sdram_size = 0
-	}
+	},
+	{
+		.id = 0x4D4F4E45, /* MONE */
+		.name = "Milkymist One",
+		.clk_frequency = 100000000,
+		.sdram_size = 64,
+		.ddr_clkphase = 0,
+		.ddr_idelay = 0,
+		.ddr_dqsdelay = 244
+	},
 };
 
 const struct board_desc *get_board_desc_id(unsigned int id)

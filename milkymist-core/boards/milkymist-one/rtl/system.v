@@ -23,8 +23,8 @@ module system(
 	input resetin,
 	
 	// Boot ROM
-	output [24:0] flash_adr,
-	input [31:0] flash_d,
+	output [20:0] flash_adr,
+	input [7:0] flash_d,
 	output flash_byte_n,
 	output flash_oe_n,
 	output flash_we_n,
@@ -35,10 +35,12 @@ module system(
 	input uart_rxd,
 	output uart_txd,
 
+	// SD card
+	// TODO
+
 	// DDR SDRAM
 	output sdram_clk_p,
 	output sdram_clk_n,
-	input sdram_clk_fb,
 	output sdram_cke,
 	output sdram_cs_n,
 	output sdram_we_n,
@@ -51,15 +53,8 @@ module system(
 	inout [3:0] sdram_dqs,
 	
 	// GPIO
-	input [4:0] btn,     // 5
-	output [4:0] btnled, //        5
-	output [3:0] led,    //        2 (2 LEDs for UART activity)
-	input [7:0] dipsw,   // 8
-	output lcd_e,        //        1
-	output lcd_rs,       //        1
-	output lcd_rw,       //        1
-	output [3:0] lcd_d,  //        4
-	                     // 13     14
+	output [3:0] led,    // 2 GPIO OUT (2 LEDs for UART activity)
+	input [3:0] dipsw,   // 4 GPIO IN
 
 	// VGA
 	output vga_psave_n,
@@ -72,23 +67,24 @@ module system(
 	output [7:0] vga_b,
 	output vga_clkout,
 	
-	// SystemACE/USB
-	output [6:0] aceusb_a,
-	inout [15:0] aceusb_d,
-	output aceusb_oe_n,
-	output aceusb_we_n,
-	input ace_clkin,
-	output ace_mpce_n,
-	input ace_mpirq,
-	output usb_cs_n,
-	output usb_hpi_reset_n,
-	input usb_hpi_int,
-	
 	// AC97
 	input ac97_clk,
 	input ac97_sin,
 	output ac97_sout,
 	output ac97_sync
+
+	// TODO
+	// ISP1362
+
+	// Ethernet
+
+	// Video Input
+
+	// DMX512
+
+	// MIDI
+
+	// IR
 );
 
 //------------------------------------------------------------------
@@ -98,6 +94,9 @@ wire sys_clk;
 wire sys_clk_n;
 
 `ifndef SIMULATION
+wire sys_clk_dcm;
+wire sys_clk_n_dcm;
+
 DCM_SP #(
 	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
@@ -115,9 +114,9 @@ DCM_SP #(
 	.PHASE_SHIFT(0),
 	.STARTUP_WAIT("TRUE")
 ) clkgen_sys (
-	.CLK0(sys_clk),
+	.CLK0(sys_clk_dcm),
 	.CLK90(),
-	.CLK180(sys_clk_n),
+	.CLK180(sys_clk_n_dcm),
 	.CLK270(),
 
 	.CLK2X(),
@@ -129,7 +128,16 @@ DCM_SP #(
 	.LOCKED(),
 	.CLKFB(sys_clk),
 	.CLKIN(clkin),
-	.RST(1'b0)
+	.RST(1'b0),
+	.PSEN(1'b0)
+);
+AUTOBUF b1(
+	.I(sys_clk_dcm),
+	.O(sys_clk)
+);
+AUTOBUF b2(
+	.I(sys_clk_n_dcm),
+	.O(sys_clk_n)
 );
 `else
 assign sys_clk = clkin;
@@ -165,8 +173,7 @@ end
  * as soon as the system reset is released.
  * From datasheet, minimum reset pulse width is 100ns
  * and reset-to-read time is 150ns.
- * On the ML401, the reset is combined with the AC97
- * reset, which must be held for 1us.
+ * The reset is combined with the AC97 reset, which must be held for 1us.
  * Here we use a 7-bit counter that holds reset
  * for 1.28us and makes everybody happy.
  */
@@ -242,7 +249,7 @@ wire [31:0]	brg_adr,
 		norflash_adr,
 		bram_adr,
 		csrbrg_adr,
-		aceusb_adr;
+		isp1362_adr;
 
 wire [2:0]	brg_cti,
 		bram_cti;
@@ -254,8 +261,8 @@ wire [31:0]	brg_dat_r,
 		bram_dat_w,
 		csrbrg_dat_r,
 		csrbrg_dat_w,
-		aceusb_dat_r,
-		aceusb_dat_w;
+		isp1362_dat_r,
+		isp1362_dat_w;
 
 wire [3:0]	brg_sel,
 		bram_sel;
@@ -263,25 +270,25 @@ wire [3:0]	brg_sel,
 wire		brg_we,
 		bram_we,
 		csrbrg_we,
-		aceusb_we;
+		isp1362_we;
 
 wire		brg_cyc,
 		norflash_cyc,
 		bram_cyc,
 		csrbrg_cyc,
-		aceusb_cyc;
+		isp1362_cyc;
 
 wire		brg_stb,
 		norflash_stb,
 		bram_stb,
 		csrbrg_stb,
-		aceusb_stb;
+		isp1362_stb;
 
 wire		brg_ack,
 		norflash_ack,
 		bram_ack,
 		csrbrg_ack,
-		aceusb_ack;
+		isp1362_ack;
 
 //---------------------------------------------------------------------------
 // Wishbone switch
@@ -292,7 +299,7 @@ conbus #(
 	.s1_addr(3'b001),	// bram		0x20000000
 	.s2_addr(3'b010),	// FML bridge	0x40000000
 	.s3_addr(3'b100),	// CSR bridge	0x80000000
-	.s4_addr(3'b101)	// aceusb	0xa0000000
+	.s4_addr(3'b101)	// isp1362	0xa0000000
 ) conbus (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -383,13 +390,13 @@ conbus #(
 	.s3_stb_o(csrbrg_stb),
 	.s3_ack_i(csrbrg_ack),
 	// Slave 4
-	.s4_dat_i(aceusb_dat_r),
-	.s4_dat_o(aceusb_dat_w),
-	.s4_adr_o(aceusb_adr),
-	.s4_we_o(aceusb_we),
-	.s4_cyc_o(aceusb_cyc),
-	.s4_stb_o(aceusb_stb),
-	.s4_ack_i(aceusb_ack)
+	.s4_dat_i(isp1362_dat_r),
+	.s4_dat_o(isp1362_dat_w),
+	.s4_adr_o(isp1362_adr),
+	.s4_we_o(isp1362_we),
+	.s4_cyc_o(isp1362_cyc),
+	.s4_stb_o(isp1362_stb),
+	.s4_ack_i(isp1362_ack)
 );
 
 //------------------------------------------------------------------
@@ -629,7 +636,7 @@ lm32_top cpu(
 //---------------------------------------------------------------------------
 // Boot ROM
 //---------------------------------------------------------------------------
-norflash32 #(
+norflash8 #(
 	.adr_width(21)
 ) norflash (
 	.sys_clk(sys_clk),
@@ -641,15 +648,12 @@ norflash32 #(
 	.wb_cyc_i(norflash_cyc),
 	.wb_ack_o(norflash_ack),
 	
-	.flash_adr(flash_adr[21:1]),
+	.flash_adr(flash_adr),
 	.flash_d(flash_d)
 
 );
 
-assign flash_adr[0] = 1'b0;
-assign flash_adr[24:22] = 3'b000;
-
-assign flash_byte_n = 1'b1;
+assign flash_byte_n = 1'b0;
 assign flash_oe_n = 1'b0;
 assign flash_we_n = 1'b1;
 assign flash_ce = 1'b1;
@@ -729,9 +733,9 @@ wire [13:0] gpio_outputs;
 
 sysctl #(
 	.csr_addr(4'h1),
-	.ninputs(13),
-	.noutputs(14),
-	.systemid(32'h58343031) /* X401 */
+	.ninputs(4),
+	.noutputs(2),
+	.systemid(32'h4D4F4E45) /* MONE */
 ) sysctl (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -745,57 +749,30 @@ sysctl #(
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_sysctl),
 
-	.gpio_inputs({dipsw, btn}),
-	.gpio_outputs(gpio_outputs)
+	.gpio_inputs(dipsw),
+	.gpio_outputs(led[3:2]) /* LED0 and LED1 are used as TX/RX indicators. */
 );
 
-/* LED0 and LED1 are used as TX/RX indicators. */
-
-assign led[2] = gpio_outputs[0];
-assign led[3] = gpio_outputs[1];
-assign btnled = gpio_outputs[6:2];
-assign lcd_e = gpio_outputs[7];
-assign lcd_rs = gpio_outputs[8];
-assign lcd_rw = gpio_outputs[9];
-assign lcd_d = gpio_outputs[13:10];
-
 //---------------------------------------------------------------------------
-// SystemACE/USB interface
+// ISP1362 USB interface
 //---------------------------------------------------------------------------
-`ifdef ENABLE_ACEUSB
-aceusb aceusb(
+`ifdef ENABLE_ISP1362
+isp1362 isp1362(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 	
-	.wb_cyc_i(aceusb_cyc),
-	.wb_stb_i(aceusb_stb),
-	.wb_ack_o(aceusb_ack),
-	.wb_adr_i(aceusb_adr),
-	.wb_dat_i(aceusb_dat_w),
-	.wb_dat_o(aceusb_dat_r),
-	.wb_we_i(aceusb_we),
+	.wb_cyc_i(isp1362_cyc),
+	.wb_stb_i(isp1362_stb),
+	.wb_ack_o(isp1362_ack),
+	.wb_adr_i(isp1362_adr),
+	.wb_dat_i(isp1362_dat_w),
+	.wb_dat_o(isp1362_dat_r),
+	.wb_we_i(isp1362_we),
 	
-	.aceusb_a(aceusb_a),
-	.aceusb_d(aceusb_d),
-	.aceusb_oe_n(aceusb_oe_n),
-	.aceusb_we_n(aceusb_we_n),
-	.ace_clkin(ace_clkin),
-	.ace_mpce_n(ace_mpce_n),
-	.ace_mpirq(ace_mpirq),
-	.usb_cs_n(usb_cs_n),
-	.usb_hpi_reset_n(usb_hpi_reset_n),
-	.usb_hpi_int(usb_hpi_int)
 );
 `else
-assign aceusb_a = 7'd0;
-assign aceusb_d = 16'bz;
-assign aceusb_oe_n = 1'b1;
-assign aceusb_we_n = 1'b1;
-assign ace_mpce_n = 1'b0;
-assign usb_cs_n = 1'b1;
-assign usb_hpi_reset_n = 1'b1;
-assign aceusb_ack = aceusb_cyc & aceusb_stb;
-assign aceusb_dat_r = 32'habadface;
+assign isp1362_ack = isp1362_cyc & isp1362_stb;
+assign isp1362_dat_r = 32'habadface;
 `endif
 
 //---------------------------------------------------------------------------
@@ -823,7 +800,6 @@ ddram #(
 	
 	.sdram_clk_p(sdram_clk_p),
 	.sdram_clk_n(sdram_clk_n),
-	.sdram_clk_fb(sdram_clk_fb),
 	.sdram_cke(sdram_cke),
 	.sdram_cs_n(sdram_cs_n),
 	.sdram_we_n(sdram_we_n),
@@ -839,6 +815,7 @@ ddram #(
 //---------------------------------------------------------------------------
 // VGA
 //---------------------------------------------------------------------------
+`ifdef ENABLE_VGA
 vga #(
 	.csr_addr(4'h3),
 	.fml_depth(`SDRAM_DEPTH)
@@ -866,17 +843,36 @@ vga #(
 	.vga_b(vga_b),
 	.vga_clkout(vga_clkout)
 );
+`else
+assign csr_dr_vga = 32'd0;
+assign fml_vga_adr = {`SDRAM_DEPTH{1'bx}};
+assign fml_vga_stb = 1'b0;
+assign vga_psave_n = 1'b0;
+assign vga_hsync_n = 1'b0;
+assign vga_vsync_n = 1'b0;
+assign vga_sync_n = 1'b0;
+assign vga_blank_n = 1'b0;
+assign vga_r = 8'd0;
+assign vga_g = 8'd0;
+assign vga_b = 8'd0;
+assign vga_clkout = 1'b0;
+`endif
 
 //---------------------------------------------------------------------------
 // AC97
 //---------------------------------------------------------------------------
 `ifdef ENABLE_AC97
+wire ac97_clk_b;
+AUTOBUF b_ac97(
+	.I(ac97_clk),
+	.O(ac97_clk_b)
+);
 ac97 #(
 	.csr_addr(4'h4)
 ) ac97 (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	.ac97_clk(ac97_clk),
+	.ac97_clk(ac97_clk_b),
 	.ac97_rst_n(ac97_rst_n),
 	
 	.ac97_sin(ac97_sin),

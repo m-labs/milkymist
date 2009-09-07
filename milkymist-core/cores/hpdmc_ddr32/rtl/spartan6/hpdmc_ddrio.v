@@ -85,7 +85,7 @@ hpdmc_oddr4 oddr_dqm(
 /*******/
 
 wire [3:0] sdram_dqs_out;
-assign sdram_dqs = direction ? {4{sdram_dqs_out}} : 4'hz;
+assign sdram_dqs = direction ? sdram_dqs_out : 4'hz;
 
 hpdmc_oddr4 oddr_dqs(
 	.Q(sdram_dqs_out),

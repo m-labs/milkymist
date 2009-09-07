@@ -23,11 +23,13 @@
  * able to cut down synthesis times.
  */
 
-`define ENABLE_ACEUSB
-`define ENABLE_AC97
-`define ENABLE_PFPU
+//`define ENABLE_ISP1362
+//`define ENABLE_CFCARD
+//`define ENABLE_AC97
+//`define ENABLE_VGA
+//`define ENABLE_PFPU
 /*
- * FIXME: enabling the TMU causes Xst 11.2 to fail with
+ * FIXME: enabling the TMU causes Xst 11.2 with SP6 to fail with
  * "ERROR:Xst:1706 - Unit <system>:
  * port <m1_di<10>> of logic node <fmlarb/Mmux_s_do2> has no source"
  * repeated for other signals in m1_di and fmlarb/Mmux_s_do.

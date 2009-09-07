@@ -49,13 +49,69 @@ module vga #(
 	output vga_clkout
 );
 
+wire vga_clk_dcm;
+wire vga_clk_n_dcm;
 wire vga_clk;
+wire vga_clk_n;
 
-reg [1:0] fcounter;
-always @(posedge sys_clk) fcounter <= fcounter + 2'd1;
-assign vga_clk = fcounter[1];
+DCM_SP #(
+	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
-assign vga_clkout = vga_clk;
+	.CLKFX_DIVIDE(8),		// 1 to 32
+	.CLKFX_MULTIPLY(2),		// 2 to 32
+
+	.CLKIN_DIVIDE_BY_2("FALSE"),
+	.CLKIN_PERIOD(`CLOCK_PERIOD),
+	.CLKOUT_PHASE_SHIFT("VARIABLE"),
+	.CLK_FEEDBACK("1X"),
+	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
+	.DFS_FREQUENCY_MODE("LOW"),
+	.DLL_FREQUENCY_MODE("LOW"),
+	.DUTY_CYCLE_CORRECTION("TRUE"),
+	.PHASE_SHIFT(0),
+	.STARTUP_WAIT("FALSE")
+) clkgen_dqs (
+	.CLK0(),
+	.CLK90(),
+	.CLK180(),
+	.CLK270(),
+
+	.CLK2X(),
+	.CLK2X180(),
+
+	.CLKDV(),
+	.CLKFX(vga_clk_dcm),
+	.CLKFX180(vga_clk_n_dcm),
+	.LOCKED(),
+	.CLKFB(vga_clk),
+	.CLKIN(sys_clk),
+	.RST(sys_rst),
+
+	.PSEN(1'b0)
+);
+AUTOBUF b_p(
+	.I(vga_clk_dcm),
+	.O(vga_clk)
+);
+AUTOBUF b_n(
+	.I(vga_clk_n_dcm),
+	.O(vga_clk_n)
+);
+
+ODDR2 #(
+	.DDR_ALIGNMENT("NONE"),
+	.INIT(1'b0),
+	.SRTYPE("SYNC")
+) clock_forward (
+	.Q(vga_clkout),
+	.C0(vga_clk),
+	.C1(vga_clk_n),
+	.CE(1'b1),
+	.D0(1'b1),
+	.D1(1'b0),
+	.R(1'b0),
+	.S(1'b0)
+);
 
 vgafb #(
 	.csr_addr(csr_addr),

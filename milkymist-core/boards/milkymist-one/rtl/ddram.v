@@ -43,7 +43,6 @@ module ddram #(
 	/* DDRAM pads */
 	output sdram_clk_p,
 	output sdram_clk_n,
-	input sdram_clk_fb,
 	output sdram_cke,
 	output sdram_cs_n,
 	output sdram_we_n,
@@ -57,6 +56,8 @@ module ddram #(
 );
 
 `ifndef SIMULATION
+wire dqs_clk_dcm;
+wire dqs_clk_n_dcm;
 wire dqs_clk;
 wire dqs_clk_n;
 wire locked1 = 1'b1;
@@ -112,9 +113,9 @@ DCM_SP #(
 	.PHASE_SHIFT(0),
 	.STARTUP_WAIT("FALSE")
 ) clkgen_dqs (
-	.CLK0(dqs_clk),
+	.CLK0(dqs_clk_dcm),
 	.CLK90(),
-	.CLK180(dqs_clk_n),
+	.CLK180(dqs_clk_n_dcm),
 	.CLK270(),
 
 	.CLK2X(),
@@ -132,6 +133,14 @@ DCM_SP #(
 	.PSINCDEC(psincdec),
 	.PSDONE(psdone),
 	.PSCLK(sys_clk)
+);
+AUTOBUF b1(
+	.I(dqs_clk_dcm),
+	.O(dqs_clk)
+);
+AUTOBUF b2(
+	.I(dqs_clk_n_dcm),
+	.O(dqs_clk_n)
 );
 `else
 reg dqs_clk;
