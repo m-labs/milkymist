@@ -26,7 +26,7 @@
 module hpdmc_iddr32 #(
 	parameter DDR_ALIGNMENT = "C0",
 	parameter INIT_Q0 = 1'b0,
-	parameter INIT_Q0 = 1'b0,
+	parameter INIT_Q1 = 1'b0,
 	parameter SRTYPE = "SYNC"
 ) (
 	output [31:0] Q0,
@@ -42,11 +42,11 @@ module hpdmc_iddr32 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr0 (
 	.Q0(Q0[0]),
-	.Q0(Q1[0]),
+	.Q1(Q1[0]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -57,11 +57,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr1 (
 	.Q0(Q0[1]),
-	.Q0(Q1[1]),
+	.Q1(Q1[1]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -72,11 +72,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr2 (
 	.Q0(Q0[2]),
-	.Q0(Q1[2]),
+	.Q1(Q1[2]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -87,11 +87,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr3 (
 	.Q0(Q0[3]),
-	.Q0(Q1[3]),
+	.Q1(Q1[3]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -102,11 +102,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr4 (
 	.Q0(Q0[4]),
-	.Q0(Q1[4]),
+	.Q1(Q1[4]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -117,11 +117,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr5 (
 	.Q0(Q0[5]),
-	.Q0(Q1[5]),
+	.Q1(Q1[5]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -132,11 +132,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr6 (
 	.Q0(Q0[6]),
-	.Q0(Q1[6]),
+	.Q1(Q1[6]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -147,11 +147,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr7 (
 	.Q0(Q0[7]),
-	.Q0(Q1[7]),
+	.Q1(Q1[7]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -162,11 +162,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr8 (
 	.Q0(Q0[8]),
-	.Q0(Q1[8]),
+	.Q1(Q1[8]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -177,11 +177,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr9 (
 	.Q0(Q0[9]),
-	.Q0(Q1[9]),
+	.Q1(Q1[9]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -192,11 +192,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr10 (
 	.Q0(Q0[10]),
-	.Q0(Q1[10]),
+	.Q1(Q1[10]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -207,11 +207,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr11 (
 	.Q0(Q0[11]),
-	.Q0(Q1[11]),
+	.Q1(Q1[11]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -222,11 +222,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr12 (
 	.Q0(Q0[12]),
-	.Q0(Q1[12]),
+	.Q1(Q1[12]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -237,11 +237,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr13 (
 	.Q0(Q0[13]),
-	.Q0(Q1[13]),
+	.Q1(Q1[13]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -252,11 +252,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr14 (
 	.Q0(Q0[14]),
-	.Q0(Q1[14]),
+	.Q1(Q1[14]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -267,11 +267,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr15 (
 	.Q0(Q0[15]),
-	.Q0(Q1[15]),
+	.Q1(Q1[15]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -282,11 +282,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr16 (
 	.Q0(Q0[16]),
-	.Q0(Q1[16]),
+	.Q1(Q1[16]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -297,11 +297,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr17 (
 	.Q0(Q0[17]),
-	.Q0(Q1[17]),
+	.Q1(Q1[17]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -312,11 +312,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr18 (
 	.Q0(Q0[18]),
-	.Q0(Q1[18]),
+	.Q1(Q1[18]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -327,11 +327,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr19 (
 	.Q0(Q0[19]),
-	.Q0(Q1[19]),
+	.Q1(Q1[19]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -342,11 +342,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr20 (
 	.Q0(Q0[20]),
-	.Q0(Q1[20]),
+	.Q1(Q1[20]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -357,11 +357,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr21 (
 	.Q0(Q0[21]),
-	.Q0(Q1[21]),
+	.Q1(Q1[21]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -372,11 +372,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr22 (
 	.Q0(Q0[22]),
-	.Q0(Q1[22]),
+	.Q1(Q1[22]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -387,11 +387,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr23 (
 	.Q0(Q0[23]),
-	.Q0(Q1[23]),
+	.Q1(Q1[23]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -402,11 +402,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr24 (
 	.Q0(Q0[24]),
-	.Q0(Q1[24]),
+	.Q1(Q1[24]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -417,11 +417,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr25 (
 	.Q0(Q0[25]),
-	.Q0(Q1[25]),
+	.Q1(Q1[25]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -432,11 +432,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr26 (
 	.Q0(Q0[26]),
-	.Q0(Q1[26]),
+	.Q1(Q1[26]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -447,11 +447,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr27 (
 	.Q0(Q0[27]),
-	.Q0(Q1[27]),
+	.Q1(Q1[27]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -462,11 +462,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr28 (
 	.Q0(Q0[28]),
-	.Q0(Q1[28]),
+	.Q1(Q1[28]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -477,11 +477,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr29 (
 	.Q0(Q0[29]),
-	.Q0(Q1[29]),
+	.Q1(Q1[29]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -492,11 +492,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr30 (
 	.Q0(Q0[30]),
-	.Q0(Q1[30]),
+	.Q1(Q1[30]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),
@@ -507,11 +507,11 @@ IDDR2 #(
 IDDR2 #(
 	.DDR_ALIGNMENT(DDR_ALIGNMENT),
 	.INIT_Q0(INIT_Q0),
-	.INIT_Q0(INIT_Q0),
+	.INIT_Q1(INIT_Q1),
 	.SRTYPE(SRTYPE)
 ) iddr31 (
 	.Q0(Q0[31]),
-	.Q0(Q1[31]),
+	.Q1(Q1[31]),
 	.C0(C0),
 	.C1(C1),
 	.CE(CE),

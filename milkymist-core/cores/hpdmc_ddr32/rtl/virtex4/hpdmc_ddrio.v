@@ -20,6 +20,7 @@ module hpdmc_ddrio(
 	input sys_clk,
 	input sys_clk_n,
 	input dqs_clk,
+	input dqs_clk_n,
 	
 	input direction,
 	input [7:0] mo,

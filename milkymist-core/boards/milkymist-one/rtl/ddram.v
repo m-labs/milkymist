@@ -22,6 +22,7 @@ module ddram #(
 	parameter csr_addr = 4'h0
 ) (
 	input sys_clk,
+	input sys_clk_n,
 	input sys_rst,
 	
 	/* Configuration interface */
@@ -57,49 +58,44 @@ module ddram #(
 
 `ifndef SIMULATION
 wire dqs_clk;
-wire idelay_clk;
-wire idelay_clk_buffered;
-wire locked1;
-DCM_PS #(
-	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
+wire dqs_clk_n;
+wire locked1 = 1'b1;
 
-	.CLKFX_DIVIDE(3),		// 1 to 32
-	.CLKFX_MULTIPLY(2),		// 2 to 32
-	
-	.CLKIN_DIVIDE_BY_2("FALSE"),
-	.CLKIN_PERIOD(`CLOCK_PERIOD),
-	.CLKOUT_PHASE_SHIFT("NONE"),
-	.CLK_FEEDBACK("1X"),
-	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
-	.DFS_FREQUENCY_MODE("LOW"),
-	.DLL_FREQUENCY_MODE("LOW"),
-	.DUTY_CYCLE_CORRECTION("TRUE"),
-	.FACTORY_JF(16'hF0F0),
-	.PHASE_SHIFT(0),
-	.STARTUP_WAIT("FALSE")
-) clkgen_sdram (
-	.CLK0(sdram_clk_p),
-	.CLK90(),
-	.CLK180(sdram_clk_n),
-	.CLK270(),
+ODDR2 #(
+	.DDR_ALIGNMENT("NONE"),
+	.INIT(1'b0),
+	.SRTYPE("SYNC")
+) clock_forward_p (
+	.Q(sdram_clk_p),
+	.C0(sys_clk),
+	.C1(sys_clk_n),
+	.CE(1'b1),
+	.D0(1'b1),
+	.D1(1'b0),
+	.R(1'b0),
+	.S(1'b0)
+);
 
-	.CLK2X(idelay_clk),
-	.CLK2X180(),
-
-	.CLKDV(),
-	.CLKFX(),
-	.CLKFX180(),
-	.LOCKED(locked1),
-	.CLKFB(sdram_clk_fb),
-	.CLKIN(sys_clk),
-	.RST(1'b0)
+ODDR2 #(
+	.DDR_ALIGNMENT("NONE"),
+	.INIT(1'b0),
+	.SRTYPE("SYNC")
+) clock_forward_n (
+	.Q(sdram_clk_n),
+	.C0(sys_clk),
+	.C1(sys_clk_n),
+	.CE(1'b1),
+	.D0(1'b0),
+	.D1(1'b1),
+	.R(1'b0),
+	.S(1'b0)
 );
 
 wire psen;
 wire psincdec;
 wire psdone;
 wire locked2;
-DCM_PS #(
+DCM_SP #(
 	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
 	.CLKFX_DIVIDE(3),		// 1 to 32
@@ -107,19 +103,18 @@ DCM_PS #(
 	
 	.CLKIN_DIVIDE_BY_2("FALSE"),
 	.CLKIN_PERIOD(`CLOCK_PERIOD),
-	.CLKOUT_PHASE_SHIFT("VARIABLE_POSITIVE"),
+	.CLKOUT_PHASE_SHIFT("VARIABLE"),
 	.CLK_FEEDBACK("1X"),
 	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
 	.DFS_FREQUENCY_MODE("LOW"),
 	.DLL_FREQUENCY_MODE("LOW"),
 	.DUTY_CYCLE_CORRECTION("TRUE"),
-	.FACTORY_JF(16'hF0F0),
 	.PHASE_SHIFT(0),
 	.STARTUP_WAIT("FALSE")
 ) clkgen_dqs (
 	.CLK0(dqs_clk),
 	.CLK90(),
-	.CLK180(),
+	.CLK180(dqs_clk_n),
 	.CLK270(),
 
 	.CLK2X(),
@@ -138,22 +133,13 @@ DCM_PS #(
 	.PSDONE(psdone),
 	.PSCLK(sys_clk)
 );
-
-BUFG idelay_clk_buffer(
-	.I(idelay_clk),
-	.O(idelay_clk_buffered)
-);
-
-IDELAYCTRL idelay_calibration(
-	.RDY(),
-	.REFCLK(idelay_clk_buffered),
-	.RST(1'b0)
-);
 `else
 reg dqs_clk;
+wire dqs_clk_n;
 assign sdram_clk_p = sys_clk;
 assign sdram_clk_n = ~sys_clk;
 always @(sys_clk) #2.5 dqs_clk <= sys_clk;
+assign dqs_clk_n = ~dqs_clk;
 wire locked1 = 1'b1;
 wire locked2 = 1'b1;
 `endif
@@ -164,8 +150,9 @@ hpdmc #(
 	.sdram_columndepth(`SDRAM_COLUMNDEPTH)
 ) hpdmc (
 	.sys_clk(sys_clk),
-	.sys_clk_n(~sys_clk),
+	.sys_clk_n(sys_clk_n),
 	.dqs_clk(dqs_clk),
+	.dqs_clk_n(dqs_clk_n),
 	.sys_rst(sys_rst),
 
 	.csr_a(csr_a),

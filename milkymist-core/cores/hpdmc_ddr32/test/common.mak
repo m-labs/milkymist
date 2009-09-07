@@ -1,5 +1,4 @@
 SOURCES_MODEL=tb_model.v ddr.v
-SOURCES_HPDMC=tb_hpdmc.v ddr.v oddr.v iddr.v idelay.v $(wildcard ../rtl/*.v)
 
 all: hpdmc
 

@@ -37,6 +37,7 @@ module hpdmc #(
 	 * as data is sent synchronously to sys_clk.
 	 */
 	input dqs_clk,
+	input dqs_clk_n,
 	
 	input sys_rst,
 	
@@ -273,6 +274,7 @@ hpdmc_ddrio ddrio(
 	.sys_clk(sys_clk),
 	.sys_clk_n(sys_clk_n),
 	.dqs_clk(dqs_clk),
+	.dqs_clk_n(dqs_clk_n),
 	
 	.direction(direction),
 	/* Bit meaning is the opposite between

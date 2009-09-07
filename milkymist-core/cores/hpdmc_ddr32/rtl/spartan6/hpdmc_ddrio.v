@@ -20,6 +20,7 @@ module hpdmc_ddrio(
 	input sys_clk,
 	input sys_clk_n,
 	input dqs_clk,
+	input dqs_clk_n,
 	
 	input direction,
 	input [7:0] mo,
@@ -35,9 +36,38 @@ module hpdmc_ddrio(
 	input idelay_inc
 );
 
-wire [31:0] sdram_data_out;
-assign sdram_dq = direction ? sdram_data_out : 32'hzzzzzzzz;
-assign sdram_dqs = direction ? {4{dqs_clk}} : 4'hz;
+/******/
+/* DQ */
+/******/
+
+wire [31:0] sdram_dq_out;
+assign sdram_dq = direction ? sdram_dq_out : 32'hzzzzzzzz;
+
+hpdmc_oddr32 oddr_dq(
+	.Q(sdram_dq_out),
+	.C0(sys_clk),
+	.C1(sys_clk_n),
+	.CE(1'b1),
+	.D0(do[63:32]),
+	.D1(do[31:0]),
+	.R(1'b0),
+	.S(1'b0)
+);
+
+hpdmc_iddr32 iddr_dq(
+	.Q0(di[31:0]),
+	.Q1(di[63:32]),
+	.C0(sys_clk),
+	.C1(sys_clk_n),
+	.CE(1'b1),
+	.D(sdram_dq),
+	.R(1'b0),
+	.S(1'b0)
+);
+
+/*******/
+/* DQM */
+/*******/
 
 hpdmc_oddr4 oddr_dqm(
 	.Q(sdram_dqm),
@@ -50,63 +80,20 @@ hpdmc_oddr4 oddr_dqm(
 	.S(1'b0)
 );
 
-hpdmc_oddr32 oddr_dq(
-	.Q(sdram_data_out),
-	.C0(sys_clk),
-	.C1(sys_clk_n),
+/*******/
+/* DQS */
+/*******/
+
+wire [3:0] sdram_dqs_out;
+assign sdram_dqs = direction ? {4{sdram_dqs_out}} : 4'hz;
+
+hpdmc_oddr4 oddr_dqs(
+	.Q(sdram_dqs_out),
+	.C0(dqs_clk),
+	.C1(dqs_clk_n),
 	.CE(1'b1),
-	.D0(do[63:32]),
-	.D1(do[31:0]),
-	.R(1'b0),
-	.S(1'b0)
-);
-
-wire [31:0] sdram_dq_delayed;
-
-hpdmc_idelay8 dq_delay0 (
-	.i(sdram_dq[7:0]),
-	.o(sdram_dq_delayed[7:0]),
-	
-	.clk(sys_clk),
-	.rst(idelay_rst),
-	.ce(idelay_ce),
-	.inc(idelay_inc)
-);
-hpdmc_idelay8 dq_delay1 (
-	.i(sdram_dq[15:8]),
-	.o(sdram_dq_delayed[15:8]),
-	
-	.clk(sys_clk),
-	.rst(idelay_rst),
-	.ce(idelay_ce),
-	.inc(idelay_inc)
-);
-hpdmc_idelay8 dq_delay2 (
-	.i(sdram_dq[23:16]),
-	.o(sdram_dq_delayed[23:16]),
-	
-	.clk(sys_clk),
-	.rst(idelay_rst),
-	.ce(idelay_ce),
-	.inc(idelay_inc)
-);
-hpdmc_idelay8 dq_delay3 (
-	.i(sdram_dq[31:24]),
-	.o(sdram_dq_delayed[31:24]),
-	
-	.clk(sys_clk),
-	.rst(idelay_rst),
-	.ce(idelay_ce),
-	.inc(idelay_inc)
-);
-
-hpdmc_iddr32 iddr_dq(
-	.Q0(di[31:0]),
-	.Q1(di[63:32]),
-	.C0(sys_clk),
-	.C1(sys_clk_n),
-	.CE(1'b1),
-	.D(sdram_dq_delayed),
+	.D0(4'hf),
+	.D1(4'h0),
 	.R(1'b0),
 	.S(1'b0)
 );

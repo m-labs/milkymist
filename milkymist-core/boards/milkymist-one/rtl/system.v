@@ -30,10 +30,6 @@ module system(
 	output flash_we_n,
 	output flash_ce,
 	output flash_ac97_reset_n,
-	
-	output sram_clk,
-	output sram_ce_n,
-	output sram_zz,
 
 	// UART
 	input uart_rxd,
@@ -99,14 +95,45 @@ module system(
 // Clock and Reset Generation
 //------------------------------------------------------------------
 wire sys_clk;
+wire sys_clk_n;
 
 `ifndef SIMULATION
-BUFG clkbuf(
-	.I(clkin),
-	.O(sys_clk)
+DCM_SP #(
+	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
+
+	.CLKFX_DIVIDE(3),		// 1 to 32
+	.CLKFX_MULTIPLY(2),		// 2 to 32
+
+	.CLKIN_DIVIDE_BY_2("FALSE"),
+	.CLKIN_PERIOD(`CLOCK_PERIOD),
+	.CLKOUT_PHASE_SHIFT("NONE"),
+	.CLK_FEEDBACK("1X"),
+	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
+	.DFS_FREQUENCY_MODE("LOW"),
+	.DLL_FREQUENCY_MODE("LOW"),
+	.DUTY_CYCLE_CORRECTION("TRUE"),
+	.PHASE_SHIFT(0),
+	.STARTUP_WAIT("TRUE")
+) clkgen_sys (
+	.CLK0(sys_clk),
+	.CLK90(),
+	.CLK180(sys_clk_n),
+	.CLK270(),
+
+	.CLK2X(),
+	.CLK2X180(),
+
+	.CLKDV(),
+	.CLKFX(),
+	.CLKFX180(),
+	.LOCKED(),
+	.CLKFB(sys_clk),
+	.CLKIN(clkin),
+	.RST(1'b0)
 );
 `else
 assign sys_clk = clkin;
+assign sys_clk_n = ~clkin;
 `endif
 
 `ifndef SIMULATION
@@ -627,16 +654,6 @@ assign flash_oe_n = 1'b0;
 assign flash_we_n = 1'b1;
 assign flash_ce = 1'b1;
 
-/*
- * Disable the SRAM.
- * Since CE_N is a synchronous input
- * we also clock the SRAM so that
- * we make sure it gets the message.
- */
-assign sram_clk = sys_clk;
-assign sram_ce_n = 1'b1;
-assign sram_zz = 1'b1;
-
 //---------------------------------------------------------------------------
 // BRAM
 //---------------------------------------------------------------------------
@@ -788,6 +805,7 @@ ddram #(
 	.csr_addr(4'h2)
 ) ddram (
 	.sys_clk(sys_clk),
+	.sys_clk_n(sys_clk_n),
 	.sys_rst(sys_rst),
 
 	.csr_a(csr_a),

@@ -166,6 +166,7 @@ hpdmc #(
 	.sys_clk(sys_clk),
 	.sys_clk_n(1'b0), /* < not needed on Virtex-4 */
 	.dqs_clk(dqs_clk),
+	.dqs_clk_n(1'b0), /* < not needed on Virtex-4 */
 	.sys_rst(sys_rst),
 
 	.csr_a(csr_a),
