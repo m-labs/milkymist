@@ -1,7 +1,7 @@
 # ==== Clock input ====
 
 NET "clkin" TNM_NET = "clkin";
-TIMESPEC "TSclkin" = PERIOD "clkin" 10 ns HIGH 50% INPUT_JITTER 100 ps;
+TIMESPEC "TSclkin" = PERIOD "clkin" 11 ns HIGH 50% INPUT_JITTER 100 ps;
 
 # ==== Reset button ====
 

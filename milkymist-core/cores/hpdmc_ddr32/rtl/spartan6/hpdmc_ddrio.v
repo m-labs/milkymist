@@ -23,6 +23,7 @@ module hpdmc_ddrio(
 	input dqs_clk_n,
 	
 	input direction,
+	input direction_r,
 	input [7:0] mo,
 	input [63:0] do,
 	output [63:0] di,
@@ -40,8 +41,27 @@ module hpdmc_ddrio(
 /* DQ */
 /******/
 
+wire [31:0] sdram_dq_t;
 wire [31:0] sdram_dq_out;
-assign sdram_dq = direction ? sdram_dq_out : 32'hzzzzzzzz;
+wire [31:0] sdram_dq_in;
+
+hpdmc_iobuf32 iobuf_dq(
+	.T(sdram_dq_t),
+	.I(sdram_dq_out),
+	.O(sdram_dq_in),
+	.IO(sdram_dq)
+);
+
+hpdmc_oddr32 oddr_dq_t(
+	.Q(sdram_dq_t),
+	.C0(sys_clk),
+	.C1(sys_clk_n),
+	.CE(1'b1),
+	.D0({32{~direction_r}}),
+	.D1({32{~direction_r}}),
+	.R(1'b0),
+	.S(1'b0)
+);
 
 hpdmc_oddr32 oddr_dq(
 	.Q(sdram_dq_out),
@@ -60,7 +80,7 @@ hpdmc_iddr32 iddr_dq(
 	.C0(sys_clk),
 	.C1(sys_clk_n),
 	.CE(1'b1),
-	.D(sdram_dq),
+	.D(sdram_dq_in),
 	.R(1'b0),
 	.S(1'b0)
 );
@@ -84,8 +104,25 @@ hpdmc_oddr4 oddr_dqm(
 /* DQS */
 /*******/
 
+wire [3:0] sdram_dqs_t;
 wire [3:0] sdram_dqs_out;
-assign sdram_dqs = direction ? sdram_dqs_out : 4'hz;
+
+hpdmc_obuft4 obuft_dqs(
+	.T(sdram_dqs_t),
+	.I(sdram_dqs_out),
+	.O(sdram_dqs)
+);
+
+hpdmc_oddr4 oddr_dqs_t(
+	.Q(sdram_dqs_t),
+	.C0(dqs_clk),
+	.C1(dqs_clk_n),
+	.CE(1'b1),
+	.D0({4{~direction_r}}),
+	.D1({4{~direction_r}}),
+	.R(1'b0),
+	.S(1'b0)
+);
 
 hpdmc_oddr4 oddr_dqs(
 	.Q(sdram_dqs_out),

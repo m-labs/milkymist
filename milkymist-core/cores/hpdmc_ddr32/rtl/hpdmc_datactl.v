@@ -29,6 +29,7 @@ module hpdmc_datactl(
 	
 	output reg ack,
 	output reg direction,
+	output direction_r,
 	
 	input tim_cas,
 	input [1:0] tim_wr
@@ -160,6 +161,8 @@ always @(posedge sys_clk) begin
 		end
 	end
 end
+
+assign direction_r = write_d|(|counter_writedirection);
 
 always @(posedge sys_clk) begin
 	if(sdram_rst)

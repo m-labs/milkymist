@@ -25,6 +25,10 @@
 
 //`define ENABLE_ISP1362
 //`define ENABLE_CFCARD
+/*
+ * FIXME: clocks in AC97 and VGA are not handled correctly
+ * and cause failure of ISE 11.2.
+ */
 //`define ENABLE_AC97
 //`define ENABLE_VGA
 //`define ENABLE_PFPU

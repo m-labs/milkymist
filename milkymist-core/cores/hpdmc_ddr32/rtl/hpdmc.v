@@ -250,6 +250,7 @@ hpdmc_busif #(
 
 /* Data path controller */
 wire direction;
+wire direction_r;
 
 hpdmc_datactl datactl(
 	.sys_clk(sys_clk),
@@ -264,6 +265,7 @@ hpdmc_datactl datactl(
 	
 	.ack(data_ack),
 	.direction(direction),
+	.direction_r(direction_r),
 	
 	.tim_cas(tim_cas),
 	.tim_wr(tim_wr)
@@ -277,6 +279,7 @@ hpdmc_ddrio ddrio(
 	.dqs_clk_n(dqs_clk_n),
 	
 	.direction(direction),
+	.direction_r(direction_r),
 	/* Bit meaning is the opposite between
 	 * the FML selection signal and SDRAM DQM pins.
 	 */
