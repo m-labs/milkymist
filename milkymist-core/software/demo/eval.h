@@ -127,10 +127,10 @@ struct eval_state {
 	int pervertex_prog_length;			/* < how many instructions in pervertex_prog */
 	pfpu_instruction pervertex_prog[PFPU_PROGSIZE];	/* < PFPU per-vertex microcode */
 	float pervertex_regs[PFPU_REG_COUNT];		/* < PFPU regf according to per-frame variables, initial conditions and constants */
-	unsigned int hmeshlast;				/* < index of last mesh point, X direction */
-	unsigned int vmeshlast;				/* < index of last mesh point, Y direction */
-	unsigned int hres;				/* < horizontal screen resolution */
-	unsigned int vres;				/* < vertical screen resolution */
+	int hmeshlast;					/* < index of last mesh point, X direction */
+	int vmeshlast;					/* < index of last mesh point, Y direction */
+	int hres;					/* < horizontal screen resolution */
+	int vres;					/* < vertical screen resolution */
 };
 
 void eval_init(struct eval_state *sc,

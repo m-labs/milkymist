@@ -30,8 +30,8 @@ static unsigned short int framebufferA[640*480] __attribute__((aligned(32)));
 static unsigned short int framebufferB[640*480] __attribute__((aligned(32)));
 static unsigned short int framebufferC[640*480] __attribute__((aligned(32)));
 
-unsigned int vga_hres;
-unsigned int vga_vres;
+int vga_hres;
+int vga_vres;
 
 unsigned short int *vga_frontbuffer; /* < buffer currently displayed (or request sent to HW) */
 unsigned short int *vga_backbuffer;  /* < buffer currently drawn to, never read by HW */

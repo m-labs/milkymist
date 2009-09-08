@@ -18,8 +18,8 @@
 #ifndef __VGA_H
 #define __VGA_H
 
-extern unsigned int vga_hres;
-extern unsigned int vga_vres;
+extern int vga_hres;
+extern int vga_vres;
 extern unsigned short int *vga_frontbuffer;
 extern unsigned short int *vga_backbuffer;
 extern unsigned short int *vga_lastbuffer;
