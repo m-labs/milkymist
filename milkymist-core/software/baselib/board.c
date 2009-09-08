@@ -38,7 +38,7 @@ static const struct board_desc boards[2] = {
 	{
 		.id = 0x4D4F4E45, /* MONE */
 		.name = "Milkymist One",
-		.clk_frequency = 100000000,
+		.clk_frequency = 80000000,
 		.sdram_size = 64,
 		.ddr_clkphase = 0,
 		.ddr_idelay = 0,
