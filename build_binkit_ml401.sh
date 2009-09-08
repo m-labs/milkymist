@@ -54,7 +54,6 @@ cp milkymist-core/tools/flterm binkit/
 
 mkdir binkit/demo
 cp milkymist-core/software/demo/boot.bin binkit/demo/
-cp milkymist-core/splash/splash.raw binkit/demo/
 cp milkymist-core/presets/*.milk binkit/demo/
 
 cp milkymist-core/LICENSE binkit/
