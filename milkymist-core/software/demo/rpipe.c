@@ -90,9 +90,11 @@ static void rpipe_tmu_callback(struct tmu_td *td)
 
 static void rpipe_start(struct rpipe_frame *frame)
 {
+	tmu_task.flags = 0;
 	tmu_task.hmeshlast = renderer_hmeshlast;
 	tmu_task.vmeshlast = renderer_vmeshlast;
 	tmu_task.brightness = frame->brightness;
+	tmu_task.chromakey = 0;
 	tmu_task.srcmesh = &frame->vertices[0][0];
 	tmu_task.srcfbuf = vga_frontbuffer;
 	tmu_task.srchres = vga_hres;

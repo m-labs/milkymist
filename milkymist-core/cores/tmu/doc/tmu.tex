@@ -45,7 +45,8 @@ Addresses are in bytes to match the addresses seen by the CPU when the CSR bus i
 0x00 & RW & 0 & Control register. \\
 & & & Bit 0: Start/Busy.\\
 & & & Bit 1: IRQ status. Cleared whenever the register is written. \\
-& & & Bit 2: Enable texture coordinates wrap (vs. clamp). \\
+& & & Bit 2: Enable chroma key. \\
+& & & Bit 3: Enable texture coordinates wrap (vs. clamp). \\
 \hline
 0x04 & RW & 32 & Number of mesh squares in the X direction (which is the number of mesh points minus one, and also the index of the last mesh point). \\
 \hline
@@ -53,21 +54,23 @@ Addresses are in bytes to match the addresses seen by the CPU when the CSR bus i
 \hline
 0x0C & RW & 63 & Brightness, between 0 and 63. The components of each pixel are multiplied by $ (n+1) \over 64 $ and rounded to the lowest integer. That means that a value of 0 in this register makes the destination picture completely black (because of the limited resolution of RGB565). \\
 \hline
-0x10 & RW & 0 & Address of the source mesh data (texture coordinates). Must be aligned on a 32-bit boundary. \\
+0x10 & RW & 0 & RGB565 color used as chroma key. Texture pixels with this color will not be drawn if the ``chroma key'' flag in the control register is set. \\
 \hline
-0x14 & RW & 0 & Source framebuffer address. Must be aligned on a 16-bit boundary. \\
+0x14 & RW & 0 & Address of the source mesh data (texture coordinates). Must be aligned on a 32-bit boundary. \\
 \hline
-0x18 & RW & 640 & Source horizontal resolution. \\
+0x18 & RW & 0 & Source framebuffer address. Must be aligned on a 16-bit boundary. \\
 \hline
-0x1C & RW & 480 & Source vertical resolution. \\
+0x1C & RW & 640 & Source horizontal resolution. \\
 \hline
-0x20 & RW & 0 & Address of the destination mesh data (vertex coordinates). Must be aligned on a 32-bit boundary. \\
+0x20 & RW & 480 & Source vertical resolution. \\
 \hline
-0x24 & RW & 0 & Destination framebuffer address. Must be aligned on a 16-bit boundary. \\
+0x24 & RW & 0 & Address of the destination mesh data (vertex coordinates). Must be aligned on a 32-bit boundary. \\
 \hline
-0x28 & RW & 640 & Destination horizontal resolution. \\
+0x28 & RW & 0 & Destination framebuffer address. Must be aligned on a 16-bit boundary. \\
 \hline
-0x2C & RW & 480 & Destination vertical resolution. \\
+0x2C & RW & 640 & Destination horizontal resolution. \\
+\hline
+0x30 & RW & 480 & Destination vertical resolution. \\
 \hline
 \end{tabularx}
 
@@ -82,19 +85,19 @@ These registers are read-only. Attempting to write them results in undefined beh
 \hline
 \bf{Offset} & \bf{Access} & \bf{Default} & \bf{Description} \\
 \hline
-0x30 & R & 0 & Number of drawn pixels. Off-screen pixels are not counted. \\
+0x34 & R & 0 & Number of drawn pixels. Off-screen pixels are not counted. \\
 \hline
-0x34 & R & 0 & Processing time, in clock cycles. \\
+0x38 & R & 0 & Processing time, in clock cycles. \\
 \hline
-0x38 & R & 0 & Number of stalled transactions detected at pipeline monitor 1. \\
+0x3C & R & 0 & Number of stalled transactions detected at pipeline monitor 1. \\
 \hline
-0x3C & R & 0 & Number of completed transactions detected at pipeline monitor 1. \\
+0x40 & R & 0 & Number of completed transactions detected at pipeline monitor 1. \\
 \hline
-0x40 & R & 0 & Number of stalled transactions detected at pipeline monitor 2. \\
+0x44 & R & 0 & Number of stalled transactions detected at pipeline monitor 2. \\
 \hline
-0x44 & R & 0 & Number of completed transactions detected at pipeline monitor 2. \\
+0x48 & R & 0 & Number of completed transactions detected at pipeline monitor 2. \\
 \hline
-0x48 & R & 0 & Number of misses in the source image (texture) cache. \\
+0x4C & R & 0 & Number of misses in the source image (texture) cache. \\
 \hline
 \end{tabularx}
 

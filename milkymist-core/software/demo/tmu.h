@@ -25,9 +25,11 @@ struct tmu_td;
 typedef void (*tmu_callback)(struct tmu_td *);
 
 struct tmu_td {
+	unsigned int flags;
 	unsigned int hmeshlast;
 	unsigned int vmeshlast;
 	unsigned int brightness;
+	unsigned short chromakey;
 	struct tmu_vertex *srcmesh;
 	unsigned short *srcfbuf;
 	unsigned int srchres;

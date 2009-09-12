@@ -37,6 +37,8 @@ module tmu_ctlif #(
 	output reg [6:0] vmesh_last,
 
 	output reg [5:0] brightness,
+	output reg chroma_key_en,
+	output reg [15:0] chroma_key,
 
 	output reg [29:0] src_mesh, /* in 32-bit words */
 	output reg [fml_depth-1-1:0] src_fbuf, /* in 16-bit words */
@@ -79,6 +81,8 @@ always @(posedge sys_clk) begin
 		vmesh_last <= 7'd24;
 
 		brightness <= 6'd63;
+		chroma_key_en <= 1'b0;
+		chroma_key <= 16'd0;
 
 		src_mesh <= 30'd0;
 		src_fbuf <= {fml_depth{1'b0}};
@@ -100,22 +104,24 @@ always @(posedge sys_clk) begin
 					4'b0000: begin
 						start <= csr_di[0];
 						irq <= 1'b0;
+						chroma_key_en <= csr_di[2];
 					end
 
 					4'b0001: hmesh_last <= csr_di[6:0];
 					4'b0010: vmesh_last <= csr_di[6:0];
 
 					4'b0011: brightness <= csr_di[5:0];
+					4'b0100: chroma_key <= csr_di[15:0];
 
-					4'b0100: src_mesh <= csr_di[31:2];
-					4'b0101: src_fbuf <= csr_di[fml_depth-1:1];
-					4'b0110: src_hres <= csr_di[10:0];
-					4'b0111: src_vres <= csr_di[10:0];
+					4'b0101: src_mesh <= csr_di[31:2];
+					4'b0110: src_fbuf <= csr_di[fml_depth-1:1];
+					4'b0111: src_hres <= csr_di[10:0];
+					4'b1000: src_vres <= csr_di[10:0];
 
-					4'b1000: dst_mesh <= csr_di[31:2];
-					4'b1001: dst_fbuf <= csr_di[fml_depth-1:1];
-					4'b1010: dst_hres <= csr_di[10:0];
-					4'b1011: dst_vres <= csr_di[10:0];
+					4'b1001: dst_mesh <= csr_di[31:2];
+					4'b1010: dst_fbuf <= csr_di[fml_depth-1:1];
+					4'b1011: dst_hres <= csr_di[10:0];
+					4'b1100: dst_vres <= csr_di[10:0];
 					default:;
 				endcase
 			end
@@ -126,27 +132,28 @@ always @(posedge sys_clk) begin
 				5'b00010: csr_do <= vmesh_last;
 
 				5'b00011: csr_do <= brightness;
+				5'b00100: csr_do <= chroma_key;
 
-				5'b00100: csr_do <= {src_mesh, 2'b00};
-				5'b00101: csr_do <= {src_fbuf, 1'b0};
-				5'b00110: csr_do <= src_hres;
-				5'b00111: csr_do <= src_vres;
+				5'b00101: csr_do <= {src_mesh, 2'b00};
+				5'b00110: csr_do <= {src_fbuf, 1'b0};
+				5'b00111: csr_do <= src_hres;
+				5'b01000: csr_do <= src_vres;
 
-				5'b01000: csr_do <= {dst_mesh, 2'b00};
-				5'b01001: csr_do <= {dst_fbuf, 1'b0};
-				5'b01010: csr_do <= dst_hres;
-				5'b01011: csr_do <= dst_vres;
+				5'b01001: csr_do <= {dst_mesh, 2'b00};
+				5'b01010: csr_do <= {dst_fbuf, 1'b0};
+				5'b01011: csr_do <= dst_hres;
+				5'b01100: csr_do <= dst_vres;
 
 				/* Performance counters */
-				5'b01100: csr_do <= perf_pixels;
-				5'b01101: csr_do <= perf_clocks;
+				5'b01101: csr_do <= perf_pixels;
+				5'b01110: csr_do <= perf_clocks;
 
-				5'b01110: csr_do <= perf_stall1;
-				5'b01111: csr_do <= perf_complete1;
-				5'b10000: csr_do <= perf_stall2;
-				5'b10001: csr_do <= perf_complete2;
+				5'b01111: csr_do <= perf_stall1;
+				5'b10000: csr_do <= perf_complete1;
+				5'b10001: csr_do <= perf_stall2;
+				5'b10010: csr_do <= perf_complete2;
 
-				5'b10010: csr_do <= perf_misses;
+				5'b10011: csr_do <= perf_misses;
 				default: csr_do <= 32'bx;
 			endcase
 		end

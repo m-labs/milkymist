@@ -3,7 +3,7 @@ TARGETS=bin2hex crc32 flterm makeraw
 all: $(TARGETS)
 
 %: %.c
-	gcc -O2 -Wall -I../std -s -o $@ $<
+	gcc -O2 -Wall -I. -s -o $@ $<
 
 makeraw: makeraw.c
 	gcc -O2 -Wall -s -o $@ $< -lgd

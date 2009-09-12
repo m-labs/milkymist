@@ -25,6 +25,8 @@ module tmu_decay #(
 	output busy,
 	
 	input [5:0] brightness,
+	input chroma_key_en,
+	input [15:0] chroma_key,
 	
 	input pipe_stb_i,
 	output pipe_ack_o,
@@ -43,14 +45,17 @@ reg s1_valid;
 reg s2_valid;
 reg s3_valid;
 
+reg [15:0] src_pixel_r;
+
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		s1_valid <= 1'b0;
 		s2_valid <= 1'b0;
 		s3_valid <= 1'b0;
 	end else if(en) begin
+		src_pixel_r <= src_pixel_r;
 		s1_valid <= s0_valid;
-		s2_valid <= s1_valid;
+		s2_valid <= s1_valid & ((src_pixel_r != chroma_key) | ~chroma_key_en);
 		s3_valid <= s2_valid;
 	end
 end

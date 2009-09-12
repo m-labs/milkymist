@@ -107,7 +107,7 @@ static int getname_cb(const char *filename, const char *longname, void *param)
 int ui_render_from_file(const char *filename)
 {
 	char buffer[8192];
-	unsigned int size;
+	int size;
 
 	if(!cffat_init()) return 0;
 	if(!cffat_load(filename, buffer, sizeof(buffer), &size)) return 0;

@@ -60,6 +60,8 @@ reg busy;
 wire [6:0] hmesh_last;
 wire [6:0] vmesh_last;
 wire [5:0] brightness;
+wire chroma_key_en;
+wire [15:0] chroma_key;
 wire [29:0] src_mesh;
 wire [fml_depth-1-1:0] src_fbuf;
 wire [10:0] src_hres;
@@ -95,6 +97,8 @@ tmu_ctlif #(
 	.hmesh_last(hmesh_last),
 	.vmesh_last(vmesh_last),
 	.brightness(brightness),
+	.chroma_key_en(chroma_key_en),
+	.chroma_key(chroma_key),
 	.src_mesh(src_mesh),
 	.src_fbuf(src_fbuf),
 	.src_hres(src_hres),
@@ -728,7 +732,7 @@ tmu_pixin #(
 	.inc_misses(inc_misses)
 );
 
-/* Stage 12 - Apply decay effect */
+/* Stage 12 - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
 wire decay_pipe_stb;
 wire decay_pipe_ack;
@@ -744,6 +748,8 @@ tmu_decay #(
 	.busy(decay_busy),
 	
 	.brightness(brightness),
+	.chroma_key_en(chroma_key_en),
+	.chroma_key(chroma_key),
 	
 	.pipe_stb_i(pixin_pipe_stb),
 	.pipe_ack_o(pixin_pipe_ack),

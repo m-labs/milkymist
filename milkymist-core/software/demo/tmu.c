@@ -57,6 +57,7 @@ static void tmu_start(struct tmu_td *td)
 	CSR_TMU_HMESHLAST = td->hmeshlast;
 	CSR_TMU_VMESHLAST = td->vmeshlast;
 	CSR_TMU_BRIGHTNESS = td->brightness;
+	CSR_TMU_CHROMAKEY = td->chromakey;
 	CSR_TMU_SRCMESH = (unsigned int)td->srcmesh;
 	CSR_TMU_SRCFBUF = (unsigned int)td->srcfbuf;
 	CSR_TMU_SRCHRES = td->srchres;
@@ -66,7 +67,7 @@ static void tmu_start(struct tmu_td *td)
 	CSR_TMU_DSTHRES = td->dsthres;
 	CSR_TMU_DSTVRES = td->dstvres;
 
-	CSR_TMU_CTL = TMU_CTL_START;
+	CSR_TMU_CTL = td->flags|TMU_CTL_START;
 }
 
 void tmu_isr()
