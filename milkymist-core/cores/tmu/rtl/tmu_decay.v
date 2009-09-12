@@ -53,7 +53,7 @@ always @(posedge sys_clk) begin
 		s2_valid <= 1'b0;
 		s3_valid <= 1'b0;
 	end else if(en) begin
-		src_pixel_r <= src_pixel_r;
+		src_pixel_r <= src_pixel;
 		s1_valid <= s0_valid;
 		s2_valid <= s1_valid & ((src_pixel_r != chroma_key) | ~chroma_key_en);
 		s3_valid <= s2_valid;

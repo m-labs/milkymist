@@ -29,12 +29,7 @@
 #include "cpustats.h"
 #include "rpipe.h"
 
-#include "spam.xpm"
-
-#define SPAM_PERIOD	300
-#define SPAM_W		305
-#define SPAM_H		128
-#define SPAM_ON		'.'
+#include "spam.h"
 
 #define RPIPE_FRAMEQ_SIZE 4 /* < must be a power of 2 */
 #define RPIPE_FRAMEQ_MASK (RPIPE_FRAMEQ_SIZE-1)
@@ -46,14 +41,31 @@ static unsigned int level;
 static int cts;
 
 struct rpipe_frame *bh_frame;
-static int run_bottom_half;
+static int run_wave_bottom_half;
+static int run_swap_bottom_half;
 
 static unsigned int frames;
 static unsigned int fps;
 static unsigned int spam_counter;
 int spam_enabled;
 
+static unsigned short texbufferA[640*480];
+static unsigned short texbufferB[640*480];
+static unsigned short *tex_frontbuffer;
+static unsigned short *tex_backbuffer;
+
 static struct tmu_vertex dst_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
+
+#define SPAM_W		75
+#define SPAM_H		75
+#define SPAM_X		545
+#define SPAM_Y		30
+#define SPAM_CHROMAKEY	0x001f
+#define SPAM_HMESHLAST	5
+#define SPAM_VMESHLAST	5
+
+static struct tmu_vertex spam_src_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
+static struct tmu_vertex spam_dst_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 
 void rpipe_init()
 {
@@ -67,47 +79,60 @@ void rpipe_init()
 	frames = 0;
 	fps = 0;
 	spam_counter = 0;
-	spam_enabled = 0;
+	spam_enabled = 1;
 
-	run_bottom_half = 0;
+	run_wave_bottom_half = 0;
+	run_swap_bottom_half = 0;
 
 	for(y=0;y<=renderer_vmeshlast;y++)
 		for(x=0;x<=renderer_hmeshlast;x++) {
 			dst_vertices[y][x].x = x*vga_hres/renderer_hmeshlast;
 			dst_vertices[y][x].y = y*vga_vres/renderer_vmeshlast;
 		}
+
+	for(y=0;y<=SPAM_VMESHLAST;y++)
+		for(x=0;x<=SPAM_VMESHLAST;x++) {
+			spam_src_vertices[y][x].x = x*SPAM_W/SPAM_HMESHLAST;
+			spam_src_vertices[y][x].y = y*SPAM_H/SPAM_VMESHLAST;
+			spam_dst_vertices[y][x].x = x*SPAM_W/SPAM_HMESHLAST + SPAM_X;
+			spam_dst_vertices[y][x].y = y*SPAM_H/SPAM_VMESHLAST + SPAM_Y;
+	}
+
+	tex_frontbuffer = texbufferA;
+	tex_backbuffer = texbufferB;
 	
 	printf("RPI: rendering pipeline ready\n");
 }
 
-static struct tmu_td tmu_task;
+static struct tmu_td tmu_task1;
+static struct tmu_td tmu_task2;
 
-static void rpipe_tmu_callback(struct tmu_td *td)
+static void rpipe_tmu_warpdone(struct tmu_td *td)
 {
 	bh_frame = (struct rpipe_frame *)td->user;
-	run_bottom_half = 1;
+	run_wave_bottom_half = 1;
 }
 
 static void rpipe_start(struct rpipe_frame *frame)
 {
-	tmu_task.flags = 0;
-	tmu_task.hmeshlast = renderer_hmeshlast;
-	tmu_task.vmeshlast = renderer_vmeshlast;
-	tmu_task.brightness = frame->brightness;
-	tmu_task.chromakey = 0;
-	tmu_task.srcmesh = &frame->vertices[0][0];
-	tmu_task.srcfbuf = vga_frontbuffer;
-	tmu_task.srchres = vga_hres;
-	tmu_task.srcvres = vga_vres;
-	tmu_task.dstmesh = &dst_vertices[0][0];
-	tmu_task.dstfbuf = vga_backbuffer;
-	tmu_task.dsthres = vga_hres;
-	tmu_task.dstvres = vga_vres;
+	tmu_task1.flags = 0;
+	tmu_task1.hmeshlast = renderer_hmeshlast;
+	tmu_task1.vmeshlast = renderer_vmeshlast;
+	tmu_task1.brightness = frame->brightness;
+	tmu_task1.chromakey = 0;
+	tmu_task1.srcmesh = &frame->vertices[0][0];
+	tmu_task1.srcfbuf = tex_frontbuffer;
+	tmu_task1.srchres = vga_hres;
+	tmu_task1.srcvres = vga_vres;
+	tmu_task1.dstmesh = &dst_vertices[0][0];
+	tmu_task1.dstfbuf = tex_backbuffer;
+	tmu_task1.dsthres = vga_hres;
+	tmu_task1.dstvres = vga_vres;
 
-	tmu_task.profile = 0;
-	tmu_task.callback = rpipe_tmu_callback;
-	tmu_task.user = frame;
-	tmu_submit_task(&tmu_task);
+	tmu_task1.profile = 0;
+	tmu_task1.callback = rpipe_tmu_warpdone;
+	tmu_task1.user = frame;
+	tmu_submit_task(&tmu_task1);
 }
 
 int rpipe_input(struct rpipe_frame *frame)
@@ -246,40 +271,72 @@ static void rpipe_draw_waves()
 			break;
 	}
 
-	wave_draw(vga_backbuffer, vga_hres, vga_vres, &params, vertices, nvertices);
+	wave_draw(tex_backbuffer, vga_hres, vga_vres, &params, vertices, nvertices);
 }
 
-static void rpipe_draw_spam()
+static void rpipe_tmu_copydone(struct tmu_td *td)
 {
-	int dx, dy;
-	int x, y;
+	run_swap_bottom_half = 1;
+}
 
-	spam_counter++;
-	if(spam_counter > SPAM_PERIOD) {
-		if(spam_enabled) {
-			dx = (vga_hres-SPAM_W)/2;
-			dy = vga_vres/2-SPAM_H;
+static void rpipe_wave_bottom_half()
+{
+	rpipe_draw_waves();
+	flush_bridge_cache();
 
-			for(y=0;y<SPAM_H;y++)
-				for(x=0;x<SPAM_W;x++) {
-					if(spam_xpm[y+3][x] == SPAM_ON)
-						vga_backbuffer[vga_hres*(dy+y)+dx+x] = 0xffff;
-			}
-		}
+	tmu_task2.flags = 0;
+	tmu_task2.hmeshlast = renderer_hmeshlast;
+	tmu_task2.vmeshlast = renderer_vmeshlast;
+	tmu_task2.brightness = TMU_BRIGHTNESS_MAX;
+	tmu_task2.chromakey = 0;
+	tmu_task2.srcmesh = &dst_vertices[0][0];
+	tmu_task2.srcfbuf = tex_backbuffer;
+	tmu_task2.srchres = vga_hres;
+	tmu_task2.srcvres = vga_vres;
+	tmu_task2.dstmesh = &dst_vertices[0][0];
+	tmu_task2.dstfbuf = vga_backbuffer;
+	tmu_task2.dsthres = vga_hres;
+	tmu_task2.dstvres = vga_vres;
+	tmu_task2.profile = 0;
+	if(spam_enabled)
+		tmu_task2.callback = NULL;
+	else
+		tmu_task2.callback = rpipe_tmu_copydone;
+	tmu_task2.user = NULL;
+	tmu_submit_task(&tmu_task2);
 
-		spam_counter = 0;
+	if(spam_enabled) {
+		tmu_task1.flags = TMU_CTL_CHROMAKEY;
+		tmu_task1.hmeshlast = SPAM_HMESHLAST;
+		tmu_task1.vmeshlast = SPAM_VMESHLAST;
+		tmu_task1.brightness = TMU_BRIGHTNESS_MAX;
+		tmu_task1.chromakey = SPAM_CHROMAKEY;
+		tmu_task1.srcmesh = &spam_src_vertices[0][0];
+		tmu_task1.srcfbuf = (unsigned short *)spam_raw;
+		tmu_task1.srchres = SPAM_W;
+		tmu_task1.srcvres = SPAM_H;
+		tmu_task1.dstmesh = &spam_dst_vertices[0][0];
+		tmu_task1.dstfbuf = vga_backbuffer;
+		tmu_task1.dsthres = vga_hres;
+		tmu_task1.dstvres = vga_vres;
+		tmu_task1.profile = 0;
+		tmu_task1.callback = rpipe_tmu_copydone;
+		tmu_task1.user = NULL;
+		tmu_submit_task(&tmu_task1);
 	}
 }
 
-static void rpipe_bottom_half()
+void rpipe_swap_bottom_half()
 {
+	unsigned short *b;
 	unsigned int oldmask;
-
-	rpipe_draw_waves();
-	rpipe_draw_spam();
+	
+	/* Swap texture buffers */
+	b = tex_backbuffer;
+	tex_backbuffer = tex_frontbuffer;
+	tex_frontbuffer = b;
 
 	/* Update display */
-	flush_bridge_cache();
 	vga_swap_buffers();
 
 	/* Update statistics */
@@ -287,22 +344,30 @@ static void rpipe_bottom_half()
 	irq_setmask(oldmask & ~(IRQ_TIMER0));
 	frames++;
 	irq_setmask(oldmask);
+
+	/* Ready to process the next frame ! */
+	queue[consume]->callback(queue[consume]);
+	consume = (consume + 1) & RPIPE_FRAMEQ_MASK;
+	level--;
+	if(level > 0)
+		rpipe_start(queue[consume]);
+	else
+		cts = 1;
 }
 
 void rpipe_service()
 {
-	if(run_bottom_half) {
+	if(run_wave_bottom_half) {
 		cpustats_enter();
-		rpipe_bottom_half();
-		run_bottom_half = 0;
+		rpipe_wave_bottom_half();
+		run_wave_bottom_half = 0;
+		cpustats_leave();
+	}
 
-		queue[consume]->callback(queue[consume]);
-		consume = (consume + 1) & RPIPE_FRAMEQ_MASK;
-		level--;
-		if(level > 0)
-			rpipe_start(queue[consume]);
-		else
-			cts = 1;
+	if(run_swap_bottom_half) {
+		cpustats_enter();
+		rpipe_swap_bottom_half();
+		run_swap_bottom_half = 0;
 		cpustats_leave();
 	}
 }

@@ -126,7 +126,7 @@ always @(posedge sys_clk) begin
 				endcase
 			end
 			case(csr_a[4:0])
-				5'b00000: csr_do <= {irq, busy};
+				5'b00000: csr_do <= {chroma_key_en, irq, busy};
 				
 				5'b00001: csr_do <= hmesh_last;
 				5'b00010: csr_do <= vmesh_last;

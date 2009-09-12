@@ -19,6 +19,12 @@ parser.h: parser.c
 bandfilters.h: bandfilters.sce
 	scilab -nw -nwni -nogui -nb -f bandfilters.sce
 
+spam.raw: spam.png
+	$(MMDIR)/tools/makeraw spam.png
+
+spam.h: spam.raw
+	xxd -i spam.raw spam.h
+
 %.bin: %.elf
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	$(MMDIR)/tools/crc32 $@
@@ -28,11 +34,11 @@ boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/baselib/baselib.a $(MMDIR)/soft
 
 .PHONY: clean depend
 
-depend: parser.c scanner.c bandfilters.h
+depend: parser.c scanner.c bandfilters.h spam.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out bandfilters.h boot.elf boot.bin .*~ *~ Makefile.bak
+	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out bandfilters.h spam.raw spam.h boot.elf boot.bin .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 
@@ -67,11 +73,10 @@ isr.o: ../../software/include/hw/pfpu.h ui.h cpustats.h
 line.o: ../../software/include/libc.h ../../software/include/math.h
 line.o: ../../software/include/console.h color.h line.h
 main.o: ../../software/include/libc.h ../../software/include/console.h
-main.o: ../../software/include/uart.h ../../software/include/cffat.h
-main.o: ../../software/include/system.h ../../software/include/irq.h
-main.o: ../../software/include/board.h ../../software/include/version.h
-main.o: ../../software/include/hw/sysctl.h ../../software/include/hw/common.h
-main.o: ../../software/include/hw/gpio.h
+main.o: ../../software/include/uart.h ../../software/include/system.h
+main.o: ../../software/include/irq.h ../../software/include/board.h
+main.o: ../../software/include/version.h ../../software/include/hw/sysctl.h
+main.o: ../../software/include/hw/common.h ../../software/include/hw/gpio.h
 main.o: ../../software/include/hw/interrupts.h brd.h mem.h time.h vga.h snd.h
 main.o: ../../software/include/hw/ac97.h tmu.h
 main.o: ../../software/include/hw/tmu.h pfpu.h
@@ -101,8 +106,7 @@ rpipe.o: ../../software/include/libc.h ../../software/include/console.h
 rpipe.o: ../../software/include/irq.h ../../software/include/system.h
 rpipe.o: ../../software/include/math.h ../../software/include/hw/interrupts.h
 rpipe.o: renderer.h vga.h tmu.h ../../software/include/hw/tmu.h
-rpipe.o: ../../software/include/hw/common.h wave.h cpustats.h rpipe.h
-rpipe.o: spam.xpm
+rpipe.o: ../../software/include/hw/common.h wave.h cpustats.h rpipe.h spam.h
 scanner.o: ../../software/include/libc.h ../../software/include/malloc.h
 scanner.o: scanner.h parser.h
 scheduler.o: ../../software/include/libc.h ../../software/include/console.h
