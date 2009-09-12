@@ -49,6 +49,7 @@ mkdir binkit/flash
 cp ml401-flasher/board/flasher.bit binkit/flash/
 cp ml401-flasher/host/flasher binkit/flash/
 cp milkymist-core/software/bios/bios.bin binkit/flash/
+cp milkymist-core/software/bios/bios_splash.bin binkit/flash/
 
 cp milkymist-core/tools/flterm binkit/
 
@@ -56,7 +57,6 @@ mkdir binkit/demo
 cp milkymist-core/software/demo/boot.bin binkit/demo/
 cp milkymist-core/presets/*.milk binkit/demo/
 
-cp milkymist-core/LICENSE binkit/
 cat << EOF > binkit/README
 This is a binary distribution of Milkymist(tm), an open hardware
 FPGA-based videosynth platform.
@@ -65,6 +65,8 @@ Built for the Xilinx ML401 development board.
 
 You can find source and more information at :
   http://www.milkymist.org
+
+Milkymist is copyrighted software.
 EOF
 
 date > binkit/TIMESTAMP

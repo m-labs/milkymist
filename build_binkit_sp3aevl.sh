@@ -33,7 +33,6 @@ cp milkymist-core/software/bios/bios.bin binkit/flash/
 
 cp milkymist-core/tools/flterm binkit/
 
-cp milkymist-core/LICENSE binkit/
 cat << EOF > binkit/README
 This is a binary distribution of Milkymist(tm), an open hardware
 FPGA-based videosynth platform.
@@ -42,6 +41,7 @@ Built for the Avnet Spartan-3A evaluation kit.
 
 You can find source and more information at :
   http://www.milkymist.org
+Milkymist is copyrighted software.
 EOF
 
 date > binkit/TIMESTAMP
