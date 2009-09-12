@@ -35,7 +35,7 @@ clean:
 boot.o: ../../software/include/libc.h ../../software/include/console.h
 boot.o: ../../software/include/uart.h ../../software/include/system.h
 boot.o: ../../software/include/cffat.h ../../software/include/crc.h
-boot.o: ../../std/sfl.h ../../software/include/hw/hpdmc.h
+boot.o: ../../tools/sfl.h ../../software/include/hw/hpdmc.h
 boot.o: ../../software/include/hw/common.h boot.h
 main.o: ../../software/include/libc.h ../../software/include/console.h
 main.o: ../../software/include/uart.h ../../software/include/cffat.h
