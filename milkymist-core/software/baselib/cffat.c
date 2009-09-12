@@ -253,7 +253,7 @@ static int cffat_is_regular(const struct directory_entry *entry)
 int cffat_list_files(cffat_dir_callback cb, void *param)
 {
 	const struct directory_entry *entry;
-	char fmtbuf[8+3+1];
+	char fmtbuf[8+1+3+1];
 	char longname[131];
 	int has_longname;
 	int i, j, k;
