@@ -26,7 +26,7 @@
 module hpdmc_oddr4 #(
 	parameter DDR_ALIGNMENT = "C0",
 	parameter INIT = 1'b0,
-	parameter SRTYPE = "SYNC"
+	parameter SRTYPE = "ASYNC"
 ) (
 	output [3:0] Q,
 	input C0,
