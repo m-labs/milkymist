@@ -33,8 +33,8 @@ _reset_handler:
 	mvhi    r1, hi(_reset_handler)
 	ori     r1, r1, lo(_reset_handler)
 	wcsr    EBA, r1
+	xor	r2, r2, r2
 	calli   _crt0
-	nop
 	nop
 
 _breakpoint_handler:
@@ -45,6 +45,40 @@ _breakpoint_handler:
 	nop
 	nop
 	nop
+	nop
+
+_instruction_bus_error_handler:
+	nop; nop; nop; nop
+	nop; nop; nop; nop
+
+_watchpoint_hander:
+	nop; nop; nop; nop
+	nop; nop; nop; nop
+
+_data_bus_error_handler:
+	nop; nop; nop; nop
+	nop; nop; nop; nop
+
+_divide_by_zero_handler:
+	nop; nop; nop; nop
+	nop; nop; nop; nop
+
+_interrupt_handler:
+	nop; nop; nop; nop
+	nop; nop; nop; nop
+
+_system_call_handler:
+	nop; nop; nop; nop
+	nop; nop; nop; nop
+
+_warm_boot_handler:
+	xor     r0, r0, r0
+	wcsr    IE, r0
+	mvhi    r1, hi(_reset_handler)
+	ori     r1, r1, lo(_reset_handler)
+	wcsr    EBA, r1
+	mvi	r2, 1
+	calli   _crt0
 	nop
 
 _crt0:
@@ -66,7 +100,7 @@ _crt0:
 	bi      .clearBSS
 	
 .callMain:
-	mvi     r1, 0
+	mv	r1, r2
 	mvi     r2, 0
 	mvi     r3, 0
 	calli   main
