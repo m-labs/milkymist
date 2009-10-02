@@ -1,3 +1,0 @@
-SOURCES_HPDMC=tb_hpdmc.v ddr.v oddr2.v iddr2.v obuft.v iobuf.v $(wildcard ../rtl/*.v) $(wildcard ../rtl/spartan6/*.v)
-
-include common.mak

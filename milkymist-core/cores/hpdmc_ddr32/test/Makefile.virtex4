@@ -1,3 +1,0 @@
-SOURCES_HPDMC=tb_hpdmc.v ddr.v oddr.v iddr.v idelay.v $(wildcard ../rtl/*.v) $(wildcard ../rtl/virtex4/*.v)
-
-include common.mak
