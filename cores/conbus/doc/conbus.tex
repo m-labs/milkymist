@@ -1,0 +1,30 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{url}
+
+\title{Wishbone bus arbiter and address decoder}
+\author{S\'ebastien Bourdeauducq}
+\date{\today}
+\begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\maketitle{}
+\section{Specifications}
+This core allows up to several masters to communicate with up to several slaves on a shared Wishbone bus.
+
+It takes care of bus arbitration and remapping of the slave base addresses. It is very simple and does not take care of priorities. Scheduling occurs when a master releases the bus, and then the next master which requested the bus takes ownership.
+
+It is based on \verb!wb_conbus! from OpenCores.
+
+\section{Using the core}
+All parameters and ports should be self-explanatory. No special care should be taken.
+
+\end{document}

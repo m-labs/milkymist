@@ -1,0 +1,25 @@
+BOARD_DIR=../rtl
+CORES_DIR=../../../cores
+
+include ../sources.mak
+SRC=$(BOARD_SRC) $(CORES_SRC)
+
+all: build/system.bit
+
+build/system.ucf: common.ucf xst.ucf
+	cat common.ucf xst.ucf > build/system.ucf
+
+build/system.prj: $(SRC)
+	rm -f build/system.prj
+	for i in `echo $^`; do \
+	    echo "verilog work ../$$i" >> build/system.prj; \
+	done
+
+build/system.ngc: build/system.prj
+	cd build && xst -ifn ../system.xst
+
+build/system.ngd: build/system.ngc build/system.ucf
+	cd build && ngdbuild -uc system.ucf system.ngc
+
+include common.mak
+

@@ -1,0 +1,36 @@
+# ==== Clock input ====
+
+NET "clkin" TNM_NET = "clkin";
+TIMESPEC "TSclkin" = PERIOD "clkin" 12.5 ns HIGH 50% INPUT_JITTER 100 ps;
+
+# ==== Reset button ====
+
+# ==== Linear Flash ====
+
+# ==== UART ====
+
+# ==== SD card ====
+
+# ==== DDR SDRAM ====
+
+# ==== LEDs ====
+
+# ==== DIP switches ====
+
+# ==== VGA output ====
+
+# ==== AC97 ====
+NET "ac97_clk" TNM_NET = "clkac97";
+TIMESPEC "TSclkac97" = PERIOD "clkac97" 80 HIGH 50%;
+
+# ==== ISP1362 USB ====
+
+# ==== Ethernet ====
+
+# ==== Video input ====
+
+# ==== DMX512 ====
+
+# ==== MIDI ====
+
+# ==== IR ====
