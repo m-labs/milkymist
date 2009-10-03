@@ -20,44 +20,29 @@ echo "Log file: $LOGFILE"
 echo "================================================================================"
 echo ""
 
+echo "Flashing BIOS into NOR flash..."
+
 if [ $BOARD == "xilinx-ml401" ] ; then
-	FLASHERDIR=$BASEDIR/../ml401-flasher
+	echo -n "  Loading flasher bitstream..."
+	load-ml401-flasher > $LOGFILE 2>&1
+	if [ "$?" != 0 ] ; then
+		echo "FAILED"
+		exit 1
+	else
+		echo "OK"
+	fi
+
+	echo -n "  Writing flash..."
+	ml401-flasher $BIOSFILE >> $LOGFILE 2>&1
+	if [ "$?" != 0 ] ; then
+		echo "FAILED"
+		exit 1
+	else
+		echo "OK"
+	fi
 else
 	echo "Unsupported board, aborting."
 	exit
 fi
-
-echo "Flashing BIOS into NOR flash..."
-
-echo -n "  Building and loading flasher bitstream..."
-cd $FLASHERDIR/board
-make load > $LOGFILE 2>&1
-if [ "$?" != 0 ] ; then
-        echo "FAILED"
-	exit 1
-else
-        echo "OK"
-fi
-
-echo -n "  Building host-side flasher tool..."
-cd $FLASHERDIR/host
-make >> $LOGFILE 2>&1
-if [ "$?" != 0 ] ; then
-        echo "FAILED"
-	exit 1
-else
-        echo "OK"
-fi
-
-echo -n "  Writing flash..."
-./flasher $BIOSFILE >> $LOGFILE 2>&1
-if [ "$?" != 0 ] ; then
-        echo "FAILED"
-	exit 1
-else
-        echo "OK"
-fi
-
-cd $BASEDIR
 
 echo "Flashing complete!"
