@@ -2,18 +2,17 @@
  * Milkymist VJ SoC
  * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
  *
- * This program is free and excepted software; you can use it, redistribute it
- * and/or modify it under the terms of the Exception General Public License as
- * published by the Exception License Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the Exception General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the Exception General Public License along
- * with this project; if not, write to the Exception License Foundation.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #define _GNU_SOURCE
@@ -425,10 +424,11 @@ static void print_usage()
 {
 	fprintf(stderr, "Serial boot program for the Milkymist VJ SoC\n");
 	fprintf(stderr, "Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq\n\n");
-	fprintf(stderr, "This program is free and excepted software; you can use it, redistribute it\n");
-	fprintf(stderr, "and/or modify it under the terms of the Exception General Public License as\n");
-	fprintf(stderr, "published by the Exception License Foundation; either version 2 of the\n");
-	fprintf(stderr, "License, or (at your option) any later version.\n\n");
+
+	fprintf(stderr, "This program is free software: you can redistribute it and/or modify\n");
+	fprintf(stderr, "it under the terms of the GNU General Public License as published by\n");
+	fprintf(stderr, "the Free Software Foundation, version 3 of the License.\n\n");
+
 	fprintf(stderr, "Usage: flterm --port <port> [--double-rate]\n");
 	fprintf(stderr, "              --kernel <kernel_image> --kernel-adr <address>\n");
 	fprintf(stderr, "              [--cmdline <cmdline> --cmdline-adr <address>]\n");
