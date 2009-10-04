@@ -16,7 +16,7 @@ BASEDIR=`pwd`
 
 echo -n "Building host utilities..."
 cd $BASEDIR/tools
-make > $LOGFILEHOST 2>&1
+make >> $LOGFILEHOST 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 	exit 1
@@ -25,7 +25,7 @@ else
 fi
 
 echo -n "Building base library..."
-cd $BASEDIR/software/baselib && make > $LOGFILE 2>&1
+cd $BASEDIR/software/baselib && make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 	exit 1

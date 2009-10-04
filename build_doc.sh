@@ -12,7 +12,7 @@ echo "==========================================================================
 echo ""
 
 echo -n "Building system documentation..."
-cd $BASEDIR/doc && make > $LOGFILE 2>&1
+cd $BASEDIR/doc && make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 else

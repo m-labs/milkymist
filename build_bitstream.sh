@@ -14,7 +14,7 @@ echo "==========================================================================
 echo ""
 
 echo -n "Building FPGA bitstream..."
-cd $BASEDIR/boards/$BOARD/synthesis && make -f Makefile.$SYNTOOL > $LOGFILE 2>&1
+cd $BASEDIR/boards/$BOARD/synthesis && make -f Makefile.$SYNTOOL >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 	exit 1

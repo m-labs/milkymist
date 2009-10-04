@@ -30,7 +30,7 @@ echo ""
 
 echo -n "Building host utilities..."
 cd $BASEDIR/tools
-make > $LOGFILE 2>&1
+make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 	exit 1
