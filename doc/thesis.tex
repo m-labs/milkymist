@@ -1,7 +1,6 @@
 % http://www.idt.mdh.se/phd/thesis/kthesis-1.0/
 \documentclass[a4paper,11pt]{kthesis}
 \usepackage{fullpage}
-\usepackage[latin1]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[normalem]{ulem}
 \usepackage[english]{babel}
@@ -15,31 +14,40 @@
 \title{A performance-driven SoC architecture for video synthesis}
 \date{June 2010}
 \type{Master of Science Thesis}
-\department{ICT/SCS}
+\department{Department of Software and Computer Systems}
 \author{S\'ebastien Bourdeauducq}
 \imprint{Stockholm 2010}
-\publisher{TBD}
+\publisher{KTH}
 \trita{xxx-nnnn}
 \issn{nnnn-nnnn}
 \isrn{KTH/xxx/R-{}-nn/n-{}-SE}
 \isbn{x-xxxx-xxx-x}
 \begin{document}
 \begin{abstract}
-bla bla bla
+TODO
 \end{abstract}
 
 \tableofcontents
+\listoffigures
 
 \mainmatter 
 
 \chapter{Introduction}
-\section{Background}
-blabla
+The open source model means that any individual, if he or she has the required level of technical knowledge, can realistically use, share and modify the design of a technical system. During the nineties, this development model gained popularity in the software world with, most notably, the GNU/Linux operating system. But it was not viable for complex SoCs until a few years ago, because before then, FPGAs were too slow, too small, and too expensive. System-on-chip design and hands-on computer architecture therefore remained a field reserved to well-funded academia and research and development laboratories of companies of a significant size and wealth, who had access to large FPGA clusters or even semiconductor foundries.
 
-pipo pipo pipo pipotron\cite{milkymist}
+But today's falling costs and general availability of high-density field programmable gate array (FPGA) devices make it possible to implement complex high-performance system-on-chips (SoC) that can be modified and improved by anyone, thanks to the flexibility of the FPGA platform.
+
+This master thesis introduces Milkymist\cite{milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by people known as ``video jockeys'', or ``VJs''.
+
+Besides the fact that this is, to me, a cool application, it is also demanding in terms of computational power and memory performance. This would make Milkymist a proof that high performance open source system-on-chip design is possible in practice; with a view to help, foster and catalyze similar ``open hardware'' initiatives. As the Milkymist system-on-chip is entirely made of synthesizable Verilog and mostly released under the GNU GPL, its code can be re-used by other open hardware projects.
+
+Meeting the performance constraints while still using cheap and relatively small FPGAs is perhaps the most interesting and challenging technical point of this project, and it could not be done without considerable work in the field of computer architecture. This is what this master thesis covers.
+
+\section{Background}
+TODO
 
 \section{Problem statement}
-foo foo bar
+TODO
 
 \bibliography{thesis}{}
 \bibliographystyle{plain}
