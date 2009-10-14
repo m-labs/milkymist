@@ -52,6 +52,7 @@ Besides the fact that this is an interesting, creative and popular application, 
 Meeting the performance constraints while still using cheap and relatively small FPGAs is perhaps the most interesting and challenging technical point of this project, and it could not be done without considerable work in the field of computer architecture. This is what this master thesis covers.
 
 \section{Background}
+\subsection{Video synthesis}
 MilkDrop~\cite{milkdrop} is a popular open source video synthesis framework that was originally made to develop visualization plugins for the Winamp audio player. People have since then ported MilkDrop to many different platforms and made it react to live events, such as captured audio or movements of a WiiMote remote control.
 
 The idea behind the Milkymist project is to implement an embedded video synthesis platform on a custom open source system-on-chip that is based on the same rendering principle of MilkDrop, but with more control interfaces and features.
@@ -63,13 +64,39 @@ The idea behind the Milkymist project is to implement an embedded video synthesi
 \label{fig:milkdrop}
 \end{figure}
 
+\subsection{Open source SoC platforms}
+There is an existing effort to build open source system-on-chips. It is interesting to review these projects in order to look forward to building upon them -- possibly adding hardware accelerators or performing other modifications in order to improve performance.
+
+There are many SoC designs available on the Internet, which are more or less mature. The system-on-chip projects listed here meet the following criteria:
+\begin{itemize}
+\item they have been shown to work on at least one FPGA board
+\item they are released under an open source license
+\item they comprise a synthesizable RISC CPU
+\item the CPU is supported by a C and C++ compiler
+\item they include a RS232 compatible UART (for a debug console)
+\item they support interfacing to off-chip SDRAM memory
+\end{itemize}
+
+\subsubsection{GRLIB}
+\subsubsection{OpenRISC}
+\subsubsection{OpenSPARC}
+\subsubsection{Lattice MicoSystem}
+\subsubsection{soc-lm32}
+
 \section{Problem statement}
 TODO
 
-\chapter{Memory system}
+\chapter{Configuration and Status Register (CSR) bus}
+\section{General SoC interconnect: the Wishbone bus and its limitations}
+\section{Saving resources and helping timing closure}
+\chapter{Memory subsystem}
+\section{Attacking the memory wall}
+\section{An alternative approach: the FastMemoryLink (FML) bus}
+\section{Milkymist's DRAM controller architecture}
+\section{Benchmarking}
 \chapter{Software execution environment}
-\section{Description}
-Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this is a community effort, the details will not be covered in this master thesis. Still, this demonstrates the capability of the platform to run complex software.
+\section{Capabilities}
+Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this is a community effort, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
 
 \begin{figure}[htp]
 \centering
@@ -77,7 +104,12 @@ Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this 
 \caption{Linux booting on the Milkymist SoC.}
 \label{fig:linux}
 \end{figure}
-\section{Tuning and benchmarking}
+
+\section{Benchmarking and tuning}
+
+\chapter{Drawing textured polygons, and drawing them fast}
+
+\chapter{The floating point coprocessor}
 
 \bibliography{thesis}{}
 \bibliographystyle{plain}
