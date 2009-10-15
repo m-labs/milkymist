@@ -12,7 +12,7 @@
 
 \title{A performance-driven SoC architecture for video synthesis}
 \date{June 2010}
-\type{Master of Science Thesis}
+\type{Master of Science Thesis in System-on-Chip Design}
 \department{Department of Software and Computer Systems}
 \author{S\'ebastien Bourdeauducq}
 \imprint{Stockholm 2010}
@@ -77,14 +77,57 @@ There are many SoC designs available on the Internet, which are more or less mat
 \item they support interfacing to off-chip SDRAM memory
 \end{itemize}
 
-\subsubsection{GRLIB}
-\subsubsection{OpenRISC}
 \subsubsection{OpenSPARC}
-\subsubsection{Lattice MicoSystem}
-\subsubsection{soc-lm32}
+OpenSPARC~\cite{opensparc} is the well-known SPARC processor of Sun Microsystems which is now released under an open source license and included into a SoC FPGA project.
+
+Implemented on a FPGA, this processor is extremely resource-intensive. A cut-down version of the CPU core only, called the ``Simply RISC S1'', occupies at least 37000 FPGA look-up tables (LUT) without the caches~\cite{simplyrisc}. This is about twice the logic capacity of the Virtex-4 XC4VLX25 FPGA.
+
+As it turns out, the OpenSPARC architecture is a very complex design which implements a huge number of techniques which increase the software execution speed (instructions per clock cycle). While this is a wise choice for a software-centric processor implemented on a fully custom semiconductor chip, with a FPGA process it is more appealing to keep the software processor simple in order to save resources and make room for custom hardware accelerators, taking advantage of the FPGA flexibility.
+
+\subsubsection{GRLIB}
+GRLIB~\cite{grlib} is a very professional and standard-compliant library of SoC cores. The library features a comprehensive set of cores: AMBA AHB/APB bus control elements, the LEON3 SPARC processor, a 32-bit PC133 SDRAM controller, a 32-bit PCI bridge with DMA, a 10/100/1000 Mbit Ethernet MAC,  16/32/64-bit DDR SDRAM/DDR2 SDRAM controllers and more.
+
+However, its drawbacks are:
+\begin{itemize}
+\item Code complexity. GRLIB is written in VHDL and makes intensive use of custom types, packages, generate statements, etc.
+\item Cores are not self-contained. GRLIB defines many ``building blocks'' that are used everywhere else in the code, making it difficult to re-use code in another project which is not based on GRLIB.
+\item Significant FPGA resource usage. Synthesized with Xilinx ISE 11.3, a system comprising the LEON3 SPARC processor with a 2-way set-associative 16kB cache and no memory management unit (MMU), the DDR SDRAM controller, a RS232 serial port, and a Ethernet 10/100 MAC uses 13264 FPGA look-up tables (LUT). They map to 79\% of the Virtex-4 XC4VLX25 FPGA. This undermines the possibility of adding hardware acceleration cores.
+\item Relatively low clock frequency. With the same parameters as above, the maximum clock frequency is 84MHz.
+\end{itemize}
+
+Because of these reasons, GRLIB was not retained.
+
+\subsubsection{ORPSoC (OpenRISC)}
+ORPSoC is based on the OpenRISC~\cite{openrisc} processor core, which is the flagship product of OpenCores, a community of developers of open source system-on-chips. ORPSoC is essentially maintained by ORSoC AB.
+
+ORPSoC notably features the OpenRISC OR1200 processor core, the Wishbone~\cite{wishbone} bus, comprehensive debugging facilities, a 16550-compatible RS232 UART, a 10/100Mbps Ethernet MAC and a SDRAM controller.
+
+Unfortunately, ORPSoC is resource-inefficient and extremely slow, mainly because of the OpenRISC implementation which is not optimized for synthesis and the poorly designed SDRAM controller. Using ORSoC AB's reference design, a C program takes more than a dozen of seconds to copy a 16MB SDRAM buffer from one memory location to another.
+
+OpenRISC and ORPSoC therefore do not seem to be a good platform for the performance-demanding video synthesis application.
+
+\subsubsection{LatticeMico32 System}
+This product~\cite{mico32} from the FPGA vendor Lattice Semiconductor is comparable to Microblaze~\cite{microblaze} and Nios II~\cite{nios} from its competitors, respectively Xilinx and Altera.
+
+Like its competing products, LatticeMico32 System features a broad library of light, fast and FPGA-optimized SoC cores.
+
+One interesting move made by Lattice Semiconductor is that parts of the LatticeMico32 System are released under an open source license, and most notably the custom LatticeMico32 microprocessor core. LatticeMico32 System is also based upon the Wishbone~\cite{wishbone} bus, whose specification is free of charge and freely distributable.
+
+While it is perhaps technically possible to build Milkymist on top of the LatticeMico32 System, there are licensing issues concerning most notably the DDR SDRAM controller which is proprietary.
+
+However, the LatticeMico32 microprocessor core is interesting. Synthesized for the XC4VLX25 with the 2-way set-associative caches enabled, it occupies only about 2400 LUTs and runs at more than 100MHz.
 
 \section{Problem statement}
-TODO
+According to this background, for the video synthesis application it seems relevant to:
+
+\begin{itemize}
+\item develop a fast, resource-efficient and FPGA-optimized system-on-chip
+\item develop an efficient memory subsystem
+\item use a light-weight softcore CPU
+\item develop custom hardware accelerators
+\end{itemize}
+
+This thesis focuses on the computer architecture problems and concepts behind these points.
 
 \chapter{Configuration and Status Register (CSR) bus}
 \section{General SoC interconnect: the Wishbone bus and its limitations}
@@ -92,7 +135,7 @@ TODO
 \chapter{Memory subsystem}
 \section{Attacking the memory wall}
 \section{An alternative approach: the FastMemoryLink (FML) bus}
-\section{Milkymist's DRAM controller architecture}
+\section{Milkymist's SDRAM controller architecture}
 \section{Benchmarking}
 \chapter{Software execution environment}
 \section{Capabilities}
@@ -100,14 +143,14 @@ Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this 
 
 \begin{figure}[htp]
 \centering
-\includegraphics[height=92mm]{linux.eps}
+\includegraphics[height=100mm]{linux.eps}
 \caption{Linux booting on the Milkymist SoC.}
 \label{fig:linux}
 \end{figure}
 
 \section{Benchmarking and tuning}
 
-\chapter{Drawing textured polygons, and drawing them fast}
+\chapter{Fast texture mapping}
 
 \chapter{The floating point coprocessor}
 
