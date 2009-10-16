@@ -6,8 +6,8 @@ source $BASEDIR/coredoc.inc
 
 cd $BASEDIR/tools && make clean
 
-cd $BASEDIR/software/baselib && make clean
-cd $BASEDIR/software/mathlib && make clean
+cd $BASEDIR/software/libbase && make clean
+cd $BASEDIR/software/libmath && make clean
 cd $BASEDIR/software/bios && make clean
 cd $BASEDIR/software/demo && make clean
 

@@ -29,8 +29,8 @@ spam.h: spam.raw
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	$(MMDIR)/tools/crc32 $@
 
-boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/baselib/baselib.a $(MMDIR)/software/mathlib/mathlib.a
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) $(MMDIR)/software/baselib/baselib.a $(MMDIR)/software/mathlib/mathlib.a
+boot.elf: linker.ld $(OBJECTS)
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -lbase -lmath
 
 .PHONY: clean depend
 

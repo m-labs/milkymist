@@ -24,7 +24,7 @@ fi
 
 echo "Building embedded software :"
 echo -n "  Base library..."
-cd $BASEDIR/software/baselib && make >> $LOGFILE 2>&1
+cd $BASEDIR/software/libbase && make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 	exit 1

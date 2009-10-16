@@ -10,8 +10,8 @@ all: bios_splash.bin
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	$(MMDIR)/tools/crc32 $@ write
 
-bios.elf: linker.ld $(OBJECTS) $(MMDIR)/software/baselib/baselib-light.a
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) $(MMDIR)/software/baselib/baselib-light.a
+bios.elf: linker.ld $(OBJECTS)
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libbase -lbase-light
 
 splash.raw: splash.png
 	$(MMDIR)/tools/makeraw splash.png

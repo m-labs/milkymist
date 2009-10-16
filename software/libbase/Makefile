@@ -5,15 +5,15 @@ OBJECTS_ALL=divsi3.o libc.o crc16.o crc32.o console.o cfcard.o cffat.o system.o 
 OBJECTS=$(OBJECTS_ALL) irq.o softfloat.o softfloat-glue.o vsnprintf.o atof.o malloc.o uart-async.o
 OBJECTS_LIGHT=$(OBJECTS_ALL) vsnprintf-nofloat.o uart.o
 
-all: baselib-light.a baselib.a
+all: libbase-light.a libbase.a
 
-baselib-light.a: $(OBJECTS_LIGHT)
-	$(AR) clr baselib-light.a $(OBJECTS_LIGHT)
-	$(RANLIB) baselib-light.a
+libbase-light.a: $(OBJECTS_LIGHT)
+	$(AR) clr libbase-light.a $(OBJECTS_LIGHT)
+	$(RANLIB) libbase-light.a
 
-baselib.a: $(OBJECTS)
-	$(AR) clr baselib.a $(OBJECTS)
-	$(RANLIB) baselib.a
+libbase.a: $(OBJECTS)
+	$(AR) clr libbase.a $(OBJECTS)
+	$(RANLIB) libbase.a
 
 .PHONY: clean depend
 
@@ -21,7 +21,7 @@ depend:
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f *.o baselib.a baselib-light.a .*~ *~ Makefile.bak
+	rm -f *.o libbase.a libbase-light.a .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 

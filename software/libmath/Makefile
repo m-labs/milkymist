@@ -3,11 +3,11 @@ include $(MMDIR)/software/include.mak
 
 OBJECTS=acosf.o asinf.o atanf.o cosf.o cotf.o expf.o floorf.o ldexpf.o logf.o modff.o sincosf.o sinf.o sqrtf.o tanf.o asincosf.o atan2f.o ceilf.o coshf.o fabsf.o frexpf.o log10f.o powf.o sincoshf.o sinhf.o tancotf.o tanhf.o
 
-all: mathlib.a
+all: libmath.a
 
-mathlib.a: $(OBJECTS)
-	$(AR) clr mathlib.a $(OBJECTS)
-	$(RANLIB) mathlib.a
+libmath.a: $(OBJECTS)
+	$(AR) clr libmath.a $(OBJECTS)
+	$(RANLIB) libmath.a
 
 .PHONY: clean depend
 
@@ -15,7 +15,7 @@ depend:
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f *.o mathlib.a .*~ *~ Makefile.bak
+	rm -f *.o libmath.a .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 
