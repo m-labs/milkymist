@@ -19,14 +19,11 @@
 #include <console.h>
 #include <math.h>
 #include <system.h>
-#include <hw/sysctl.h>
-#include <hw/uart.h>
-#include <hw/ac97.h>
-#include <hw/tmu.h>
+
+#include <hal/pfpu.h>
+#include <hal/vga.h>
 
 #include "parser_helper.h"
-#include "pfpu.h"
-#include "vga.h"
 #include "eval.h"
 #include "apipe.h"
 #include "renderer.h"

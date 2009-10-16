@@ -21,7 +21,7 @@
 #include <hw/ac97.h>
 #include <hw/interrupts.h>
 
-#include "snd.h"
+#include <hal/snd.h>
 
 /****************************************************************/
 /* GENERAL                                                      */

@@ -15,11 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __BRD_H
-#define __BRD_H
+#include <libc.h>
+#include <console.h>
+#include <malloc.h>
+#include <hw/sram.h>
 
-extern const struct board_desc *brd_desc;
+#include <hal/mem.h>
 
-void brd_init();
+static char heap[16*1024*1024] __attribute__((aligned(8)));
 
-#endif /* __BRD_H */
+struct malloc_bank banks[2] = {
+	{
+		.addr_start = (unsigned int)&heap,
+		.addr_end = (unsigned int)&heap + sizeof(heap)
+	},
+	{
+		.addr_start = SRAM_BASE,
+		.addr_end = SRAM_BASE + SRAM_SIZE
+	}
+};
+
+void mem_init()
+{
+	int i, n;
+	
+	n = sizeof(banks)/sizeof(struct malloc_bank);
+	malloc_init(banks, n, BANK_SDRAM);
+	printf("MEM: registered %d dynamic banks:\n", n);
+	for(i=0;i<n;i++)
+		printf("MEM:   #%d 0x%08x-0x%08x\n", i, banks[i].addr_start, banks[i].addr_end);
+}

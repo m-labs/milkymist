@@ -23,6 +23,8 @@
 #include <hw/interrupts.h>
 #include <hw/sysctl.h>
 
+#include <hal/slowout.h>
+
 struct slowout_operation {
 	unsigned int duration;
 	unsigned int mask;

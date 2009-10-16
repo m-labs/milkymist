@@ -24,11 +24,8 @@
 #include <hw/sysctl.h>
 #include <hw/interrupts.h>
 
-#include "brd.h"
-#include "rpipe.h"
-#include "cpustats.h"
-#include "ui.h"
-#include "time.h"
+#include <hal/brd.h>
+#include <hal/time.h>
 
 static int sec;
 
@@ -51,10 +48,7 @@ void time_isr()
 {
 	sec++;
 	CSR_TIMER0_CONTROL = TIMER_AUTORESTART|TIMER_ENABLE; /* Ack interrupt */
-
-	rpipe_tick();
-	cpustats_tick();
-	ui_tick();
+	time_tick();
 }
 
 void time_get(struct timestamp *ts)

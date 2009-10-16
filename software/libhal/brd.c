@@ -15,17 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __VGA_H
-#define __VGA_H
+#include <libc.h>
+#include <console.h>
+#include <board.h>
 
-extern int vga_hres;
-extern int vga_vres;
-extern unsigned short int *vga_frontbuffer;
-extern unsigned short int *vga_backbuffer;
-extern unsigned short int *vga_lastbuffer;
+#include <hal/brd.h>
 
-void vga_init();
-void vga_disable();
-void vga_swap_buffers();
+const struct board_desc *brd_desc;
 
-#endif /* __VGA_H */
+void brd_init()
+{
+	brd_desc = get_board_desc();
+	if(brd_desc == NULL) {
+		printf("BRD: Fatal error, unknown board\n");
+		while(1);
+	}
+	printf("BRD: detected %s\n", brd_desc->name);
+}

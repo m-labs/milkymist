@@ -19,12 +19,13 @@
 #include <console.h>
 #include <board.h>
 
-#include "brd.h"
-#include "snd.h"
+#include <hal/brd.h>
+#include <hal/snd.h>
+#include <hal/pfpu.h>
+#include <hal/time.h>
+
 #include "analyzer.h"
 #include "eval.h"
-#include "pfpu.h"
-#include "time.h"
 #include "cpustats.h"
 #include "rpipe.h"
 #include "apipe.h"

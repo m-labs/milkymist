@@ -15,11 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HDLCD_H
-#define __HDLCD_H
+#ifndef __HAL_MEM_H
+#define __HAL_MEM_H
 
-void hdlcd_init();
-void hdlcd_clear();
-int hdlcd_printf(const char *fmt, ...);
+#define BANK_SDRAM	(0)
+#define BANK_SRAM	(1)
 
-#endif /* __HDLCD_H */
+void mem_init();
+
+#endif /* __HAL_MEM_H */

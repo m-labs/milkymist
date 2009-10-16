@@ -15,20 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TIME_H
-#define __TIME_H
+#ifndef __HAL_VGA_H
+#define __HAL_VGA_H
 
-struct timestamp {
-	int sec;
-	int usec;
-};
+extern int vga_hres;
+extern int vga_vres;
+extern unsigned short int *vga_frontbuffer;
+extern unsigned short int *vga_backbuffer;
+extern unsigned short int *vga_lastbuffer;
 
-void time_init();
-void time_isr();
+void vga_init();
+void vga_disable();
+void vga_swap_buffers();
 
-void time_get(struct timestamp *ts);
-
-void time_add(struct timestamp *dest, struct timestamp *delta);
-void time_diff(struct timestamp *dest, struct timestamp *t1, struct timestamp *t0);
-
-#endif /* __TIME_H */
+#endif /* __HAL_VGA_H */

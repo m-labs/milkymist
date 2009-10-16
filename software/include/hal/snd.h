@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SND_H
-#define __SND_H
+#ifndef __HAL_SND_H
+#define __HAL_SND_H
 
 #include <hw/ac97.h>
 
@@ -49,4 +49,4 @@ int snd_record_active();
  */
 #define SND_MAX_NSAMPLES (AC97_MAX_DMASIZE/4)
 
-#endif /* __SND_H */
+#endif /* __HAL_SND_H */

@@ -29,13 +29,14 @@
 #include <hw/gpio.h>
 #include <hw/interrupts.h>
 
-#include "vga.h"
-#include "snd.h"
-#include "tmu.h"
+#include <hal/vga.h>
+#include <hal/snd.h>
+#include <hal/tmu.h>
+#include <hal/time.h>
+#include <hal/brd.h>
+
 #include "line.h"
 #include "wave.h"
-#include "time.h"
-#include "brd.h"
 #include "rpipe.h"
 #include "cpustats.h"
 #include "shell.h"

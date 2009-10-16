@@ -18,7 +18,7 @@
 #ifndef __RPIPE_H
 #define __RPIPE_H
 
-#include "tmu.h"
+#include <hal/tmu.h>
 
 struct rpipe_frame;
 

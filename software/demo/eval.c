@@ -19,7 +19,8 @@
 #include <console.h>
 #include <hw/pfpu.h>
 
-#include "pfpu.h"
+#include <hal/pfpu.h>
+
 #include "ast.h"
 #include "compiler.h"
 #include "scheduler.h"

@@ -21,9 +21,9 @@
 #include <hw/sysctl.h>
 #include <hw/gpio.h>
 
-#include "brd.h"
-#include "slowout.h"
-#include "hdlcd.h"
+#include <hal/brd.h>
+#include <hal/slowout.h>
+#include <hal/hdlcd.h>
 
 /* In tenths of microseconds */
 #define SETUP_DELAY 3

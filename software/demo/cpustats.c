@@ -18,7 +18,8 @@
 #include <libc.h>
 #include <irq.h>
 
-#include "time.h"
+#include <hal/time.h>
+
 #include "cpustats.h"
 
 static int enter_count;

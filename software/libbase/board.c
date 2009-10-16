@@ -19,7 +19,7 @@
 #include <libc.h>
 #include <board.h>
 
-static const struct board_desc boards[2] = {
+static const struct board_desc boards[3] = {
 	{
 		.id = 0x58343031, /* X401 */
 		.name = "Xilinx ML401 development board",

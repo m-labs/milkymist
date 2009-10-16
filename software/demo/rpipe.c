@@ -22,9 +22,10 @@
 #include <math.h>
 #include <hw/interrupts.h>
 
+#include <hal/vga.h>
+#include <hal/tmu.h>
+
 #include "renderer.h"
-#include "vga.h"
-#include "tmu.h"
 #include "wave.h"
 #include "cpustats.h"
 #include "rpipe.h"

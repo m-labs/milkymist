@@ -15,20 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libc.h>
-#include <console.h>
-#include <board.h>
+#ifndef __HAL_SLOWOUT_H
+#define __HAL_SLOWOUT_H
 
-#include "brd.h"
+void slowout_init();
+void slowout_isr();
+int slowout_queue(unsigned int duration, unsigned int mask);
 
-const struct board_desc *brd_desc;
-
-void brd_init()
-{
-	brd_desc = get_board_desc();
-	if(brd_desc == NULL) {
-		printf("BRD: Fatal error, unknown board\n");
-		while(1);
-	}
-	printf("BRD: detected %s\n", brd_desc->name);
-}
+#endif /* __HAL_SLOWOUT_H */

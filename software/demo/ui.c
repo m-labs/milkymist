@@ -24,9 +24,10 @@
 #include <hw/sysctl.h>
 #include <hw/gpio.h>
 
+#include <hal/hdlcd.h>
+#include <hal/time.h>
+
 #include "renderer.h"
-#include "hdlcd.h"
-#include "time.h"
 #include "rpipe.h"
 #include "cpustats.h"
 #include "ui.h"

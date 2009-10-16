@@ -1,7 +1,7 @@
 MMDIR?=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=crt0.o isr.o brd.o time.o mem.o vga.o snd.o slowout.o hdlcd.o tmu.o pfpu.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o shell.o ui.o main.o
+OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o shell.o ui.o main.o
 SEGMENTS=-j .text -j .data -j .rodata
 
 all: boot.bin
@@ -30,7 +30,7 @@ spam.h: spam.raw
 	$(MMDIR)/tools/crc32 $@
 
 boot.elf: linker.ld $(OBJECTS)
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -lbase -lmath
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal --start-group $(OBJECTS) -lbase -lmath -lhal --end-group
 
 .PHONY: clean depend
 
@@ -45,31 +45,28 @@ clean:
 analyzer.o: ../../software/include/libc.h ../../software/include/console.h
 analyzer.o: analyzer.h bandfilters.h
 apipe.o: ../../software/include/libc.h ../../software/include/console.h
-apipe.o: ../../software/include/board.h brd.h snd.h
-apipe.o: ../../software/include/hw/ac97.h ../../software/include/hw/common.h
-apipe.o: analyzer.h eval.h ../../software/include/hw/pfpu.h
-apipe.o: ../../software/include/hw/tmu.h pfpu.h ast.h time.h cpustats.h
-apipe.o: rpipe.h tmu.h apipe.h
-brd.o: ../../software/include/libc.h ../../software/include/console.h
-brd.o: ../../software/include/board.h brd.h
+apipe.o: ../../software/include/board.h ../../software/include/hal/brd.h
+apipe.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
+apipe.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
+apipe.o: ../../software/include/hw/pfpu.h ../../software/include/hal/time.h
+apipe.o: analyzer.h eval.h ../../software/include/hw/tmu.h ast.h cpustats.h
+apipe.o: rpipe.h ../../software/include/hal/tmu.h apipe.h
 compiler.o: ../../software/include/hw/pfpu.h
 compiler.o: ../../software/include/hw/common.h ../../software/include/libc.h
 compiler.o: ../../software/include/console.h compiler.h ast.h
-cpustats.o: ../../software/include/libc.h ../../software/include/irq.h time.h
-cpustats.o: cpustats.h
+cpustats.o: ../../software/include/libc.h ../../software/include/irq.h
+cpustats.o: ../../software/include/hal/time.h cpustats.h
 eval.o: ../../software/include/libc.h ../../software/include/console.h
 eval.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
-eval.o: pfpu.h ast.h compiler.h scheduler.h eval.h
+eval.o: ../../software/include/hal/pfpu.h ast.h compiler.h scheduler.h eval.h
 eval.o: ../../software/include/hw/tmu.h
-hdlcd.o: ../../software/include/libc.h ../../software/include/board.h
-hdlcd.o: ../../software/include/console.h ../../software/include/hw/sysctl.h
-hdlcd.o: ../../software/include/hw/common.h ../../software/include/hw/gpio.h
-hdlcd.o: brd.h slowout.h hdlcd.h
 isr.o: ../../software/include/hw/interrupts.h ../../software/include/irq.h
-isr.o: ../../software/include/uart.h time.h slowout.h snd.h
+isr.o: ../../software/include/uart.h ../../software/include/hal/time.h
+isr.o: ../../software/include/hal/slowout.h ../../software/include/hal/snd.h
 isr.o: ../../software/include/hw/ac97.h ../../software/include/hw/common.h
-isr.o: tmu.h ../../software/include/hw/tmu.h pfpu.h
-isr.o: ../../software/include/hw/pfpu.h ui.h cpustats.h
+isr.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
+isr.o: ../../software/include/hal/pfpu.h ../../software/include/hw/pfpu.h
+isr.o: ui.h cpustats.h
 line.o: ../../software/include/libc.h ../../software/include/math.h
 line.o: ../../software/include/console.h color.h line.h
 main.o: ../../software/include/libc.h ../../software/include/console.h
@@ -77,13 +74,15 @@ main.o: ../../software/include/uart.h ../../software/include/system.h
 main.o: ../../software/include/irq.h ../../software/include/board.h
 main.o: ../../software/include/version.h ../../software/include/hw/sysctl.h
 main.o: ../../software/include/hw/common.h ../../software/include/hw/gpio.h
-main.o: ../../software/include/hw/interrupts.h brd.h mem.h time.h vga.h snd.h
-main.o: ../../software/include/hw/ac97.h tmu.h
-main.o: ../../software/include/hw/tmu.h pfpu.h
-main.o: ../../software/include/hw/pfpu.h apipe.h rpipe.h renderer.h slowout.h
-main.o: hdlcd.h ui.h cpustats.h shell.h
-mem.o: ../../software/include/libc.h ../../software/include/console.h
-mem.o: ../../software/include/malloc.h ../../software/include/hw/sram.h mem.h
+main.o: ../../software/include/hw/interrupts.h
+main.o: ../../software/include/hal/brd.h ../../software/include/hal/mem.h
+main.o: ../../software/include/hal/time.h ../../software/include/hal/vga.h
+main.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
+main.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
+main.o: ../../software/include/hal/pfpu.h ../../software/include/hw/pfpu.h
+main.o: ../../software/include/hal/slowout.h
+main.o: ../../software/include/hal/hdlcd.h apipe.h rpipe.h renderer.h ui.h
+main.o: cpustats.h shell.h
 parser.o: ../../software/include/stdio.h ../../software/include/libc.h
 parser.o: ../../software/include/console.h ../../software/include/malloc.h
 parser.o: ../../software/include/math.h ast.h
@@ -91,22 +90,19 @@ parser_helper.o: ../../software/include/libc.h
 parser_helper.o: ../../software/include/malloc.h
 parser_helper.o: ../../software/include/console.h scanner.h parser.h ast.h
 parser_helper.o: parser_helper.h
-pfpu.o: ../../software/include/libc.h ../../software/include/console.h
-pfpu.o: ../../software/include/irq.h ../../software/include/hw/interrupts.h
-pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
-pfpu.o: pfpu.h
 renderer.o: ../../software/include/libc.h ../../software/include/console.h
 renderer.o: ../../software/include/math.h ../../software/include/system.h
-renderer.o: ../../software/include/hw/sysctl.h
+renderer.o: ../../software/include/hal/pfpu.h
+renderer.o: ../../software/include/hw/pfpu.h
 renderer.o: ../../software/include/hw/common.h
-renderer.o: ../../software/include/hw/uart.h ../../software/include/hw/ac97.h
-renderer.o: ../../software/include/hw/tmu.h parser_helper.h ast.h pfpu.h
-renderer.o: ../../software/include/hw/pfpu.h vga.h eval.h apipe.h renderer.h
+renderer.o: ../../software/include/hal/vga.h parser_helper.h ast.h eval.h
+renderer.o: ../../software/include/hw/tmu.h apipe.h renderer.h
 rpipe.o: ../../software/include/libc.h ../../software/include/console.h
 rpipe.o: ../../software/include/irq.h ../../software/include/system.h
 rpipe.o: ../../software/include/math.h ../../software/include/hw/interrupts.h
-rpipe.o: renderer.h vga.h tmu.h ../../software/include/hw/tmu.h
-rpipe.o: ../../software/include/hw/common.h wave.h cpustats.h rpipe.h spam.h
+rpipe.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
+rpipe.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
+rpipe.o: renderer.h wave.h cpustats.h rpipe.h spam.h
 scanner.o: ../../software/include/libc.h ../../software/include/malloc.h
 scanner.o: scanner.h parser.h
 scheduler.o: ../../software/include/libc.h ../../software/include/console.h
@@ -119,34 +115,21 @@ shell.o: ../../software/include/irq.h ../../software/include/board.h
 shell.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 shell.o: ../../software/include/hw/tmu.h ../../software/include/hw/sysctl.h
 shell.o: ../../software/include/hw/gpio.h
-shell.o: ../../software/include/hw/interrupts.h vga.h snd.h
-shell.o: ../../software/include/hw/ac97.h tmu.h line.h wave.h time.h brd.h
-shell.o: rpipe.h cpustats.h shell.h ui.h
-slowout.o: ../../software/include/libc.h ../../software/include/console.h
-slowout.o: ../../software/include/irq.h
-slowout.o: ../../software/include/hw/interrupts.h
-slowout.o: ../../software/include/hw/sysctl.h
-slowout.o: ../../software/include/hw/common.h
-snd.o: ../../software/include/libc.h ../../software/include/console.h
-snd.o: ../../software/include/irq.h ../../software/include/hw/ac97.h
-snd.o: ../../software/include/hw/common.h
-snd.o: ../../software/include/hw/interrupts.h snd.h
-time.o: ../../software/include/libc.h ../../software/include/console.h
-time.o: ../../software/include/irq.h ../../software/include/board.h
-time.o: ../../software/include/hw/sysctl.h ../../software/include/hw/common.h
-time.o: ../../software/include/hw/interrupts.h brd.h rpipe.h tmu.h
-time.o: ../../software/include/hw/tmu.h cpustats.h ui.h time.h
-tmu.o: ../../software/include/libc.h ../../software/include/console.h
-tmu.o: ../../software/include/irq.h ../../software/include/board.h
-tmu.o: ../../software/include/hw/interrupts.h ../../software/include/hw/tmu.h
-tmu.o: ../../software/include/hw/common.h brd.h tmu.h
+shell.o: ../../software/include/hw/interrupts.h
+shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
+shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
+shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
+shell.o: line.h wave.h rpipe.h cpustats.h shell.h ui.h
+tick.o: ../../software/include/hal/time.h rpipe.h
+tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
+tick.o: ../../software/include/hw/common.h cpustats.h ui.h
 ui.o: ../../software/include/libc.h ../../software/include/console.h
 ui.o: ../../software/include/cffat.h ../../software/include/irq.h
 ui.o: ../../software/include/version.h ../../software/include/hw/interrupts.h
 ui.o: ../../software/include/hw/sysctl.h ../../software/include/hw/common.h
-ui.o: ../../software/include/hw/gpio.h renderer.h hdlcd.h time.h rpipe.h
-ui.o: tmu.h ../../software/include/hw/tmu.h cpustats.h ui.h
-vga.o: ../../software/include/console.h ../../software/include/hw/vga.h
-vga.o: ../../software/include/hw/common.h
+ui.o: ../../software/include/hw/gpio.h ../../software/include/hal/hdlcd.h
+ui.o: ../../software/include/hal/time.h renderer.h rpipe.h
+ui.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
+ui.o: cpustats.h ui.h
 wave.o: ../../software/include/libc.h ../../software/include/math.h
 wave.o: ../../software/include/console.h line.h color.h wave.h renderer.h

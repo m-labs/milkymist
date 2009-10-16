@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SLOWOUT_H
-#define __SLOWOUT_H
+#ifndef __HAL_BRD_H
+#define __HAL_BRD_H
 
-void slowout_init();
-void slowout_isr();
-int slowout_queue(unsigned int duration, unsigned int mask);
+extern const struct board_desc *brd_desc;
 
-#endif /* __SLOWOUT_H */
+void brd_init();
+
+#endif /* __HAL_BRD_H */

@@ -21,7 +21,7 @@
 #include <hw/interrupts.h>
 #include <hw/pfpu.h>
 
-#include "pfpu.h"
+#include <hal/pfpu.h>
 
 #define PFPU_TASKQ_SIZE 4 /* < must be a power of 2 */
 #define PFPU_TASKQ_MASK (PFPU_TASKQ_SIZE-1)

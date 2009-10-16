@@ -18,6 +18,8 @@
 #include <console.h>
 #include <hw/vga.h>
 
+#include <hal/vga.h>
+
 /*
  * RGB565 framebuffers.
  * We use page flipping triple buffering as described on

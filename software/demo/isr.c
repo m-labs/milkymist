@@ -19,11 +19,12 @@
 #include <irq.h>
 #include <uart.h>
 
-#include "time.h"
-#include "slowout.h"
-#include "snd.h"
-#include "tmu.h"
-#include "pfpu.h"
+#include <hal/time.h>
+#include <hal/slowout.h>
+#include <hal/snd.h>
+#include <hal/tmu.h>
+#include <hal/pfpu.h>
+
 #include "ui.h"
 #include "cpustats.h"
 

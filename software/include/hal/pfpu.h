@@ -15,37 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TMU_H
-#define __TMU_H
+#ifndef __HAL_PFPU_H
+#define __HAL_PFPU_H
 
-#include <hw/tmu.h>
+#include <hw/pfpu.h>
 
-struct tmu_td;
+struct pfpu_td;
 
-typedef void (*tmu_callback)(struct tmu_td *);
+typedef void (*pfpu_callback)(struct pfpu_td *);
 
-struct tmu_td {
-	unsigned int flags;
+struct pfpu_td {
+	unsigned int *output;
 	unsigned int hmeshlast;
 	unsigned int vmeshlast;
-	unsigned int brightness;
-	unsigned short chromakey;
-	struct tmu_vertex *srcmesh;
-	unsigned short *srcfbuf;
-	unsigned int srchres;
-	unsigned int srcvres;
-	struct tmu_vertex *dstmesh;
-	unsigned short *dstfbuf;
-	unsigned int dsthres;
-	unsigned int dstvres;
-
-	int profile; /* < prints profiling info after completion */
-	tmu_callback callback;
+	pfpu_instruction *program;
+	unsigned int progsize;
+	float *registers;
+	int update; /* < shall we update the "registers" array after completion */
+	int invalidate; /* < shall we invalidate L1 data cache after completion */
+	pfpu_callback callback;
 	void *user; /* < for application use */
 };
 
-void tmu_init();
-void tmu_isr();
-int tmu_submit_task(struct tmu_td *td);
+void pfpu_init();
+void pfpu_isr();
+int pfpu_submit_task(struct pfpu_td *td);
 
-#endif /* __TMU_H */
+#endif /* __HAL_PFPU_H */

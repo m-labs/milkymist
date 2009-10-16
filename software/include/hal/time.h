@@ -15,12 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __MEM_H
-#define __MEM_H
+#ifndef __HAL_TIME_H
+#define __HAL_TIME_H
 
-#define BANK_SDRAM	(0)
-#define BANK_SRAM	(1)
+struct timestamp {
+	int sec;
+	int usec;
+};
 
-void mem_init();
+void time_init();
+void time_isr();
 
-#endif /* __MEM_H */
+void time_get(struct timestamp *ts);
+
+void time_add(struct timestamp *dest, struct timestamp *delta);
+void time_diff(struct timestamp *dest, struct timestamp *t1, struct timestamp *t0);
+
+void time_tick(); /* provided by app */
+
+#endif /* __HAL_TIME_H */

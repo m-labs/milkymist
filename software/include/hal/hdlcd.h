@@ -15,30 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PFPU_H
-#define __PFPU_H
+#ifndef __HAL_HDLCD_H
+#define __HAL_HDLCD_H
 
-#include <hw/pfpu.h>
+void hdlcd_init();
+void hdlcd_clear();
+int hdlcd_printf(const char *fmt, ...);
 
-struct pfpu_td;
-
-typedef void (*pfpu_callback)(struct pfpu_td *);
-
-struct pfpu_td {
-	unsigned int *output;
-	unsigned int hmeshlast;
-	unsigned int vmeshlast;
-	pfpu_instruction *program;
-	unsigned int progsize;
-	float *registers;
-	int update; /* < shall we update the "registers" array after completion */
-	int invalidate; /* < shall we invalidate L1 data cache after completion */
-	pfpu_callback callback;
-	void *user; /* < for application use */
-};
-
-void pfpu_init();
-void pfpu_isr();
-int pfpu_submit_task(struct pfpu_td *td);
-
-#endif /* __PFPU_H */
+#endif /* __HAL_HDLCD_H */

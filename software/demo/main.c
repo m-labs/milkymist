@@ -26,18 +26,19 @@
 #include <hw/gpio.h>
 #include <hw/interrupts.h>
 
-#include "brd.h"
-#include "mem.h"
-#include "time.h"
-#include "vga.h"
-#include "snd.h"
-#include "tmu.h"
-#include "pfpu.h"
+#include <hal/brd.h>
+#include <hal/mem.h>
+#include <hal/time.h>
+#include <hal/vga.h>
+#include <hal/snd.h>
+#include <hal/tmu.h>
+#include <hal/pfpu.h>
+#include <hal/slowout.h>
+#include <hal/hdlcd.h>
+
 #include "apipe.h"
 #include "rpipe.h"
 #include "renderer.h"
-#include "slowout.h"
-#include "hdlcd.h"
 #include "ui.h"
 #include "cpustats.h"
 #include "shell.h"

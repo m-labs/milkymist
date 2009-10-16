@@ -21,7 +21,8 @@
 #include <hw/pfpu.h>
 #include <hw/tmu.h>
 
-#include "pfpu.h"
+#include <hal/pfpu.h>
+
 #include "ast.h"
 
 /****************************************************************/
