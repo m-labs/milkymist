@@ -422,7 +422,7 @@ static const struct option options[] = {
 
 static void print_usage()
 {
-	fprintf(stderr, "Serial boot program for the Milkymist VJ SoC\n");
+	fprintf(stderr, "Serial boot program for the Milkymist VJ SoC - v. 1.0\n");
 	fprintf(stderr, "Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq\n\n");
 
 	fprintf(stderr, "This program is free software: you can redistribute it and/or modify\n");
