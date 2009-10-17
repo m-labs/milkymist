@@ -1,0 +1,31 @@
+OBJECTS=isr.o tick.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o shell.o ui.o main.o
+CFLAGS=-O2 -Wall -fsigned-char -fsingle-precision-constant -I$(MMEMUDIR)/include
+
+all: emu
+
+%.c: %.re
+	re2c -o $@ $<
+
+scanner.c: parser.h
+
+parser.h: parser.c
+
+%.c: %.y
+	lemon $<
+
+bandfilters.h: bandfilters.sce
+	scilab -nw -nwni -nogui -nb -f bandfilters.sce
+
+spam.raw: spam.png
+	$(MMDIR)/tools/makeraw spam.png
+
+spam.h: spam.raw
+	xxd -i spam.raw spam.h
+
+emu: $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ -L$(MMEMUDIR)/src --start-group $(OBJECTS) -lmmemulation --end-group
+
+.PHONY: clean
+
+clean:
+	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out bandfilters.h spam.raw spam.h emu .*~ *~
