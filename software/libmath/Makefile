@@ -1,4 +1,4 @@
-MMDIR?=../..
+MMDIR=../..
 include $(MMDIR)/software/include.mak
 
 OBJECTS=acosf.o asinf.o atanf.o cosf.o cotf.o expf.o floorf.o ldexpf.o logf.o modff.o sincosf.o sinf.o sqrtf.o tanf.o asincosf.o atan2f.o ceilf.o coshf.o fabsf.o frexpf.o log10f.o powf.o sincoshf.o sinhf.o tancotf.o tanhf.o

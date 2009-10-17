@@ -1,4 +1,4 @@
-MMDIR?=../..
+MMDIR=../..
 include $(MMDIR)/software/include.mak
 
 OBJECTS_ALL=divsi3.o libc.o crc16.o crc32.o console.o cfcard.o cffat.o system.o board.o
@@ -25,7 +25,7 @@ clean:
 
 # DO NOT DELETE
 
-atof.o: ../../software/include/stdlib.h
+atof.o: ../../software/include/stdlib.h ../../software/include/ctype.h
 board.o: ../../software/include/hw/sysctl.h
 board.o: ../../software/include/hw/common.h ../../software/include/stdlib.h
 board.o: ../../software/include/board.h
@@ -33,17 +33,20 @@ cfcard.o: ../../software/include/hw/systemace.h
 cfcard.o: ../../software/include/hw/common.h ../../software/include/cfcard.h
 cfcard.o: ../../software/include/console.h
 cffat.o: ../../software/include/stdlib.h ../../software/include/stdio.h
+cffat.o: ../../software/include/string.h ../../software/include/ctype.h
 cffat.o: ../../software/include/endian.h ../../software/include/cfcard.h
 cffat.o: ../../software/include/console.h ../../software/include/cffat.h
 console.o: ../../software/include/uart.h ../../software/include/console.h
-console.o: ../../software/include/stdio.h ../../software/include/stdarg.h
+console.o: ../../software/include/stdio.h ../../software/include/stdlib.h
+console.o: ../../software/include/stdarg.h
 crc16.o: ../../software/include/crc.h
 crc32.o: ../../software/include/crc.h
 libc.o: ../../software/include/ctype.h ../../software/include/stdio.h
-libc.o: ../../software/include/stdlib.h ../../software/include/string.h
-libc.o: ../../software/include/limits.h
+libc.o: ../../software/include/stdlib.h ../../software/include/stdarg.h
+libc.o: ../../software/include/string.h ../../software/include/limits.h
 malloc.o: ../../software/include/stdio.h ../../software/include/stdlib.h
-malloc.o: ../../software/include/console.h ../../software/include/malloc.h
+malloc.o: ../../software/include/string.h ../../software/include/console.h
+malloc.o: ../../software/include/malloc.h
 softfloat-glue.o: softfloat.h
 softfloat.o: milieu.h softfloat.h softfloat-macros.h softfloat-specialize.h
 system.o: ../../software/include/hw/fmlbrg.h ../../software/include/system.h
@@ -56,5 +59,8 @@ uart.o: ../../software/include/uart.h
 vsnprintf-nofloat.o: ../../software/include/stdlib.h
 vsnprintf-nofloat.o: ../../software/include/stdio.h
 vsnprintf-nofloat.o: ../../software/include/stdarg.h
+vsnprintf-nofloat.o: ../../software/include/string.h
+vsnprintf-nofloat.o: ../../software/include/ctype.h
 vsnprintf.o: ../../software/include/stdlib.h ../../software/include/stdio.h
-vsnprintf.o: ../../software/include/stdarg.h
+vsnprintf.o: ../../software/include/stdarg.h ../../software/include/string.h
+vsnprintf.o: ../../software/include/ctype.h

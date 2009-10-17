@@ -1,4 +1,4 @@
-MMDIR?=../..
+MMDIR=../..
 include $(MMDIR)/software/include.mak
 
 OBJECTS=crt0.o main.o boot.o splash.o

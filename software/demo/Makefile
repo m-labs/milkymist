@@ -1,4 +1,4 @@
-MMDIR?=../..
+MMDIR=../..
 include $(MMDIR)/software/include.mak
 
 OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o shell.o ui.o main.o

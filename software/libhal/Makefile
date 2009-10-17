@@ -1,4 +1,4 @@
-MMDIR?=../..
+MMDIR=../..
 include $(MMDIR)/software/include.mak
 
 OBJECTS=brd.o hdlcd.o mem.o pfpu.o slowout.o snd.o time.o tmu.o vga.o
@@ -56,5 +56,6 @@ tmu.o: ../../software/include/irq.h ../../software/include/board.h
 tmu.o: ../../software/include/hw/interrupts.h ../../software/include/hw/tmu.h
 tmu.o: ../../software/include/hw/common.h ../../software/include/hal/brd.h
 tmu.o: ../../software/include/hal/tmu.h
-vga.o: ../../software/include/console.h ../../software/include/hw/vga.h
-vga.o: ../../software/include/hw/common.h ../../software/include/hal/vga.h
+vga.o: ../../software/include/stdio.h ../../software/include/stdlib.h
+vga.o: ../../software/include/hw/vga.h ../../software/include/hw/common.h
+vga.o: ../../software/include/hal/vga.h
