@@ -19,6 +19,8 @@
 #ifndef __STRING_H
 #define __STRING_H
 
+#include <stdlib.h>
+
 char *strchr(const char *s, int c);
 char *strrchr(const char *s, int c);
 char *strnchr(const char *s, size_t count, int c);

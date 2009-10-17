@@ -19,6 +19,8 @@
 #ifndef __STDARG_H
 #define __STDARG_H
 
+#include <stdlib.h>
+
 #if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 4))
 #define va_start(v,l) __builtin_va_start((v),l)
 #else
