@@ -16,7 +16,6 @@
  */
 
 #include <hw/systemace.h>
-#include <libc.h>
 #include <cfcard.h>
 #include <console.h>
 

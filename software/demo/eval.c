@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libc.h>
-#include <console.h>
+#include <stdio.h>
+#include <string.h>
 #include <hw/pfpu.h>
 
 #include <hal/pfpu.h>

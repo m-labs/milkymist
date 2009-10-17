@@ -16,7 +16,7 @@
  */
 
 #include <hw/sysctl.h>
-#include <libc.h>
+#include <stdlib.h>
 #include <board.h>
 
 static const struct board_desc boards[3] = {

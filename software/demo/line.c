@@ -3,9 +3,8 @@
  * adapted to Milkymist by Sebastien Bourdeauducq
  */
 
-#include <libc.h>
+#include <stdlib.h>
 #include <math.h>
-#include <console.h>
 
 #include "color.h"
 #include "line.h"

@@ -15,8 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libc.h>
-#include <console.h>
+#include <stdio.h>
 
 #include "analyzer.h"
 

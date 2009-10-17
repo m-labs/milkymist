@@ -25,24 +25,26 @@ clean:
 
 # DO NOT DELETE
 
-atof.o: ../../software/include/libc.h
+atof.o: ../../software/include/stdlib.h
 board.o: ../../software/include/hw/sysctl.h
-board.o: ../../software/include/hw/common.h ../../software/include/libc.h
+board.o: ../../software/include/hw/common.h ../../software/include/stdlib.h
 board.o: ../../software/include/board.h
 cfcard.o: ../../software/include/hw/systemace.h
-cfcard.o: ../../software/include/hw/common.h ../../software/include/libc.h
-cfcard.o: ../../software/include/cfcard.h ../../software/include/console.h
-cffat.o: ../../software/include/libc.h ../../software/include/endian.h
-cffat.o: ../../software/include/cfcard.h ../../software/include/console.h
-cffat.o: ../../software/include/cffat.h
-console.o: ../../software/include/libc.h ../../software/include/uart.h
-console.o: ../../software/include/console.h
+cfcard.o: ../../software/include/hw/common.h ../../software/include/cfcard.h
+cfcard.o: ../../software/include/console.h
+cffat.o: ../../software/include/stdlib.h ../../software/include/stdio.h
+cffat.o: ../../software/include/endian.h ../../software/include/cfcard.h
+cffat.o: ../../software/include/console.h ../../software/include/cffat.h
+console.o: ../../software/include/uart.h ../../software/include/console.h
+console.o: ../../software/include/stdio.h ../../software/include/stdarg.h
 crc16.o: ../../software/include/crc.h
 crc32.o: ../../software/include/crc.h
-libc.o: ../../software/include/libc.h
-malloc.o: ../../software/include/libc.h ../../software/include/console.h
-malloc.o: ../../software/include/malloc.h
-softfloat-glue.o: ../../software/include/libc.h softfloat.h
+libc.o: ../../software/include/ctype.h ../../software/include/stdio.h
+libc.o: ../../software/include/stdlib.h ../../software/include/string.h
+libc.o: ../../software/include/limits.h
+malloc.o: ../../software/include/stdio.h ../../software/include/stdlib.h
+malloc.o: ../../software/include/console.h ../../software/include/malloc.h
+softfloat-glue.o: softfloat.h
 softfloat.o: milieu.h softfloat.h softfloat-macros.h softfloat-specialize.h
 system.o: ../../software/include/hw/fmlbrg.h ../../software/include/system.h
 uart-async.o: ../../software/include/uart.h ../../software/include/irq.h
@@ -51,5 +53,8 @@ uart-async.o: ../../software/include/hw/common.h
 uart-async.o: ../../software/include/hw/interrupts.h
 uart.o: ../../software/include/hw/uart.h ../../software/include/hw/common.h
 uart.o: ../../software/include/uart.h
-vsnprintf-nofloat.o: ../../software/include/libc.h
-vsnprintf.o: ../../software/include/libc.h
+vsnprintf-nofloat.o: ../../software/include/stdlib.h
+vsnprintf-nofloat.o: ../../software/include/stdio.h
+vsnprintf-nofloat.o: ../../software/include/stdarg.h
+vsnprintf.o: ../../software/include/stdlib.h ../../software/include/stdio.h
+vsnprintf.o: ../../software/include/stdarg.h

@@ -1,6 +1,7 @@
 /*
  * Milkymist VJ SoC (Software)
  * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) Linux kernel developers
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,32 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __MALLOC_H
-#define __MALLOC_H
+#ifndef __ASSERT_H
+#define __ASSERT_H
 
-/* NB. Start and end addresses must be multiples of 8. */
-struct malloc_bank {
-	unsigned int addr_start;
-	unsigned int addr_end;
-	int first_allocated; /* initialized by the allocator */
-	int last_allocated; /* initialized by the allocator */
-};
+#define assert(x)
 
-void malloc_init(struct malloc_bank *banks, unsigned int n, unsigned int defaultbank);
-void *mallocex(unsigned int size, unsigned int bank, unsigned int alignment);
-
-#ifdef PC_TEST
-void test_free(void *p);
-#endif
-
-#ifdef PC_TEST
-void *test_malloc(size_t size);
-#endif
-
-#ifdef PC_TEST
-void *test_calloc(size_t nmemb, size_t size);
-#else
-void *calloc(size_t nmemb, size_t size);
-#endif
-
-#endif /* __MALLOC_H */
+#endif /* __ASSERT_H */

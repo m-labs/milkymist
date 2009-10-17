@@ -19,38 +19,39 @@ clean:
 
 # DO NOT DELETE
 
-brd.o: ../../software/include/libc.h ../../software/include/console.h
+brd.o: ../../software/include/stdlib.h ../../software/include/stdio.h
 brd.o: ../../software/include/board.h ../../software/include/hal/brd.h
-hdlcd.o: ../../software/include/libc.h ../../software/include/board.h
-hdlcd.o: ../../software/include/console.h ../../software/include/hw/sysctl.h
+hdlcd.o: ../../software/include/stdlib.h ../../software/include/stdio.h
+hdlcd.o: ../../software/include/stdarg.h ../../software/include/board.h
+hdlcd.o: ../../software/include/hw/sysctl.h
 hdlcd.o: ../../software/include/hw/common.h ../../software/include/hw/gpio.h
 hdlcd.o: ../../software/include/hal/brd.h
 hdlcd.o: ../../software/include/hal/slowout.h
 hdlcd.o: ../../software/include/hal/hdlcd.h
-mem.o: ../../software/include/libc.h ../../software/include/console.h
+mem.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 mem.o: ../../software/include/malloc.h ../../software/include/hw/sram.h
 mem.o: ../../software/include/hal/mem.h
-pfpu.o: ../../software/include/libc.h ../../software/include/console.h
+pfpu.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 pfpu.o: ../../software/include/irq.h ../../software/include/hw/interrupts.h
 pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 pfpu.o: ../../software/include/hal/pfpu.h
-slowout.o: ../../software/include/libc.h ../../software/include/console.h
+slowout.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 slowout.o: ../../software/include/irq.h
 slowout.o: ../../software/include/hw/interrupts.h
 slowout.o: ../../software/include/hw/sysctl.h
 slowout.o: ../../software/include/hw/common.h
 slowout.o: ../../software/include/hal/slowout.h
-snd.o: ../../software/include/libc.h ../../software/include/console.h
+snd.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 snd.o: ../../software/include/irq.h ../../software/include/hw/ac97.h
 snd.o: ../../software/include/hw/common.h
 snd.o: ../../software/include/hw/interrupts.h
 snd.o: ../../software/include/hal/snd.h
-time.o: ../../software/include/libc.h ../../software/include/console.h
+time.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 time.o: ../../software/include/irq.h ../../software/include/board.h
 time.o: ../../software/include/hw/sysctl.h ../../software/include/hw/common.h
 time.o: ../../software/include/hw/interrupts.h
 time.o: ../../software/include/hal/brd.h ../../software/include/hal/time.h
-tmu.o: ../../software/include/libc.h ../../software/include/console.h
+tmu.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 tmu.o: ../../software/include/irq.h ../../software/include/board.h
 tmu.o: ../../software/include/hw/interrupts.h ../../software/include/hw/tmu.h
 tmu.o: ../../software/include/hw/common.h ../../software/include/hal/brd.h

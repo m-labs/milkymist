@@ -8,10 +8,12 @@ all: bios_splash.bin
 
 %.bin: %.elf
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
+	chmod -x $@
 	$(MMDIR)/tools/crc32 $@ write
 
 bios.elf: linker.ld $(OBJECTS)
 	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libbase -lbase-light
+	chmod -x $@
 
 splash.raw: splash.png
 	$(MMDIR)/tools/makeraw splash.png
@@ -32,12 +34,14 @@ clean:
 
 # DO NOT DELETE
 
-boot.o: ../../software/include/libc.h ../../software/include/console.h
-boot.o: ../../software/include/uart.h ../../software/include/system.h
-boot.o: ../../software/include/cffat.h ../../software/include/crc.h
-boot.o: ../../tools/sfl.h ../../software/include/hw/hpdmc.h
-boot.o: ../../software/include/hw/common.h boot.h
-main.o: ../../software/include/libc.h ../../software/include/console.h
+boot.o: ../../software/include/stdio.h ../../software/include/stdlib.h
+boot.o: ../../software/include/console.h ../../software/include/uart.h
+boot.o: ../../software/include/system.h ../../software/include/cffat.h
+boot.o: ../../software/include/crc.h ../../tools/sfl.h
+boot.o: ../../software/include/hw/hpdmc.h ../../software/include/hw/common.h
+boot.o: boot.h
+main.o: ../../software/include/stdio.h ../../software/include/stdlib.h
+main.o: ../../software/include/console.h ../../software/include/string.h
 main.o: ../../software/include/uart.h ../../software/include/cffat.h
 main.o: ../../software/include/crc.h ../../software/include/system.h
 main.o: ../../software/include/board.h ../../software/include/version.h
@@ -45,6 +49,6 @@ main.o: ../../software/include/hw/hpdmc.h ../../software/include/hw/common.h
 main.o: ../../software/include/hw/vga.h ../../software/include/hw/fmlbrg.h
 main.o: ../../software/include/hw/sysctl.h ../../software/include/hw/gpio.h
 main.o: ../../software/include/hw/uart.h boot.h splash.h
-splash.o: ../../software/include/libc.h ../../software/include/console.h
+splash.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 splash.o: ../../software/include/system.h ../../software/include/hw/vga.h
 splash.o: ../../software/include/hw/common.h splash.h
