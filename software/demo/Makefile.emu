@@ -1,5 +1,5 @@
 OBJECTS=isr.o tick.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o shell.o ui.o main.o
-CFLAGS=-O2 -Wall -fsigned-char -fsingle-precision-constant -DEMULATION -I$(MMEMUDIR)/include
+CFLAGS=-O2 -Wall -fsigned-char -fsingle-precision-constant -DEMULATION -I$(MMEMUDIR)/include -I/usr/include/SDL
 
 all: emu
 
@@ -23,7 +23,7 @@ spam.h: spam.raw
 	xxd -i spam.raw spam.h
 
 emu: bandfilters.h spam.h $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ -L$(MMEMUDIR)/src --start-group $(OBJECTS) -lmmemulation -lm --end-group
+	$(CC) $(LDFLAGS) -o $@ -L$(MMEMUDIR)/src --start-group $(OBJECTS) -lmmemulation -lm -lSDL --end-group
 
 .PHONY: clean
 
