@@ -22,9 +22,6 @@
 #include <irq.h>
 #include <board.h>
 #include <version.h>
-#include <hw/sysctl.h>
-#include <hw/gpio.h>
-#include <hw/interrupts.h>
 
 #include <hal/brd.h>
 #include <hal/mem.h>

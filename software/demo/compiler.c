@@ -293,7 +293,11 @@ void print_terminals(struct compiler_state *sc)
 		if(sc->terminals[i].valid) {
 			printf("R%03d ", i);
 			if(sc->terminals[i].isconst)
+#ifdef EMULATION
+				printf("%f\n", sc->terminals[i].id.x);
+#else
 				printf("%f\n", &sc->terminals[i].id.x);
+#endif
 			else
 				printf("%s\n", sc->terminals[i].id.name);
 		}

@@ -15,6 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef EMULATION
+
+void ui_init()
+{
+}
+
+void ui_isr_key()
+{
+}
+
+void ui_tick()
+{
+}
+
+#else
+
 #include <stdio.h>
 #include <string.h>
 #include <cffat.h>
@@ -271,3 +287,5 @@ void ui_tick()
 		refresh_screen();
 	}
 }
+
+#endif /* EMULATION */

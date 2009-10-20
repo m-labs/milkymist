@@ -18,6 +18,7 @@
 %include {
 	#include <assert.h>
 	#include <string.h>
+	#include <stdlib.h>
 	#include <malloc.h>
 	#include <math.h>
 	#include "ast.h"
