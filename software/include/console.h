@@ -18,10 +18,8 @@
 #ifndef __CONSOLE_H
 #define __CONSOLE_H
 
-void writechar(char c);
 int puts(const char *s);
 void putsnonl(const char *s);
-char readchar();
 void readstr(char *s, int size);
 
 #endif /* __CONSOLE_H */
