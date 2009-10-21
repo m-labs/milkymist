@@ -79,6 +79,9 @@ int main()
 			shell_input(readchar());
 		apipe_service();
 		rpipe_service();
+#ifdef EMULATION
+		emu_service();
+#endif
 	}
 	
 	return 0;
