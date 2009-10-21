@@ -399,26 +399,29 @@ static char *get_token(char **str)
 
 static void do_command(char *c)
 {
-	char *token;
+	char *command, *param1, *param2, *param3;
 
-	token = get_token(&c);
+	command = get_token(&c);
+	param1 = get_token(&c);
+	param2 = get_token(&c);
+	param3 = get_token(&c);
 
-	if(strcmp(token, "mr") == 0) mr(get_token(&c), get_token(&c));
-	else if(strcmp(token, "mw") == 0) mw(get_token(&c), get_token(&c), get_token(&c));
-	else if(strcmp(token, "ls") == 0) ls();
-	else if(strcmp(token, "flush") == 0) flush_bridge_cache();
-	else if(strcmp(token, "render") == 0) render(get_token(&c));
-	else if(strcmp(token, "stop") == 0) ui_render_stop();
-	else if(strcmp(token, "spam") == 0) spam();
-	else if(strcmp(token, "stats") == 0) stats();
-	else if(strcmp(token, "help") == 0) help();
+	if(strcmp(command, "mr") == 0) mr(param1, param2);
+	else if(strcmp(command, "mw") == 0) mw(param1, param2, param3);
+	else if(strcmp(command, "ls") == 0) ls();
+	else if(strcmp(command, "flush") == 0) flush_bridge_cache();
+	else if(strcmp(command, "render") == 0) render(param1);
+	else if(strcmp(command, "stop") == 0) ui_render_stop();
+	else if(strcmp(command, "spam") == 0) spam();
+	else if(strcmp(command, "stats") == 0) stats();
+	else if(strcmp(command, "help") == 0) help();
 
 	/* Test functions and hacks */
-	else if(strcmp(token, "pfputest") == 0) pfputest();
-	else if(strcmp(token, "tmutest") == 0) tmutest();
-	else if(strcmp(token, "echo") == 0) echo();
+	else if(strcmp(command, "pfputest") == 0) pfputest();
+	else if(strcmp(command, "tmutest") == 0) tmutest();
+	else if(strcmp(command, "echo") == 0) echo();
 
-	else if(strcmp(token, "") != 0) printf("Command not found: '%s'\n", token);
+	else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 }
 
 static char command_buffer[64];
