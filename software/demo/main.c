@@ -51,6 +51,9 @@ static void banner()
 
 int main()
 {
+#ifdef EMULATION
+	emu_init();
+#endif
 	irq_setmask(0);
 	irq_enable(1);
 	uart_async_init();
