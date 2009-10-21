@@ -23,7 +23,7 @@ spam.h: spam.raw
 	xxd -i spam.raw spam.h
 
 emu: bandfilters.h spam.h $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ -L$(MMEMUDIR)/src --start-group $(OBJECTS) -lmmemulation -lm -lSDL --end-group
+	$(CC) $(LDFLAGS) -o $@ -L$(MMEMUDIR)/src --start-group $(OBJECTS) -lmmemulation -lm -lSDL -lasound --end-group
 
 .PHONY: clean
 
