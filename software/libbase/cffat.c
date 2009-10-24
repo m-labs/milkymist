@@ -98,6 +98,7 @@ struct directory_entry_lfn {
 } __attribute__((packed));
 
 #define PARTITION_TYPE_FAT16		0x06
+#define PARTITION_TYPE_FAT32		0x0b
 
 static int cffat_partition_start_sector;	/* Sector# of the beginning of the FAT16 partition */
 
@@ -134,8 +135,9 @@ int cffat_init()
 	
 	cffat_partition_start_sector = -1;
 	for(i=0;i<4;i++)
-		if(s0.partitions[i].type == PARTITION_TYPE_FAT16) {
-			/*printf("I: Using partition #%d: start sector %08x, end sector %08x\n", i, 
+		if((s0.partitions[i].type == PARTITION_TYPE_FAT16)
+		 ||(s0.partitions[i].type == PARTITION_TYPE_FAT32)){
+			/*printf("I: Using partition #%d: start sector %08x, end sector %08x\n", i,
 				le32toh(s0.partitions[i].start_sector), le32toh(s0.partitions[i].end_sector));*/
 			cffat_partition_start_sector = le32toh(s0.partitions[i].start_sector);
 			break;
