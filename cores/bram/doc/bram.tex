@@ -1,0 +1,30 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{url}
+
+\title{Wishbone Block RAM}
+\author{S\'ebastien Bourdeauducq}
+\date{October 2009}
+\begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\maketitle{}
+\section{Specifications}
+This core creates 32-bit storage RAM on the Wishbone bus by using FPGA Block RAM.
+
+Byte-wide writes are supported. Burst access is not supported.
+
+The typical use case is to provide initial memory for softcore CPUs.
+
+\section{Using the core}
+You should specify the block RAM storage depth, in bytes, by using the \verb!adr_width! parameter.
+
+\end{document}

@@ -1,0 +1,248 @@
+H1 { 
+    font-weight:bold; 
+    border-top-style:none; 
+    font-family:Arial, helvetica, sans-serif; 
+    color:#ea6d23; 
+    margin-left:15px; 
+    margin-top:3px; 
+    margin-bottom:10px; 
+    border-bottom-style:Solid; 
+    border-bottom-width:2px; 
+    border-bottom-color:#dbdbdb; 
+    margin-right:1pt; 
+    line-height:Normal; 
+    font-size:1em;  }
+LI.kadov-H1 { 
+             font-weight:bold; 
+             font-family:Arial, helvetica, sans-serif; 
+             color:#ea6d23; 
+             line-height:Normal; 
+             font-size:1em;  }
+H2 { 
+    font-weight:bold; 
+    x-text-underline:Off; 
+    border-top-style:none; 
+    border-bottom-style:none; 
+    font-family:Arial, helvetica, sans-serif; 
+    color:#ea6d23; 
+    margin-left:15px; 
+    margin-top:12px; 
+    margin-bottom:5px; 
+    font-size:0.84em; 
+    margin-right:1pt; 
+    text-decoration:none;  }
+LI.kadov-H2 { 
+             font-weight:bold; 
+             x-text-underline:Off; 
+             font-family:Arial, helvetica, sans-serif; 
+             color:#ea6d23; 
+             font-size:0.84em; 
+             text-decoration:none;  }
+P { 
+   margin-top:1pt; 
+   font-family:Verdana, Arial, helvetica, sans-serif; 
+   color:#323232; 
+   font-size:71%; 
+   margin-bottom:8px; 
+   line-height:1.4em; 
+   margin-right:1pt; 
+   margin-left:15px;  }
+LI.kadov-P { 
+            font-family:Verdana, Arial, helvetica, sans-serif; 
+            color:#323232; 
+            font-size:71%; 
+            line-height:1.4em;  }
+p.Step { 
+        list-style:decimal; 
+        margin-left:1pt; 
+        font-size:100%; 
+        margin-bottom:7px; 
+        margin-top:1pt;  }
+LI.kadov-p-CStep { 
+                  list-style:decimal; 
+                  font-size:100%;  }
+P.Bullet { 
+          font-size:100%; 
+          margin-bottom:7px; 
+          margin-left:1pt; 
+          margin-top:1pt;  }
+LI.kadov-P-CBullet { 
+                    font-size:100%;  }
+P.NormalIndent { 
+                margin-left:40px;  }
+LI.kadov-P-CNormalIndent {  }
+P.BulletIndent { 
+                margin-bottom:2px; 
+                font-size:100%; 
+                margin-left:15pt;  }
+LI.kadov-P-CBulletIndent { 
+                          font-size:100%;  }
+P.Procedure { 
+             font-style:italic; 
+             font-weight:normal; 
+             x-next-class:Step; 
+             x-next-type:p; 
+             margin-top:12pt; 
+             margin-bottom:5px;  }
+LI.kadov-P-CProcedure { 
+                       font-style:italic; 
+                       font-weight:normal;  }
+P.Note { 
+        margin-top:8pt; 
+        margin-bottom:8pt; 
+        border-top-style:Solid; 
+        border-bottom-style:Solid; 
+        padding-top:4px; 
+        padding-bottom:4px; 
+        border-top-width:1px; 
+        border-bottom-width:1px; 
+        background-color:#ffffff;  }
+LI.kadov-P-CNote {  }
+P.NoteIndent { 
+              margin-top:8pt; 
+              margin-bottom:8pt; 
+              border-top-style:Solid; 
+              border-bottom-style:Solid; 
+              padding-top:4px; 
+              padding-bottom:4px; 
+              border-top-width:1px; 
+              border-bottom-width:1px; 
+              background-color:#ffffff; 
+              margin-left:40px;  }
+LI.kadov-P-CNoteIndent {  }
+P.Table { 
+         margin-top:4px; 
+         margin-bottom:4px; 
+         margin-right:4px; 
+         margin-left:4px;  }
+LI.kadov-P-CTable {  }
+P.Code { 
+        margin-bottom:1pt; 
+        line-height:Normal; 
+        font-family:"Courier New"     , Courier, monospace;  }
+LI.kadov-P-CCode { 
+                  line-height:Normal; 
+                  font-family:"Courier New"     , Courier, monospace;  }
+P.StepBulletFirst { 
+                   font-size:100%; 
+                   margin-left:15px; 
+                   margin-bottom:2px;  }
+LI.kadov-P-CStepBulletFirst { 
+                             font-size:100%;  }
+BODY { 
+      background-color:#ffffff; 
+      color:#000080; 
+      font-family:Arial, sans-serif;  }
+P.SeeAlso { 
+           font-weight:bold; 
+           font-style:normal; 
+           x-next-type:P; 
+           color:#ea6d23; 
+           font-family:Arial, helvetica, sans-serif; 
+           margin-left:15px; 
+           margin-top:12px; 
+           margin-bottom:5px; 
+           font-size:0.84em;  }
+LI.kadov-P-CSeeAlso { 
+                     font-weight:bold; 
+                     font-style:normal; 
+                     color:#ea6d23; 
+                     font-family:Arial, helvetica, sans-serif; 
+                     font-size:0.84em;  }
+A:link { 
+        font-weight:bold; 
+        font-style:normal; 
+        color:#003a98; 
+        x-text-underline:Off; 
+        text-decoration:none;  }
+A:hover { 
+         x-text-underline:Normal; 
+         color:#59add3; 
+         text-decoration:underline;  }
+A:active { 
+          color:#59add3;  }
+A:visited { 
+           x-text-underline:Off; 
+           color:#385689; 
+           font-weight:bold; 
+           font-style:normal; 
+           text-decoration:none;  }
+H1.Home { 
+         x-next-type:P; 
+         border-top-style:none; 
+         border-bottom-style:none; 
+         x-text-underline:Off; 
+         font-size:15pt; 
+         color:#ea6d23; 
+         text-decoration:none;  }
+LI.kadov-H1-CHome { 
+                   x-text-underline:Off; 
+                   font-size:15pt; 
+                   color:#ea6d23; 
+                   text-decoration:none;  }
+H3 { 
+    margin-left:15px; 
+    margin-top:12px; 
+    margin-bottom:5px; 
+    color:#323232; 
+    font-size:71%; 
+    font-family:Verdana, Arial, helvetica, sans-serif; 
+    margin-right:1pt; 
+    font-weight:bold;  }
+LI.kadov-H3 { 
+             color:#323232; 
+             font-size:71%; 
+             font-family:Verdana, Arial, helvetica, sans-serif;  }
+P.Title { 
+         font-weight:bold; 
+         font-style:normal; 
+         x-next-type:P; 
+         font-family:Arial, helvetica, sans-serif; 
+         color:#ea6d23; 
+         margin-bottom:10px; 
+         font-size:1.4em; 
+         line-height:Normal; 
+         border-bottom-style:Solid; 
+         border-bottom-width:2px; 
+         border-bottom-color:#dbdbdb; 
+         margin-top:1pt;  }
+LI.kadov-P-CTitle { 
+                   font-weight:bold; 
+                   font-style:normal; 
+                   font-family:Arial, helvetica, sans-serif; 
+                   color:#ea6d23; 
+                   font-size:1.4em; 
+                   line-height:Normal;  }
+P.Supra { 
+         font-weight:bold; 
+         font-style:normal; 
+         margin-bottom:6pt; 
+         font-family:Arial, helvetica, sans-serif;  }
+LI.kadov-P-CSupra { 
+                   font-weight:bold; 
+                   font-style:normal; 
+                   font-family:Arial, helvetica, sans-serif;  }
+OL { 
+    font-size:71%; 
+    font-family:Verdana, Arial, helvetica, sans-serif; 
+    color:#323232;  }
+UL { 
+    font-size:71%; 
+    font-family:Verdana, Arial, helvetica, sans-serif; 
+    color:#323232;  }
+P.CodeIndent { 
+              font-family:"Courier New"     , Courier, monospace; 
+              margin-left:40px; 
+              margin-bottom:1pt; 
+              line-height:Normal;  }
+LI.kadov-P-CCodeIndent { 
+                        font-family:"Courier New"     , Courier, monospace; 
+                        line-height:Normal;  }
+ol ol { 
+       margin-top:1px;  }
+ol ul { 
+       margin-top:1px;  }
+ul ul { 
+       margin-top:1px;  }
+ul ol { 
+       margin-top:1px;  }

@@ -1,0 +1,78 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{url}
+\usepackage{tabularx}
+
+\title{System controller}
+\author{S\'ebastien Bourdeauducq}
+\date{October 2009}
+\begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\maketitle{}
+\section{Overview}
+
+The system controller includes basic functionality that is found on most SoC designs :
+\begin{itemize}
+\item a \textbf{GPIO controller}, which can be used for software-driven low-speed communication with peripherals and for simple user interaction like controlling LEDs and detecting keypresses.
+\item two \textbf{timers} with a precision of one clock cycle.
+\item a 32-bit \textbf{system identification} value.
+\end{itemize}
+
+\section{GPIO controller}
+
+The GPIO controller can support a maximum of 32 inputs and 32 outputs. Bidirectional signals are not supported. The \verb!ninputs! and \verb!noutputs! control the actual number of input and outputs.
+
+It is possible to generate an interrupt when an input changes. The interrupt will be generated on both rising and falling edges of the input.
+
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\bf{Offset} & \bf{Read/Write} & \bf{Default} & \bf{Description} \\
+\hline
+0x00 & R & N/A & Inputs. \\
+\hline
+0x04 & RW & 0 & Outputs. \\
+\hline
+0x08 & RW & 0 & Level changes. Lists the input pins whose level has changed. When this register is written, the bits set in the written value clear the corresponding bits in the register. For example, writing 0x5 clears bits 0 and 2. \\
+\hline
+0x0C & RW & 0 & Interrupt enable. Lists the input pins whose level changes (bit set in the 0x08 register) generate an interrupt. \\
+\hline
+\end{tabularx}\\
+
+\section{Dual timer}
+The system controller provides two independent timers. Timer 0 uses registers 0x10, 0x14 and 0x18, while timer 1 uses registers 0x20, 0x24 and 0x28.
+
+\subsection{Timer control register, offset 0x10/0x20}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\bf Bits & \bf Access & \bf Default & \bf Description \\
+\hline
+0 & R & 0 & Indicates if the timer has reached its compare value. Writing any value to the register clears this bit. \\
+\hline
+1 & RW & 0 & If this bit is set, the counter will automatically restart from 1 when the compare value is reached, otherwise the counter will be disabled. \\
+\hline
+2 & RW & 0 & If this bit is set, the counter register counts upwards until it reaches the value stored in the compare register. \\
+\hline
+31 -- 3 & --- & 0 & Reserved. \\
+\hline
+\end{tabularx}
+
+\subsection{Compare register, offset 0x14/0x24}
+This register holds the value to which the counter is compared to, in order to stop/restart the timer and possibly generate an interrupt.
+
+\subsection{Counter register, offset 0x18/0x28}
+This register holds the current value of the timer counter. It can be read or written at any time.
+Writing it does not clear the trigger bit (bit 0 of the timer control register). The trigger bit should always be manually reset.
+
+\section{System identification}
+The system controller provides a 32-bit value defined at synthesis time that can be used to identify bitstreams or boards. The value is set by the \verb!systemid! Verilog parameter and read using the register 0x2c.
+
+\end{document}

@@ -1,0 +1,128 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{url}
+\usepackage{tabularx}
+
+\title{AC'97 controller}
+\author{S\'ebastien Bourdeauducq}
+\date{October 2009}
+\begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\maketitle{}
+\section{Introduction}
+The AC'97 controller core enables a system-on-chip (SoC) to interface directly with off-the-shelf AC'97 codecs popular in PCs.
+
+It provides a cost-efficient solution to add good quality sound input and output to a FPGA-based system.
+
+\section{Registers}
+\subsection{Codec register access, offsets 0x00, 0x04, 0x08 and 0x0c}
+Those registers are used to read and write the registers inside the off-chip AC'97 codec.
+
+Register 0x04 holds the current register address, while registers 0x08 and 0x0c contain data respectively written to and read from the AC'97 codec.
+
+Register 0x00 controls the transfers to and from the AC'97 codec registers. Its bits are mapped as follows:
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Bit} & \textbf{Description} \\
+\hline
+0 & Request pending. Write 1 to this bit to initiate a read or write request. \\
+\hline
+1 & Selects between a read (0) and write (1) request. \\
+\hline
+2 & Request has been sent. This asserts the IRQ line. Write 1 to clear this bit. \\
+\hline
+3 & For a read request, the reply has been received. This asserts the IRQ line. Write 1 to clear this bit. \\
+\hline
+4--31 & Reserved. \\
+\hline
+\end{tabularx}
+
+\subsection{Downstream control registers, offsets 0x10, 0x14 and 0x18}
+Those registers control the stream of PCM data from the SoC to the AC'97 codec (audio playback).
+
+The PCM data is transferred via DMA. Stereo samples are interleaved and use the signed 16-bit big-endian format. The sample rate is fixed at 48kHz.
+
+The register 0x14 holds the current DMA address. It is incremented by 4 (two 2-byte values --- one for each channel) after each transferred sample.
+The register 0x18 (counter register) holds the number of bytes that can still be transferred in the DMA buffer before a new buffer address must be programmed. It is decremented by 4 after each transferred sample. The maximum value is \verb!0x3fffc!. When this register reaches 0, a ``DMA read'' interrupt is generated and the AC'97 controller uses its built-in FIFO to supply the codec with data.
+
+The DMA address must be aligned on a 32-bit boundary, and the number of bytes must be a multiple of 4.
+
+The register 0x10 controls the stream of data:
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Bit} & \textbf{Description} \\
+\hline
+0 & Downstream enabled. When this bit is set by the CPU, the AC'97 controller sends PCM data to the codec and reads the DMA buffer (if the counter register is not zero). \\
+\hline
+1 & DMA interrupt. This bit is set by the core when the counter register reaches 0. Writing any value to the control register clears this bit. \\
+\hline
+2--31 & Reserved. \\
+\hline
+\end{tabularx}
+
+\subsection{Upstream control registers, offsets 0x20, 0x24 and 0x28}
+Those registers control the stream of PCM data from the AC'97 codec to the SoC (audio recording).
+
+They work exactly like the downstream control registers.
+
+\section{Using the DMA engine}
+The downstream and upstream DMA engines work exactly the same, and can be enabled at the same time.
+
+\subsection{Initiating the stream}
+\begin{itemize}
+\item Prepare a memory buffer. If you want to play sound, it must be initialized with the samples. If you want to record, it does not need to be initialized.
+\item Program the buffer address and the buffer length.
+\item Set bit 0 in the stream control register.
+\end{itemize}
+
+\subsection{Refilling the stream}
+Once your buffer has been transferred, the AC'97 will send an interrupt to request another buffer.
+\begin{itemize}
+\item Prepare a new buffer.
+\item Program the new buffer address \underline{then} the buffer length\footnote{When the stream is enabled, the AC'97 controller starts making transfers on the bus as soon as the counter register is non-zero.}.
+\item Write any value to the stream control register to ack the interrupt (however, the bit 0 must still be set so that the stream continues).
+\end{itemize}
+
+\subsection{Terminating the stream}
+Clear the bit 0 in the stream control register.
+
+If the AC'97 controller is in the middle of a Wishbone bus cycle, this cycle will be allowed to finish. No new bus cycle will be started.
+
+\section{Connections}
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Port} & \textbf{Description} \\
+\hline
+sys\_clk & System clock. \\
+sys\_rst & System reset. \\
+\hline
+ac97\_clk & AC'97 clock. Entirely asynchronous to the system clock. \\
+ac97\_rst\_n & AC'97 reset signal (input). \\
+ac97\_sin & AC'97 serial data line (codec to SoC). \\
+ac97\_sout & AC'97 serial data line (SoC to codec). \\
+ac97\_sync & AC'97 synchronization line. \\
+\hline
+csr\_* & CSR bus interface. \\
+\hline
+crrequest\_irq & Codec register request sent interrupt. \\
+crreply\_irq & Codec register reply received interrupt. \\
+dmar\_irq & DMA read (downstream) interrupt. \\
+dmaw\_irq & DMA write (upstream) interrupt. \\
+\hline
+wbm\_* & Wishbone master interface for DMA. \\
+\hline
+\end{tabularx}
+
+\end{document}

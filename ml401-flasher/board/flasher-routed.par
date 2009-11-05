@@ -1,0 +1,202 @@
+Release 11.3 par L.57 (lin)
+Copyright (c) 1995-2009 Xilinx, Inc.  All rights reserved.
+
+tmatsuyaxpc::  Thu Oct 15 21:58:07 2009
+
+par -ol high -w flasher.ncd flasher-routed.ncd 
+
+
+Constraints file: flasher.pcf.
+   "flasher" is an NCD, version 3.2, device xc4vlx25, package ff668, speed -10
+This design is using the default stepping level (major silicon revision) for this device (1). Unless your design is
+targeted at devices of this stepping level, it is recommended that you explicitly specify the stepping level of the
+parts you will be using. This will allow the tools to take advantage of any available performance and functional
+enhancements for this device. The latest stepping level for this device is '2'. Additional information on "stepping
+level" is available at support.xilinx.com.
+
+Initializing temperature to 85.000 Celsius. (default - Range: 0.000 to 85.000 Celsius)
+Initializing voltage to 1.140 Volts. (default - Range: 1.140 to 1.260 Volts)
+
+INFO:Par:282 - No user timing constraints were detected or you have set the option to ignore timing constraints ("par
+   -x"). Place and Route will run in "Performance Evaluation Mode" to automatically improve the performance of all
+   internal clocks in this design. Because there are not defined timing requirements, a timing score will not be
+   reported in the PAR report in this mode. The PAR timing summary will list the performance achieved for each clock.
+   Note: For the fastest runtime, set the effort level to "std".  For best performance, set the effort level to "high".
+
+Device speed data version:  "PRODUCTION 1.69 2009-08-24".
+
+
+Device Utilization Summary:
+
+   Number of BSCANs                          1 out of 4      25%
+   Number of BUFGs                           3 out of 32      9%
+   Number of External IOBs                  70 out of 448    15%
+      Number of LOCed IOBs                  70 out of 70    100%
+
+   Number of OLOGICs                        61 out of 448    13%
+   Number of Slices                         43 out of 10752   1%
+      Number of SLICEMs                      0 out of 5376    0%
+
+
+
+Overall effort level (-ol):   High 
+Placer effort level (-pl):    High 
+Placer cost table entry (-t): 1
+Router effort level (-rl):    High 
+
+Starting initial Timing Analysis.  REAL time: 4 secs 
+Finished initial Timing Analysis.  REAL time: 4 secs 
+
+
+Starting Placer
+Total REAL time at the beginning of Placer: 6 secs 
+Total CPU  time at the beginning of Placer: 6 secs 
+
+Phase 1.1  Initial Placement Analysis
+Phase 1.1  Initial Placement Analysis (Checksum:439adfa6) REAL time: 6 secs 
+
+Phase 2.7  Design Feasibility Check
+Phase 2.7  Design Feasibility Check (Checksum:439adfa6) REAL time: 6 secs 
+
+Phase 3.31  Local Placement Optimization
+Phase 3.31  Local Placement Optimization (Checksum:7f9d8e57) REAL time: 6 secs 
+
+Phase 4.2  Initial Clock and IO Placement
+
+Phase 4.2  Initial Clock and IO Placement (Checksum:fa4cd2bf) REAL time: 6 secs 
+
+Phase 5.36  Local Placement Optimization
+Phase 5.36  Local Placement Optimization (Checksum:fa4cd2bf) REAL time: 6 secs 
+
+Phase 6.30  Global Clock Region Assignment
+Phase 6.30  Global Clock Region Assignment (Checksum:fa4cd2bf) REAL time: 6 secs 
+
+Phase 7.3  Local Placement Optimization
+Phase 7.3  Local Placement Optimization (Checksum:fa4cd2bf) REAL time: 6 secs 
+
+Phase 8.5  Local Placement Optimization
+Phase 8.5  Local Placement Optimization (Checksum:fa4cd2bf) REAL time: 6 secs 
+
+Phase 9.8  Global Placement
+..
+..
+Phase 9.8  Global Placement (Checksum:ad41e36d) REAL time: 6 secs 
+
+Phase 10.5  Local Placement Optimization
+Phase 10.5  Local Placement Optimization (Checksum:ad41e36d) REAL time: 6 secs 
+
+Phase 11.18  Placement Optimization
+Phase 11.18  Placement Optimization (Checksum:5adcfcbd) REAL time: 6 secs 
+
+Phase 12.5  Local Placement Optimization
+Phase 12.5  Local Placement Optimization (Checksum:5adcfcbd) REAL time: 6 secs 
+
+Phase 13.34  Placement Validation
+Phase 13.34  Placement Validation (Checksum:5adcfcbd) REAL time: 6 secs 
+
+Total REAL time to Placer completion: 6 secs 
+Total CPU  time to Placer completion: 6 secs 
+Writing design to file flasher-routed.ncd
+
+
+
+Starting Router
+
+
+Phase  1  : 343 unrouted;      REAL time: 5 secs 
+
+Phase  2  : 200 unrouted;      REAL time: 5 secs 
+
+Phase  3  : 5 unrouted;      REAL time: 5 secs 
+
+Phase  4  : 6 unrouted; (Par is working to improve performance)     REAL time: 7 secs 
+
+Updating file: flasher-routed.ncd with current fully routed design.
+
+Phase  5  : 0 unrouted; (Par is working to improve performance)     REAL time: 7 secs 
+
+Phase  6  : 0 unrouted; (Par is working to improve performance)     REAL time: 13 secs 
+
+Updating file: flasher-routed.ncd with current fully routed design.
+
+Phase  7  : 0 unrouted; (Par is working to improve performance)     REAL time: 13 secs 
+
+Phase  8  : 0 unrouted; (Par is working to improve performance)     REAL time: 13 secs 
+
+Phase  9  : 0 unrouted; (Par is working to improve performance)     REAL time: 13 secs 
+
+Phase 10  : 0 unrouted; (Par is working to improve performance)     REAL time: 13 secs 
+Total REAL time to Router completion: 13 secs 
+Total CPU time to Router completion: 13 secs 
+
+Partition Implementation Status
+-------------------------------
+
+  No Partitions were found in this design.
+
+-------------------------------
+
+Generating "PAR" statistics.
+
+**************************
+Generating Clock Report
+**************************
+
++---------------------+--------------+------+------+------------+-------------+
+|        Clock Net    |   Resource   |Locked|Fanout|Net Skew(ns)|Max Delay(ns)|
++---------------------+--------------+------+------+------------+-------------+
+|                drck | BUFGCTRL_X0Y1| No   |   29 |  0.145     |  2.585      |
++---------------------+--------------+------+------+------------+-------------+
+|              update |BUFGCTRL_X0Y31| No   |   58 |  0.253     |  2.634      |
++---------------------+--------------+------+------+------------+-------------+
+|       sram_clk_OBUF | BUFGCTRL_X0Y0| No   |   15 |  0.093     |  2.589      |
++---------------------+--------------+------+------+------------+-------------+
+
+* Net Skew is the difference between the minimum and maximum routing
+only delays for the net. Note this is different from Clock Skew which
+is reported in TRCE timing report. Clock Skew is the difference between
+the minimum and maximum path delays which includes logic delays.
+
+Timing Score: 0 (Setup: 0, Hold: 0)
+
+Asterisk (*) preceding a constraint indicates it was not met.
+   This may be due to a setup or hold violation.
+
+----------------------------------------------------------------------------------------------------------
+  Constraint                                |    Check    | Worst Case |  Best Case | Timing |   Timing   
+                                            |             |    Slack   | Achievable | Errors |    Score   
+----------------------------------------------------------------------------------------------------------
+  Autotimespec constraint for clock net drc | SETUP       |         N/A|     1.771ns|     N/A|           0
+  k                                         | HOLD        |     0.544ns|            |       0|           0
+----------------------------------------------------------------------------------------------------------
+  Autotimespec constraint for clock net sra | SETUP       |         N/A|     4.782ns|     N/A|           0
+  m_clk_OBUF                                | HOLD        |     0.774ns|            |       0|           0
+----------------------------------------------------------------------------------------------------------
+
+
+All constraints were met.
+INFO:Timing:2761 - N/A entries in the Constraints list may indicate that the 
+   constraint does not cover any paths or that it has no requested value.
+
+
+Generating Pad Report.
+
+All signals are completely routed.
+
+Total REAL time to PAR completion: 14 secs 
+Total CPU time to PAR completion: 14 secs 
+
+Peak Memory Usage:  225 MB
+
+Placement: Completed - No errors found.
+Routing: Completed - No errors found.
+
+Number of error messages: 0
+Number of warning messages: 0
+Number of info messages: 1
+
+Writing design to file flasher-routed.ncd
+
+
+
+PAR done!

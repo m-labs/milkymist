@@ -1,0 +1,70 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{url}
+\usepackage{amsmath}
+
+\title{VGA framebuffer}
+\author{S\'ebastien Bourdeauducq}
+\date{October 2009}
+\begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\maketitle{}
+\section{Specifications}
+The VGA framebuffer core enables a system-on-chip to support a VGA video output with the picture read from a memory framebuffer.
+The core directly drives a 3-channel 8-bit digital to analog converter and the horizontal and vertical synchronization signals.
+The framebuffer is read with a 4x64 FastMemoryLink (FML) master; and a CSR interface is implemented for configuring the video output.
+
+\section{Registers}
+\subsection{Control register, offset 0x00}
+This register enables or disables the video output by setting or clearing the reset bit 0. At reset, the default value is 0x1.
+
+\subsection{Horizontal video parameters, offsets 0x04, 0x08, 0x0c and 0x10}
+Those registers set respectively:
+\begin{itemize}
+\item the horizontal size of the active video area (the horizontal resolution)
+\item the position of the beginning of the horizontal sync pulse in the scan line, in pixel clocks
+\item the position of the end of the horizontal sync pulse in the scan line, in pixel clocks
+\item the total length of the horizontal scan line minus one, in pixels
+\end{itemize}
+The default values are for the standard VGA resolution of 640x480 at 60Hz with a 25MHz pixel clock.
+
+\subsection{Vertical video parameters, offsets 0x14, 0x18, 0x1c and 0x20}
+Those registers set respectively:
+\begin{itemize}
+\item the vertical size of the active video area (the vertical resolution)
+\item the position of the beginning of the vertical sync pulse. The unit is the horizontal scan line.
+\item the position of the end of the vertical sync pulse. Same unit as above.
+\item the total count of horizontal scan lines minus one. Same unit as above.
+\end{itemize}
+The default values are for the standard VGA resolution of 640x480 at 60Hz with a 25MHz pixel clock.
+
+\subsection{DMA control registers, offsets 0x24, 0x28 and 0x2c}
+The register 0x24 defines the base address of the framebuffer. That framebuffer is basic progressive scan buffer using the RGB565 pixel format.
+
+When register 0x24 is written, the framebuffer address is not updated immediately. Instead, the VGA core waits for the end of the vertical active video area and only starts fetching data from the new framebuffer at the beginning of the next frame. This enables the use of multiple framebuffers without any tearing or flickering artifacts. The address from which the core is currently reading data is available in register 0x28.
+When registers 0x24 and 0x28 have different values, a framebuffer address change is pending. When they have the same values, the frame being displayed is the latest that was asked for.
+
+The framebuffer must be aligned to the start of a FML burst ($\frac{4 \cdot 64}{8}$ bytes).
+
+Register 0x2c defines the number of FML bursts required to fill a complete screen. This is typically set to:
+\[
+\frac{\text{horizontal resolution} \cdot \text{vertical resolution} \cdot 16}{4 \cdot 64}
+\]
+
+The screen resolution must be set so that this number is integer. This is the case with common VGA resolutions.
+
+\section{Connections}
+The pixel clock is not generated internally and must be fed to the core using the \verb!vga_clk! port. No relationship is expected with the system clock (the two domains are entirely independent). That pixel clock should also be fed to the synchronous DAC.
+
+The other ports should be self-explanatory.
+
+\end{document}
