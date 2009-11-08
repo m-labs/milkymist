@@ -394,7 +394,8 @@ lm32_top cpu(
 // Boot ROM
 //---------------------------------------------------------------------------
 norflash8 #(
-	.adr_width(22)
+	.adr_width(22),
+	.swapbytes(1'b1)
 ) norflash (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
