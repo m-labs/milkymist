@@ -520,7 +520,7 @@ static const char banner[] =
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, version 3 of the License.\n\n";
 
-int main()
+int main(int warm_boot)
 {
 	char buffer[64];
 
@@ -540,7 +540,8 @@ int main()
 
 	if(brd_desc->sdram_size > 0) {
 		if(plltest()) {
-			ddrinit();
+			if (!warm_boot)
+				ddrinit();
 			flush_bridge_cache();
 
 			if(memtest(8)) {

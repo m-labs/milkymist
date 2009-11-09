@@ -341,4 +341,6 @@ NET "ac97_sync" LOC = D9 | IOSTANDARD = LVCMOS25;
 NET "ac97_clk" TNM_NET = "clkac97";
 TIMESPEC "TSclkac97" = PERIOD "clkac97" 80 HIGH 50%;
 
-
+# PS2 signals
+NET "ps2_clk1"  LOC = D2 | SLEW = SLOW | DRIVE = 2 | TIG;
+NET "ps2_data1" LOC = G9 | SLEW = SLOW | DRIVE = 2 | TIG;
