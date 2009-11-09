@@ -27,7 +27,7 @@ static const struct board_desc boards[3] = {
 		.sdram_size = 64,
 		.ddr_clkphase = 0,
 		.ddr_idelay = 0,
-		.ddr_dqsdelay = 244
+		.ddr_dqsdelay = 0//244
 	},
 	{
 		.id = 0x53334145, /* S3AE */

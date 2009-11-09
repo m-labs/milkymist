@@ -1,9 +1,0 @@
-run
--ifn flasher.prj
--top flasher
--ifmt MIXED
--opt_mode AREA
--opt_level 2
--ofn flasher.ngc
--p xc4vlx25-ff668-10
--register_balancing yes
