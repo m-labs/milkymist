@@ -540,7 +540,7 @@ int main(int warm_boot)
 
 	if(brd_desc->sdram_size > 0) {
 		if(plltest()) {
-			if (!warm_boot)
+			if(!warm_boot)
 				ddrinit();
 			flush_bridge_cache();
 

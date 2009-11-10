@@ -100,7 +100,7 @@ _crt0:
 	bi      .clearBSS
 	
 .callMain:
-	mv	r1, r2
+	mv      r1, r2
 	mvi     r2, 0
 	mvi     r3, 0
 	calli   main

@@ -12,27 +12,34 @@
 \usepackage{cite}
 \usepackage{nopageno}
 
-\title{Milkymist, an open hardware VJ platform}
-\subtitle{Technical overview}
+\title{Overview of Milkymist, an open hardware VJ platform}
+\subtitle{Revision B (Nov. 2009)}
 \author{S\'ebastien Bourdeauducq}
 \begin{document}
 \maketitle{}
 \section{Introduction}
 The Milkymist\textsuperscript{\texttrademark} project~\cite{milkymist} develops a stand-alone device in a small form factor that is capable of rendering MilkDrop-esque visuals effects~\cite{milkdrop} in real time, with a high level of interaction with many sensors and using live audio and video streams as a base.
 
-Open source components and design tools have been developed or used as much as possible. A system-on-chip implemented in a FPGA has been chosen for meeting this goal at the IP core level.
+The flexibility of the FPGA used as a central component enables advanced users to modify the design, and also permits compact integration of many interfaces (Ethernet, USB, MIDI, DMX512, IR remote, video input), making Milkymist\textsuperscript{\texttrademark} a platform of choice for the mobile VJ.
 
-The flexibility of the FPGA enables advanced users to modify the design, and also permits compact integration of many interfaces (MIDI, OSC, DMX512, analog sensors, video inputs), making Milkymist\textsuperscript{\texttrademark} a platform of choice for the mobile VJ.
+But Milkymist\textsuperscript{\texttrademark} is more than a visual synthesizer - it is also one of the leading open source system-on-chip designs. It is today the fastest open source system-on-chip capable of running uClinux, and it comes with an extensive set of features and graphics accelerators.
 
-The design is also highly modular and documented, making the code easy to re-use in other open source system-on-chips.
+The IP cores that make up the system-on-chip are entirely written in open source synthesizable Verilog HDL with extensive use of logic inference to ease porting to various FPGA and ASIC technologies. They come with test benches and documentation. This makes Milkymist\textsuperscript{\texttrademark} a great library of re-usable logic cores to serve as a base for other open source hardware.
 
-This paper gives a technical overview of the FPGA-based system-on-chip and its environment.
+\begin{figure}
+\centering
+\includegraphics[height=60mm]{milkdrop_bw.eps}
+\caption{Sample video output from MilkDrop}
+\label{fig:genodefx}
+\end{figure}
+
+This paper gives a technical overview of the system-on-chip and its environment.
 
 \section{System architecture}
 The block diagram of the complete system-on-chip is given in Figure~\ref{fig:block}. The complete system is written in synthesizable Verilog HDL. Its components are detailed below.
 \begin{figure*}
 \centering
-\includegraphics[height=130mm]{soc_architecture.eps}
+\includegraphics[height=185mm]{soc_architecture.eps}
 \caption{SoC block diagram}
 \label{fig:block}
 \end{figure*}
@@ -50,9 +57,7 @@ By removing the need for logic that is only required to comply with a too genera
 \subsubsection{Base system}
 The base system is made up of a Mico32 CPU core~\cite{mico32}, on-chip SRAM, off-chip Flash, an UART for printing debug messages, general-purpose I/O ports, timers, and interrupt controller.
 
-The Mico32 core can execute uClinux~\cite{micolinux}, or be programmed like a microcontroller, without operating system.
-
-There are plans to use AEMB~\cite{aemb} instead of Mico32.
+The Mico32 core can execute uClinux~\cite{micolinux}, or be programmed like a microcontroller, without operating system. Early versions of the system-on-chip used AEMB~\cite{aemb} instead of Mico32. It has been replaced because of performance and software support complexity reasons.
 
 These make up a basic system that is capable of executing software and communicate with the outside world. On top of this system, special peripherals and accelerators are added.
 
@@ -82,37 +87,45 @@ The unit maps a texture on a surface defined by a triangle strip.
 To implement MilkDrop at a good frame rate, this becomes a very computation and memory intensive process. The implementation is heavily parallel, and is directly connected to the FML bus to acheive memory bandwidth constraints~\cite{confslides}~\cite{tmu}.
 
 \subsubsection{Programmable floating point unit (PFPU)}
-The PFPU~\cite{pfpu} is a floating point coprocessor, whose primary purpose is generating vertex data when implementing MilkDrop.
+The PFPU~\cite{pfpu} is a floating point coprocessor, whose primary purpose is generating vertex data when implementing MilkDrop. It is similar to the vertex shader of traditional graphics processing units.
 
-It is a pipelined VLIW processor with all the scheduling done by the compiler. Loop structures are not programmable, which limits the use case to evaluating mathematical expressions.
+It is a pipelined VLIW processor with all the scheduling done by the compiler. This radical approach enables a very efficient use of the FPGA resources. Loop structures are not programmable, which limits the use case to evaluating mathematical expressions.
 
 \subsubsection{Audio I/O}
 The audio controller interfaces the system-on-chip to industry-standard and cheap AC97 codecs.
 
-\subsubsection{Memory card}
-The system is equipped with a CompactFlash memory card controller, which is used to store firmware, and user media and data.
+It supports full-duplex audio operation at a 16-bit 48kHz sample rate and access to the AC97 codec registers.
 
-\subsubsection{Video inputs}
-Two video inputs compatible with PAL and NTSC are planned to be added to the system. 
+\subsubsection{microSD card}
+The system is equipped with a memory card controller compatible with the popular microSD cards, which are used to store firmware, user media and data.
 
-An external ADC and decoder chip like ADV7181 will be added to simplify the process.
+\subsubsection{Ethernet}
+The Milkymist SoC can connect to industry-standard Ethernet PHYs to enable TCP/IP network connectivity and specifically the OpenSoundControl protocol which supersedes MIDI for the connection of electronic instruments.
 
-Those video inputs enable the use of the device in live video mixing and transformation applications.
+\subsubsection{USB}
+The system-on-chip integrates a protocol stack compatible with full-speed host USB. The SoC connects directly to USB transceivers to interface the ports.
 
-\subsubsection{Control peripherals}
-The following interfaces are planned to be added to the system :
-\begin{itemize}
-\item DMX512 (stage lighting)
-\item MIDI (electronic instruments)
-\item Ethernet (OpenSoundControl for electronic instruments)
-\end{itemize}
+The USB-compatible ports allow connection of keyboards, mice, USB sticks, wireless network cards, etc.
 
-These make the device suitable for artistic installations and performances.
+\subsubsection{DMX512 and MIDI}
+These two interfaces are common in stage environments. DMX512 is a protocol for controlling lighting while MIDI connects electronic instruments together.
+
+By integrating these two interfaces, the Milkymist SoC enables new ways of easily interacting with the visuals.
+
+\subsubsection{IR remote}
+The SoC integrates a RC-5 compatible IR remote control decoder. The user can utilize most electronic appliances' remote controls to interact with the visuals or navigate through GUI menus.
+
+\subsubsection{Video input}
+A video input compatible with PAL and NTSC are is supported by the system. Like every high-bandwidth DMA master, it is connected to the FML bus.
+
+An external ADC and decoder chip like ADV7181 is used. This simplifies greatly the problem of decoding multiple video standards.
+
+This video input enables the use of the device in live video mixing and transformation applications.
 
 \section{Development system}
-The system is currently working on a Xilinx ML401 development board equipped with a Virtex-4 XC4VLX25 FPGA. This board integrates most of the peripherals, except DMX512, MIDI and video inputs.
+The system is currently working on a Xilinx ML401 development board equipped with a Virtex-4 XC4VLX25 FPGA. This board integrates most of the peripherals, but some are missing; most notably DMX512, MIDI, video inputs and appropriate USB transceivers.
 
-A custom PCB is in development, which will be smaller, have all the interfaces and use a cheaper Spartan-3A FPGA.
+A custom PCB being developed, which is smaller, supports all the interfaces and uses a cheaper and higher-density Spartan-6 FPGA (XC6SLX45).
 
 On the software side:
 \begin{itemize}
@@ -122,6 +135,18 @@ On the software side:
 \end{itemize}
 
 All these tools are either free (as in freedom) or available at no charge.
+
+\section{Software support}
+As stated earlier, GCC can compile code for the Mico32 CPU target, which eases the porting of existing C or C++ software.
+
+\begin{figure}
+\centering
+\includegraphics[height=60mm]{genode_bw.eps}
+\caption{The Genode FX GUI toolkit}
+\label{fig:genodefx}
+\end{figure}
+
+The final system will run uClinux with kernel drivers for all the system-on-chip components, and use the Genode FX GUI toolkit~\cite{genodefx} (shown in Figure~\ref{fig:genodefx}) to enable the user to configure and tune the system. The visual effect engine will be based on the ``iterative rendering'' idea behind MilkDrop, and will use the same system of parametrizable equations to define the effects.
 
 \section{Conclusion}
 Milkymist features a powerful system-on-chip design, perfectly suited for running embedded applications targeted at video performance artists (VJs). It is also fully open-source (GNU GPL license version 3), flexible and well documented, allowing its components to be re-used in other system-on-chip designs.
