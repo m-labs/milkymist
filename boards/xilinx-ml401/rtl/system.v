@@ -91,7 +91,11 @@ module system(
 	input ac97_clk,
 	input ac97_sin,
 	output ac97_sout,
-	output ac97_sync
+	output ac97_sync,
+
+	// PS2
+	inout ps2_clk1,
+	inout ps2_data1
 );
 
 //------------------------------------------------------------------
@@ -376,7 +380,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_vga,
 		csr_dr_ac97,
 		csr_dr_pfpu,
-		csr_dr_tmu;
+		csr_dr_tmu,
+		csr_dr_ps2;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -500,6 +505,7 @@ csrbrg csrbrg(
 		|csr_dr_ac97
 		|csr_dr_pfpu
 		|csr_dr_tmu
+		|csr_dr_ps2
 	)
 );
 
@@ -545,9 +551,11 @@ wire ac97dmar_irq;
 wire ac97dmaw_irq;
 wire pfpu_irq;
 wire tmu_irq;
+wire ps2_irq;
 
 wire [31:0] cpu_interrupt_n;
-assign cpu_interrupt_n = {{21{1'b1}},
+assign cpu_interrupt_n = {{20{1'b1}},
+	~ps2_irq,
 	~tmu_irq,
 	~pfpu_irq,
 	~ac97dmaw_irq,
@@ -992,6 +1000,32 @@ assign fml_tmuw_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmuw_stb = 1'b0;
 assign fml_tmuw_sel = 8'bx;
 assign fml_tmuw_dw = 64'bx;
+`endif
+
+//---------------------------------------------------------------------------
+// PS2 Interface
+//---------------------------------------------------------------------------
+`ifdef ENABLE_PS2_KEYBOARD
+ps2 # (
+	.csr_addr(4'h7),
+	.clk_freq(`CLOCK_FREQUENCY)
+) ps2_keyboard (
+	.sys_clk (sys_clk),
+	.sys_rst (sys_rst),
+
+	.csr_a   (csr_a),
+	.csr_we  (csr_we),
+	.csr_di  (csr_dw),
+	.csr_do  (csr_dr_ps2),
+
+	.irq     (ps2_irq),
+
+	.ps2_clk (ps2_clk1),
+	.ps2_data(ps2_data1)
+);
+`else
+assign csr_dr_ps2 = 32'd0;
+assign ps2_irq = 1'd0;
 `endif
 
 endmodule
