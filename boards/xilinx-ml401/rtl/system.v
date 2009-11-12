@@ -94,8 +94,8 @@ module system(
 	output ac97_sync,
 
 	// PS2
-	inout ps2_clk1,
-	inout ps2_data1
+	input ps2_clk1,
+	input ps2_data1
 );
 
 //------------------------------------------------------------------
@@ -1005,22 +1005,22 @@ assign fml_tmuw_dw = 64'bx;
 //---------------------------------------------------------------------------
 // PS2 Interface
 //---------------------------------------------------------------------------
-`ifdef ENABLE_PS2_KEYBOARD
+`ifdef ENABLE_PS2
 ps2 # (
 	.csr_addr(4'h7),
 	.clk_freq(`CLOCK_FREQUENCY)
 ) ps2_keyboard (
-	.sys_clk (sys_clk),
-	.sys_rst (sys_rst),
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
 
-	.csr_a   (csr_a),
-	.csr_we  (csr_we),
-	.csr_di  (csr_dw),
-	.csr_do  (csr_dr_ps2),
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_ps2),
 
-	.irq     (ps2_irq),
+	.irq(ps2_irq),
 
-	.ps2_clk (ps2_clk1),
+	.ps2_clk(ps2_clk1),
 	.ps2_data(ps2_data1)
 );
 `else

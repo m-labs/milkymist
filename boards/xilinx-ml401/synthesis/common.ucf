@@ -119,9 +119,6 @@ NET "sram_zz" DRIVE = 8;
 NET "uart_rxd" LOC = W2 | IOSTANDARD = LVCMOS33;
 NET "uart_txd" LOC = W1 | IOSTANDARD = LVCMOS33;
 
-NET "uart_rxd" TIG;
-NET "uart_txd" TIG;
-
 # ==== Push buttons ====
 NET "btn(0)" LOC = E7 | IOSTANDARD = LVCMOS25;  # N
 NET "btn(1)" LOC = E9  | IOSTANDARD = LVCMOS25; # W
@@ -324,12 +321,12 @@ NET "ace_clkin" TNM_NET = "ace_clkin";
 TIMESPEC "TSace" = PERIOD "ace_clkin" 30 ns HIGH 50% INPUT_JITTER 1 ns;
 
 NET "ace_mpce_n" LOC = AD5 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
-NET "ace_mpirq" LOC = AD4 | IOSTANDARD = LVCMOS33 | TIG | PULLDOWN;
+NET "ace_mpirq" LOC = AD4 | IOSTANDARD = LVCMOS33 | PULLDOWN;
 
 # USB signals
 NET "usb_cs_n" LOC = AF10 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
-NET "usb_hpi_reset_n" LOC = A7 | IOSTANDARD = LVCMOS25 | TIG;
-NET "usb_hpi_int" LOC = V5 | IOSTANDARD = LVCMOS33 | TIG | PULLDOWN;
+NET "usb_hpi_reset_n" LOC = A7 | IOSTANDARD = LVCMOS25;
+NET "usb_hpi_int" LOC = V5 | IOSTANDARD = LVCMOS33 | PULLDOWN;
 
 # ==== AC97 ====
 NET "ac97_clk" LOC = AE10 | IOSTANDARD = LVCMOS33;
@@ -342,5 +339,5 @@ NET "ac97_clk" TNM_NET = "clkac97";
 TIMESPEC "TSclkac97" = PERIOD "clkac97" 80 HIGH 50%;
 
 # PS2 signals
-NET "ps2_clk1"  LOC = D2 | SLEW = SLOW | DRIVE = 2 | TIG;
-NET "ps2_data1" LOC = G9 | SLEW = SLOW | DRIVE = 2 | TIG;
+NET "ps2_clk1"  LOC = D2 | IOSTANDARD = LVCMOS25;
+NET "ps2_data1" LOC = G9 | IOSTANDARD = LVCMOS25;

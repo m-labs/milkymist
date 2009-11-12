@@ -28,7 +28,7 @@ module ps2 #(
 	input [31:0] csr_di,
 	output reg [31:0] csr_do,
 
-	output irq,
+	output reg irq,
 
 	input ps2_clk,
 	input ps2_data
@@ -41,17 +41,17 @@ wire csr_selected = csr_a[13:10] == csr_addr;
 // divisor
 //-----------------------------------------------------------------
 reg [9:0] enable_counter;
-wire	enable;
-assign	enable = ( enable_counter == 10'd0);
+wire enable;
+assign enable = (enable_counter == 10'd0);
 
 parameter divisor = clk_freq/12800/16;
 
 always @(posedge sys_clk) begin
-	if ( sys_rst )
+	if(sys_rst)
 		enable_counter <= divisor - 10'd1;
 	else begin
 		enable_counter <= enable_counter - 10'd1;
-		if (enable)
+		if(enable)
 			enable_counter <= divisor - 10'd1;
 	end
 end
@@ -75,57 +75,46 @@ end
 // PS2 RX Logic
 //-----------------------------------------------------------------
 reg [7:0] kcode;
-reg       rx_irq;
-reg       rx_clk_data;
+reg rx_clk_data;
 reg [5:0] rx_clk_count;
 reg [4:0] rx_bitcount;
 reg [10:0] rx_data;
 
 always @(posedge sys_clk) begin
-	if( sys_rst ) begin
+	if(sys_rst) begin
 		rx_clk_data <= 1'd1;
-		rx_clk_count<= 5'd0;
+		rx_clk_count <= 5'd0;
 		rx_bitcount <= 4'd0;
-		rx_data     <= 11'b11111111111;
-		rx_irq      <= 1'd0;
-		csr_do      <= 32'd0;
+		rx_data <= 11'b11111111111;
+		irq <= 1'd0;
+		csr_do <= 32'd0;
 	end else begin
-rx_irq      <= 1'b0;	// IRQ ack
-		csr_do      <= 32'd0;
-		if (csr_selected) begin
-//rx_irq      <= 1'b0;	// IRQ ack
-//			if (csr_we) begin
-//				case(csr_a[1:0])
-//					2'b01:	rx_irq <= 1'b0;	// IRQ ack
-//				endcase
-//			end
-			case(csr_a[1:0])
-				2'b00: csr_do <= kcode;		// PS2 code
-			endcase
+		irq <= 1'b0;
+		csr_do <= 32'd0;
+		if(csr_selected) begin
+			csr_do <= kcode;
 		end
-		if (enable) begin
-			if ( rx_clk_data == ps2_clk_2 ) begin
+		if(enable) begin
+			if(rx_clk_data == ps2_clk_2) begin
 				rx_clk_count <= rx_clk_count + 5'd1;
 			end else begin
 				rx_clk_count <= 5'd0;
-				rx_clk_data  <= ps2_clk_2;
+				rx_clk_data <= ps2_clk_2;
 			end
-			if ( rx_clk_data == 1'd0 && rx_clk_count == 5'd4 ) begin
-				rx_data     <= {ps2_data_2, rx_data[10:1]};
+			if(rx_clk_data == 1'd0 && rx_clk_count == 5'd4) begin
+				rx_data <= {ps2_data_2, rx_data[10:1]};
 				rx_bitcount <= rx_bitcount + 4'd1;
-				if ( rx_bitcount == 4'd10 ) begin
-					rx_irq <= 1'b1;
-					kcode  <= rx_data[9:2];
+				if(rx_bitcount == 4'd10) begin
+					irq <= 1'b1;
+					kcode <= rx_data[9:2];
 				end
 			end
-			if ( rx_clk_count == 5'd16 ) begin
+			if(rx_clk_count == 5'd16) begin
 				rx_bitcount <= 4'd0;
-				rx_data     <= 11'b11111111111;
+				rx_data <= 11'b11111111111;
 			end
 		end
 	end
 end
-
-assign irq = rx_irq;
 
 endmodule
