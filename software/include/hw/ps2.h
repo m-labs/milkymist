@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HW_FMLBRG_H
-#define __HW_FMLBRG_H
+#ifndef __HW_PS2_H
+#define __HW_PS2_H
 
-#define FMLBRG_FLUSH_BASE	(0x44000000)
-#define FMLBRG_LINE_LENGTH	(32)
-#define FMLBRG_LINE_COUNT	(512)
+#include <hw/common.h>
 
-#endif /* __HW_FMLBRG_H */
+#define CSR_PS2_RX	MMPTR(0x80007000)
+
+#endif /* __HW_PS2_H */

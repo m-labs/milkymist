@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HW_FMLBRG_H
-#define __HW_FMLBRG_H
+#ifndef __HAL_PS2_H
+#define __HAL_PS2_H
 
-#define FMLBRG_FLUSH_BASE	(0x44000000)
-#define FMLBRG_LINE_LENGTH	(32)
-#define FMLBRG_LINE_COUNT	(512)
+void ps2_init();
+void ps2_isr();
+int ps2_read();
 
-#endif /* __HW_FMLBRG_H */
+#endif /* __HAL_PS2_H */

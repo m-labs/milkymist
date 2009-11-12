@@ -38,6 +38,7 @@
 #include <hal/tmu.h>
 #include <hal/time.h>
 #include <hal/brd.h>
+#include <hal/ps2.h>
 
 #include "line.h"
 #include "wave.h"
@@ -381,6 +382,18 @@ static void echo()
 	}
 }
 
+static void ps2()
+{
+	int r;
+
+	printf("PS/2 scancode test - send any key on UART to abort\n");
+	while(!readchar_nonblock()) {
+		r = ps2_read();
+		if(r != -1)
+			printf("%02x\n", r);
+	}
+}
+
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -420,6 +433,7 @@ static void do_command(char *c)
 	else if(strcmp(command, "pfputest") == 0) pfputest();
 	else if(strcmp(command, "tmutest") == 0) tmutest();
 	else if(strcmp(command, "echo") == 0) echo();
+	else if(strcmp(command, "ps2") == 0) ps2();
 
 	else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 }

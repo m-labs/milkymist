@@ -14,7 +14,7 @@
 
 \title{Milkymist system reference manual}
 \author{S\'ebastien Bourdeauducq}
-\date{October 2009}
+\date{November 2009}
 \begin{document}
 \maketitle{}
 \section{What is Milkymist}
@@ -29,6 +29,8 @@ Open source components have been used as much as possible, and therefore a syste
 \end{itemize}
 
 \section{Supported boards}
+\subsection{Milkymist One}
+
 \subsection{Xilinx ML401 development board}
 This board is equipped with a Virtex-4 FPGA (XC4VLX25). Milkymist can use the on-board peripherals of the ML401:
 \begin{itemize}
@@ -38,6 +40,7 @@ This board is equipped with a Virtex-4 FPGA (XC4VLX25). Milkymist can use the on
 \item RS232 port
 \item LCD screen (Lumex LCM-S01602DTR/M, HD44780-compatible)
 \item LEDs
+\item PS/2
 \item Buttons
 \item Parallel flash
 \item DDRAM (two Infineon HYB25D256160BT-7 chips)
@@ -58,7 +61,7 @@ The following peripherals are supported:
 
 \begin{figure}[H]
 \centering
-\includegraphics[height=130mm]{soc_architecture.eps}
+\includegraphics[height=170mm]{soc_architecture.eps}
 \caption{SoC block diagram}
 \end{figure}
 
@@ -108,6 +111,9 @@ The engine performs texture mapping on a triangle strip. It is a central compone
 
 It has two FML master interfaces for fetching pixel data, a WISHBONE master to fetch the vertex data, and a CSR slave for control.
 
+\subsection{PS/2 controller}
+Milkymist supports standard PS/2 keyboard/mouse port in read-only mode. This is only implemented on the ML401 board.
+
 \section{GPIO map}
 
 \subsubsection{Inputs}
@@ -116,11 +122,11 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 \bf{PIO bit} & \bf{Direction} & \bf{Description} \\
 \hline
-0 & Input & Pushbutton North \\
+0 & Input & Pushbutton North (ML401 only) \\
 \hline
 1 & Input & Pushbutton West \\
 \hline
-2 & Input & Pushbutton South \\
+2 & Input & Pushbutton South (ML401 only) \\
 \hline
 3 & Input & Pushbutton East \\
 \hline
@@ -134,13 +140,13 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 8 & Input & DIP switch 4 \\
 \hline
-9 & Input & DIP switch 5 \\
+9 & Input & DIP switch 5 (ML401 only) \\
 \hline
-10 & Input & DIP switch 6 \\
+10 & Input & DIP switch 6 (ML401 only) \\
 \hline
-11 & Input & DIP switch 7 \\
+11 & Input & DIP switch 7 (ML401 only) \\
 \hline
-12 & Input & DIP switch 8 \\
+12 & Input & DIP switch 8 (ML401 only) \\
 \hline
 \end{tabularx}
 
@@ -150,33 +156,33 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 \bf{PIO bit} & \bf{Direction} & \bf{Description} \\
 \hline
-0 & Output & LED 2 (NB. LED 0 and LED 1 respectively monitor UART transmission and reception) \\
+0 & Output & LED 2 (NB. ML401's LED 0 and LED 1 respectively monitor UART transmission and reception) \\
 \hline
 1 & Output & LED 3 \\
 \hline
-2 & Output & LED North \\
+2 & Output & LED North (ML401 only) \\
 \hline
-3 & Output & LED West \\
+3 & Output & LED West (ML401 only) \\
 \hline
-4 & Output & LED South \\
+4 & Output & LED South (ML401 only) \\
 \hline
-5 & Output & LED East \\
+5 & Output & LED East (ML401 only) \\
 \hline
-6 & Output & LED Center \\
+6 & Output & LED Center (ML401 only) \\
 \hline
-7 & Output & HD44780-compatible LCD -- E pin \\
+7 & Output & HD44780-compatible LCD (ML401 only) -- E pin \\
 \hline
-8 & Output & HD44780-compatible LCD -- RS pin \\
+8 & Output & HD44780-compatible LCD (ML401 only) -- RS pin \\
 \hline
-9 & Output & HD44780-compatible LCD -- RW pin \\
+9 & Output & HD44780-compatible LCD (ML401 only) -- RW pin \\
 \hline
-10 & Output & HD44780-compatible LCD -- D4 pin \\
+10 & Output & HD44780-compatible LCD (ML401 only) -- D4 pin \\
 \hline
-11 & Output & HD44780-compatible LCD -- D5 pin \\
+11 & Output & HD44780-compatible LCD (ML401 only) -- D5 pin \\
 \hline
-12 & Output & HD44780-compatible LCD -- D6 pin \\
+12 & Output & HD44780-compatible LCD (ML401 only) -- D6 pin \\
 \hline
-13 & Output & HD44780-compatible LCD -- D7 pin \\
+13 & Output & HD44780-compatible LCD (ML401 only) -- D7 pin \\
 \hline
 \end{tabularx}
 
@@ -212,7 +218,9 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 \hline
 \hspace{5mm} 0x80006000 & No & \hspace{5mm} TMU \\
 \hline
-0xa0000000 & No & SystemACE \\
+\hspace{5mm} 0x80007000 & No & \hspace{5mm} PS/2 (ML401 only) \\
+\hline
+0xa0000000 & No & SystemACE (ML401 only) \\
 \hline
 \end{tabularx}
 
@@ -242,6 +250,8 @@ It has two FML master interfaces for fetching pixel data, a WISHBONE master to f
 9 & Programmable Floating Point Unit\\
 \hline
 10 & Texture Mapping Unit\\
+\hline
+11 & PS/2 (ML401 only)\\
 \hline
 \end{tabularx}
 

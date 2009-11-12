@@ -1070,7 +1070,7 @@ lm32_mc_arithmetic mc_arithmetic (
               
 `ifdef CFG_INTERRUPTS_ENABLED
 // Interrupt unit
-lm32_interrupt interrupt (
+lm32_interrupt interrupt_unit (
     // ----- Inputs -------
     .clk_i                  (clk_i),
     .rst_i                  (rst_i),

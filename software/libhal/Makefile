@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=brd.o hdlcd.o mem.o pfpu.o slowout.o snd.o time.o tmu.o vga.o
+OBJECTS=brd.o hdlcd.o mem.o pfpu.o ps2.o slowout.o snd.o time.o tmu.o vga.o
 
 all: libhal.a
 
@@ -35,6 +35,10 @@ pfpu.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 pfpu.o: ../../software/include/irq.h ../../software/include/hw/interrupts.h
 pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 pfpu.o: ../../software/include/hal/pfpu.h
+ps2.o: ../../software/include/stdio.h ../../software/include/stdlib.h
+ps2.o: ../../software/include/irq.h ../../software/include/hw/interrupts.h
+ps2.o: ../../software/include/hw/ps2.h ../../software/include/hw/common.h
+ps2.o: ../../software/include/hal/ps2.h
 slowout.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 slowout.o: ../../software/include/irq.h
 slowout.o: ../../software/include/hw/interrupts.h

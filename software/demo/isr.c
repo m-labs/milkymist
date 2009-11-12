@@ -22,8 +22,9 @@
 #include <hal/time.h>
 #include <hal/slowout.h>
 #include <hal/snd.h>
-#include <hal/tmu.h>
 #include <hal/pfpu.h>
+#include <hal/tmu.h>
+#include <hal/ps2.h>
 
 #include "ui.h"
 #include "cpustats.h"
@@ -55,11 +56,14 @@ void isr()
 	if(irqs & IRQ_AC97DMAW)
 		snd_isr_dmaw();
 
+	if(irqs & IRQ_PFPU)
+		pfpu_isr();
+
 	if(irqs & IRQ_TMU)
 		tmu_isr();
 
-	if(irqs & IRQ_PFPU)
-		pfpu_isr();
+	if(irqs & IRQ_PS2)
+		ps2_isr();
 
 	if(irqs & IRQ_GPIO)
 		ui_isr_key();

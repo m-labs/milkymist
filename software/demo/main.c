@@ -28,10 +28,11 @@
 #include <hal/time.h>
 #include <hal/vga.h>
 #include <hal/snd.h>
-#include <hal/tmu.h>
 #include <hal/pfpu.h>
+#include <hal/tmu.h>
 #include <hal/slowout.h>
 #include <hal/hdlcd.h>
+#include <hal/ps2.h>
 
 #include "apipe.h"
 #include "rpipe.h"
@@ -64,13 +65,14 @@ int main()
 	mem_init();
 	vga_init();
 	snd_init();
-	tmu_init();
 	pfpu_init();
+	tmu_init();
 	renderer_init();
 	apipe_init();
 	rpipe_init();
 	slowout_init();
 	hdlcd_init();
+	ps2_init();
 	ui_init();
 	shell_init();
 	
