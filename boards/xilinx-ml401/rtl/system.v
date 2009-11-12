@@ -553,20 +553,20 @@ wire pfpu_irq;
 wire tmu_irq;
 wire ps2_irq;
 
-wire [31:0] cpu_interrupt_n;
-assign cpu_interrupt_n = {{20{1'b1}},
-	~ps2_irq,
-	~tmu_irq,
-	~pfpu_irq,
-	~ac97dmaw_irq,
-	~ac97dmar_irq,
-	~ac97crreply_irq,
-	~ac97crrequest_irq,
-	~uarttx_irq,
-	~uartrx_irq,
-	~timer1_irq,
-	~timer0_irq,
-	~gpio_irq
+wire [31:0] cpu_interrupt;
+assign cpu_interrupt = {20'd0,
+	ps2_irq,
+	tmu_irq,
+	pfpu_irq,
+	ac97dmaw_irq,
+	ac97dmar_irq,
+	ac97crreply_irq,
+	ac97crrequest_irq,
+	uarttx_irq,
+	uartrx_irq,
+	timer1_irq,
+	timer0_irq,
+	gpio_irq
 };
 
 //---------------------------------------------------------------------------
@@ -575,7 +575,7 @@ assign cpu_interrupt_n = {{20{1'b1}},
 lm32_top cpu(
 	.clk_i(sys_clk),
 	.rst_i(sys_rst),
-	.interrupt_n(cpu_interrupt_n),
+	.interrupt(cpu_interrupt),
 
 	.I_ADR_O(cpuibus_adr),
 	.I_DAT_I(cpuibus_dat_r),

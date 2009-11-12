@@ -38,7 +38,7 @@ module lm32_top (
     rst_i,
     // From external devices
 `ifdef CFG_INTERRUPTS_ENABLED
-    interrupt_n,
+    interrupt,
 `endif
     // From user logic
 `ifdef CFG_USER_ENABLED
@@ -111,7 +111,7 @@ input clk_i;                                    // Clock
 input rst_i;                                    // Reset
 
 `ifdef CFG_INTERRUPTS_ENABLED
-input [`LM32_INTERRUPT_RNG] interrupt_n;        // Interrupt pins, active-low
+input [`LM32_INTERRUPT_RNG] interrupt;          // Interrupt pins
 `endif
 
 `ifdef CFG_USER_ENABLED
@@ -240,8 +240,8 @@ wire trace_bret;                                // Indicates a bret instruction 
 /////////////////////////////////////////////////////
 // Instantiations
 ///////////////////////////////////////////////////// 
-   
-// LM32 CPU   
+
+// LM32 CPU
 lm32_cpu cpu (
     // ----- Inputs -------
     .clk_i                 (clk_i),
@@ -251,7 +251,7 @@ lm32_cpu cpu (
     .rst_i                 (rst_i),
     // From external devices
 `ifdef CFG_INTERRUPTS_ENABLED
-    .interrupt_n           (interrupt_n),
+    .interrupt             (interrupt),
 `endif
     // From user logic
 `ifdef CFG_USER_ENABLED

@@ -37,7 +37,7 @@ module lm32_interrupt (
     clk_i, 
     rst_i,
     // From external devices
-    interrupt_n,
+    interrupt,
     // From pipeline
     stall_x,
 `ifdef CFG_DEBUG_ENABLED
@@ -72,8 +72,8 @@ parameter interrupts = `CFG_INTERRUPTS;         // Number of interrupts
 input clk_i;                                    // Clock
 input rst_i;                                    // Reset
 
-input [interrupts-1:0] interrupt_n;             // Interrupt pins, active-low
-                           
+input [interrupts-1:0] interrupt;               // Interrupt pins, active-low
+
 input stall_x;                                  // Stall X pipeline stage
 
 `ifdef CFG_DEBUG_ENABLED
@@ -130,7 +130,7 @@ assign interrupt_n_exception = ip & im;
 assign interrupt_exception = (|interrupt_n_exception) & ie;
 
 // Determine which interrupts are currently being asserted (active-low) or are already pending
-assign asserted = ip | ~interrupt_n;
+assign asserted = ip | interrupt;
        
 assign ie_csr_read_data = {{`LM32_WORD_WIDTH-3{1'b0}}, 
 `ifdef CFG_DEBUG_ENABLED

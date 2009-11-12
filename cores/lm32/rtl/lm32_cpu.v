@@ -73,7 +73,7 @@ module lm32_cpu (
     rst_i,
     // From external devices
 `ifdef CFG_INTERRUPTS_ENABLED
-    interrupt_n,
+    interrupt,
 `endif
     // From user logic
 `ifdef CFG_USER_ENABLED
@@ -209,7 +209,7 @@ input clk_n_i;                                  // Inverted clock
 input rst_i;                                    // Reset
 
 `ifdef CFG_INTERRUPTS_ENABLED
-input [`LM32_INTERRUPT_RNG] interrupt_n;        // Interrupt pins, active-low
+input [`LM32_INTERRUPT_RNG] interrupt;          // Interrupt pins
 `endif
 
 `ifdef CFG_USER_ENABLED
@@ -1072,17 +1072,17 @@ lm32_mc_arithmetic mc_arithmetic (
 // Interrupt unit
 lm32_interrupt interrupt (
     // ----- Inputs -------
-    .clk_i                  (clk_i), 
+    .clk_i                  (clk_i),
     .rst_i                  (rst_i),
     // From external devices
-    .interrupt_n            (interrupt_n),
+    .interrupt              (interrupt),
     // From pipeline
     .stall_x                (stall_x),
 `ifdef CFG_DEBUG_ENABLED
-    .non_debug_exception    (non_debug_exception_q_w), 
+    .non_debug_exception    (non_debug_exception_q_w),
     .debug_exception        (debug_exception_q_w),
 `else
-    .exception              (exception_q_w), 
+    .exception              (exception_q_w),
 `endif
     .eret_q_x               (eret_q_x),
 `ifdef CFG_DEBUG_ENABLED

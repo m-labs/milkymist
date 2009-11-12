@@ -336,7 +336,7 @@
 // Bizarre - Removing this increases LUT count!
 `define CFG_DEBUG_EXCEPTIONS_ENABLED
 
-// Wishbone defines 
+// Wishbone defines
 // Refer to Wishbone System-on-Chip Interconnection Architecture
 // These should probably be moved to a Wishbone common file
 
