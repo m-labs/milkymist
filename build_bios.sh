@@ -14,6 +14,8 @@ echo ""
 
 echo -n "Building host utilities..."
 cd $BASEDIR/tools
+echo >> $LOGFILEHOST
+date >> $LOGFILEHOST
 make >> $LOGFILEHOST 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
@@ -24,6 +26,8 @@ fi
 
 echo "Building embedded software :"
 echo -n "  Base library..."
+echo >> $LOGFILE
+date >> $LOGFILE
 cd $BASEDIR/software/libbase && make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"

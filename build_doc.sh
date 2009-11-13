@@ -12,6 +12,8 @@ echo "==========================================================================
 echo ""
 
 echo -n "Building system documentation..."
+echo >> $LOGFILE
+date >> $LOGFILE
 cd $BASEDIR/doc && make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"

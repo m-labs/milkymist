@@ -22,6 +22,9 @@ echo ""
 
 echo "Flashing BIOS into NOR flash..."
 
+echo >> $LOGFILE
+date >> $LOGFILE
+
 if [ $BOARD == "xilinx-ml401" ] ; then
 	echo -n "  Loading flasher bitstream..."
 	load-ml401-flasher > $LOGFILE 2>&1
