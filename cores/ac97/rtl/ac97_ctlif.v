@@ -103,6 +103,11 @@ always @(posedge sys_clk) begin
 		dmar_irq <= 1'b0;
 		dmaw_irq <= 1'b0;
 	end else begin
+		crrequest_irq <= 1'b0;
+		crreply_irq <= 1'b0;
+		dmar_irq <= 1'b0;
+		dmaw_irq <= 1'b0;
+	
 		if(down_en & down_next_frame) begin
 			down_addr_valid <= request_en;
 			down_addr <= {~request_write, request_addr, 12'd0};
@@ -142,46 +147,36 @@ always @(posedge sys_clk) begin
 					4'b0000: begin
 						request_en <= csr_di[0];
 						request_write <= csr_di[1];
-						if(csr_di[2])
-							crrequest_irq <= 1'b0;
-						if(csr_di[3])
-							crreply_irq <= 1'b0;
 					end
 					4'b0001: request_addr <= csr_di[6:0];
 					4'b0010: request_data <= csr_di[15:0];
 					// Reply Data is read-only
 					
 					/* Downstream */
-					4'b0100: begin
-						dmar_en <= csr_di[0];
-						dmar_irq <= 1'b0;
-					end
+					4'b0100: dmar_en <= csr_di[0];
 					4'b0101: dmar_addr <= csr_di[31:2];
 					4'b0110: dmar_remaining <= csr_di[17:2];
 					
 					/* Upstream */
-					4'b1000: begin
-						dmaw_en <= csr_di[0];
-						dmaw_irq <= 1'b0;
-					end
+					4'b1000: dmaw_en <= csr_di[0];
 					4'b1001: dmaw_addr <= csr_di[31:2];
 					4'b1010: dmaw_remaining <= csr_di[17:2];
 				endcase
 			end
 			case(csr_a[3:0])
 				/* Codec register access */
-				4'b0000: csr_do <= {crreply_irq, crrequest_irq, request_write, request_en};
+				4'b0000: csr_do <= {request_write, request_en};
 				4'b0001: csr_do <= request_addr;
 				4'b0010: csr_do <= request_data;
 				4'b0011: csr_do <= reply_data;
 				
 				/* Downstream */
-				4'b0100: csr_do <= {dmar_irq, dmar_en};
+				4'b0100: csr_do <= dmar_en;
 				4'b0101: csr_do <= {dmar_addr, 2'b00};
 				4'b0110: csr_do <= {dmar_remaining, 2'b00};
 
 				/* Upstream */
-				4'b1000: csr_do <= {dmaw_irq, dmaw_en};
+				4'b1000: csr_do <= dmaw_en;
 				4'b1001: csr_do <= {dmaw_addr, 2'b00};
 				4'b1010: csr_do <= {dmaw_remaining, 2'b00};
 			endcase

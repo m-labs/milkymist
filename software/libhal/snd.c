@@ -76,14 +76,12 @@ void snd_init()
 void snd_isr_crrequest()
 {
 	snd_cr_request = 1;
-	CSR_AC97_CRCTL = AC97_CRCTL_REQUEST;
 	irq_ack(IRQ_AC97CRREQUEST);
 }
 
 void snd_isr_crreply()
 {
 	snd_cr_reply = 1;
-	CSR_AC97_CRCTL = AC97_CRCTL_REPLY;
 	irq_ack(IRQ_AC97CRREPLY);
 }
 
@@ -126,24 +124,24 @@ static void play_start(short *buffer)
 {
 	CSR_AC97_DADDRESS = (unsigned int)buffer;
 	CSR_AC97_DREMAINING = play_nbytes;
-	CSR_AC97_DCTL = AC97_SCTL_EN; /* Start/ack interrupt */
+	CSR_AC97_DCTL = AC97_SCTL_EN;
 }
 
 void snd_isr_dmar()
 {
-	irq_ack(IRQ_AC97DMAR);
 	/* NB. the callback can give us buffers by calling snd_play_refill() */
 	play_callback(play_queue[play_consume], play_user);
 
 	play_consume = (play_consume + 1) & PLAY_BUFQ_MASK;
 	play_level--;
 
+	irq_ack(IRQ_AC97DMAR);
+
 	if(play_level > 0)
 		play_start(play_queue[play_consume]);
 	else {
 		printf("SND: playing underrun\n");
 		play_underrun = 1;
-		CSR_AC97_DCTL = AC97_SCTL_EN; /* Ack interrupt anyway */
 	}
 }
 
@@ -207,7 +205,7 @@ void snd_play_stop()
 
 	oldmask = irq_getmask();
 	irq_setmask(oldmask & (~IRQ_AC97DMAR));
-	CSR_AC97_DCTL = 0; /* this also acks any pending IRQ in the AC97 core */
+	CSR_AC97_DCTL = 0;
 	irq_ack(IRQ_AC97DMAR);
 	irq_setmask(oldmask);
 }
@@ -239,13 +237,11 @@ static void record_start(short *buffer)
 {
 	CSR_AC97_UADDRESS = (unsigned int)buffer;
 	CSR_AC97_UREMAINING = record_nbytes;
-	CSR_AC97_UCTL = AC97_SCTL_EN; /* Start/ack interrupt */
+	CSR_AC97_UCTL = AC97_SCTL_EN;
 }
 
 void snd_isr_dmaw()
 {
-	irq_ack(IRQ_AC97DMAW);
-
 	asm volatile( /* Invalidate Level-1 data cache */
 		"wcsr DCC, r0\n"
 		"nop\n"
@@ -257,12 +253,13 @@ void snd_isr_dmaw()
 	record_consume = (record_consume + 1) & RECORD_BUFQ_MASK;
 	record_level--;
 
+	irq_ack(IRQ_AC97DMAW);
+
 	if(record_level > 0)
 		record_start(record_queue[record_consume]);
 	else {
 		printf("SND: recording overrun\n");
 		record_overrun = 1;
-		CSR_AC97_UCTL = AC97_SCTL_EN; /* Ack interrupt anyway */
 	}
 }
 
@@ -326,7 +323,7 @@ void snd_record_stop()
 
 	oldmask = irq_getmask();
 	irq_setmask(oldmask & (~IRQ_AC97DMAW));
-	CSR_AC97_UCTL = 0; /* this also acks any pending IRQ in the AC97 core */
+	CSR_AC97_UCTL = 0;
 	irq_ack(IRQ_AC97DMAW);
 	irq_setmask(oldmask);
 }

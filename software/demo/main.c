@@ -64,7 +64,7 @@ int main()
 	time_init();
 	mem_init();
 	vga_init();
-	//snd_init();
+	snd_init();
 	//pfpu_init();
 	//tmu_init();
 	//renderer_init();
