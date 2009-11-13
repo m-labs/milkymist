@@ -35,6 +35,7 @@ void time_init()
 	CSR_TIMER0_COUNTER = 0;
 	CSR_TIMER0_COMPARE = brd_desc->clk_frequency;
 	CSR_TIMER0_CONTROL = TIMER_AUTORESTART|TIMER_ENABLE;
+	irq_ack(IRQ_TIMER0);
 
 	mask = irq_getmask();
 	mask |= IRQ_TIMER0;
@@ -46,7 +47,6 @@ void time_init()
 void time_isr()
 {
 	sec++;
-	CSR_TIMER0_CONTROL = TIMER_AUTORESTART|TIMER_ENABLE; /* Ack interrupt */
 	time_tick();
 }
 

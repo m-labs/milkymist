@@ -25,10 +25,10 @@ module sysctl #(
 	input sys_rst,
 	
 	/* Interrupts */
-	output gpio_irq,
-	output timer0_irq,
-	output timer1_irq,
-   
+	output reg gpio_irq,
+	output reg timer0_irq,
+	output reg timer1_irq,
+
 	/* CSR bus interface */
 	input [13:0] csr_a,
 	input csr_we,
@@ -55,13 +55,14 @@ end
 /* Detect level changes and generate IRQs */
 reg [ninputs-1:0] gpio_inbefore;
 always @(posedge sys_clk) gpio_inbefore <= gpio_in;
-
-reg [ninputs-1:0] gpio_irqact;
-reg [ninputs-1:0] gpio_irqen;
-
 wire [ninputs-1:0] gpio_diff = gpio_inbefore ^ gpio_in;
-
-assign gpio_irq = |(gpio_irqact & gpio_irqen);
+reg [ninputs-1:0] gpio_irqen;
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		gpio_irq <= 1'b0;
+	else
+		gpio_irq <= |(gpio_diff & gpio_irqen);
+end
 
 /*
  * Dual timer
@@ -88,9 +89,11 @@ wire csr_selected = csr_a[13:10] == csr_addr;
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		csr_do <= 32'd0;
+
+		timer0_irq <= 1'b0;
+		timer1_irq <= 1'b0;
 	
 		gpio_outputs <= {noutputs{1'b0}};
-		gpio_irqact <= {ninputs{1'b0}};
 		gpio_irqen <= {ninputs{1'b0}};
 		
 		en0 <= 1'b0;
@@ -104,18 +107,24 @@ always @(posedge sys_clk) begin
 		compare0 <= 32'hFFFFFFFF;
 		compare1 <= 32'hFFFFFFFF;
 	end else begin
-		/* Handle GPIO */
-		gpio_irqact <= gpio_irqact|gpio_diff;
-	
+		timer0_irq <= 1'b0;
+		timer1_irq <= 1'b0;
+
 		/* Handle timer 0 */
 		if( en0 & ~match0) counter0 <= counter0 + 32'd1;
-		if( en0 &  match0) trig0 <= 1'b1;
+		if( en0 &  match0) begin
+			trig0 <= 1'b1;
+			timer0_irq <= 1'b1;
+		end
 		if( ar0 &  match0) counter0 <= 32'd1;
 		if(~ar0 &  match0) en0 <= 1'b0;
 
 		/* Handle timer 1 */
 		if( en1 & ~match1) counter1 <= counter1 + 32'd1;
-		if( en1 &  match1) trig1 <= 1'b1;
+		if( en1 &  match1) begin
+			trig1 <= 1'b1;
+			timer1_irq <= 1'b1;
+		end
 		if( ar1 &  match1) counter1 <= 32'd1;
 		if(~ar1 &  match1) en1 <= 1'b0;
 	
@@ -127,8 +136,7 @@ always @(posedge sys_clk) begin
 					/* GPIO registers */
 					// 0000 is GPIO IN and is read-only
 					4'b0001: gpio_outputs <= csr_di[noutputs-1:0];
-					4'b0010: gpio_irqact <= (gpio_irqact|gpio_diff) & ~csr_di[ninputs-1:0];
-					4'b0011: gpio_irqen <= csr_di[ninputs-1:0];
+					4'b0010: gpio_irqen <= csr_di[ninputs-1:0];
 					
 					/* Timer 0 registers */
 					4'b0100: begin
@@ -155,8 +163,7 @@ always @(posedge sys_clk) begin
 				/* GPIO registers */
 				4'b0000: csr_do <= gpio_in;
 				4'b0001: csr_do <= gpio_outputs;
-				4'b0010: csr_do <= gpio_irqact;
-				4'b0011: csr_do <= gpio_irqen;
+				4'b0010: csr_do <= gpio_irqen;
 				
 				/* Timer 0 registers */
 				4'b0100: csr_do <= {en0, ar0, trig0};

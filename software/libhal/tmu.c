@@ -42,7 +42,8 @@ void tmu_init()
 	level = 0;
 	cts = 1;
 
-	CSR_TMU_CTL = 0; /* Ack any pending IRQ */
+	CSR_TMU_CTL = 0;
+	irq_ack(IRQ_TMU);
 
 	mask = irq_getmask();
 	mask |= IRQ_TMU;

@@ -237,8 +237,7 @@ void ui_init()
 	for(i=1;i<KEY_COUNT;i++)
 		last_press[i] = last_press[0];
 
-	CSR_GPIO_CHANGES = UI_GPIO;
-	CSR_GPIO_INT |= UI_GPIO;
+	CSR_GPIO_INTEN |= UI_GPIO;
 
 	mask = irq_getmask();
 	mask |= IRQ_GPIO;
@@ -286,8 +285,6 @@ static void handle_key(unsigned int n)
 void ui_isr_key()
 {
 	unsigned int keys;
-
-	CSR_GPIO_CHANGES = CSR_GPIO_CHANGES & UI_GPIO;
 
 	keys = CSR_GPIO_IN;
 

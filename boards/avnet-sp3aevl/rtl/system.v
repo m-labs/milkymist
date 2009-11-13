@@ -334,7 +334,6 @@ csrbrg csrbrg(
 	)
 );
 
-
 //---------------------------------------------------------------------------
 // Interrupts
 //---------------------------------------------------------------------------
@@ -344,13 +343,13 @@ wire timer1_irq;
 wire uartrx_irq;
 wire uarttx_irq;
 
-wire [31:0] cpu_interrupt_n;
-assign cpu_interrupt_n = {{27{1'b1}},
-	~uarttx_irq,
-	~uartrx_irq,
-	~timer1_irq,
-	~timer0_irq,
-	~gpio_irq
+wire [31:0] cpu_interrupt;
+assign cpu_interrupt = {27'd0,
+	uarttx_irq,
+	uartrx_irq,
+	timer1_irq,
+	timer0_irq,
+	gpio_irq
 };
 
 //---------------------------------------------------------------------------
@@ -359,7 +358,7 @@ assign cpu_interrupt_n = {{27{1'b1}},
 lm32_top cpu(
 	.clk_i(sys_clk),
 	.rst_i(sys_rst),
-	.interrupt_n(cpu_interrupt_n),
+	.interrupt(cpu_interrupt),
 
 	.I_ADR_O(cpuibus_adr),
 	.I_DAT_I(cpuibus_dat_r),

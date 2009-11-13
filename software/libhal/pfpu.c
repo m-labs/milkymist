@@ -35,7 +35,9 @@ void pfpu_init()
 {
 	unsigned int mask;
 
-	CSR_PFPU_CTL = 0; /* Ack any pending IRQ */
+	/* Reset PFPU */
+	CSR_PFPU_CTL = 0;
+	irq_ack(IRQ_PFPU);
 
 	produce = 0;
 	consume = 0;

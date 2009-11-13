@@ -42,8 +42,12 @@ void snd_init()
 	
 	snd_cr_request = 0;
 	snd_cr_reply = 0;
+
+	/* Reset AC'97 controller */
+	CSR_AC97_CRCTL = 0;
 	CSR_AC97_DCTL = 0;
 	CSR_AC97_UCTL = 0;
+	irq_ack(IRQ_AC97CRREQUEST|IRQ_AC97CRREPLY|IRQ_AC97DMAR|IRQ_AC97DMAW);
 	
 	mask = irq_getmask();
 	mask |= IRQ_AC97CRREQUEST|IRQ_AC97CRREPLY|IRQ_AC97DMAR|IRQ_AC97DMAW;

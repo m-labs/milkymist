@@ -38,6 +38,8 @@ void ps2_init()
 	consume = 0;
 	level = 0;
 
+	irq_ack(IRQ_PS2);
+
 	mask = irq_getmask();
 	mask |= IRQ_PS2;
 	irq_setmask(mask);

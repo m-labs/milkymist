@@ -47,7 +47,9 @@ void slowout_init()
 	level = 0;
 	cts = 1;
 
-	CSR_TIMER1_CONTROL = 0; /* Disable timer + ack any pending IRQ */
+	/* Reset timer */
+	CSR_TIMER1_CONTROL = 0;
+	irq_ack(IRQ_TIMER1);
 
 	mask = irq_getmask();
 	mask |= IRQ_TIMER1;
@@ -70,10 +72,8 @@ void slowout_isr()
 	level--;
 	if(level > 0)
 		slowout_start(&queue[consume]);
-	else {
-		CSR_TIMER1_CONTROL = 0; /* Ack IRQ */
+	else
 		cts = 1;
-	}
 }
 
 int slowout_queue(unsigned int duration, unsigned int mask)
