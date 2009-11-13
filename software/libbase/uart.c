@@ -44,3 +44,7 @@ int readchar_nonblock()
 	else
 		return 0;
 }
+
+void uart_force_sync(int f)
+{
+}

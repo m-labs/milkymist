@@ -91,7 +91,7 @@ static int plltest()
 
 	if(!sdram_enabled) {
 		printf("E: Command disabled\n");
-		return;
+		return 0;
 	}
 
 	printf("I: Checking if SDRAM clocking is functional:\n");
@@ -99,7 +99,7 @@ static int plltest()
 	ok2 = CSR_HPDMC_IODELAY & HPDMC_PLL2_LOCKED;
 	printf("I:   PLL#1: %s\n", ok1 ? "Locked" : "Error");
 	printf("I:   PLL#2: %s\n", ok2 ? "Locked" : "Error");
-	return (ok1 && ok2);
+	return(ok1 && ok2);
 }
 
 static int memtest(unsigned int div)
@@ -111,7 +111,7 @@ static int memtest(unsigned int div)
 
 	if(!sdram_enabled) {
 		printf("E: Command disabled\n");
-		return;
+		return 0;
 	}
 	
 	putsnonl("I: SDRAM test...");
@@ -384,8 +384,6 @@ static void crc(char *startaddr, char *len)
 
 /* CF filesystem functions */
 
-static int cf_enabled;
-
 static int lscb(const char *filename, const char *longname, void *param)
 {
 	printf("%12s [%s]\n", filename, longname);
@@ -552,7 +550,22 @@ static const char banner[] =
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, version 3 of the License.\n\n";
 
-int main(int warm_boot, int dummy)
+static void boot_sequence()
+{
+	splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-4)));
+	if(test_user_abort()) {
+		serialboot(1);
+		if(brd_desc->memory_card != MEMCARD_NONE) {
+			if(CSR_GPIO_IN & GPIO_DIP1)
+				cardboot(1);
+			else
+				cardboot(0);
+		}
+		printf("E: No boot medium found\n");
+	}
+}
+
+int main(int warm_boot, char **dummy)
 {
 	char buffer[64];
 
@@ -578,19 +591,9 @@ int main(int warm_boot, int dummy)
 				ddrinit();
 				flush_bridge_cache();
 
-				if(memtest(8)) {
-					splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-4)));
-					if(test_user_abort()) {
-						serialboot(1);
-						if(brd_desc->memory_card != MEMCARD_NONE) {
-							if(CSR_GPIO_IN & GPIO_DIP1)
-								cardboot(1);
-							else
-								cardboot(0);
-						}
-						printf("E: No boot medium found\n");
-					}
-				} else
+				if(memtest(8))
+					boot_sequence();
+				else
 					printf("E: Aborted boot on memory error\n");
 			} else
 				printf("E: Faulty SDRAM clocking\n");
@@ -601,6 +604,7 @@ int main(int warm_boot, int dummy)
 	} else {
 		printf("I: Warm boot\n");
 		sdram_enabled = 0;
+		boot_sequence();
 	}
 
 	splash_showerr();

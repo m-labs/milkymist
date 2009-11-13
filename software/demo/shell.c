@@ -207,6 +207,7 @@ static void help()
 	puts("stop       - stop renderer");
 	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
+	puts("reboot     - warm reboot");
 }
 
 /*
@@ -427,6 +428,7 @@ static void do_command(char *c)
 	else if(strcmp(command, "stop") == 0) ui_render_stop();
 	else if(strcmp(command, "spam") == 0) spam();
 	else if(strcmp(command, "stats") == 0) stats();
+	else if(strcmp(command, "reboot") == 0) reboot();
 	else if(strcmp(command, "help") == 0) help();
 
 	/* Test functions and hacks */
