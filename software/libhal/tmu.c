@@ -73,7 +73,6 @@ static void tmu_start(struct tmu_td *td)
 
 void tmu_isr()
 {
-	irq_ack(IRQ_TMU);
 	if(queue[consume]->callback)
 		queue[consume]->callback(queue[consume]);
 	if(queue[consume]->profile) {
@@ -103,12 +102,13 @@ void tmu_isr()
 	}
 	consume = (consume + 1) & TMU_TASKQ_MASK;
 	level--;
+
+	irq_ack(IRQ_TMU);
+
 	if(level > 0)
 		tmu_start(queue[consume]); /* IRQ automatically acked */
-	else {
+	else
 		cts = 1;
-		CSR_TMU_CTL = 0; /* Ack IRQ */
-	}
 }
 
 int tmu_submit_task(struct tmu_td *td)

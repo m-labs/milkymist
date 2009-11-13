@@ -102,7 +102,6 @@ static void pfpu_start(struct pfpu_td *td)
 
 void pfpu_isr()
 {
-	irq_ack(IRQ_PFPU);
 	if(queue[consume]->update)
 		update_registers(queue[consume]->registers);
 	if(queue[consume]->invalidate) {
@@ -114,12 +113,13 @@ void pfpu_isr()
 	queue[consume]->callback(queue[consume]);
 	consume = (consume + 1) & PFPU_TASKQ_MASK;
 	level--;
+
+	irq_ack(IRQ_PFPU);
+
 	if(level > 0)
-		pfpu_start(queue[consume]); /* IRQ automatically acked */
-	else {
+		pfpu_start(queue[consume]);
+	else
 		cts = 1;
-		CSR_PFPU_CTL = 0; /* Ack IRQ */
-	}
 }
 
 int pfpu_submit_task(struct pfpu_td *td)

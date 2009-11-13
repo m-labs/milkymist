@@ -65,11 +65,11 @@ int main()
 	mem_init();
 	vga_init();
 	snd_init();
-	//pfpu_init();
-	//tmu_init();
-	//renderer_init();
-	//apipe_init();
-	//rpipe_init();
+	pfpu_init();
+	tmu_init();
+	renderer_init();
+	apipe_init();
+	rpipe_init();
 	slowout_init();
 	hdlcd_init();
 	ps2_init();

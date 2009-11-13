@@ -65,8 +65,6 @@ always @(posedge sys_clk) begin
 		old_busy <= busy;
 end
 
-wire trigger_irq = old_busy & ~busy;
-
 reg [13:0] vertex_counter;
 reg [10:0] collision_counter;
 reg [10:0] stray_counter;
@@ -96,7 +94,7 @@ always @(posedge sys_clk) begin
 		collision_counter <= 11'd0;
 		stray_counter <= 11'd0;
 	end else begin
-		if(trigger_irq) irq <= 1'b1;
+		irq <= old_busy & ~busy;
 
 		if(vnext) vertex_counter <= vertex_counter + 14'd1;
 		if(err_collision) collision_counter <= collision_counter + 11'd1;
@@ -110,7 +108,7 @@ always @(posedge sys_clk) begin
 
 		/* Read control registers */
 		case(csr_a[3:0])
-			4'b0000: csr_do_r <= {irq, busy};
+			4'b0000: csr_do_r <= busy;
 
 			4'b0001: csr_do_r <= {dma_base, 2'b00};
 			4'b0010: csr_do_r <= hmesh_last;
@@ -144,7 +142,6 @@ always @(posedge sys_clk) begin
 				case(csr_a[2:0])
 					3'b000: begin
 						start <= csr_di[0];
-						irq <= 1'b0;
 
 						vertex_counter <= 14'd0;
 						collision_counter <= 11'd0;

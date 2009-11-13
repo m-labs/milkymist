@@ -66,8 +66,6 @@ always @(posedge sys_clk) begin
 		old_busy <= busy;
 end
 
-wire trigger_irq = old_busy & ~busy;
-
 wire csr_selected = csr_a[13:10] == csr_addr;
 
 always @(posedge sys_clk) begin
@@ -93,7 +91,7 @@ always @(posedge sys_clk) begin
 		dst_hres <= 11'd640;
 		dst_vres <= 11'd480;
 	end else begin
-		if(trigger_irq) irq <= 1'b1;
+		irq <= old_busy & ~busy;
 		
 		csr_do <= 32'd0;
 		start <= 1'b0;
@@ -102,8 +100,7 @@ always @(posedge sys_clk) begin
 				case(csr_a[3:0])
 					4'b0000: begin
 						start <= csr_di[0];
-						irq <= 1'b0;
-						chroma_key_en <= csr_di[2];
+						chroma_key_en <= csr_di[1];
 					end
 
 					4'b0001: hmesh_last <= csr_di[6:0];
@@ -125,7 +122,7 @@ always @(posedge sys_clk) begin
 				endcase
 			end
 			case(csr_a[4:0])
-				5'b00000: csr_do <= {chroma_key_en, irq, busy};
+				5'b00000: csr_do <= {chroma_key_en, busy};
 				
 				5'b00001: csr_do <= hmesh_last;
 				5'b00010: csr_do <= vmesh_last;
