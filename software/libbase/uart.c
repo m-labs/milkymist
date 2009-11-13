@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <hw/uart.h>
-#include <hw/interrupts.h>
 #include <uart.h>
 #include <irq.h>
+#include <hw/uart.h>
+#include <hw/interrupts.h>
 
 void writechar(char c)
 {

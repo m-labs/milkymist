@@ -34,15 +34,21 @@
 #include "boot.h"
 #include "splash.h"
 
-static const struct board_desc *brd_desc;
+const struct board_desc *brd_desc;
 
 /* SDRAM functions */
 
+static int sdram_enabled;
 static int dqs_ps;
 
 static void ddrinit()
 {
 	volatile unsigned int i;
+
+	if(!sdram_enabled) {
+		printf("E: Command disabled\n");
+		return;
+	}
 	
 	putsnonl("I: Initializing SDRAM [DDR200 CL=2 BL=8]...");
 	/* Bring CKE high */
@@ -82,7 +88,12 @@ static void ddrinit()
 static int plltest()
 {
 	int ok1, ok2;
-	
+
+	if(!sdram_enabled) {
+		printf("E: Command disabled\n");
+		return;
+	}
+
 	printf("I: Checking if SDRAM clocking is functional:\n");
 	ok1 = CSR_HPDMC_IODELAY & HPDMC_PLL1_LOCKED;
 	ok2 = CSR_HPDMC_IODELAY & HPDMC_PLL2_LOCKED;
@@ -97,6 +108,11 @@ static int memtest(unsigned int div)
 	unsigned int expected;
 	unsigned int i;
 	unsigned int size;
+
+	if(!sdram_enabled) {
+		printf("E: Command disabled\n");
+		return;
+	}
 	
 	putsnonl("I: SDRAM test...");
 
@@ -130,6 +146,11 @@ static void calibrate()
 	int taps;
 	int quit;
 	char c;
+
+	if(!sdram_enabled) {
+		printf("E: Command disabled\n");
+		return;
+	}
 	
 	printf("================================\n");
 	printf("DDR SDRAM calibration tool\n");
@@ -363,6 +384,8 @@ static void crc(char *startaddr, char *len)
 
 /* CF filesystem functions */
 
+static int cf_enabled;
+
 static int lscb(const char *filename, const char *longname, void *param)
 {
 	printf("%12s [%s]\n", filename, longname);
@@ -371,6 +394,10 @@ static int lscb(const char *filename, const char *longname, void *param)
 
 static void ls()
 {
+	if(brd_desc->memory_card == MEMCARD_NONE) {
+		printf("E: No memory card on this board\n");
+		return;
+	}
 	cffat_init();
 	cffat_list_files(lscb, NULL);
 	cffat_done();
@@ -380,6 +407,11 @@ static void load(char *filename, char *addr)
 {
 	char *c;
 	unsigned int *addr2;
+
+	if(brd_desc->memory_card == MEMCARD_NONE) {
+		printf("E: No memory card on this board\n");
+		return;
+	}
 
 	if((*filename == 0) || (*addr == 0)) {
 		printf("load <filename> <address>\n");
@@ -520,7 +552,7 @@ static const char banner[] =
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, version 3 of the License.\n\n";
 
-int main(int warm_boot)
+int main(int warm_boot, int dummy)
 {
 	char buffer[64];
 
@@ -538,28 +570,38 @@ int main(int warm_boot)
 	crcbios();
 	display_board();
 
-	if(brd_desc->sdram_size > 0) {
-		if(plltest()) {
-			if(!warm_boot)
+	sdram_enabled = 1;
+	
+	if(!warm_boot) {
+		if(brd_desc->sdram_size > 0) {
+			if(plltest()) {
 				ddrinit();
-			flush_bridge_cache();
+				flush_bridge_cache();
 
-			if(memtest(8)) {
-				splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-4)));
-				if(test_user_abort()) {
-					serialboot(1);
-					if(CSR_GPIO_IN & GPIO_DIP1)
-						cardboot(1);
-					else
-						cardboot(0);
-					printf("E: No boot medium found\n");
-				}
+				if(memtest(8)) {
+					splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-4)));
+					if(test_user_abort()) {
+						serialboot(1);
+						if(brd_desc->memory_card != MEMCARD_NONE) {
+							if(CSR_GPIO_IN & GPIO_DIP1)
+								cardboot(1);
+							else
+								cardboot(0);
+						}
+						printf("E: No boot medium found\n");
+					}
+				} else
+					printf("E: Aborted boot on memory error\n");
 			} else
-				printf("E: Aborted boot on memory error\n");
-		} else
-			printf("E: Faulty SDRAM clocking\n");
-	} else
-		printf("I: No SDRAM on this evaluation board, not booting\n");
+				printf("E: Faulty SDRAM clocking\n");
+		} else {
+			printf("I: No SDRAM on this evaluation board, not booting\n");
+			sdram_enabled = 0;
+		}
+	} else {
+		printf("I: Warm boot\n");
+		sdram_enabled = 0;
+	}
 
 	splash_showerr();
 	while(1) {

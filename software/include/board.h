@@ -20,6 +20,12 @@
 
 #define BOARD_NAME_LEN 32
 
+enum {
+	MEMCARD_NONE,
+	MEMCARD_SYSTEMACE,
+	MEMCARD_MICROSD
+};
+
 struct board_desc {
 	unsigned int id;
 	char name[BOARD_NAME_LEN];
@@ -28,6 +34,7 @@ struct board_desc {
 	unsigned int ddr_clkphase;
 	unsigned int ddr_idelay;
 	unsigned int ddr_dqsdelay;
+	unsigned int memory_card;
 };
 
 const struct board_desc *get_board_desc_id(unsigned int id);

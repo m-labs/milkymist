@@ -19,12 +19,15 @@
 #include <console.h>
 #include <uart.h>
 #include <system.h>
+#include <board.h>
 #include <cffat.h>
 #include <crc.h>
 #include <sfl.h>
 #include <hw/hpdmc.h>
 
 #include "boot.h"
+
+extern const struct board_desc *brd_desc;
 
 /*
  * HACK: by defining this function as not inlinable, GCC will automatically
@@ -206,6 +209,11 @@ void cardboot(int alt)
 {
 	int size;
 	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
+
+	if(brd_desc->memory_card == MEMCARD_NONE) {
+		printf("E: No memory card on this board\n");
+		return;
+	}
 	
 	printf("I: Booting from CF card...\n");
 	if(!cffat_init()) {

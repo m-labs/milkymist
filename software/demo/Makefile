@@ -121,7 +121,8 @@ shell.o: ../../software/include/hw/interrupts.h
 shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
 shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
 shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
-shell.o: line.h wave.h rpipe.h cpustats.h shell.h ui.h
+shell.o: ../../software/include/hal/ps2.h line.h wave.h rpipe.h cpustats.h
+shell.o: shell.h ui.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h ui.h

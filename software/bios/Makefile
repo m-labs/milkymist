@@ -36,10 +36,10 @@ clean:
 
 boot.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 boot.o: ../../software/include/console.h ../../software/include/uart.h
-boot.o: ../../software/include/system.h ../../software/include/cffat.h
-boot.o: ../../software/include/crc.h ../../tools/sfl.h
-boot.o: ../../software/include/hw/hpdmc.h ../../software/include/hw/common.h
-boot.o: boot.h
+boot.o: ../../software/include/system.h ../../software/include/board.h
+boot.o: ../../software/include/cffat.h ../../software/include/crc.h
+boot.o: ../../tools/sfl.h ../../software/include/hw/hpdmc.h
+boot.o: ../../software/include/hw/common.h boot.h
 main.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 main.o: ../../software/include/console.h ../../software/include/string.h
 main.o: ../../software/include/uart.h ../../software/include/cffat.h

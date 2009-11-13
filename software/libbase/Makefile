@@ -54,8 +54,9 @@ uart-async.o: ../../software/include/uart.h ../../software/include/irq.h
 uart-async.o: ../../software/include/hw/uart.h
 uart-async.o: ../../software/include/hw/common.h
 uart-async.o: ../../software/include/hw/interrupts.h
+uart.o: ../../software/include/uart.h ../../software/include/irq.h
 uart.o: ../../software/include/hw/uart.h ../../software/include/hw/common.h
-uart.o: ../../software/include/uart.h
+uart.o: ../../software/include/hw/interrupts.h
 vsnprintf-nofloat.o: ../../software/include/stdlib.h
 vsnprintf-nofloat.o: ../../software/include/stdio.h
 vsnprintf-nofloat.o: ../../software/include/stdarg.h

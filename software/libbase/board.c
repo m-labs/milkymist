@@ -27,13 +27,15 @@ static const struct board_desc boards[3] = {
 		.sdram_size = 64,
 		.ddr_clkphase = 0,
 		.ddr_idelay = 0,
-		.ddr_dqsdelay = 0//244
+		.ddr_dqsdelay = 244,
+		.memory_card = MEMCARD_SYSTEMACE
 	},
 	{
 		.id = 0x53334145, /* S3AE */
 		.name = "Avnet Spartan-3A evaluation kit",
 		.clk_frequency = 64000000,
-		.sdram_size = 0
+		.sdram_size = 0,
+		.memory_card = MEMCARD_NONE
 	},
 	{
 		.id = 0x4D4F4E45, /* MONE */
@@ -42,7 +44,8 @@ static const struct board_desc boards[3] = {
 		.sdram_size = 64,
 		.ddr_clkphase = 0,
 		.ddr_idelay = 0,
-		.ddr_dqsdelay = 244
+		.ddr_dqsdelay = 244,
+		.memory_card = MEMCARD_MICROSD
 	},
 };
 
