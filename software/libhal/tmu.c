@@ -73,6 +73,7 @@ static void tmu_start(struct tmu_td *td)
 
 void tmu_isr()
 {
+	irq_ack(IRQ_TMU);
 	if(queue[consume]->callback)
 		queue[consume]->callback(queue[consume]);
 	if(queue[consume]->profile) {

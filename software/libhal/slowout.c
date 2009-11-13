@@ -68,6 +68,7 @@ static void slowout_start(struct slowout_operation *op)
 
 void slowout_isr()
 {
+	irq_ack(IRQ_TIMER1);
 	consume = (consume + 1) & OPQ_MASK;
 	level--;
 	if(level > 0)

@@ -46,6 +46,7 @@ void time_init()
 
 void time_isr()
 {
+	irq_ack(IRQ_TIMER0);
 	sec++;
 	time_tick();
 }
@@ -53,12 +54,12 @@ void time_isr()
 void time_get(struct timestamp *ts)
 {
 	unsigned int oldmask = 0;
-	unsigned int ctl, counter, sec2;
+	unsigned int pending, counter, sec2;
 
 	oldmask = irq_getmask();
 	irq_setmask(oldmask & ~(IRQ_TIMER0));
 	counter = CSR_TIMER0_COUNTER;
-	ctl = CSR_TIMER0_CONTROL;
+	pending = irq_pending() & IRQ_TIMER0;
 	sec2 = sec;
 	irq_setmask(oldmask);
 
@@ -70,7 +71,7 @@ void time_get(struct timestamp *ts)
 	 * the overflow was already present when we read the counter
 	 * value.
 	 */
-	if(ctl & TIMER_MATCH) {
+	if(pending) {
 		if(counter < (brd_desc->clk_frequency/2))
 			ts->sec++;
 	}

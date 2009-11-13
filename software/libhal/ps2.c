@@ -49,6 +49,7 @@ void ps2_init()
 
 void ps2_isr()
 {
+	irq_ack(IRQ_PS2);
 	if(level >= QSIZE) {
 		printf("PS2: queue overflow\n");
 		return;

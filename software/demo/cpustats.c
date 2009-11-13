@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <irq.h>
 
 #include <hal/time.h>
@@ -43,6 +44,11 @@ void cpustats_tick()
 	struct timestamp ts;
 	struct timestamp diff;
 	int usec;
+
+	if(enter_count == 0) {
+		printf("cpustats_tick() called with enter_count == 0!\n");
+		return;
+	}
 
 	time_get(&ts);
 	time_diff(&diff, &ts, &first_enter);

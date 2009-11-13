@@ -102,6 +102,7 @@ static void pfpu_start(struct pfpu_td *td)
 
 void pfpu_isr()
 {
+	irq_ack(IRQ_PFPU);
 	if(queue[consume]->update)
 		update_registers(queue[consume]->registers);
 	if(queue[consume]->invalidate) {

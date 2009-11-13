@@ -36,6 +36,7 @@ static volatile unsigned int rx_consume;
 
 void uart_async_isr_rx()
 {
+	irq_ack(IRQ_UARTRX);
 	rx_buf[rx_produce] = CSR_UART_RXTX;
 	rx_produce = (rx_produce + 1) & UART_RINGBUFFER_MASK_RX;
 }
@@ -67,6 +68,7 @@ static int force_sync;
 
 void uart_async_isr_tx()
 {
+	irq_ack(IRQ_UARTTX);
 	if(tx_produce != tx_consume) {
 		CSR_UART_RXTX = tx_buf[tx_consume];
 		tx_consume = (tx_consume + 1) & UART_RINGBUFFER_MASK_TX;

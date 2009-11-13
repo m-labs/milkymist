@@ -65,10 +65,10 @@ void isr()
 	if(irqs & IRQ_PS2)
 		ps2_isr();
 
-	if(irqs & IRQ_GPIO)
+	if(irqs & IRQ_GPIO) {
+		irq_ack(IRQ_GPIO);
 		ui_isr_key();
-
-	irq_ack(irqs);
+	}
 
 	cpustats_leave();
 }

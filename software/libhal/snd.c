@@ -76,13 +76,15 @@ void snd_init()
 void snd_isr_crrequest()
 {
 	snd_cr_request = 1;
-	CSR_AC97_CRCTL = AC97_CRCTL_REQUEST; /* Ack interrupt */
+	CSR_AC97_CRCTL = AC97_CRCTL_REQUEST;
+	irq_ack(IRQ_AC97CRREQUEST);
 }
 
 void snd_isr_crreply()
 {
 	snd_cr_reply = 1;
-	CSR_AC97_CRCTL = AC97_CRCTL_REPLY; /* Ack interrupt */
+	CSR_AC97_CRCTL = AC97_CRCTL_REPLY;
+	irq_ack(IRQ_AC97CRREPLY);
 }
 
 unsigned int snd_ac97_read(unsigned int addr)
@@ -129,6 +131,7 @@ static void play_start(short *buffer)
 
 void snd_isr_dmar()
 {
+	irq_ack(IRQ_AC97DMAR);
 	/* NB. the callback can give us buffers by calling snd_play_refill() */
 	play_callback(play_queue[play_consume], play_user);
 
@@ -241,6 +244,8 @@ static void record_start(short *buffer)
 
 void snd_isr_dmaw()
 {
+	irq_ack(IRQ_AC97DMAW);
+
 	asm volatile( /* Invalidate Level-1 data cache */
 		"wcsr DCC, r0\n"
 		"nop\n"

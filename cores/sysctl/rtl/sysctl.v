@@ -68,7 +68,6 @@ end
  * Dual timer
  */
 
-reg trig0, trig1;
 reg en0, en1;
 reg ar0, ar1;
 reg [31:0] counter0, counter1;
@@ -97,8 +96,6 @@ always @(posedge sys_clk) begin
 		en1 <= 1'b0;
 		ar0 <= 1'b0;
 		ar1 <= 1'b0;
-		trig0 <= 1'b0;
-		trig1 <= 1'b0;
 		counter0 <= 32'd0;
 		counter1 <= 32'd0;
 		compare0 <= 32'hFFFFFFFF;
@@ -109,19 +106,13 @@ always @(posedge sys_clk) begin
 
 		/* Handle timer 0 */
 		if( en0 & ~match0) counter0 <= counter0 + 32'd1;
-		if( en0 &  match0) begin
-			trig0 <= 1'b1;
-			timer0_irq <= 1'b1;
-		end
+		if( en0 &  match0) timer0_irq <= 1'b1;
 		if( ar0 &  match0) counter0 <= 32'd1;
 		if(~ar0 &  match0) en0 <= 1'b0;
 
 		/* Handle timer 1 */
 		if( en1 & ~match1) counter1 <= counter1 + 32'd1;
-		if( en1 &  match1) begin
-			trig1 <= 1'b1;
-			timer1_irq <= 1'b1;
-		end
+		if( en1 &  match1) timer1_irq <= 1'b1;
 		if( ar1 &  match1) counter1 <= 32'd1;
 		if(~ar1 &  match1) en1 <= 1'b0;
 	
@@ -137,18 +128,16 @@ always @(posedge sys_clk) begin
 					
 					/* Timer 0 registers */
 					4'b0100: begin
-						trig0 <= 1'b0;
+						en0 <= csr_di[0];
 						ar0 <= csr_di[1];
-						en0 <= csr_di[2];
 					end
 					4'b0101: compare0 <= csr_di;
 					4'b0110: counter0 <= csr_di;
 					
 					/* Timer 1 registers */
 					4'b1000: begin
-						trig1 <= 1'b0;
+						en1 <= csr_di[0];
 						ar1 <= csr_di[1];
-						en1 <= csr_di[2];
 					end
 					4'b1001: compare1 <= csr_di;
 					4'b1010: counter1 <= csr_di;
@@ -163,12 +152,12 @@ always @(posedge sys_clk) begin
 				4'b0010: csr_do <= gpio_irqen;
 				
 				/* Timer 0 registers */
-				4'b0100: csr_do <= {en0, ar0, trig0};
+				4'b0100: csr_do <= {ar0, en0};
 				4'b0101: csr_do <= compare0;
 				4'b0110: csr_do <= counter0;
 				
 				/* Timer 1 registers */
-				4'b1000: csr_do <= {en1, ar1, trig1};
+				4'b1000: csr_do <= {ar1, en1};
 				4'b1001: csr_do <= compare1;
 				4'b1010: csr_do <= counter1;
 				
