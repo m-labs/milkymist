@@ -123,6 +123,7 @@ always @(posedge sys_clk) begin
 		tx_busy <= 1'b0;
 		uart_txd <= 1'b1;
 	end else begin
+		tx_done <= 1'b0;
 		if(tx_wr) begin
 			txd_reg <= tx_data;
 			tx_bitcount <= 4'd0;
@@ -142,7 +143,8 @@ always @(posedge sys_clk) begin
 					uart_txd <= 1'b1;
 				end else if(tx_bitcount == 4'd9) begin
 					uart_txd <= 1'b1;
-					tx_busy  <= 1'b0;
+					tx_busy <= 1'b0;
+					tx_done <= 1'b1;
 				end else begin
 					uart_txd <= txd_reg[0];
 					txd_reg  <= {1'b0, txd_reg[7:1]};
