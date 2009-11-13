@@ -77,9 +77,6 @@ reg [31:0] compare0, compare1;
 wire match0 = (counter0 == compare0);
 wire match1 = (counter1 == compare1);
 
-assign timer0_irq = trig0;
-assign timer1_irq = trig1;
-
 /*
  * Logic and CSR interface
  */

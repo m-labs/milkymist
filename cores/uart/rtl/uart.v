@@ -36,15 +36,9 @@ module uart #(
 );
 
 reg [15:0] divisor;
-
 wire [7:0] rx_data;
-wire rx_avail;
-wire rx_error;
-wire rx_ack;
-
 wire [7:0] tx_data;
 wire tx_wr;
-wire tx_busy;
 
 uart_transceiver transceiver(
 	.sys_clk(sys_clk),
@@ -56,40 +50,18 @@ uart_transceiver transceiver(
 	.divisor(divisor),
 
 	.rx_data(rx_data),
-	.rx_avail(rx_avail),
-	.rx_error(rx_error),
-	.rx_ack(rx_ack),
-	
+	.rx_done(rx_irq),
+
 	.tx_data(tx_data),
 	.tx_wr(tx_wr),
-	.tx_busy(tx_busy)
+	.tx_done(tx_irq)
 );
-
-/* Generate tx_done signal */
-wire tx_ack;
-reg tx_busy_r;
-reg tx_done;
-
-always @(posedge sys_clk) begin
-	if(sys_rst) begin
-		tx_busy_r <= 1'b0;
-		tx_done <= 1'b0;
-	end else begin
-		tx_busy_r <= tx_busy;
-		if(tx_ack|tx_wr)
-			tx_done <= 1'b0;
-		if(tx_busy_r & ~tx_busy)
-			tx_done <= 1'b1;
-	end
-end
 
 /* CSR interface */
 wire csr_selected = csr_a[13:10] == csr_addr;
 
-assign rx_ack = csr_selected & csr_we & (csr_a[1:0] == 2'b00) & csr_di[2];
 assign tx_data = csr_di[7:0];
-assign tx_wr = csr_selected & csr_we & (csr_a[1:0] == 2'b01);
-assign tx_ack = csr_selected & csr_we & (csr_a[1:0] == 2'b00) & csr_di[5];
+assign tx_wr = csr_selected & csr_we & (csr_a[0] == 1'b0);
 
 parameter default_divisor = clk_freq/baud/16;
 
@@ -100,21 +72,16 @@ always @(posedge sys_clk) begin
 	end else begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin
-			case(csr_a[1:0])
-				2'b00: csr_do <= {1'b0, tx_done, tx_busy, 1'b0, rx_error, rx_avail};
-				2'b01: csr_do <= rx_data;
-				2'b10: csr_do <= divisor;
+			case(csr_a[0])
+				1'b0: csr_do <= rx_data;
+				1'b1: csr_do <= divisor;
 			endcase
 			if(csr_we) begin
-				if(csr_a[1:0] == 2'b10)
+				if(csr_a[0] == 1'b1)
 					divisor <= csr_di[15:0];
 			end
 		end
 	end
 end
-
-/* IRQs */
-assign rx_irq = rx_avail|rx_error;
-assign tx_irq = tx_done;
 
 endmodule

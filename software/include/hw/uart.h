@@ -20,16 +20,7 @@
 
 #include <hw/common.h>
 
-#define CSR_UART_UCR 		MMPTR(0x80000000)
-#define CSR_UART_RXTX 		MMPTR(0x80000004)
-#define CSR_UART_DIVISOR	MMPTR(0x80000008)
-
-#define UART_RXAVAIL		(0x01)
-#define UART_RXERROR		(0x02)
-#define UART_RXACK		(0x04)
-
-#define UART_TXBUSY		(0x08)
-#define UART_TXDONE		(0x10)
-#define UART_TXACK		(0x20)
+#define CSR_UART_RXTX 		MMPTR(0x80000000)
+#define CSR_UART_DIVISOR	MMPTR(0x80000004)
 
 #endif /* __HW_UART_H */
