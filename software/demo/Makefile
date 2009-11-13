@@ -30,8 +30,8 @@ spam.h: spam.raw
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@
 
-boot.elf: linker.ld $(OBJECTS)
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal --start-group $(OBJECTS) -lbase -lmath -lhal --end-group
+boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase.a $(MMDIR)/software/libmath/libmath.a $(MMDIR)/software/libhal/libhal.a
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libhal --start-group $(OBJECTS) -lbase -lmath -lhal --end-group
 	chmod -x $@
 
 .PHONY: clean depend
@@ -56,6 +56,7 @@ apipe.o: rpipe.h ../../software/include/hal/tmu.h apipe.h
 compiler.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 compiler.o: ../../software/include/string.h ../../software/include/hw/pfpu.h
 compiler.o: ../../software/include/hw/common.h compiler.h ast.h
+cpustats.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 cpustats.o: ../../software/include/irq.h ../../software/include/hal/time.h
 cpustats.o: cpustats.h
 eval.o: ../../software/include/stdio.h ../../software/include/stdlib.h

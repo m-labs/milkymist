@@ -106,7 +106,7 @@ void tmu_isr()
 	irq_ack(IRQ_TMU);
 
 	if(level > 0)
-		tmu_start(queue[consume]); /* IRQ automatically acked */
+		tmu_start(queue[consume]);
 	else
 		cts = 1;
 }
