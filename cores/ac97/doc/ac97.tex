@@ -13,7 +13,7 @@
 
 \title{AC'97 controller}
 \author{S\'ebastien Bourdeauducq}
-\date{October 2009}
+\date{November 2009}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -39,11 +39,7 @@ Register 0x00 controls the transfers to and from the AC'97 codec registers. Its 
 \hline
 1 & Selects between a read (0) and write (1) request. \\
 \hline
-2 & Request has been sent. This asserts the IRQ line. Write 1 to clear this bit. \\
-\hline
-3 & For a read request, the reply has been received. This asserts the IRQ line. Write 1 to clear this bit. \\
-\hline
-4--31 & Reserved. \\
+2--31 & Reserved. \\
 \hline
 \end{tabularx}
 
@@ -65,9 +61,7 @@ The register 0x10 controls the stream of data:
 \hline
 0 & Downstream enabled. When this bit is set by the CPU, the AC'97 controller sends PCM data to the codec and reads the DMA buffer (if the counter register is not zero). \\
 \hline
-1 & DMA interrupt. This bit is set by the core when the counter register reaches 0. Writing any value to the control register clears this bit. \\
-\hline
-2--31 & Reserved. \\
+1--31 & Reserved. \\
 \hline
 \end{tabularx}
 
@@ -75,6 +69,23 @@ The register 0x10 controls the stream of data:
 Those registers control the stream of PCM data from the AC'97 codec to the SoC (audio recording).
 
 They work exactly like the downstream control registers.
+
+\section{Interrupts}
+The AC'97 core is equipped with 4 active-high edge-sensitive interrupt lines:
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Line} & \textbf{Description} \\
+\hline
+crrequest\_irq & The codec configuration register read/write request has been sent. \\
+\hline
+crreply\_irq & The value of a codec configuration register has been received (after a read request). \\
+\hline
+dmar\_irq & The read (downstream/playback) DMA counter register has reached 0. \\
+\hline
+dmaw\_irq & The write (upstream/recording) DMA counter register has reached 0. \\
+\hline
+\end{tabularx}
 
 \section{Using the DMA engine}
 The downstream and upstream DMA engines work exactly the same, and can be enabled at the same time.

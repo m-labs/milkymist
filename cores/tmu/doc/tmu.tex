@@ -15,7 +15,7 @@
 
 \title{Texture Mapping Unit}
 \author{S\'ebastien Bourdeauducq}
-\date{October 2009}
+\date{November 2009}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -44,9 +44,7 @@ Addresses are in bytes to match the addresses seen by the CPU when the CSR bus i
 \hline
 0x00 & RW & 0 & Control register. \\
 & & & Bit 0: Start/Busy.\\
-& & & Bit 1: IRQ status. Cleared whenever the register is written. \\
-& & & Bit 2: Enable chroma key. \\
-& & & Bit 3: Enable texture coordinates wrap (vs. clamp). \\
+& & & Bit 1: Enable chroma key. \\
 \hline
 0x04 & RW & 32 & Number of mesh squares in the X direction (which is the number of mesh points minus one, and also the index of the last mesh point). \\
 \hline
@@ -100,6 +98,11 @@ These registers are read-only. Attempting to write them results in undefined beh
 0x4C & R & 0 & Number of misses in the source image (texture) cache. \\
 \hline
 \end{tabularx}
+
+\section{Interrupts}
+The TMU is equipped with one active-high edge-sensitive interrupt line.
+
+An interrupt is triggered when a texture mapping is done and all resulting data has been sent through the bus master.
 
 \section{Encoding the vertex data}
 The core supports a maximum mesh of 128x128 points. The address of the point at indices $ (x, y) $ in the mesh is, regardless of the actual the number of mesh points:

@@ -15,7 +15,7 @@
 
 \title{Programmable Floating Point Unit}
 \author{S\'ebastien Bourdeauducq}
-\date{October 2009}
+\date{November 2009}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -178,9 +178,7 @@ The CSR bus gives access to configuration and status registers, to the contents 
 \hline
 0 & RW & 0 & Start/busy bit. Writing 1 to this position starts the execution of the microcode. When reading, this bit is set when the core is busy. \\
 \hline
-1 & RW & 0 & IRQ status. This bit is set to 1 when an interrupt is pending (because the microcode has finished execution). This bit is cleared when the register is written. \\
-\hline
-31--2 & --- & 0 & Reserved. \\
+31--1 & --- & 0 & Reserved. \\
 \hline
 \end{tabularx}
 
@@ -217,5 +215,10 @@ It should not be accessed while the microcode is in execution.
 This address range gives direct access to a page of 512 words of the microcode. The 25-bit microcode words are padded to 32 bits by adding 7 zeros before them.
 
 It should not be accessed while the microcode is in execution.
+
+\section{Interrupts}
+The PFPU is equipped with one active-high edge-sensitive interrupt line.
+
+An interrupt is triggered when a microcode has finished execution and all resulting data has been sent through the bus master.
 
 \end{document}

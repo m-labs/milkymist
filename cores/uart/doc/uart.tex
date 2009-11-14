@@ -14,7 +14,7 @@
 
 \title{Simple UART}
 \author{S\'ebastien Bourdeauducq}
-\date{October 2009}
+\date{November 2009}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -26,36 +26,26 @@ The UART operates with 8 bits per character, no parity, and 1 stop bit. The defa
 
 The divisor is computed as follows :
 \begin{equation*}
-divisor = \frac{Clock frequency (Hz)}{16 \cdot Bitrate (bps)}
+\text{divisor} = \frac{\text{Clock frequency (Hz)}}{16 \cdot \text{Bitrate (bps)}}
 \end{equation*}
 
 \section{Registers}
-
 \begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
 \bf{Offset} & \bf{Read/Write} & \bf{Default} & \bf{Description} \\
 \hline
-0x0 & RW & 0x00 & Control/status register.\\
-& & & Bit 0 (read-only): RX data available.\\
-& & & Bit 1 (read-only): RX error.\\
-& & & Bit 2 (write-only): RX ack.\\
-& & & Bit 3 (read-only): TX busy.\\
-& & & Bit 4 (read-only): TX done.\\
-& & & Bit 5 (write-only): TX ack. \\
+0x0 & RW & 0x00 & Data register. Received bytes and bytes to transmit are read/written from/to this register. \\
 \hline
-0x4 & RW & 0x00 & Data register. Received bytes and bytes to transmit are read/written from/to this register. \\
-\hline
-0x8 & RW & for default bitrate & Divisor register (for bitrate selection). \\
+0x4 & RW & for default bitrate & Divisor register (for bitrate selection). \\
 \hline
 \end{tabularx}\\
 
-Upon reception of a byte, the register 0 should be written with the ``RX ack'' bit set to acknowledge the transmission (and clear the ``data available'' and ``error'' bits).
-
-Upon transmission of a byte, the register 0 can be written with the ``TX ack'' bit set to clear the ``TX done'' bit. This is not mandatory if the transmission is not operating in an interrupt-driven mode (it is possible to busy-wait on the ``TX busy'' bit instead).
-
 \section{Interrupts}
-The core has two interrupts outputs. The ``RX'' interrupt is asserted whenever the ``RX data available'' or ``RX error'' bits are set. The ``TX'' interrupt is asserted whenever the ``TX done'' bit is set.
+The core has two active-high edge-sensitive interrupts outputs.
 
+The ``RX'' interrupt is sent whenever a new character is received. The CPU should then read the data register immediately. If a new character is sent before the CPU has had time to read it, the first character will be lost.
+
+The ``TX'' interrupt is sent as soon as the UART finished transmitting a character. When the CPU has written to the data register, it must wait for the interrupt before writing again.
 
 \section{Using the core}
 Connect the CSR signals and the interrupts to the system bus and the interrupt controller. The \verb!uart_txd! and \verb!uart_rxd! signals should go to the FPGA pads. You must also provide the desired default baudrate and the system clock frequency in Hz using the parameters.

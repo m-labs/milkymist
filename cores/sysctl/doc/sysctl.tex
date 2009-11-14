@@ -13,7 +13,7 @@
 
 \title{System controller}
 \author{S\'ebastien Bourdeauducq}
-\date{October 2009}
+\date{November 2009}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -41,9 +41,7 @@ It is possible to generate an interrupt when an input changes. The interrupt wil
 \hline
 0x04 & RW & 0 & Outputs. \\
 \hline
-0x08 & RW & 0 & Level changes. Lists the input pins whose level has changed. When this register is written, the bits set in the written value clear the corresponding bits in the register. For example, writing 0x5 clears bits 0 and 2. \\
-\hline
-0x0C & RW & 0 & Interrupt enable. Lists the input pins whose level changes (bit set in the 0x08 register) generate an interrupt. \\
+0x08 & RW & 0 & Interrupt enable. Lists the input pins whose level changes (bit set in the 0x08 register) generate an interrupt. \\
 \hline
 \end{tabularx}\\
 
@@ -55,18 +53,16 @@ The system controller provides two independent timers. Timer 0 uses registers 0x
 \hline
 \bf Bits & \bf Access & \bf Default & \bf Description \\
 \hline
-0 & R & 0 & Indicates if the timer has reached its compare value. Writing any value to the register clears this bit. \\
+0 & RW & 0 & (Enable bit). If this bit is set, the counter register counts upwards until it reaches the value stored in the compare register. \\
 \hline
 1 & RW & 0 & If this bit is set, the counter will automatically restart from 1 when the compare value is reached, otherwise the counter will be disabled. \\
 \hline
-2 & RW & 0 & If this bit is set, the counter register counts upwards until it reaches the value stored in the compare register. \\
-\hline
-31 -- 3 & --- & 0 & Reserved. \\
+31 -- 2 & --- & 0 & Reserved. \\
 \hline
 \end{tabularx}
 
 \subsection{Compare register, offset 0x14/0x24}
-This register holds the value to which the counter is compared to, in order to stop/restart the timer and possibly generate an interrupt.
+This register holds the value to which the counter is compared to, in order to stop/restart the timer and generate an interrupt.
 
 \subsection{Counter register, offset 0x18/0x28}
 This register holds the current value of the timer counter. It can be read or written at any time.
