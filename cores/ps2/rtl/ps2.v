@@ -30,11 +30,7 @@ module ps2 #(
 
 	inout ps2_clk,
 	inout ps2_data,
-	output reg ps2_irq,
-
-	inout mouse_clk,
-	inout mouse_data,
-	output reg mouse_irq
+	output reg irq
 );
 
 /* CSR interface */
@@ -93,13 +89,12 @@ always @(posedge sys_clk) begin
 		rx_clk_count <= 5'd0;
 		rx_bitcount <= 4'd0;
 		rx_data <= 11'b11111111111;
-		ps2_irq <= 1'd0;
-		mouse_irq <= 1'd0;
+		irq <= 1'd0;
 		csr_do <= 32'd0;
 		ps2_clk_out <= 1'b1;
 		ps2_data_out <= 1'b1;
 	end else begin
-		ps2_irq <= 1'b0;
+		irq <= 1'b0;
 		csr_do <= 32'd0;
 		if(csr_selected) begin
 			csr_do <= kcode;
@@ -115,7 +110,7 @@ always @(posedge sys_clk) begin
 				rx_data <= {ps2_data_2, rx_data[10:1]};
 				rx_bitcount <= rx_bitcount + 4'd1;
 				if(rx_bitcount == 4'd10) begin
-					ps2_irq <= 1'b1;
+					irq <= 1'b1;
 					kcode <= rx_data[9:2];
 				end
 			end
@@ -129,6 +124,4 @@ end
 
 assign ps2_clk = ps2_clk_out ? 1'hz : ps2_clk_out;
 assign ps2_data = ps2_data_out ? 1'hz : ps2_data_out;
-assign mouse_clk = 1'hz;
-assign mouse_data = 1'hz;
 endmodule
