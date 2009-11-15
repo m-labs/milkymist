@@ -95,7 +95,9 @@ module system(
 
 	// PS2
 	inout ps2_clk1,
-	inout ps2_data1
+	inout ps2_data1,
+	inout ps2_clk2,
+	inout ps2_data2
 );
 
 //------------------------------------------------------------------
@@ -552,9 +554,11 @@ wire ac97dmaw_irq;
 wire pfpu_irq;
 wire tmu_irq;
 wire ps2_irq;
+wire mouse_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {20'd0,
+assign cpu_interrupt = {19'd0,
+	mouse_irq,
 	ps2_irq,
 	tmu_irq,
 	pfpu_irq,
@@ -1018,14 +1022,22 @@ ps2 # (
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_ps2),
 
-	.irq(ps2_irq),
-
 	.ps2_clk(ps2_clk1),
-	.ps2_data(ps2_data1)
+	.ps2_data(ps2_data1),
+	.ps2_irq(ps2_irq),
+
+	.mouse_clk(ps2_clk2),
+	.mouse_data(ps2_data2),
+	.mouse_irq(mouse_irq)
 );
 `else
 assign csr_dr_ps2 = 32'd0;
+`ifndef ENABLE_PS2_KEYBOARD
 assign ps2_irq = 1'd0;
+`endif
+`ifndef ENABLE_PS2_MOUSE
+assign mouse_irq = 1'd0;
+`endif
 `endif
 
 endmodule

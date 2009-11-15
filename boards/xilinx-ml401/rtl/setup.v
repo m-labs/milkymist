@@ -26,7 +26,16 @@
 `define ENABLE_AC97
 `define ENABLE_PFPU
 `define ENABLE_TMU
+`define ENABLE_PS2_KEYBOARD
+`define ENABLE_PS2_MOUSE
+
+`ifdef ENABLE_PS2_KEYBOARD
 `define ENABLE_PS2
+`else
+`ifdef ENABLE_PS2_MOUSE
+`define ENABLE_PS2
+`endif
+`endif
 
 /*
  * System clock frequency in Hz.

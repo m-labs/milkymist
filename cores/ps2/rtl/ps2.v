@@ -28,10 +28,13 @@ module ps2 #(
 	input [31:0] csr_di,
 	output reg [31:0] csr_do,
 
-	output reg irq,
-
 	inout ps2_clk,
-	inout ps2_data
+	inout ps2_data,
+	output reg ps2_irq,
+
+	inout mouse_clk,
+	inout mouse_data,
+	output reg mouse_irq
 );
 
 /* CSR interface */
@@ -66,12 +69,14 @@ reg ps2_data_2;
 reg ps2_clk_out;
 reg ps2_data_out;
 
+`ifdef ENABLE_PS2_KEYBOARD
 always @(posedge sys_clk) begin
 	ps2_clk_1 <= ps2_clk;
 	ps2_data_1 <= ps2_data;
 	ps2_clk_2 <= ps2_clk_1;
 	ps2_data_2 <= ps2_data_1;
 end
+`endif
 
 //-----------------------------------------------------------------
 // PS2 RX Logic
@@ -88,12 +93,13 @@ always @(posedge sys_clk) begin
 		rx_clk_count <= 5'd0;
 		rx_bitcount <= 4'd0;
 		rx_data <= 11'b11111111111;
-		irq <= 1'd0;
+		ps2_irq <= 1'd0;
+		mouse_irq <= 1'd0;
 		csr_do <= 32'd0;
 		ps2_clk_out <= 1'b1;
 		ps2_data_out <= 1'b1;
 	end else begin
-		irq <= 1'b0;
+		ps2_irq <= 1'b0;
 		csr_do <= 32'd0;
 		if(csr_selected) begin
 			csr_do <= kcode;
@@ -109,7 +115,7 @@ always @(posedge sys_clk) begin
 				rx_data <= {ps2_data_2, rx_data[10:1]};
 				rx_bitcount <= rx_bitcount + 4'd1;
 				if(rx_bitcount == 4'd10) begin
-					irq <= 1'b1;
+					ps2_irq <= 1'b1;
 					kcode <= rx_data[9:2];
 				end
 			end
@@ -123,4 +129,6 @@ end
 
 assign ps2_clk = ps2_clk_out ? 1'hz : ps2_clk_out;
 assign ps2_data = ps2_data_out ? 1'hz : ps2_data_out;
+assign mouse_clk = 1'hz;
+assign mouse_data = 1'hz;
 endmodule
