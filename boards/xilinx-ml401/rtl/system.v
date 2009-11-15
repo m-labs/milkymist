@@ -94,8 +94,8 @@ module system(
 	output ac97_sync,
 
 	// PS2
-	input ps2_clk1,
-	input ps2_data1
+	inout ps2_clk1,
+	inout ps2_data1
 );
 
 //------------------------------------------------------------------

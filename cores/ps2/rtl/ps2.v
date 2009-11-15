@@ -30,8 +30,8 @@ module ps2 #(
 
 	output reg irq,
 
-	input ps2_clk,
-	input ps2_data
+	inout ps2_clk,
+	inout ps2_data
 );
 
 /* CSR interface */
@@ -63,6 +63,8 @@ reg ps2_clk_1;
 reg ps2_data_1;
 reg ps2_clk_2;
 reg ps2_data_2;
+reg ps2_clk_out;
+reg ps2_data_out;
 
 always @(posedge sys_clk) begin
 	ps2_clk_1 <= ps2_clk;
@@ -88,6 +90,8 @@ always @(posedge sys_clk) begin
 		rx_data <= 11'b11111111111;
 		irq <= 1'd0;
 		csr_do <= 32'd0;
+		ps2_clk_out <= 1'b1;
+		ps2_data_out <= 1'b1;
 	end else begin
 		irq <= 1'b0;
 		csr_do <= 32'd0;
@@ -117,4 +121,6 @@ always @(posedge sys_clk) begin
 	end
 end
 
+assign ps2_clk = ps2_clk_out ? 1'hz : ps2_clk_out;
+assign ps2_data = ps2_data_out ? 1'hz : ps2_data_out;
 endmodule
