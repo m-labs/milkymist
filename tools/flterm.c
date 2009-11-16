@@ -32,6 +32,10 @@
 #include <getopt.h>
 #include <sfl.h>
 
+#define DEFAULT_KERNELADR	(0x40000000)
+#define DEFAULT_CMDLINEADR	(0x41000000)
+#define DEFAULT_INITRDADR	(0x41002000)
+
 unsigned int crc16_table[256] = {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
 	0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
@@ -422,7 +426,7 @@ static const struct option options[] = {
 
 static void print_usage()
 {
-	fprintf(stderr, "Serial boot program for the Milkymist VJ SoC - v. 1.0\n");
+	fprintf(stderr, "Serial boot program for the Milkymist VJ SoC - v. 1.1\n");
 	fprintf(stderr, "Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq\n\n");
 
 	fprintf(stderr, "This program is free software: you can redistribute it and/or modify\n");
@@ -430,9 +434,13 @@ static void print_usage()
 	fprintf(stderr, "the Free Software Foundation, version 3 of the License.\n\n");
 
 	fprintf(stderr, "Usage: flterm --port <port> [--double-rate]\n");
-	fprintf(stderr, "              --kernel <kernel_image> --kernel-adr <address>\n");
-	fprintf(stderr, "              [--cmdline <cmdline> --cmdline-adr <address>]\n");
-	fprintf(stderr, "              [--initrd <initrd_image> --initrd-adr <address>]\n");
+	fprintf(stderr, "              --kernel <kernel_image> [--kernel-adr <address>]\n");
+	fprintf(stderr, "              [--cmdline <cmdline> [--cmdline-adr <address>]]\n");
+	fprintf(stderr, "              [--initrd <initrd_image> [--initrd-adr <address>]]\n\n");
+	printf("Default load addresses:\n");
+	fprintf(stderr, "  kernel:  0x%08x\n", DEFAULT_KERNELADR);
+	fprintf(stderr, "  cmdline: 0x%08x\n", DEFAULT_CMDLINEADR);
+	fprintf(stderr, "  initrd:  0x%08x\n", DEFAULT_INITRDADR);
 }
 
 int main(int argc, char *argv[])
@@ -453,11 +461,11 @@ int main(int argc, char *argv[])
 	serial_port = NULL;
 	doublerate = 0;
 	kernel_image = NULL;
-	kernel_address = 0;
+	kernel_address = DEFAULT_KERNELADR;
 	cmdline = NULL;
-	cmdline_address = 0;
+	cmdline_address = DEFAULT_CMDLINEADR;
 	initrd_image = NULL;
-	initrd_address = 0;
+	initrd_address = DEFAULT_INITRDADR;
 	while((opt = getopt_long(argc, argv, "", options, NULL)) != -1) {
 		if(opt == '?') {
 			print_usage();
@@ -498,9 +506,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if((serial_port == NULL) || (kernel_image == NULL) || (kernel_address == 0)
-	  || ((cmdline != NULL) && (cmdline_address == 0))
-	  || ((initrd_image != NULL) && (initrd_address == 0))) {
+	if((serial_port == NULL) || (kernel_image == NULL)) {
 		print_usage();
 		return 1;
 	}
