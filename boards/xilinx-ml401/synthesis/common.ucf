@@ -293,7 +293,7 @@ NET "aceusb_a(3)" LOC = AC7;
 NET "aceusb_a(4)" LOC = Y7;
 NET "aceusb_a(5)" LOC = AA9;
 NET "aceusb_a(6)" LOC = Y9;
-NET "aceusb_a(*)" IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "aceusb_a(*)" IOSTANDARD = LVCMOS33 | SLEW = SLOW | DRIVE = 4;
 NET "aceusb_d(0)" LOC = AB7;
 NET "aceusb_d(1)" LOC = AC9;
 NET "aceusb_d(2)" LOC = AB9;
@@ -310,21 +310,22 @@ NET "aceusb_d(12)" LOC = AC3;
 NET "aceusb_d(13)" LOC = AF6;
 NET "aceusb_d(14)" LOC = AF5;
 NET "aceusb_d(15)" LOC = AA7;
-NET "aceusb_d(*)" IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8 | PULLDOWN;
-NET "aceusb_oe_n" LOC = AA8 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
-NET "aceusb_we_n" LOC = Y8 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "aceusb_d(*)" IOSTANDARD = LVCMOS33 | SLEW = SLOW | DRIVE = 4 | PULLDOWN;
+NET "aceusb_oe_n" LOC = AA8 | IOSTANDARD = LVCMOS33 | SLEW = SLOW | DRIVE = 4;
+NET "aceusb_we_n" LOC = Y8 | IOSTANDARD = LVCMOS33 | SLEW = SLOW | DRIVE = 4;
 
 # SystemACE signals
 NET "ace_clkin" LOC = AF11;
 NET "ace_clkin" IOSTANDARD = LVCMOS33;
 NET "ace_clkin" TNM_NET = "ace_clkin";
-TIMESPEC "TSace" = PERIOD "ace_clkin" 30 ns HIGH 50% INPUT_JITTER 1 ns;
+# leave 1ns margin (as in the ML401 UCF from Xilinx)
+TIMESPEC "TSace" = PERIOD "ace_clkin" 29 ns HIGH 50%;
 
-NET "ace_mpce_n" LOC = AD5 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "ace_mpce_n" LOC = AD5 | IOSTANDARD = LVCMOS33 | SLEW = SLOW | DRIVE = 4;
 NET "ace_mpirq" LOC = AD4 | IOSTANDARD = LVCMOS33 | PULLDOWN;
 
 # USB signals
-NET "usb_cs_n" LOC = AF10 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "usb_cs_n" LOC = AF10 | IOSTANDARD = LVCMOS33 | SLEW = SLOW | DRIVE = 4;
 NET "usb_hpi_reset_n" LOC = A7 | IOSTANDARD = LVCMOS25;
 NET "usb_hpi_int" LOC = V5 | IOSTANDARD = LVCMOS33 | PULLDOWN;
 
