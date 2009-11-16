@@ -186,6 +186,13 @@ int cffat_init()
 	
 	cffat_data_start_sector = cffat_root_table_sector + (cffat_max_root_entries*sizeof(struct directory_entry))/CF_BLOCK_SIZE;
 
+	if(cffat_max_root_entries == 0) {
+		printf("E: Your memory card uses FAT32, which is not supported.\n");
+		printf("E: Please reformat your card using FAT16, e.g. use mkdosfs -F 16\n");
+		printf("E: FAT32 support would be an appreciated contribution.\n");
+		return 0;
+	}
+	
 #ifdef DEBUG
 	printf("I: Cluster is %d sectors, FAT has %d entries, FAT 1 is at sector %d,\nI: root table is at sector %d (max %d), data is at sector %d\n",
 		cffat_sectors_per_cluster, cffat_fat_entries, cffat_fat_sector,
