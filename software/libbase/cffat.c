@@ -24,6 +24,8 @@
 #include <console.h>
 #include <cffat.h>
 
+//#define DEBUG
+
 struct partition_descriptor {
 	unsigned char flags;
 	unsigned char start_head;
@@ -121,7 +123,7 @@ int cffat_init()
 	struct firstsector s0;
 	struct fat16_firstsector s;
 	int i;
-	
+
 	if(!cf_init()) {
 		printf("E: Unable to initialize CF card driver\n");
 		return 0;
@@ -132,13 +134,15 @@ int cffat_init()
 		printf("E: Unable to read block 0\n");
 		return 0;
 	}
-	
+
 	cffat_partition_start_sector = -1;
 	for(i=0;i<4;i++)
 		if((s0.partitions[i].type == PARTITION_TYPE_FAT16)
-		 ||(s0.partitions[i].type == PARTITION_TYPE_FAT32)){
-			/*printf("I: Using partition #%d: start sector %08x, end sector %08x\n", i,
-				le32toh(s0.partitions[i].start_sector), le32toh(s0.partitions[i].end_sector));*/
+		 ||(s0.partitions[i].type == PARTITION_TYPE_FAT32)) {
+#ifdef DEBUG
+			printf("I: Using partition #%d: start sector %08x, end sector %08x\n", i,
+				le32toh(s0.partitions[i].start_sector), le32toh(s0.partitions[i].end_sector));
+#endif
 			cffat_partition_start_sector = le32toh(s0.partitions[i].start_sector);
 			break;
 		}
@@ -153,10 +157,23 @@ int cffat_init()
 		return 0;
 	}
 	
-	s.volume_label[10] = 0;
-	//printf("I: Volume label: %s\n", s.volume_label);
+#ifdef DEBUG
+	{
+		char oem[9];
+		char volume_label[12];
+		memcpy(oem, s.oem, 8);
+		oem[8] = 0;
+		memcpy(volume_label, s.volume_label, 11);
+		volume_label[11] = 0;
+		printf("I: OEM name: %s\n", oem);
+		printf("I: Volume label: %s\n", volume_label);
+	}
+#endif
 	
-	if(le16toh(s.bytes_per_sector) != CF_BLOCK_SIZE) return 0;
+	if(le16toh(s.bytes_per_sector) != CF_BLOCK_SIZE) {
+		printf("E: Unexpected number of bytes per sector\n");
+		return 0;
+	}
 	cffat_sectors_per_cluster = s.sectors_per_cluster;
 	
 	cffat_fat_entries = (le16toh(s.sectors_per_fat)*CF_BLOCK_SIZE)/2;
@@ -168,11 +185,13 @@ int cffat_init()
 	cffat_dir_cached_sector = -1;
 	
 	cffat_data_start_sector = cffat_root_table_sector + (cffat_max_root_entries*sizeof(struct directory_entry))/CF_BLOCK_SIZE;
-	
-	/*printf("I: Cluster is %d sectors, FAT has %d entries, FAT 1 is at sector %d,\nI: root table is at sector %d (max %d), data is at sector %d\n",
+
+#ifdef DEBUG
+	printf("I: Cluster is %d sectors, FAT has %d entries, FAT 1 is at sector %d,\nI: root table is at sector %d (max %d), data is at sector %d\n",
 		cffat_sectors_per_cluster, cffat_fat_entries, cffat_fat_sector,
 		cffat_root_table_sector, cffat_max_root_entries,
-		cffat_data_start_sector);*/
+		cffat_data_start_sector);
+#endif
 	return 1;
 }
 
@@ -267,6 +286,9 @@ int cffat_list_files(cffat_dir_callback cb, void *param)
 	longname[sizeof(longname)-1] = 0; /* avoid crashing when reading a corrupt FS */
 	for(k=0;k<cffat_max_root_entries;k++) {
 		entry = cffat_read_root_directory(k);
+#ifdef DEBUG
+		printf("I: Read entry with attribute %02x\n", entry->attributes);
+#endif
 		if(entry->attributes == 0x0f) {
 			const struct directory_entry_lfn *entry_lfn;
 			unsigned char frag;
