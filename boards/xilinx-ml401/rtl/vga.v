@@ -35,7 +35,7 @@ module vga #(
 	output fml_stb,
 	input fml_ack,
 	input [63:0] fml_di,
-	
+
 	/* VGA pads */
 	output vga_psave_n,
 	output vga_hsync_n,
@@ -51,8 +51,14 @@ module vga #(
 wire vga_clk;
 
 reg [1:0] fcounter;
+wire [1:0] vga_clk_sel;
 always @(posedge sys_clk) fcounter <= fcounter + 2'd1;
-assign vga_clk = fcounter[1];
+BUFGMUX BUFGMUX_vgaclk (
+	.O(vga_clk),
+	.I0(fcounter[1]),
+	.I1(fcounter[0]),
+	.S(vga_clk_sel[0])
+);
 
 assign vga_clkout = vga_clk;
 
@@ -81,7 +87,8 @@ vgafb #(
 	.vga_blank_n(vga_blank_n),
 	.vga_r(vga_r),
 	.vga_g(vga_g),
-	.vga_b(vga_b)
+	.vga_b(vga_b),
+	.vga_clk_sel(vga_clk_sel)
 );
 
 endmodule

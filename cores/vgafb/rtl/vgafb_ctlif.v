@@ -42,7 +42,9 @@ module vgafb_ctlif #(
 	output reg [fml_depth-1:0] baseaddress,
 	input baseaddress_ack,
 	
-	output reg [17:0] nbursts
+	output reg [17:0] nbursts,
+
+	output reg [1:0] vga_clk_sel
 );
 
 reg [fml_depth-1:0] baseaddress_act;
@@ -75,6 +77,7 @@ always @(posedge sys_clk) begin
 		baseaddress <= {fml_depth{1'b0}};
 		
 		nbursts <= 18'd19200;
+		vga_clk_sel <= 2'd00;
 	end else begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin
@@ -92,6 +95,7 @@ always @(posedge sys_clk) begin
 					4'd9: baseaddress <= csr_di[fml_depth-1:0];
 					// 10: baseaddress_act is read-only for Wishbone
 					4'd11: nbursts <= csr_di[17:0];
+					4'd12: vga_clk_sel <= csr_di[17:0];
 				endcase
 			end
 			
@@ -108,6 +112,7 @@ always @(posedge sys_clk) begin
 				4'd9: csr_do <= baseaddress;
 				4'd10: csr_do <= baseaddress_act;
 				4'd11: csr_do <= nbursts;
+				4'd12: csr_do <= vga_clk_sel;
 			endcase
 		end
 	end
