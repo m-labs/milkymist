@@ -191,7 +191,7 @@ wire [17:0] fifo_do;
 
 vgafb_asfifo #(
 	.DATA_WIDTH(18),
-	.ADDRESS_WIDTH(6)
+	.ADDRESS_WIDTH(11)	// 25MHz->6, 50MHz->7, 65MHz->11
 ) fifo (
 	.Data_out(fifo_do),
 	.Empty_out(),
