@@ -53,19 +53,27 @@ reg [7:0] ram5do;
 reg [7:0] ram6do;
 reg [7:0] ram7do;
 
-always @(posedge sys_clk) begin
-	if(we[0]) begin
-		ram0[a] <= ram0di;
-		ram0do <= ram0di;
-	end else
-		ram0do <= ram0[a];
-end
+/*
+ * Workaround for a strange Xst 11.4 bug with Spartan-6
+ * We must specify the RAMs in this order, otherwise,
+ * ram1 "disappears" from the netlist. The typical
+ * first symptom is a Bitgen DRC failure because of
+ * dangling I/O pins going to the SDRAM.
+ * Problem reported to Xilinx.
+ */
 always @(posedge sys_clk) begin
 	if(we[1]) begin
 		ram1[a] <= ram1di;
 		ram1do <= ram1di;
 	end else
 		ram1do <= ram1[a];
+end
+always @(posedge sys_clk) begin
+	if(we[0]) begin
+		ram0[a] <= ram0di;
+		ram0do <= ram0di;
+	end else
+		ram0do <= ram0[a];
 end
 always @(posedge sys_clk) begin
 	if(we[2]) begin

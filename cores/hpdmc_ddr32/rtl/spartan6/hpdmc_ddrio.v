@@ -67,8 +67,8 @@ hpdmc_oddr32 oddr_dq(
 	.C0(sys_clk),
 	.C1(sys_clk_n),
 	.CE(1'b1),
-	.D0(do[63:32]),
-	.D1(do[31:0]),
+	.D0(do[31:0]),
+	.D1(do[63:32]),
 	.R(1'b0),
 	.S(1'b0)
 );
