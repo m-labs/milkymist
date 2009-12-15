@@ -63,65 +63,156 @@ reg ps2_data_1;
 reg ps2_clk_2;
 reg ps2_data_2;
 reg ps2_clk_out;
-reg ps2_data_out;
+reg ps2_data_out1, ps2_data_out2;
 
-`ifdef ENABLE_PS2_KEYBOARD
 always @(posedge sys_clk) begin
 	ps2_clk_1 <= ps2_clk;
 	ps2_data_1 <= ps2_data;
 	ps2_clk_2 <= ps2_clk_1;
 	ps2_data_2 <= ps2_data_1;
 end
-`endif
 
-//-----------------------------------------------------------------
-// PS2 RX Logic
-//-----------------------------------------------------------------
+/* PS2 */
 reg [7:0] kcode;
 reg rx_clk_data;
 reg [5:0] rx_clk_count;
 reg [4:0] rx_bitcount;
 reg [10:0] rx_data;
+reg [10:0] tx_data;
+reg we_reg;
 
+/* FSM */
+reg [2:0] state;
+reg [2:0] next_state;
+
+parameter RECEIVE		= 3'd0;
+parameter WAIT_READY		= 3'd1;
+parameter CLOCK_LOW		= 3'd2;
+parameter CLOCK_HIGH		= 3'd3;
+parameter WAIT_CLOCK_LOW	= 3'd4;
+parameter TRANSMIT		= 3'd5;
+
+assign state_receive = state == RECEIVE;
+assign state_transmit = state == TRANSMIT;
+
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		state = RECEIVE;
+	else begin
+		state = next_state;
+	end
+end
+
+/* ps2 clock falling edge 100us counter */
+parameter divisor_100us = clk_freq/10000;
+reg [16:0] counter;
+wire counter_100us;
+assign counter_100us = (counter == 17'd0);
+always @(sys_clk) begin
+	if(sys_rst)
+		counter <= counter_100us - 1;
+	else begin
+		counter <= counter != 17'd0 ? counter - 1 :17'd 0;
+		if (ps2_clk_out)
+			counter <= counter_100us - 1;
+	end
+end
+
+always @(*) begin
+	ps2_clk_out = 1'b1;
+	ps2_data_out1 = 1'b1;
+
+	next_state = state;
+
+	case(state)
+		RECEIVE: begin
+			if (we_reg) begin
+				next_state = WAIT_READY;
+			end
+		end
+		WAIT_READY: begin
+			if (rx_bitcount==5'd0) begin
+				next_state = CLOCK_LOW;
+			end
+		end
+		CLOCK_LOW: begin
+			ps2_clk_out = 1'b0;
+//			if(counter_100us) begin
+				next_state = CLOCK_HIGH;
+//			end
+		end
+		CLOCK_HIGH: begin
+			ps2_data_out1 = 1'b0;
+			next_state = WAIT_CLOCK_LOW;
+		end
+		WAIT_CLOCK_LOW: begin
+			ps2_data_out1 = 1'b0;
+			if(ps2_clk==1'b0) begin
+				next_state = TRANSMIT;
+			end
+		end
+		TRANSMIT: begin
+			if(rx_bitcount==5'd10) begin
+				next_state = RECEIVE;
+			end
+		end
+	endcase
+end
+
+//-----------------------------------------------------------------
+// PS2 RX/TX Logic
+//-----------------------------------------------------------------
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		rx_clk_data <= 1'd1;
 		rx_clk_count <= 5'd0;
-		rx_bitcount <= 4'd0;
+		rx_bitcount <= 5'd0;
 		rx_data <= 11'b11111111111;
 		irq <= 1'd0;
 		csr_do <= 32'd0;
-		ps2_clk_out <= 1'b1;
-		ps2_data_out <= 1'b1;
+		we_reg <= 1'b0;
+		ps2_data_out2 <= 1'b1;
 	end else begin
 		irq <= 1'b0;
+		we_reg <= 1'b0;
 		csr_do <= 32'd0;
 		if(csr_selected) begin
 			csr_do <= kcode;
+			if (csr_we) begin
+				tx_data <= {2'b11,~(^csr_di[7:0]),csr_di[7:0]};	// STOP+PARITY+DATA
+				we_reg <= 1'b1;
+			end
 		end
 		if(enable) begin
-			if(rx_clk_data == ps2_clk_2) begin
+			if (rx_clk_data == ps2_clk_2) begin
 				rx_clk_count <= rx_clk_count + 5'd1;
 			end else begin
 				rx_clk_count <= 5'd0;
 				rx_clk_data <= ps2_clk_2;
 			end
-			if(rx_clk_data == 1'd0 && rx_clk_count == 5'd4) begin
+			if(state_receive && rx_clk_data == 1'b0 && rx_clk_count == 5'd4) begin
 				rx_data <= {ps2_data_2, rx_data[10:1]};
-				rx_bitcount <= rx_bitcount + 4'd1;
-				if(rx_bitcount == 4'd10) begin
+				rx_bitcount <= rx_bitcount + 5'd1;
+				if(rx_bitcount == 5'd10) begin
 					irq <= 1'b1;
 					kcode <= rx_data[9:2];
 				end
 			end
+			if(state_transmit && rx_clk_data == 1'b0 && rx_clk_count == 5'd0) begin
+				ps2_data_out2 <= tx_data[rx_bitcount];
+				rx_bitcount <= rx_bitcount + 5'd1;
+				if(rx_bitcount == 5'd10) begin
+					ps2_data_out2 <= 1'b1;
+				end
+			end
 			if(rx_clk_count == 5'd16) begin
-				rx_bitcount <= 4'd0;
+				rx_bitcount <= 5'd0;
 				rx_data <= 11'b11111111111;
 			end
 		end
 	end
 end
 
-assign ps2_clk = ps2_clk_out ? 1'hz : ps2_clk_out;
-assign ps2_data = ps2_data_out ? 1'hz : ps2_data_out;
+assign ps2_clk = ps2_clk_out ? 1'hz : 1'b0;
+assign ps2_data = ps2_data_out1 & ps2_data_out2 ? 1'hz : 1'b0;
 endmodule
