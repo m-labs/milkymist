@@ -132,14 +132,15 @@ always @(*) begin
 		end
 		WAIT_READY: begin
 			if (rx_bitcount==5'd0) begin
+				ps2_clk_out = 1'b0;
 				next_state = CLOCK_LOW;
 			end
 		end
 		CLOCK_LOW: begin
 			ps2_clk_out = 1'b0;
-//			if(counter_100us) begin
+			if(counter_100us) begin
 				next_state = CLOCK_HIGH;
-//			end
+			end
 		end
 		CLOCK_HIGH: begin
 			ps2_data_out1 = 1'b0;
