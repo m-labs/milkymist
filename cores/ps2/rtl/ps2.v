@@ -89,8 +89,10 @@ parameter RECEIVE		= 3'd0;
 parameter WAIT_READY		= 3'd1;
 parameter CLOCK_LOW		= 3'd2;
 parameter CLOCK_HIGH		= 3'd3;
-parameter WAIT_CLOCK_LOW	= 3'd4;
-parameter TRANSMIT		= 3'd5;
+parameter CLOCK_HIGH1		= 3'd4;
+parameter CLOCK_HIGH2		= 3'd5;
+parameter WAIT_CLOCK_LOW	= 3'd6;
+parameter TRANSMIT		= 3'd7;
 
 assign state_receive = state == RECEIVE;
 assign state_transmit = state == TRANSMIT;
@@ -143,12 +145,18 @@ always @(*) begin
 			end
 		end
 		CLOCK_HIGH: begin
+			next_state = CLOCK_HIGH1;
+		end
+		CLOCK_HIGH1: begin
+			next_state = CLOCK_HIGH2;
+		end
+		CLOCK_HIGH2: begin
 			ps2_data_out1 = 1'b0;
 			next_state = WAIT_CLOCK_LOW;
 		end
 		WAIT_CLOCK_LOW: begin
 			ps2_data_out1 = 1'b0;
-			if(ps2_clk==1'b0) begin
+			if(ps2_clk_2==1'b0) begin
 				next_state = TRANSMIT;
 			end
 		end
