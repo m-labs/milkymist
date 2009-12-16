@@ -106,18 +106,16 @@ always @(posedge sys_clk) begin
 end
 
 /* ps2 clock falling edge 100us counter */
-parameter divisor_100us = clk_freq/10000;
-reg [16:0] counter;
-wire counter_100us;
-assign counter_100us = (counter == 17'd0);
+//parameter divisor_100us = clk_freq/10000;
+parameter divisor_100us = 1;
+reg [16:0] watchdog_timer;
+wire watchdog_timer_done;
+assign watchdog_timer_done = (watchdog_timer == 17'd0);
 always @(sys_clk) begin
-	if(sys_rst)
-		counter <= counter_100us - 1;
-	else begin
-		counter <= counter != 17'd0 ? counter - 1 :17'd 0;
-		if (ps2_clk_out)
-			counter <= counter_100us - 1;
-	end
+	if(sys_rst||ps2_clk_out)
+		watchdog_timer <= divisor_100us - 1;
+	else if (~watchdog_timer_done)
+			watchdog_timer <= watchdog_timer - 1;
 end
 
 always @(*) begin
@@ -140,7 +138,7 @@ always @(*) begin
 		end
 		CLOCK_LOW: begin
 			ps2_clk_out = 1'b0;
-			if(counter_100us) begin
+			if(watchdog_timer_done) begin
 				next_state = CLOCK_HIGH;
 			end
 		end
