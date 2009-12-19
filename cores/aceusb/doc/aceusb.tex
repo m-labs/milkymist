@@ -12,7 +12,7 @@
 
 \title{Wishbone to SystemACE MPU interface bridge}
 \author{S\'ebastien Bourdeauducq}
-\date{October 2009}
+\date{December 2009}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -32,5 +32,9 @@ The SystemACE registers are documented in Xilinx datasheet DS080.
 Connecting the core is very simple. The Wishbone signals are standard, and the other signals should go the the FPGA pads.
 
 Only attention should be paid to the clock signal. It must be generated externally (with the on-board oscillator on the ML401) and is an input to the core, and also to the FPGA in the ML401 case.
+
+\section*{Copyright notice}
+Copyright \copyright 2007-2009 S\'ebastien Bourdeauducq. \\
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.3; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the LICENSE.FDL file at the root of the Milkymist source distribution.
 
 \end{document}
