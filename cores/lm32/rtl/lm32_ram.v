@@ -26,9 +26,10 @@
 //                  : Distributed RAM).
 // Version          : 3.2
 //                  : EBRs use SYNC resets instead of ASYNC resets.
+// Version          : 3.5
+//                  : Added read-after-write hazard resolution when using true
+//                  : dual-port EBRs
 // =============================================================================
-
-// Modified for Milkymist: kept only the behavioral (portable) version
 
 `include "lm32_include.v"
 
@@ -36,7 +37,7 @@
 // Module interface
 /////////////////////////////////////////////////////
 
-module lm32_ram
+module lm32_ram 
   (
    // ----- Inputs -------
    read_clk,

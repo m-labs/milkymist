@@ -21,8 +21,9 @@
 //                  : Initial Release
 // Version          : 7.0SP2, 3.0
 //                  : No Change
-// Version          : 3.1
-//                  : No Change
+// Version          : 3.3
+//                  : Removed port mismatch in instantiation of module
+//                  : lm32_monitor_ram.
 // =============================================================================
 
 `include "system_conf.v"
@@ -86,7 +87,7 @@ wire   MON_ERR_O;
 /////////////////////////////////////////////////////
 
 reg [1:0] state;                                    // Current state of FSM
-wire [`LM32_WORD_RNG] data;                         // Data read from RAM
+wire [`LM32_WORD_RNG] data, dataB;                  // Data read from RAM
 reg write_enable;                                   // RAM write enable
 reg [`LM32_WORD_RNG] write_data;                    // RAM write data
  
@@ -103,11 +104,14 @@ lm32_monitor_ram ram (
     .ClockEnA           (`TRUE),
     .ClockEnB           (`FALSE),
     .AddressA           (MON_ADR_I[10:2]),
+    .AddressB           (9'b0),
     .DataInA            (write_data),
+    .DataInB            (32'b0),
     .WrA                (write_enable),
     .WrB                (`FALSE),
     // ----- Outputs -------
-    .QA                 (data)
+    .QA                 (data),
+    .QB                 (dataB)
     );
 
 /////////////////////////////////////////////////////

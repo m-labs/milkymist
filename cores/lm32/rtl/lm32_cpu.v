@@ -19,6 +19,10 @@
 // Title            : Top-level of CPU.
 // Dependencies     : lm32_include.v
 //
+// Version 3.4
+// 1. Bug Fix: In a tight infinite loop (add, sw, bi) incoming interrupts were 
+//    never serviced.
+//    
 // Version 3.3
 // 1. Feature: Support for memory that is tightly coupled to processor core, and 
 //    has a single-cycle access latency (same as caches). Instruction port has
@@ -1072,17 +1076,17 @@ lm32_mc_arithmetic mc_arithmetic (
 // Interrupt unit
 lm32_interrupt interrupt_unit (
     // ----- Inputs -------
-    .clk_i                  (clk_i),
+    .clk_i                  (clk_i), 
     .rst_i                  (rst_i),
     // From external devices
     .interrupt              (interrupt),
     // From pipeline
     .stall_x                (stall_x),
 `ifdef CFG_DEBUG_ENABLED
-    .non_debug_exception    (non_debug_exception_q_w),
+    .non_debug_exception    (non_debug_exception_q_w), 
     .debug_exception        (debug_exception_q_w),
 `else
-    .exception              (exception_q_w),
+    .exception              (exception_q_w), 
 `endif
     .eret_q_x               (eret_q_x),
 `ifdef CFG_DEBUG_ENABLED
@@ -1867,6 +1871,20 @@ assign stall_m =    (stall_wb_load == `TRUE)
 `else
                  || (   (D_CYC_O == `TRUE)
                      && (   (store_m == `TRUE)
+		         /*
+			  Bug: Following loop does not allow interrupts to be services since
+			  either D_CYC_O or store_m is always high during entire duration of
+			  loop.
+		          L1:	addi	r1, r1, 1
+			  	sw	(r2,0), r1
+			  	bi	L1
+			  
+			  Introduce a single-cycle stall when a wishbone cycle is in progress
+			  and a new store instruction is in Execute stage and a interrupt
+			  exception has occured. This stall will ensure that D_CYC_O and 
+			  store_m will both be low for one cycle.
+			  */
+		         || ((store_x == `TRUE) && (interrupt_exception == `TRUE))
                          || (load_m == `TRUE)
                          || (load_x == `TRUE)
                         ) 

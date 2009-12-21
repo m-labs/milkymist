@@ -18,16 +18,19 @@
 // File             : lm32_icache.v
 // Title            : Instruction cache
 // Dependencies     : lm32_include.v
-// Version          : 6.1.17
-//                  : Initial Release
-// Version          : 7.0SP2, 3.0
-//                  : No Change
-// Version          : 3.1
-//                  : Support for user-selected resource usage when implementing
-//                  : cache memory. Additional parameters must be defined when
-//                  : invoking module lm32_ram. Instruction cache miss mechanism
-//                  : is dependent on branch prediction being performed in D stage
-//                  : of pipeline.
+// 
+// Version 3.5
+// 1. Bug Fix: Instruction cache flushes issued from Instruction Inline Memory
+//    cause segmentation fault due to incorrect fetches.
+//
+// Version 3.1
+// 1. Feature: Support for user-selected resource usage when implementing
+//    cache memory. Additional parameters must be defined when invoking module
+//    lm32_ram. Instruction cache miss mechanism is dependent on branch
+//    prediction being performed in D stage of pipeline.
+//
+// Version 7.0SP2, 3.0
+// No change
 // =============================================================================
 					  
 `include "lm32_include.v"
@@ -71,6 +74,9 @@ module lm32_icache (
     refill_ready,
     refill_data,
     iflush,
+`ifdef CFG_IROM_ENABLED
+    select_f,
+`endif
     valid_d,
     branch_predict_taken_d,
     // ----- Outputs -----
@@ -123,6 +129,10 @@ input refill_ready;                                 // Next word of refill data 
 input [`LM32_INSTRUCTION_RNG] refill_data;          // Data to refill the cache with
 
 input iflush;                                       // Flush the cache
+`ifdef CFG_IROM_ENABLED
+input select_f;                                     // Instruction in F stage is mapped through instruction cache
+`endif
+   
 /////////////////////////////////////////////////////
 // Outputs
 /////////////////////////////////////////////////////
@@ -366,7 +376,13 @@ begin
         `LM32_IC_STATE_FLUSH:
         begin            
             if (flush_set == {`LM32_IC_TMEM_ADDR_WIDTH{1'b0}})
+`ifdef CFG_IROM_ENABLED
+	      if (select_f)
                 state <= `LM32_IC_STATE_REFILL;
+	      else
+`endif
+		state <= `LM32_IC_STATE_CHECK;
+	   
             flush_set <= flush_set - 1'b1;
         end
         

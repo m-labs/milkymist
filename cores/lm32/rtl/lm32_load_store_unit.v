@@ -32,6 +32,11 @@
 // Version      : 3.3
 //              : Support for new non-cacheable Data Memory that is accessible by 
 //              : the data port and has a one cycle access latency.
+// Version      : 3.4
+//              : No change
+// Version      : 3.5
+//              : Bug fix: Inline memory is correctly generated if it is not a
+//              : power-of-two
 // =============================================================================
 
 `include "lm32_include.v"
@@ -268,12 +273,21 @@ reg wb_load_complete;                                   // Indicates when a Wish
      #(
        // ----- Parameters -------
        .pmi_family             (`LATTICE_FAMILY),
-       .pmi_addr_depth_a       (1 << (clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
-       .pmi_addr_width_a       ((clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
+
+       //.pmi_addr_depth_a       (1 << (clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_addr_width_a       ((clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_data_width_a       (`LM32_WORD_WIDTH),
+       //.pmi_addr_depth_b       (1 << (clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_addr_width_b       ((clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_data_width_b       (`LM32_WORD_WIDTH),
+	
+       .pmi_addr_depth_a       (`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1),
+       .pmi_addr_width_a       (clogb2_v1(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)),
        .pmi_data_width_a       (`LM32_WORD_WIDTH),
-       .pmi_addr_depth_b       (1 << (clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
-       .pmi_addr_width_b       ((clogb2(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)-1)),
+       .pmi_addr_depth_b       (`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1),
+       .pmi_addr_width_b       (clogb2_v1(`CFG_DRAM_LIMIT/4-`CFG_DRAM_BASE_ADDRESS/4+1)),
        .pmi_data_width_b       (`LM32_WORD_WIDTH),
+
        .pmi_regmode_a          ("noreg"),
        .pmi_regmode_b          ("noreg"),
        .pmi_gsr                ("enable"),

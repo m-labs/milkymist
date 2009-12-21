@@ -14,15 +14,16 @@
 // U.S.A                                   email: techsupport@latticesemi.com
 // =============================================================================/
 //                         FILE DETAILS
-// Project          : LatticeMico32
-// File             : lm32_functions.v
-// Title            : Common functions
-// Version          : 6.1.17
-//                  : Initial Release
-// Version          : 7.0SP2, 3.0
-//                  : No Change
-// Version          : 3.1
-//                  : No Change
+// Project      : LatticeMico32
+// File         : lm32_functions.v
+// Title        : Common functions
+// Version      : 6.1.17
+//              : Initial Release
+// Version      : 7.0SP2, 3.0
+//              : No Change
+// Version      : 3.5
+//              : Added function to generate log-of-two that rounds-up to
+//              : power-of-two
 // =============================================================================
 					  
 function integer clogb2;
@@ -32,3 +33,17 @@ begin
         value = value >> 1;
 end
 endfunction 
+
+function integer clogb2_v1;
+input [31:0] value;
+reg   [31:0] i;
+reg   [31:0] temp;
+begin
+   temp = 0;
+   i    = 0;
+   for (i = 0; temp < value; i = i + 1)  
+	temp = 1<<i;
+   clogb2_v1 = i-1;
+end
+endfunction
+

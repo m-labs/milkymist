@@ -30,8 +30,8 @@
  */
 //`define ENABLE_AC97
 //`define ENABLE_VGA
-`define ENABLE_PFPU
-`define ENABLE_TMU
+//`define ENABLE_PFPU
+//`define ENABLE_TMU
 
 /*
  * System clock frequency in Hz.
