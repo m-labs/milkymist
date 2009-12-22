@@ -45,8 +45,7 @@ module vgafb #(
 	output vga_blank_n,
 	output reg [7:0] vga_r,
 	output reg [7:0] vga_g,
-	output reg [7:0] vga_b,
-	output [1:0] vga_clk_sel
+	output reg [7:0] vga_b
 );
 
 /*
@@ -96,9 +95,7 @@ vgafb_ctlif #(
 	.baseaddress(baseaddress),
 	.baseaddress_ack(baseaddress_ack),
 	
-	.nbursts(nbursts),
-
-	.vga_clk_sel(vga_clk_sel)
+	.nbursts(nbursts)
 );
 
 /*
@@ -191,7 +188,7 @@ wire [17:0] fifo_do;
 
 vgafb_asfifo #(
 	.DATA_WIDTH(18),
-	.ADDRESS_WIDTH(11)	// 25MHz->6, 50MHz->7, 65MHz->11
+	.ADDRESS_WIDTH(6)
 ) fifo (
 	.Data_out(fifo_do),
 	.Empty_out(),

@@ -189,7 +189,7 @@ genvar i, j;
       for (i = 0; i < associativity; i = i + 1)    
 	begin : memories
 	   // Way data
-           if (`LM32_DC_DMEM_ADDR_WIDTH < 7)
+           if (`LM32_DC_DMEM_ADDR_WIDTH < 11)
              begin : data_memories
 		lm32_ram 
 		  #(
@@ -292,7 +292,7 @@ assign load_data = way_match[0] ? way_data[0] : way_data[1];
 endgenerate
 
 generate
-    if (`LM32_DC_DMEM_ADDR_WIDTH < 7)
+    if (`LM32_DC_DMEM_ADDR_WIDTH < 11)
     begin
 // Select data to write to data memories
 always @(*)

@@ -33,6 +33,15 @@
 //              : Support for a non-cacheable Instruction Memory that has a 
 //              : single-cycle access latency. This memory can be accessed by
 //              : data port of LM32 (so that debugger has access to it).
+// Version      : 3.4
+//              : No change
+// Version      : 3.5
+//              : Bug fix: Inline memory is correctly generated if it is not a
+//              : power-of-two.
+//              : Bug fix: Fixed a bug that caused LM32 (configured without
+//              : instruction cache) to lock up in to an infinite loop due to a 
+//              : instruction bus error when EBA was set to instruction inline
+//              : memory.
 // =============================================================================
 
 `include "lm32_include.v"
@@ -342,12 +351,22 @@ reg jtag_access;                                        // Indicates if a JTAG W
    pmi_ram_dp_true 
      #(
        // ----- Parameters -------
-       .pmi_addr_depth_a       (1 << (clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
-       .pmi_addr_width_a       ((clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
+       .pmi_family             (`LATTICE_FAMILY),
+	 
+       //.pmi_addr_depth_a       (1 << (clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_addr_width_a       ((clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_data_width_a       (`LM32_WORD_WIDTH),
+       //.pmi_addr_depth_b       (1 << (clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_addr_width_b       ((clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
+       //.pmi_data_width_b       (`LM32_WORD_WIDTH),
+	 
+       .pmi_addr_depth_a       (`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1),
+       .pmi_addr_width_a       (clogb2_v1(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)),
        .pmi_data_width_a       (`LM32_WORD_WIDTH),
-       .pmi_addr_depth_b       (1 << (clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
-       .pmi_addr_width_b       ((clogb2(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)-1)),
+       .pmi_addr_depth_b       (`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1),
+       .pmi_addr_width_b       (clogb2_v1(`CFG_IROM_LIMIT/4-`CFG_IROM_BASE_ADDRESS/4+1)),
        .pmi_data_width_b       (`LM32_WORD_WIDTH),
+	 
        .pmi_regmode_a          ("noreg"),
        .pmi_regmode_b          ("noreg"),
        .pmi_gsr                ("enable"),
@@ -729,7 +748,7 @@ begin
         i_cyc_o <= `FALSE;
         i_stb_o <= `FALSE;
         i_adr_o <= {`LM32_WORD_WIDTH{1'b0}};
-        i_cti_o <= `LM32_CTYPE_CLASSIC;
+        i_cti_o <= `LM32_CTYPE_END;
         i_lock_o <= `FALSE;
         wb_data_f <= {`LM32_INSTRUCTION_WIDTH{1'b0}};
 `ifdef CFG_BUS_ERRORS_ENABLED
@@ -778,6 +797,19 @@ begin
                 bus_error_f <= `FALSE;
 `endif
             end
+	    else
+	    begin
+	        if (   (stall_a == `FALSE) 
+`ifdef CFG_IROM_ENABLED 
+		    && (irom_select_a == `TRUE)
+`endif       
+	           )
+		begin
+`ifdef CFG_BUS_ERRORS_ENABLED
+		    bus_error_f <= `FALSE;
+`endif
+		end
+	    end
         end
     end
 end

@@ -343,6 +343,3 @@ TIMESPEC "TSclkac97" = PERIOD "clkac97" 80 HIGH 50%;
 # "keyboard" connector
 NET "ps2_clk1"  LOC = D2 | IOSTANDARD = LVCMOS25;
 NET "ps2_data1" LOC = G9 | IOSTANDARD = LVCMOS25;
-# "mouse" connector
-NET "ps2_clk2"  LOC = B14 | IOSTANDARD = LVCMOS25;
-NET "ps2_data2" LOC = C14 | IOSTANDARD = LVCMOS25;

@@ -240,8 +240,8 @@ wire trace_bret;                                // Indicates a bret instruction 
 /////////////////////////////////////////////////////
 // Instantiations
 ///////////////////////////////////////////////////// 
-
-// LM32 CPU
+   
+// LM32 CPU   
 lm32_cpu cpu (
     // ----- Inputs -------
     .clk_i                 (clk_i),

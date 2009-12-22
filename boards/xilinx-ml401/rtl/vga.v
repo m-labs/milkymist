@@ -35,7 +35,7 @@ module vga #(
 	output fml_stb,
 	input fml_ack,
 	input [63:0] fml_di,
-
+	
 	/* VGA pads */
 	output vga_psave_n,
 	output vga_hsync_n,
@@ -48,93 +48,13 @@ module vga #(
 	output vga_clkout
 );
 
-wire vga_clk1, vga_clk2;
+wire vga_clk;
 
 reg [1:0] fcounter;
-wire [1:0] vga_clk_sel;
 always @(posedge sys_clk) fcounter <= fcounter + 2'd1;
+assign vga_clk = fcounter[1];
 
-wire clk0;
-wire clk0_bufg;
-BUFG i_bufg_clk0
-(
-	.I(clk0),
-	.O(clk0_bufg)
-);
-
-// Generate 50MHz
-wire clkdv;
-wire clkdv_bufg;
-BUFG i_bufg_clkdv
-(
-	.I(clkdv),
-	.O(clkdv_bufg)
-);
-
-// Generate 65MHz
-wire clkfx;
-wire clkfx_bufg;
-BUFG i_bufg_clkfx
-(
-	.I(clkfx),
-	.O(clkfx_bufg)
-);
-
-DCM
-#(
-	.CLK_FEEDBACK("1X"),
-	.CLKDV_DIVIDE(2.0),
-	.CLKFX_DIVIDE (20),		// 100MHz*20/13=65MHz
-	.CLKFX_MULTIPLY(13),
-	.CLKIN_DIVIDE_BY_2("FALSE"),
-	.CLKIN_PERIOD(20.000),
-	.CLKOUT_PHASE_SHIFT("NONE"),
-	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
-	.DFS_FREQUENCY_MODE("LOW"),
-	.DLL_FREQUENCY_MODE("LOW"),
-	.DUTY_CYCLE_CORRECTION("TRUE"),
-	.FACTORY_JF(16'hF0F0),
-	.PHASE_SHIFT(0),
-	.STARTUP_WAIT("FALSE")
-)
-i_dcm
-(
-	.CLKFB(clk0_bufg),
-	.CLKIN(sys_clk),
-	.DSSEN(1'b0),
-	.PSCLK(1'b0),
-	.PSEN(1'b0),
-	.PSINCDEC(1'b0),
-	.RST(in_reset),
-	.CLKDV(clkdv),
-	.CLKFX(clkfx),
-	.CLKFX180(),
-	.CLK0(clk0),
-	.CLK2X(clk2x),
-	.CLK2X180(),
-	.CLK90(),
-	.CLK180(),
-	.CLK270(),
-	.LOCKED(),
-	.PSDONE(),
-	.STATUS()
-);
-
-BUFGMUX BUFGMUX_vgaclk1 (
-	.O(vga_clk1),
-	.I0(fcounter[1]),
-	.I1(clkdv_bufg),
-	.S(vga_clk_sel[0])
-);
-
-BUFGMUX BUFGMUX_vgaclk2 (
-	.O(vga_clk2),
-	.I0(vga_clk1),
-	.I1(clkfx_bufg),
-	.S(vga_clk_sel[1])
-);
-
-assign vga_clkout = vga_clk2;
+assign vga_clkout = vga_clk;
 
 vgafb #(
 	.csr_addr(csr_addr),
@@ -153,7 +73,7 @@ vgafb #(
 	.fml_ack(fml_ack),
 	.fml_di(fml_di),
 	
-	.vga_clk(vga_clk2),
+	.vga_clk(vga_clk),
 	.vga_psave_n(vga_psave_n),
 	.vga_hsync_n(vga_hsync_n),
 	.vga_vsync_n(vga_vsync_n),
@@ -161,8 +81,7 @@ vgafb #(
 	.vga_blank_n(vga_blank_n),
 	.vga_r(vga_r),
 	.vga_g(vga_g),
-	.vga_b(vga_b),
-	.vga_clk_sel(vga_clk_sel)
+	.vga_b(vga_b)
 );
 
 endmodule

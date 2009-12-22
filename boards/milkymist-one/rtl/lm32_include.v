@@ -45,10 +45,10 @@
 `define CFG_SIGN_EXTEND_ENABLED
 `define CFG_MC_DIVIDE_ENABLED
 
-// Bug in Mico32/Xst ?
-// CFG_ICACHE_ASSOCIATIVITY=2 => works fine
-// CFG_ICACHE_ASSOCIATIVITY=1 => disaster
-// TODO: try with the expensive synthesizers
+// Bug in Xst:
+// CFG_ICACHE_ASSOCIATIVITY=2 => works in most cases (random crash on complex software)
+// CFG_ICACHE_ASSOCIATIVITY=1 => disaster, CPU will not work at all
+// Works 100% OK with expensive synthesizers.
 `define CFG_ICACHE_ENABLED
 `define CFG_ICACHE_ASSOCIATIVITY   2
 `define CFG_ICACHE_SETS            512

@@ -94,10 +94,8 @@ module system(
 	output ac97_sync,
 
 	// PS2
-	inout ps2_clk1,
-	inout ps2_data1,
-	inout ps2_clk2,
-	inout ps2_data2
+	input ps2_clk1,
+	input ps2_data1
 );
 
 //------------------------------------------------------------------
@@ -383,8 +381,7 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_ac97,
 		csr_dr_pfpu,
 		csr_dr_tmu,
-		csr_dr_ps2,
-		csr_dr_mouse;
+		csr_dr_ps2;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -509,7 +506,6 @@ csrbrg csrbrg(
 		|csr_dr_pfpu
 		|csr_dr_tmu
 		|csr_dr_ps2
-		|csr_dr_mouse
 	)
 );
 
@@ -556,11 +552,9 @@ wire ac97dmaw_irq;
 wire pfpu_irq;
 wire tmu_irq;
 wire ps2_irq;
-wire mouse_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {19'd0,
-	mouse_irq,
+assign cpu_interrupt = {20'd0,
 	ps2_irq,
 	tmu_irq,
 	pfpu_irq,
@@ -1011,7 +1005,7 @@ assign fml_tmuw_dw = 64'bx;
 //---------------------------------------------------------------------------
 // PS2 Interface
 //---------------------------------------------------------------------------
-`ifdef ENABLE_PS2_KEYBOARD
+`ifdef ENABLE_PS2
 ps2 # (
 	.csr_addr(4'h7),
 	.clk_freq(`CLOCK_FREQUENCY)
@@ -1024,38 +1018,14 @@ ps2 # (
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_ps2),
 
+	.irq(ps2_irq),
+
 	.ps2_clk(ps2_clk1),
-	.ps2_data(ps2_data1),
-
-	.irq(ps2_irq)
-
+	.ps2_data(ps2_data1)
 );
 `else
 assign csr_dr_ps2 = 32'd0;
 assign ps2_irq = 1'd0;
-`endif
-`ifdef ENABLE_PS2_MOUSE
-ps2 # (
-	.csr_addr(4'h8),
-	.clk_freq(`CLOCK_FREQUENCY)
-) ps2_mouse (
-	.sys_clk(sys_clk),
-	.sys_rst(sys_rst),
-
-	.csr_a(csr_a),
-	.csr_we(csr_we),
-	.csr_di(csr_dw),
-	.csr_do(csr_dr_mouse),
-
-	.ps2_clk(ps2_clk2),
-	.ps2_data(ps2_data2),
-
-	.irq(mouse_irq)
-
-);
-`else
-assign csr_dr_mouse = 32'd0;
-assign mouse_irq = 1'd0;
 `endif
 
 endmodule
