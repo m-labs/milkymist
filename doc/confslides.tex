@@ -2,8 +2,8 @@
 
 \usepackage{beamerthemesplit}
 
-\title{An open hardware VJ platform}
-\subtitle{Technical aspects}
+\title{Milkymist}
+\subtitle{The architecture for the open hardware world}
 \author{S\'ebastien Bourdeauducq}
 \date{December 2009}
 
@@ -17,10 +17,10 @@
 }
 
 \section{Introduction}
-\subsection{What we are speaking about}
+\subsection{How it all started}
 \frame
 {
-  \frametitle{What we are speaking about}
+  \frametitle{How it all started}
 A device for video performance artists (VJs)...
   \begin{itemize}
   \item inspired by the popular MilkDrop program for PCs
@@ -59,17 +59,18 @@ At the frontier between...
   \end{figure}
 }
 
-\subsection{Open Hardware, for real}
+\subsection{Open Hardware}
 \frame
 {
-  \frametitle{Open Hardware, for real}
+  \frametitle{Open Hardware}
 
   \begin{itemize}
   \item Arduino = AVR + power supply + connectors.
   \item The AVR chip does all the magic! And it's a black box in every sense.
-  \item Here, all the logic of the chip is described (in Verilog HDL)...
-  \item ...and open source!
+  \item OTOH, you could describe all the logic of the chip...
+  \item ...and open source it!
   \item Ask Atmel for the same!
+  \item Let's make Milkymist truly open hardware...
   \end{itemize}
 }
 
@@ -81,13 +82,13 @@ At the frontier between...
   \item GRLIB/LEON3 (Aeroflex Gaisler, ESA)
   \item OpenSPARC (Sun Microsystems)
   \item Open Graphics
-  \item OpenPattern
   \item Project VGA
   \item ...and others
+  \item Let's do the same and build our own SoC design for the project!
   \end{itemize}
 }
 
-\section{How is MilkDrop working?}
+\subsection{How is MilkDrop working?}
 \frame
 {
   \frametitle{How is MilkDrop working?}
@@ -122,8 +123,7 @@ Iterative rendering:
   \end{itemize}
 }
 
-\section{Challenges}
-
+\subsection{Challenges}
 \frame
 {
   \frametitle{Challenges}
@@ -151,26 +151,11 @@ Iterative rendering:
   \end{itemize}
 }
 
-\section{System architecture}
+\subsection{System architecture}
 \frame
 {
-  \begin{center}
-  \framebox[100mm][c]{System architecture}
-  \end{center}
-}
+  \frametitle{System architecture}
 
-\frame
-{
-  \frametitle{It contains a microcontroller!}
-  \begin{figure}[H]
-  \includegraphics[height=60mm]{microcontroller.eps}
-  \end{figure}
-}
-
-\frame
-{
-  \frametitle{The design flow}
-  
   ``System-on-a-Programmable-Chip'' (SoPC):
   \begin{itemize}
   \item A microcontroller is implemented using the FPGA fabric
@@ -394,7 +379,7 @@ Iterative rendering:
 {
   \frametitle{How big should the cache be?}
   \begin{figure}[H]
-  \includegraphics[height=38mm]{texelcache.eps}
+  \includegraphics[height=40mm]{texelcache.eps}
   \end{figure}
   \begin{itemize}
   \item Cache size: 4KB
@@ -417,6 +402,32 @@ Iterative rendering:
   \end{itemize}
 }
 
+\section{Software}
+\subsection{Linux}
+\frame
+{
+  \frametitle{Linux}
+  \begin{itemize}
+  \item noMMU for now. Who wants to contribute a LM32 MMU?
+  \end{itemize}
+  \begin{figure}[H]
+  \includegraphics[height=55mm]{linux.eps}
+  \end{figure}
+}
+
+\subsection{Genode FX}
+\frame
+{
+  \frametitle{Genode FX}
+  \begin{itemize}
+  \item Embedded GUI toolkit
+  \end{itemize}
+  \begin{figure}[H]
+  \includegraphics[height=55mm]{genode.eps}
+  \end{figure}
+}
+
+
 \section{In practice}
 \frame
 {
@@ -432,7 +443,7 @@ Iterative rendering:
   \begin{itemize}
   \item Most developments were done on a Xilinx ML401 board.
   \item Feature-rich.
-  \item Affordable: $\approx USD 500$.
+  \item Affordable: $\approx$ USD 500.
   \end{itemize}
   \begin{figure}[H]
   \includegraphics[height=40mm]{ml401.eps}
