@@ -68,8 +68,8 @@ isr.o: ../../software/include/uart.h ../../software/include/hal/time.h
 isr.o: ../../software/include/hal/slowout.h ../../software/include/hal/snd.h
 isr.o: ../../software/include/hw/ac97.h ../../software/include/hw/common.h
 isr.o: ../../software/include/hal/pfpu.h ../../software/include/hw/pfpu.h
-isr.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
-isr.o: ../../software/include/hal/ps2.h ui.h cpustats.h
+isr.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h ui.h
+isr.o: cpustats.h
 line.o: ../../software/include/stdlib.h ../../software/include/math.h color.h
 line.o: line.h
 main.o: ../../software/include/stdio.h ../../software/include/stdlib.h
@@ -82,8 +82,8 @@ main.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
 main.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
 main.o: ../../software/include/hw/pfpu.h ../../software/include/hal/tmu.h
 main.o: ../../software/include/hw/tmu.h ../../software/include/hal/slowout.h
-main.o: ../../software/include/hal/hdlcd.h ../../software/include/hal/ps2.h
-main.o: apipe.h rpipe.h renderer.h ui.h cpustats.h shell.h
+main.o: ../../software/include/hal/hdlcd.h apipe.h rpipe.h renderer.h ui.h
+main.o: cpustats.h shell.h
 parser.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 parser.o: ../../software/include/assert.h ../../software/include/string.h
 parser.o: ../../software/include/malloc.h ../../software/include/math.h ast.h
@@ -122,8 +122,7 @@ shell.o: ../../software/include/hw/interrupts.h
 shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
 shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
 shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
-shell.o: ../../software/include/hal/ps2.h line.h wave.h rpipe.h cpustats.h
-shell.o: shell.h ui.h
+shell.o: line.h wave.h rpipe.h cpustats.h shell.h ui.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h ui.h

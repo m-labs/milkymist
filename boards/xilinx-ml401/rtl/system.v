@@ -555,13 +555,13 @@ wire ac97dmar_irq;
 wire ac97dmaw_irq;
 wire pfpu_irq;
 wire tmu_irq;
-wire ps2_irq;
+wire keyboard_irq;
 wire mouse_irq;
 
 wire [31:0] cpu_interrupt;
 assign cpu_interrupt = {19'd0,
 	mouse_irq,
-	ps2_irq,
+	keyboard_irq,
 	tmu_irq,
 	pfpu_irq,
 	ac97dmaw_irq,
@@ -1012,7 +1012,7 @@ assign fml_tmuw_dw = 64'bx;
 // PS2 Interface
 //---------------------------------------------------------------------------
 `ifdef ENABLE_PS2_KEYBOARD
-ps2 # (
+ps2 #(
 	.csr_addr(4'h7),
 	.clk_freq(`CLOCK_FREQUENCY)
 ) ps2_keyboard (
@@ -1027,15 +1027,15 @@ ps2 # (
 	.ps2_clk(ps2_clk1),
 	.ps2_data(ps2_data1),
 
-	.irq(ps2_irq)
+	.irq(keyboard_irq)
 
 );
 `else
 assign csr_dr_ps2 = 32'd0;
-assign ps2_irq = 1'd0;
+assign keyboard_irq = 1'd0;
 `endif
 `ifdef ENABLE_PS2_MOUSE
-ps2 # (
+ps2 #(
 	.csr_addr(4'h8),
 	.clk_freq(`CLOCK_FREQUENCY)
 ) ps2_mouse (

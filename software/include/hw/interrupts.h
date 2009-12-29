@@ -29,6 +29,7 @@
 #define IRQ_AC97DMAW		(0x00000100)
 #define IRQ_PFPU		(0x00000200)
 #define IRQ_TMU			(0x00000400)
-#define IRQ_PS2			(0x00000800)
+#define IRQ_PS2KEYBOARD		(0x00000800)
+#define IRQ_PS2MOUSE		(0x00001000)
 
 #endif /* __INTERRUPTS_H */

@@ -24,7 +24,6 @@
 #include <hal/snd.h>
 #include <hal/pfpu.h>
 #include <hal/tmu.h>
-#include <hal/ps2.h>
 
 #include "ui.h"
 #include "cpustats.h"
@@ -61,9 +60,6 @@ void isr()
 
 	if(irqs & IRQ_TMU)
 		tmu_isr();
-
-	if(irqs & IRQ_PS2)
-		ps2_isr();
 
 	if(irqs & IRQ_GPIO) {
 		irq_ack(IRQ_GPIO);

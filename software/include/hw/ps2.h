@@ -20,6 +20,7 @@
 
 #include <hw/common.h>
 
-#define CSR_PS2_RX	MMPTR(0x80007000)
+#define CSR_PS2_KEYBOARD	MMPTR(0x80007000)
+#define CSR_PS2_MOUSE		MMPTR(0x80008000)
 
 #endif /* __HW_PS2_H */
