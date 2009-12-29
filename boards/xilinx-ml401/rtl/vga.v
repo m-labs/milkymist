@@ -1,6 +1,7 @@
 /*
  * Milkymist VJ SoC
  * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2009 Takeshi Matsuya
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,8 +57,7 @@ always @(posedge sys_clk) fcounter <= fcounter + 2'd1;
 
 wire clk0;
 wire clk0_bufg;
-BUFG i_bufg_clk0
-(
+BUFG i_bufg_clk0 (
 	.I(clk0),
 	.O(clk0_bufg)
 );
@@ -65,8 +65,7 @@ BUFG i_bufg_clk0
 // Generate 50MHz
 wire clkdv;
 wire clkdv_bufg;
-BUFG i_bufg_clkdv
-(
+BUFG i_bufg_clkdv (
 	.I(clkdv),
 	.O(clkdv_bufg)
 );
@@ -74,17 +73,15 @@ BUFG i_bufg_clkdv
 // Generate 65MHz
 wire clkfx;
 wire clkfx_bufg;
-BUFG i_bufg_clkfx
-(
+BUFG i_bufg_clkfx (
 	.I(clkfx),
 	.O(clkfx_bufg)
 );
 
-DCM
-#(
+DCM #(
 	.CLK_FEEDBACK("1X"),
 	.CLKDV_DIVIDE(2.0),
-	.CLKFX_DIVIDE (20),		// 100MHz*20/13=65MHz
+	.CLKFX_DIVIDE(20), // 100MHz*20/13=65MHz
 	.CLKFX_MULTIPLY(13),
 	.CLKIN_DIVIDE_BY_2("FALSE"),
 	.CLKIN_PERIOD(20.000),
@@ -96,9 +93,7 @@ DCM
 	.FACTORY_JF(16'hF0F0),
 	.PHASE_SHIFT(0),
 	.STARTUP_WAIT("FALSE")
-)
-i_dcm
-(
+) i_dcm (
 	.CLKFB(clk0_bufg),
 	.CLKIN(sys_clk),
 	.DSSEN(1'b0),
