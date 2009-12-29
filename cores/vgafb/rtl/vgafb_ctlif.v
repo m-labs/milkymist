@@ -95,7 +95,7 @@ always @(posedge sys_clk) begin
 					4'd9: baseaddress <= csr_di[fml_depth-1:0];
 					// 10: baseaddress_act is read-only for Wishbone
 					4'd11: nbursts <= csr_di[17:0];
-					4'd12: vga_clk_sel <= csr_di[17:0];
+					4'd12: vga_clk_sel <= csr_di[1:0];
 				endcase
 			end
 			
