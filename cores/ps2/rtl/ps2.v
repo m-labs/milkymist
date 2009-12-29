@@ -114,7 +114,7 @@ assign watchdog_timer_done = (watchdog_timer == 17'd0);
 always @(sys_clk) begin
 	if(sys_rst||ps2_clk_out)
 		watchdog_timer <= divisor_100us - 1;
-	else if (~watchdog_timer_done)
+	else if(~watchdog_timer_done)
 			watchdog_timer <= watchdog_timer - 1;
 end
 
@@ -126,12 +126,12 @@ always @(*) begin
 
 	case(state)
 		RECEIVE: begin
-			if (we_reg) begin
+			if(we_reg) begin
 				next_state = WAIT_READY;
 			end
 		end
 		WAIT_READY: begin
-			if (rx_bitcount==5'd0) begin
+			if(rx_bitcount == 5'd0) begin
 				ps2_clk_out = 1'b0;
 				next_state = CLOCK_LOW;
 			end
@@ -154,12 +154,12 @@ always @(*) begin
 		end
 		WAIT_CLOCK_LOW: begin
 			ps2_data_out1 = 1'b0;
-			if(ps2_clk_2==1'b0) begin
+			if(ps2_clk_2 == 1'b0) begin
 				next_state = TRANSMIT;
 			end
 		end
 		TRANSMIT: begin
-			if(rx_bitcount==5'd10) begin
+			if(rx_bitcount == 5'd10) begin
 				next_state = RECEIVE;
 			end
 		end
@@ -185,13 +185,13 @@ always @(posedge sys_clk) begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin
 			csr_do <= kcode;
-			if (csr_we) begin
-				tx_data <= {2'b11,~(^csr_di[7:0]), csr_di[7:0]}; // STOP+PARITY+DATA
+			if(csr_we) begin
+				tx_data <= {2'b11, ~(^csr_di[7:0]), csr_di[7:0]}; // STOP+PARITY+DATA
 				we_reg <= 1'b1;
 			end
 		end
 		if(enable) begin
-			if (rx_clk_data == ps2_clk_2) begin
+			if(rx_clk_data == ps2_clk_2) begin
 				rx_clk_count <= rx_clk_count + 5'd1;
 			end else begin
 				rx_clk_count <= 5'd0;
