@@ -112,7 +112,7 @@ The engine performs texture mapping on a triangle strip. It is a central compone
 It has two FML master interfaces for fetching pixel data, a WISHBONE master to fetch the vertex data, and a CSR slave for control.
 
 \subsection{PS/2 controller}
-Milkymist supports standard PS/2 keyboard/mouse port in read-only mode. This is only implemented on the ML401 board.
+Milkymist supports two standard PS/2 keyboard/mouse port. This is only implemented on the ML401 board.
 
 \section{GPIO map}
 
@@ -218,7 +218,9 @@ Milkymist supports standard PS/2 keyboard/mouse port in read-only mode. This is 
 \hline
 \hspace{5mm} 0x80006000 & No & \hspace{5mm} TMU \\
 \hline
-\hspace{5mm} 0x80007000 & No & \hspace{5mm} PS/2 (ML401 only) \\
+\hspace{5mm} 0x80007000 & No & \hspace{5mm} PS/2 keyboard (ML401 only) \\
+\hline
+\hspace{5mm} 0x80008000 & No & \hspace{5mm} PS/2 mouse (ML401 only) \\
 \hline
 0xa0000000 & No & SystemACE (ML401 only) \\
 \hline

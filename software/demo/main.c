@@ -32,7 +32,6 @@
 #include <hal/tmu.h>
 #include <hal/slowout.h>
 #include <hal/hdlcd.h>
-#include <hal/ps2.h>
 
 #include "apipe.h"
 #include "rpipe.h"
@@ -72,7 +71,6 @@ int main()
 	rpipe_init();
 	slowout_init();
 	hdlcd_init();
-	ps2_init();
 	ui_init();
 	shell_init();
 	

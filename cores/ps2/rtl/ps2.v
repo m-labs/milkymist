@@ -186,7 +186,7 @@ always @(posedge sys_clk) begin
 		if(csr_selected) begin
 			csr_do <= kcode;
 			if (csr_we) begin
-				tx_data <= {2'b11,~(^csr_di[7:0]),csr_di[7:0]};	// STOP+PARITY+DATA
+				tx_data <= {2'b11,~(^csr_di[7:0]), csr_di[7:0]}; // STOP+PARITY+DATA
 				we_reg <= 1'b1;
 			end
 		end
@@ -222,4 +222,5 @@ end
 
 assign ps2_clk = ps2_clk_out ? 1'hz : 1'b0;
 assign ps2_data = ps2_data_out1 & ps2_data_out2 ? 1'hz : 1'b0;
+
 endmodule
