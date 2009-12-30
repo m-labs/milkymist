@@ -35,6 +35,7 @@ module ps2 #(
 
 /* CSR interface */
 wire csr_selected = csr_a[13:10] == csr_addr;
+reg tx_busy;
 
 //-----------------------------------------------------------------
 // divisor
@@ -121,11 +122,13 @@ end
 always @(*) begin
 	ps2_clk_out = 1'b1;
 	ps2_data_out1 = 1'b1;
+	tx_busy = 1'b1;
 
 	next_state = state;
 
 	case(state)
 		RECEIVE: begin
+			tx_busy = 1'b0;
 			if(we_reg) begin
 				next_state = WAIT_READY;
 			end
@@ -184,8 +187,11 @@ always @(posedge sys_clk) begin
 		we_reg <= 1'b0;
 		csr_do <= 32'd0;
 		if(csr_selected) begin
-			csr_do <= kcode;
-			if(csr_we) begin
+			case(csr_a[0])
+				1'b0: csr_do <= kcode;
+				1'b1: csr_do <= tx_busy;
+			endcase
+			if(csr_we && csr_a[0] == 1'b0) begin
 				tx_data <= {2'b11, ~(^csr_di[7:0]), csr_di[7:0]}; // STOP+PARITY+DATA
 				we_reg <= 1'b1;
 			end
