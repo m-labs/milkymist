@@ -26,7 +26,12 @@ UART_SRC=$(wildcard $(CORES_DIR)/uart/rtl/*.v)
 SYSCTL_SRC=$(wildcard $(CORES_DIR)/sysctl/rtl/*.v)
 ACEUSB_SRC=$(wildcard $(CORES_DIR)/aceusb/rtl/*.v)
 HPDMC_SRC=$(wildcard $(CORES_DIR)/hpdmc_ddr32/rtl/*.v) $(wildcard $(CORES_DIR)/hpdmc_ddr32/rtl/virtex4/*.v)
-VGAFB_SRC=$(wildcard $(CORES_DIR)/vgafb/rtl/*.v)
+VGAFB_SRC=						\
+	$(CORES_DIR)/vgafb/rtl/vgafb_asfifo_xilinx.v	\
+	$(CORES_DIR)/vgafb/rtl/vgafb_pixelfeed.v	\
+	$(CORES_DIR)/vgafb/rtl/vgafb_ctlif.v		\
+	$(CORES_DIR)/vgafb/rtl/vgafb_fifo64to16.v	\
+	$(CORES_DIR)/vgafb/rtl/vgafb.v
 AC97_SRC=$(wildcard $(CORES_DIR)/ac97/rtl/*.v)
 PFPU_SRC=$(wildcard $(CORES_DIR)/pfpu/rtl/*.v)
 TMU_SRC=$(wildcard $(CORES_DIR)/tmu/rtl/*.v)

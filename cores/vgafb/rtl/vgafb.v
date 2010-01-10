@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -191,7 +191,7 @@ wire [17:0] fifo_do;
 
 vgafb_asfifo #(
 	.DATA_WIDTH(18),
-	.ADDRESS_WIDTH(11)	// 25MHz->6, 50MHz->7, 65MHz->11
+	.ADDRESS_WIDTH(11)
 ) fifo (
 	.Data_out(fifo_do),
 	.Empty_out(),
