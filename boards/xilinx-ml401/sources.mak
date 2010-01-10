@@ -27,7 +27,8 @@ SYSCTL_SRC=$(wildcard $(CORES_DIR)/sysctl/rtl/*.v)
 ACEUSB_SRC=$(wildcard $(CORES_DIR)/aceusb/rtl/*.v)
 HPDMC_SRC=$(wildcard $(CORES_DIR)/hpdmc_ddr32/rtl/*.v) $(wildcard $(CORES_DIR)/hpdmc_ddr32/rtl/virtex4/*.v)
 VGAFB_SRC=						\
-	$(CORES_DIR)/vgafb/rtl/vgafb_asfifo_xilinx.v	\
+	$(CORES_DIR)/vgafb/rtl/vgafb_graycounter.v	\
+	$(CORES_DIR)/vgafb/rtl/vgafb_asfifo.v		\
 	$(CORES_DIR)/vgafb/rtl/vgafb_pixelfeed.v	\
 	$(CORES_DIR)/vgafb/rtl/vgafb_ctlif.v		\
 	$(CORES_DIR)/vgafb/rtl/vgafb_fifo64to16.v	\

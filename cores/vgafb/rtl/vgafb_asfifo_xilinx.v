@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* FIXME: this module does not work. Find out why. */
+
 module vgafb_asfifo #(
 	/* NB: those are fixed in this implementation */
 	parameter DATA_WIDTH = 18,
@@ -35,6 +37,9 @@ module vgafb_asfifo #(
 	input Clear_in
 );
 
+wire full;
+wire empty;
+
 FIFO16 #(
 	.DATA_WIDTH(9),
 	.FIRST_WORD_FALL_THROUGH("TRUE")
@@ -43,8 +48,8 @@ FIFO16 #(
 	.ALMOSTFULL(),
 	.DO(Data_out[7:0]),
 	.DOP(Data_out[8]),
-	.EMPTY(Empty_out),
-	.FULL(Full_out),
+	.EMPTY(empty),
+	.FULL(full),
 	.RDCOUNT(),
 	.RDERR(),
 	.WRCOUNT(),
@@ -52,11 +57,14 @@ FIFO16 #(
 	.DI(Data_in[7:0]),
 	.DIP(Data_in[8]),
 	.RDCLK(RClk),
-	.RDEN(ReadEn_in),
+	.RDEN(ReadEn_in & ~empty & ~Clear_in),
 	.RST(Clear_in),
 	.WRCLK(WClk),
-	.WREN(WriteEn_in)
+	.WREN(WriteEn_in & ~full & ~Clear_in)
 );
+
+assign Empty_out = empty;
+assign Full_out = full;
 
 FIFO16 #(
 	.DATA_WIDTH(9),
@@ -75,10 +83,10 @@ FIFO16 #(
 	.DI(Data_in[16:9]),
 	.DIP(Data_in[17]),
 	.RDCLK(RClk),
-	.RDEN(ReadEn_in),
+	.RDEN(ReadEn_in & ~empty & ~Clear_in),
 	.RST(Clear_in),
 	.WRCLK(WClk),
-	.WREN(WriteEn_in)
+	.WREN(WriteEn_in & ~full & ~Clear_in)
 );
 
 endmodule

@@ -191,7 +191,7 @@ wire [17:0] fifo_do;
 
 vgafb_asfifo #(
 	.DATA_WIDTH(18),
-	.ADDRESS_WIDTH(11)
+	.ADDRESS_WIDTH(6)
 ) fifo (
 	.Data_out(fifo_do),
 	.Empty_out(),
@@ -203,7 +203,7 @@ vgafb_asfifo #(
 	.WriteEn_in(generate_en),
 	.WClk(sys_clk),
 	
-	.Clear_in(sys_rst)
+	.Clear_in(vga_rst)
 );
 
 /*
