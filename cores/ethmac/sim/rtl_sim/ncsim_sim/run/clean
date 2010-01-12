@@ -1,4 +1,0 @@
-rm ../bin/INCA_libs/worklib/*
-rm ../bin/INCA_libs/worklib/.*
-rm ../log/*.log
-rm -rf ../out/*.shm
