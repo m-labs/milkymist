@@ -1,0 +1,2165 @@
+ncsim: 04.10-b001: (c) Copyright 1995-2002 Cadence Design Systems, Inc.
+Loading snapshot worklib.ethernet:fun .................... Done
+ncsim> source /shared/tools/ncsim/tools/inca/files/ncsimrc
+ncsim> run
+ 
+ACCESS TO MAC REGISTERS TEST
+  Time: 62387000
+  TEST 0: BYTE SELECTS ON 3 32-BIT READ-WRITE REGISTERS ( VARIOUS BUS DELAYS )
+  Time: 68509000
+  TEST 1: 'WALKING ONE' WITH SINGLE CYCLES ACROSS MAC REGISTERS ( VARIOUS BUS DELAYS )
+    ->registers tested with 0, 1, 2, 3 and 4 bus delay cycles
+  Time: 302749000
+  TEST 2: 'WALKING ONE' WITH SINGLE CYCLES ACROSS MAC BUFFER DESC. ( VARIOUS BUS DELAYS )
+    ->buffer descriptors tested with 0 bus delay
+    ->buffer descriptors tested with 1 bus delay cycle
+    ->buffer descriptors tested with 2 bus delay cycles
+    ->buffer descriptors tested with 3 bus delay cycles
+  Time: 5383309000
+  TEST 3: MAX REG. VALUES AND REG. VALUES AFTER WRITING INVERSE RESET VALUES AND HARD RESET OF THE MAC
+  Time: 5399539000
+  TEST 4: BUFFER DESC. RAM PRESERVING VALUES AFTER HARD RESET OF THE MAC AND RESETING THE LOGIC
+ 
+MIIM MODULE TEST
+  Time: 5645717000
+  TEST 0: CLOCK DIVIDER OF MII MANAGEMENT MODULE WITH ALL POSSIBLE FREQUENCES
+  Time: 7595117000
+  TEST 1: VARIOUS READINGS FROM 'REAL' PHY REGISTERS
+  Time: 7622149000
+  TEST 2: VARIOUS WRITINGS TO 'REAL' PHY REGISTERS ( CONTROL AND NON WRITABLE REGISTERS )
+  Time: 7655119000
+  TEST 3: RESET PHY THROUGH MII MANAGEMENT MODULE
+  Time: 7673959000
+  TEST 4: 'WALKING ONE' ACROSS PHY ADDRESS ( WITH AND WITHOUT PREAMBLE )
+  Time: 7749859000
+  TEST 5: 'WALKING ONE' ACROSS PHY'S REGISTER ADDRESS ( WITH AND WITHOUT PREAMBLE )
+  Time: 7825759000
+  TEST 6: 'WALKING ONE' ACROSS PHY'S DATA ( WITH AND WITHOUT PREAMBLE )
+  Time: 8067259000
+  TEST 7: READING FROM PHY WITH WRONG PHY ADDRESS ( HOST READING HIGH 'Z' DATA )
+  => Two error lines will be displayed from WB Bus Monitor, because correct HIGH Z data was read
+Time:           8071935000
+tb_ethernet.wb_eth_slave_bus_mon.message_out, Slave provided invalid data during read and qualified it with ACK_I
+Byte select value: SEL_O = 1111, Data bus value: DAT_I =  0000zzzz 
+  Time: 8071969000
+  TEST 8: WRITING TO PHY WITH WRONG PHY ADDRESS AND READING FROM CORRECT ONE
+  Time: 8081389000
+  TEST 9: SLIDING STOP SCAN COMMAND IMMEDIATELY AFTER READ REQUEST ( WITH AND WITHOUT PREAMBLE )
+  Time: 8976619000
+  TEST 10: SLIDING STOP SCAN COMMAND IMMEDIATELY AFTER WRITE REQUEST ( WITH AND WITHOUT PREAMBLE )
+  Time: 9882439000
+  TEST 11: BUSY AND NVALID STATUS DURATIONS DURING WRITE ( WITH AND WITHOUT PREAMBLE )
+  Time: 10098649000
+  TEST 12: BUSY AND NVALID STATUS DURATIONS DURING READ ( WITH AND WITHOUT PREAMBLE )
+  Time: 10315609000
+  TEST 13: BUSY AND NVALID STATUS DURATIONS DURING SCAN ( WITH AND WITHOUT PREAMBLE )
+  Time: 10532569000
+  TEST 14: SCAN STATUS FROM PHY WITH DETECTING LINK-FAIL BIT ( WITH AND WITHOUT PREAMBLE )
+  Time: 10676539000
+  TEST 15: SCAN STATUS FROM PHY WITH SLIDING LINK-FAIL BIT ( WITH AND WITHOUT PREAMBLE )
+  Time: 12186559000
+  TEST 16: SLIDING STOP SCAN COMMAND IMMEDIATELY AFTER SCAN REQUEST ( WITH AND WITHOUT PREAMBLE )
+  Time: 13113619000
+  TEST 17: SLIDING STOP SCAN COMMAND AFTER 2. SCAN ( WITH AND WITHOUT PREAMBLE )
+
+===========================================================================
+PHY generates ideal Carrier sense and Collision signals for following tests
+===========================================================================
+ 
+MAC FULL DUPLEX TRANSMIT TEST
+  Time: 14603687000
+  TEST 0: NO TRANSMIT WHEN ALL BUFFERS ARE RX ( 10Mbps )
+  Time: 15302239000
+  TEST 1: NO TRANSMIT WHEN ALL BUFFERS ARE RX ( 100Mbps )
+  Time: 15936679000
+  TEST 2: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT ONE TX BD ( 10Mbps )
+    pads appending to packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    pads appending to packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    pads appending to packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 49727119000
+  TEST 3: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT ONE TX BD ( 100Mbps )
+    pads appending to packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    pads appending to packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    pads appending to packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 53442319000
+  TEST 4: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT MAX TX BDs ( 10Mbps )
+    pads appending to packets is NOT selected
+    using only TX BD 0 out of 128 BDs assigned to TX (wrap at first BD - TX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were send from TX BD 0
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 0 to TX BD 120 respectively
+    pads appending to packets is selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were send from TX BD 121 to TX BD 127 and from TX BD 0 to TX BD 2 respectively
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 3 to TX BD 18 respectively
+  Time: 95351355000
+  TEST 5: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT MAX TX BDs ( 100Mbps )
+    pads appending to packets is NOT selected
+    using only TX BD 0 out of 128 BDs assigned to TX (wrap at first BD - TX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were send from TX BD 0
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 0 to TX BD 120 respectively
+    pads appending to packets is selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were send from TX BD 121 to TX BD 127 and from TX BD 0 to TX BD 2 respectively
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 3 to TX BD 18 respectively
+  Time: 99968955000
+  TEST 6: TRANSMIT PACKETS FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 10Mbps )
+    pads appending to packets is selected
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 104360595000
+  TEST 7: TRANSMIT PACKETS FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 100Mbps )
+    pads appending to packets is selected
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 104966115000
+  TEST 8: TRANSMIT PACKETS (NO PADs) FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 10Mbps )
+    pads appending to packets is not selected (except for 0x23)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 108053235000
+  TEST 9: TRANSMIT PACKETS (NO PADs) FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 100Mbps )
+    pads appending to packets is not selected (except for 0x23)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 108528075000
+  TEST 10: TRANSMIT PACKETS ACROSS MAXFL VALUE AT 13 TX BDs ( 10Mbps )
+    ->packet with length 1535 sent
+    ->packet with length 1536 sent
+    ->packet with length 1537 sent
+    ->packet with length 104 sent
+  Time: 112357635000
+  TEST 11: TRANSMIT PACKETS ACROSS MAXFL VALUE AT 13 TX BDs ( 100Mbps )
+    ->packet with length 1535 sent
+    ->packet with length 1536 sent
+    ->packet with length 1537 sent
+    ->packet with length 104 sent
+  Time: 112755195000
+  TEST 12: TRANSMIT PACKETS ACROSS CHANGED MAXFL VALUE AT 13 TX BDs ( 10Mbps )
+    ->packet with length 116 sent
+    ->packet with length 117 sent
+    ->packet with length 118 sent
+  Time: 113082915000
+  TEST 13: TRANSMIT PACKETS ACROSS CHANGED MAXFL VALUE AT 13 TX BDs ( 100Mbps )
+    ->packet with length 116 sent
+    ->packet with length 117 sent
+    ->packet with length 118 sent
+  Time: 113125035000
+  TEST 14: TRANSMIT PACKETS ACROSS CHANGED MINFL VALUE AT 7 TX BDs ( 10Mbps )
+    ->packet with length 1358 sent
+    ->packet with length 1359 sent
+    ->packet with length 1360 sent
+  Time: 116433315000
+  TEST 15: TRANSMIT PACKETS ACROSS CHANGED MINFL VALUE AT 7 TX BDs ( 100Mbps )
+    ->packet with length 1358 sent
+    ->packet with length 1359 sent
+    ->packet with length 1360 sent
+  Time: 116773995000
+  TEST 16: TRANSMIT PACKETS ACROSS MAXFL WITH HUGEN AT 19 TX BDs ( 10Mbps )
+   i_length = 1531
+   eth_phy length = 1535
+    ->packet with length 1535 sent
+   i_length = 1532
+   eth_phy length = 1536
+    ->packet with length 1536 sent
+   i_length = 1533
+   eth_phy length = 1537
+    ->packet with length 1537 sent
+   i_length = 65530
+   eth_phy length = 65534
+    ->packet with length 65534 sent
+   i_length = 65531
+   eth_phy length = 65535
+    ->packet with length 65535 sent
+  Time: 225419715000
+  TEST 17: TRANSMIT PACKETS ACROSS MAXFL WITH HUGEN AT 19 TX BDs ( 100Mbps )
+   i_length = 1531
+   eth_phy length = 1535
+    ->packet with length 1535 sent
+   i_length = 1532
+   eth_phy length = 1536
+    ->packet with length 1536 sent
+   i_length = 1533
+   eth_phy length = 1537
+    ->packet with length 1537 sent
+   i_length = 65530
+   eth_phy length = 65534
+    ->packet with length 65534 sent
+   i_length = 65531
+   eth_phy length = 65535
+    ->packet with length 65535 sent
+  Time: 236329395000
+  TEST 18: IPG DURING BACK-TO-BACK TRANSMIT AT 88 TX BDs ( 10Mbps )
+    ->IPG with 8 mtx_clk periods (min 3) between packets with lengths 64 and 65 checked
+    ->IPG with 8 mtx_clk periods (min 4) between packets with lengths 66 and 67 checked
+    ->IPG with 8 mtx_clk periods (min 5) between packets with lengths 68 and 69 checked
+    ->IPG with 8 mtx_clk periods (min 6) between packets with lengths 70 and 71 checked
+    ->IPG with 7 mtx_clk periods (min 7) between packets with lengths 72 and 73 checked
+    ->IPG with 8 mtx_clk periods (min 8) between packets with lengths 74 and 75 checked
+    ->IPG with 9 mtx_clk periods (min 9) between packets with lengths 76 and 77 checked
+    ->IPG with 10 mtx_clk periods (min 10) between packets with lengths 78 and 79 checked
+    ->IPG with 17 mtx_clk periods (min 17) between packets with lengths 80 and 81 checked
+    ->IPG with 24 mtx_clk periods (min 24) between packets with lengths 82 and 83 checked
+    ->IPG with 38 mtx_clk periods (min 38) between packets with lengths 84 and 85 checked
+    ->IPG with 72 mtx_clk periods (min 72) between packets with lengths 86 and 87 checked
+    ->IPG with 130 mtx_clk periods (min 130) between packets with lengths 88 and 89 checked
+  Time: 238386915000
+  TEST 19: IPG DURING BACK-TO-BACK TRANSMIT AT 88 TX BDs ( 100Mbps )
+    ->IPG with 47 mtx_clk periods (min 3) between packets with lengths 64 and 65 checked
+    ->IPG with 47 mtx_clk periods (min 4) between packets with lengths 66 and 67 checked
+    ->IPG with 44 mtx_clk periods (min 5) between packets with lengths 68 and 69 checked
+    ->IPG with 45 mtx_clk periods (min 6) between packets with lengths 70 and 71 checked
+    ->IPG with 44 mtx_clk periods (min 7) between packets with lengths 72 and 73 checked
+    ->IPG with 43 mtx_clk periods (min 8) between packets with lengths 74 and 75 checked
+    ->IPG with 45 mtx_clk periods (min 9) between packets with lengths 76 and 77 checked
+    ->IPG with 44 mtx_clk periods (min 10) between packets with lengths 78 and 79 checked
+    ->IPG with 43 mtx_clk periods (min 17) between packets with lengths 80 and 81 checked
+    ->IPG with 45 mtx_clk periods (min 24) between packets with lengths 82 and 83 checked
+    ->IPG with 44 mtx_clk periods (min 38) between packets with lengths 84 and 85 checked
+    ->IPG with 72 mtx_clk periods (min 72) between packets with lengths 86 and 87 checked
+    ->IPG with 130 mtx_clk periods (min 130) between packets with lengths 88 and 89 checked
+  Time: 238653435000
+  TEST 20: TRANSMIT PACKETS AFTER TX UNDER-RUN ON EACH PACKET's BYTE AT 2 TX BDs ( 10Mbps )
+    ->under-run on 61. byte
+    ->under-run on 62. byte
+    ->under-run on 63. byte
+    ->under-run on 64. byte
+    ->under-run on 65. byte
+    ->under-run on 66. byte
+    ->under-run on 67. byte
+    ->under-run on 68. byte
+    ->under-run on 69. byte
+    ->under-run on 70. byte
+    ->under-run on 71. byte
+    ->under-run on 72. byte
+    ->under-run on 73. byte
+    ->under-run on 74. byte
+    ->under-run on 75. byte
+    ->under-run on 76. byte
+    ->under-run on 77. byte
+    ->under-run on 78. byte
+    ->under-run on 79. byte
+    ->no under-run on 80. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 81. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 82. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 83. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 84. byte, since length of frame (without CRC) is only 80 bytes
+  Time: 242447355000
+  TEST 21: TRANSMIT PACKETS AFTER TX UNDER-RUN ON EACH PACKET's BYTE AT 2 TX BDs ( 100Mbps )
+    ->under-run on 61. byte
+    ->under-run on 62. byte
+    ->under-run on 63. byte
+    ->under-run on 64. byte
+    ->under-run on 65. byte
+    ->under-run on 66. byte
+    ->under-run on 67. byte
+    ->under-run on 68. byte
+    ->under-run on 69. byte
+    ->under-run on 70. byte
+    ->under-run on 71. byte
+    ->under-run on 72. byte
+    ->under-run on 73. byte
+    ->under-run on 74. byte
+    ->under-run on 75. byte
+    ->under-run on 76. byte
+    ->under-run on 77. byte
+    ->under-run on 78. byte
+    ->under-run on 79. byte
+    ->no under-run on 80. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 81. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 82. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 83. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 84. byte, since length of frame (without CRC) is only 80 bytes
+ 
+MAC FULL DUPLEX RECEIVE TEST
+  Time: 242923367000
+  TEST 0: NO RECEIVE WHEN ALL BUFFERS ARE TX ( 10Mbps )
+  Time: 252557359000
+  TEST 1: NO RECEIVE WHEN ALL BUFFERS ARE TX ( 100Mbps )
+  Time: 254085799000
+  TEST 2: RECEIVE PACKET SYNCHRONIZATION WITH RECEIVE DISABLE/ENABLE ( 10Mbps )
+    8 packets (without this one) are checked - packets are received by two in a set
+    From this moment:
+    first one of two packets (including this one) is not accepted due to late RX enable
+    ->RX enable set 3 WB clks after RX_DV
+  Time: 294264649000
+  TEST 3: RECEIVE PACKET SYNCHRONIZATION WITH RECEIVE DISABLE/ENABLE ( 100Mbps )
+    0 packets (without this one) are checked - packets are received by two in a set
+    From this moment:
+    first one of two packets (including this one) is not accepted due to late RX enable
+    ->RX enable set 2 WB clks after RX_DV
+  Time: 299591329000
+  TEST 4: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT ONE RX BD ( 10Mbps )
+    receive small packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    receive small packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    receive small packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 333243169000
+  TEST 5: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT ONE RX BD ( 100Mbps )
+    receive small packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    receive small packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    receive small packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 336818689000
+  TEST 6: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT MAX RX BDs ( 10Mbps )
+    receive small packets is NOT selected
+    using only RX BD 0 out of 128 BDs assigned to RX (wrap at first BD - RX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were received on RX BD 0
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were received on RX BD 0 to RX BD 120 respectively
+    receive small packets is selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were received from RX BD 121 to RX BD 127 and from RX BD 0 to RX BD 2 respectively
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were received from RX BD 3 to RX BD 18 respectively
+  Time: 378320475000
+  TEST 7: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT MAX RX BDs ( 100Mbps )
+    receive small packets is NOT selected
+    using only RX BD 0 out of 128 BDs assigned to RX (wrap at first BD - RX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were received on RX BD 0
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were received on RX BD 0 to RX BD 120 respectively
+    receive small packets is selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were received from RX BD 121 to RX BD 127 and from RX BD 0 to RX BD 2 respectively
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were received from RX BD 3 to RX BD 18 respectively
+  Time: 382758795000
+  TEST 8: RECEIVE PACKETS FROM 0 TO (MINFL + 12) SIZES AT 8 RX BD ( 10Mbps )
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packets with lengths from 0 to 3 are not received (length increasing by 1 byte)
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packet with length 4 is not received (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs (120..127) assigned to RX (wrap at 4th BD - RX BD 123)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs (120..127) assigned to RX (wrap at 5th BD - RX BD 124)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs (120..127) assigned to RX (wrap at 6th BD - RX BD 125)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs (120..127) assigned to RX (wrap at 7th BD - RX BD 126)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 70 to 77 are checked (length increasing by 1 byte)
+  Time: 386187495000
+  TEST 9: RECEIVE PACKETS FROM 0 TO (MINFL + 12) SIZES AT 8 RX BD ( 100Mbps )
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packets with lengths from 0 to 3 are not received (length increasing by 1 byte)
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packet with length 4 is not received (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs (120..127) assigned to RX (wrap at 4th BD - RX BD 123)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs (120..127) assigned to RX (wrap at 5th BD - RX BD 124)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs (120..127) assigned to RX (wrap at 6th BD - RX BD 125)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs (120..127) assigned to RX (wrap at 7th BD - RX BD 126)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 70 to 77 are checked (length increasing by 1 byte)
+  Time: 386657745000
+  TEST 10: RECEIVE PACKETS AT ONE RX BD AND CHECK ADDRESSES ( 10Mbps )
+    Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    Unicast packet is going to be received without PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is NOT going to be received without PRO bit (wrap at 1st BD)
+    ->packet NOT received
+    Broadcast packet is going to be received with PRO & without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received with PRO & with Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is NOT going to be received with Reject_BRO bit (wrap at 1st BD)
+    ->packet NOT received
+  Time: 387208159000
+  TEST 11: RECEIVE PACKETS AT ONE RX BD AND CHECK ADDRESSES ( 100Mbps )
+    Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    Unicast packet is going to be received without PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is NOT going to be received without PRO bit (wrap at 1st BD)
+    ->packet NOT received
+    Broadcast packet is going to be received with PRO & without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received with PRO & with Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is NOT going to be received with Reject_BRO bit (wrap at 1st BD)
+    ->packet NOT received
+  Time: 387288679000
+  TEST 12: RECEIVE PACKETS AT 8 RX BD WITH RX FIFO AND RX BD OVERRUN ( 10Mbps )
+    packet shoud be successfuly received
+    ->packet received
+  Time: 387359689000
+*E RX buffer descriptor status is not correct: 6000 instead of 4000
+    packet (64Bytes) should be retained in RX FIFO and written to MEM after next RX FIFO overrun
+    ->packet NOT received
+  Time: 387423768000
+*E WB INT signal should not be set
+  Time: 387424129000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+  Time: 387487968000
+*E WB INT signal should not be set
+  Time: 387488329000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+    ->previous packet written into MEM
+  Time: 387492409000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 387492529000
+*E Interrupt Receive Buffer Error was not set, interrupt reg: 10
+  Time: 387492529000
+*E Other interrupts (except Receive Buffer Error) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 387562849000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 387562849000
+*E Wrong length of the packet out from PHY (0 instead of 72)
+  Time: 387562867000
+*E Wrong data of the received packet
+  Time: 387562969000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 387562969000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+  Time: 387633408000
+*E WB INT signal should not be set
+  Time: 387633769000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+  Time: 387637849000
+*E RX buffer descriptor status is not correct: c000 instead of 4040
+  Time: 387637969000
+*E Interrupt Receive Buffer Error was not set, interrupt reg: 10
+  Time: 387637969000
+*E Other interrupts (except Receive Buffer Error) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 387708409000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 387708409000
+*E Wrong length of the packet out from PHY (0 instead of 72)
+  Time: 387708427000
+*E Wrong data of the received packet
+  Time: 387708529000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 387708529000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+  Time: 387788208000
+*E WB INT signal should not be set
+  Time: 387788569000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+  Time: 387792649000
+*E RX buffer descriptor status is not correct: c000 instead of 4040
+  Time: 387792769000
+*E Interrupt Receive Buffer Error was not set, interrupt reg: 10
+  Time: 387792769000
+*E Other interrupts (except Receive Buffer Error) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 387872809000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 387872809000
+*E Wrong length of the packet out from PHY (0 instead of 84)
+  Time: 387872830000
+*E Wrong data of the received packet
+  Time: 387872929000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 387872929000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 387952849000
+*E RX buffer descriptor status is not correct: e000 instead of 6000
+  Time: 387952849000
+*E Wrong length of the packet out from PHY (0 instead of 84)
+  Time: 387952870000
+*E Wrong data of the received packet
+  Time: 387952969000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 387952969000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet should NOT be received - RX FIFO overrun due to lack of RX BDs
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+  Time: 388115689000
+*E RX buffer descriptor status is not correct: 6000 instead of 4000
+  Time: 388116049000
+  TEST 13: RECEIVE PACKETS AT 8 RX BD WITH RX FIFO AND RX BD OVERRUN ( 100Mbps )
+    packet shoud be successfuly received
+    ->packet received
+    packet (64Bytes) should be retained in RX FIFO and written to MEM after next RX FIFO overrun
+    ->packet NOT received
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+    ->previous packet written into MEM
+    packet shoud be successfuly received
+    ->packet received
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+    packet shoud be successfuly received
+    ->packet received
+    packet should NOT be received - RX FIFO overrun due to lack of RX BDs
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+ 
+MAC FULL DUPLEX FLOW CONTROL TEST
+  Time: 388235057000
+  TEST 0: INSERT CONTROL FRM. WHILE TRANSMITTING NORMAL FRM. AT 4 TX BD ( 10Mbps )
+  Time: 397626071000
+  TEST 1: INSERT CONTROL FRM. WHILE TRANSMITTING NORMAL FRM. AT 4 TX BD ( 100Mbps )
+  Time: 398657171000
+  TEST 2: RECEIVE CONTROL FRAMES WITH PASSALL OPTION TURNED ON AND OFF AT ONE RX BD ( 10Mbps )
+  Time: 399868939000
+  TEST 3: RECEIVE CONTROL FRAMES WITH PASSALL OPTION TURNED ON AND OFF AT ONE RX BD ( 100Mbps )
+  Time: 400018579000
+  TEST 4: RANDOM RECEIVE AND TRANSMIT FRAMES AT ONE TX AND ONE RX BD ( 10Mbps )
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+  Time: 438761899000
+  TEST 5: RANDOM RECEIVE AND TRANSMIT FRAMES AT ONE TX AND ONE RX BD ( 100Mbps )
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+ 
+MAC HALF DUPLEX FLOW TEST
+  Time: 443751047000
+  TEST 0: DEFER, COLL. AND LATE COLL. WHILE TRANSMITTING AND RECEIVING FRM. AT 4 TX/RX BD ( 10Mbps )
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 443899119000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 444057159000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 444222399000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 444387999000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 444564339000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 444730779000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 444897579000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 445064679000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+  Time: 445100407000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 445293579000
+*E Wrong data of the transmitted packet
+    ->TX Defer occured
+  Time: 445319207000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 445461579000
+*E Wrong data of the transmitted packet
+    ->Collision occured due to registered inputs
+    ->IPGR2 timing checking
+  Time: 445680339000
+*E Wrong data of the transmitted packet
+    ->Collision occured - last checking
+    ->IPGR2 timing checking
+  Time: 445899039000
+*E Wrong data of the transmitted packet
+  Time: 445919355000
+  TEST 1: DEFER, COLL. AND LATE COLL. WHILE TRANSMITTING AND RECEIVING FRM. AT 4 TX/RX BD ( 100Mbps )
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 445941549000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 445958709000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 445976589000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 445994469000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446019369000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446037369000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446055369000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446073369000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446098269000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446116269000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446134389000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446152629000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446177769000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446196129000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446214489000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446232849000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446257989000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446276349000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446294709000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446313189000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446338689000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446357289000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446376009000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446394549000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446420169000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446439009000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446457849000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446476689000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446502309000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446521149000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446539989000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446558949000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446584929000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446604009000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446623209000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446642229000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446668329000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446687649000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446706969000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446726289000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446752389000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446771709000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446791029000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446810469000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446836929000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446856489000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 446876169000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+  Time: 446880487000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 446895669000
+*E Wrong data of the transmitted packet
+    ->TX Defer occured
+  Time: 446906887000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 446922249000
+*E Wrong data of the transmitted packet
+    ->Collision occured due to registered inputs
+    ->IPGR2 timing checking
+  Time: 446947089000
+*E Wrong data of the transmitted packet
+    ->Collision occured - last checking
+    ->IPGR2 timing checking
+  Time: 446966889000
+*E Wrong data of the transmitted packet
+
+===========================================================================
+PHY generates 'real delayed' Carrier sense and Collision signals for following tests
+===========================================================================
+ 
+MAC FULL DUPLEX TRANSMIT TEST
+  Time: 446969327000
+  TEST 0: NO TRANSMIT WHEN ALL BUFFERS ARE RX ( 10Mbps )
+  Time: 447667519000
+  TEST 1: NO TRANSMIT WHEN ALL BUFFERS ARE RX ( 100Mbps )
+  Time: 448301959000
+  TEST 2: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT ONE TX BD ( 10Mbps )
+    pads appending to packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    pads appending to packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    pads appending to packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 482092399000
+  TEST 3: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT ONE TX BD ( 100Mbps )
+    pads appending to packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    pads appending to packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    pads appending to packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 485807599000
+  TEST 4: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT MAX TX BDs ( 10Mbps )
+    pads appending to packets is NOT selected
+    using only TX BD 0 out of 128 BDs assigned to TX (wrap at first BD - TX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were send from TX BD 0
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 0 to TX BD 120 respectively
+    pads appending to packets is selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were send from TX BD 121 to TX BD 127 and from TX BD 0 to TX BD 2 respectively
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 3 to TX BD 18 respectively
+  Time: 527716635000
+  TEST 5: TRANSMIT PACKETS FROM MINFL TO MAXFL SIZES AT MAX TX BDs ( 100Mbps )
+    pads appending to packets is NOT selected
+    using only TX BD 0 out of 128 BDs assigned to TX (wrap at first BD - TX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were send from TX BD 0
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 0 to TX BD 120 respectively
+    pads appending to packets is selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were send from TX BD 121 to TX BD 127 and from TX BD 0 to TX BD 2 respectively
+    pads appending to packets is NOT selected
+    using all 128 BDs assigned to TX (wrap at 128th BD - TX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were send from TX BD 3 to TX BD 18 respectively
+  Time: 532334235000
+  TEST 6: TRANSMIT PACKETS FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 10Mbps )
+    pads appending to packets is selected
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 536725875000
+  TEST 7: TRANSMIT PACKETS FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 100Mbps )
+    pads appending to packets is selected
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 537331395000
+  TEST 8: TRANSMIT PACKETS (NO PADs) FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 10Mbps )
+    pads appending to packets is not selected (except for 0x23)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 540418515000
+  TEST 9: TRANSMIT PACKETS (NO PADs) FROM 0 TO (MINFL - 1) SIZES AT 8 TX BD ( 100Mbps )
+    pads appending to packets is not selected (except for 0x23)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packets with lengths from 0 to 3 are not transmitted (length increasing by 1 byte)
+    using 1 BD out of 8 BDs assigned to TX (wrap at 1st BD - TX BD 0)
+    ->packet with length 4 is not transmitted (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs assigned to TX (wrap at 4th BD - TX BD 3)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs assigned to TX (wrap at 5th BD - TX BD 4)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs assigned to TX (wrap at 6th BD - TX BD 5)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs assigned to TX (wrap at 7th BD - TX BD 6)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs assigned to TX (wrap at 8th BD - TX BD 7)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+  Time: 540893355000
+  TEST 10: TRANSMIT PACKETS ACROSS MAXFL VALUE AT 13 TX BDs ( 10Mbps )
+    ->packet with length 1535 sent
+    ->packet with length 1536 sent
+    ->packet with length 1537 sent
+    ->packet with length 104 sent
+  Time: 544722915000
+  TEST 11: TRANSMIT PACKETS ACROSS MAXFL VALUE AT 13 TX BDs ( 100Mbps )
+    ->packet with length 1535 sent
+    ->packet with length 1536 sent
+    ->packet with length 1537 sent
+    ->packet with length 104 sent
+  Time: 545120475000
+  TEST 12: TRANSMIT PACKETS ACROSS CHANGED MAXFL VALUE AT 13 TX BDs ( 10Mbps )
+    ->packet with length 116 sent
+    ->packet with length 117 sent
+    ->packet with length 118 sent
+  Time: 545448195000
+  TEST 13: TRANSMIT PACKETS ACROSS CHANGED MAXFL VALUE AT 13 TX BDs ( 100Mbps )
+    ->packet with length 116 sent
+    ->packet with length 117 sent
+    ->packet with length 118 sent
+  Time: 545490315000
+  TEST 14: TRANSMIT PACKETS ACROSS CHANGED MINFL VALUE AT 7 TX BDs ( 10Mbps )
+    ->packet with length 1358 sent
+    ->packet with length 1359 sent
+    ->packet with length 1360 sent
+  Time: 548798595000
+  TEST 15: TRANSMIT PACKETS ACROSS CHANGED MINFL VALUE AT 7 TX BDs ( 100Mbps )
+    ->packet with length 1358 sent
+    ->packet with length 1359 sent
+    ->packet with length 1360 sent
+  Time: 549139275000
+  TEST 16: TRANSMIT PACKETS ACROSS MAXFL WITH HUGEN AT 19 TX BDs ( 10Mbps )
+   i_length = 1531
+   eth_phy length = 1535
+    ->packet with length 1535 sent
+   i_length = 1532
+   eth_phy length = 1536
+    ->packet with length 1536 sent
+   i_length = 1533
+   eth_phy length = 1537
+    ->packet with length 1537 sent
+   i_length = 65530
+   eth_phy length = 65534
+    ->packet with length 65534 sent
+   i_length = 65531
+   eth_phy length = 65535
+    ->packet with length 65535 sent
+  Time: 657784995000
+  TEST 17: TRANSMIT PACKETS ACROSS MAXFL WITH HUGEN AT 19 TX BDs ( 100Mbps )
+   i_length = 1531
+   eth_phy length = 1535
+    ->packet with length 1535 sent
+   i_length = 1532
+   eth_phy length = 1536
+    ->packet with length 1536 sent
+   i_length = 1533
+   eth_phy length = 1537
+    ->packet with length 1537 sent
+   i_length = 65530
+   eth_phy length = 65534
+    ->packet with length 65534 sent
+   i_length = 65531
+   eth_phy length = 65535
+    ->packet with length 65535 sent
+  Time: 668694675000
+  TEST 18: IPG DURING BACK-TO-BACK TRANSMIT AT 88 TX BDs ( 10Mbps )
+    ->IPG with 8 mtx_clk periods (min 3) between packets with lengths 64 and 65 checked
+    ->IPG with 8 mtx_clk periods (min 4) between packets with lengths 66 and 67 checked
+    ->IPG with 8 mtx_clk periods (min 5) between packets with lengths 68 and 69 checked
+    ->IPG with 8 mtx_clk periods (min 6) between packets with lengths 70 and 71 checked
+    ->IPG with 7 mtx_clk periods (min 7) between packets with lengths 72 and 73 checked
+    ->IPG with 8 mtx_clk periods (min 8) between packets with lengths 74 and 75 checked
+    ->IPG with 9 mtx_clk periods (min 9) between packets with lengths 76 and 77 checked
+    ->IPG with 10 mtx_clk periods (min 10) between packets with lengths 78 and 79 checked
+    ->IPG with 17 mtx_clk periods (min 17) between packets with lengths 80 and 81 checked
+    ->IPG with 24 mtx_clk periods (min 24) between packets with lengths 82 and 83 checked
+    ->IPG with 38 mtx_clk periods (min 38) between packets with lengths 84 and 85 checked
+    ->IPG with 72 mtx_clk periods (min 72) between packets with lengths 86 and 87 checked
+    ->IPG with 130 mtx_clk periods (min 130) between packets with lengths 88 and 89 checked
+  Time: 670752195000
+  TEST 19: IPG DURING BACK-TO-BACK TRANSMIT AT 88 TX BDs ( 100Mbps )
+    ->IPG with 47 mtx_clk periods (min 3) between packets with lengths 64 and 65 checked
+    ->IPG with 47 mtx_clk periods (min 4) between packets with lengths 66 and 67 checked
+    ->IPG with 44 mtx_clk periods (min 5) between packets with lengths 68 and 69 checked
+    ->IPG with 45 mtx_clk periods (min 6) between packets with lengths 70 and 71 checked
+    ->IPG with 44 mtx_clk periods (min 7) between packets with lengths 72 and 73 checked
+    ->IPG with 43 mtx_clk periods (min 8) between packets with lengths 74 and 75 checked
+    ->IPG with 45 mtx_clk periods (min 9) between packets with lengths 76 and 77 checked
+    ->IPG with 44 mtx_clk periods (min 10) between packets with lengths 78 and 79 checked
+    ->IPG with 43 mtx_clk periods (min 17) between packets with lengths 80 and 81 checked
+    ->IPG with 45 mtx_clk periods (min 24) between packets with lengths 82 and 83 checked
+    ->IPG with 44 mtx_clk periods (min 38) between packets with lengths 84 and 85 checked
+    ->IPG with 72 mtx_clk periods (min 72) between packets with lengths 86 and 87 checked
+    ->IPG with 130 mtx_clk periods (min 130) between packets with lengths 88 and 89 checked
+  Time: 671018715000
+  TEST 20: TRANSMIT PACKETS AFTER TX UNDER-RUN ON EACH PACKET's BYTE AT 2 TX BDs ( 10Mbps )
+    ->under-run on 61. byte
+    ->under-run on 62. byte
+    ->under-run on 63. byte
+    ->under-run on 64. byte
+    ->under-run on 65. byte
+    ->under-run on 66. byte
+    ->under-run on 67. byte
+    ->under-run on 68. byte
+    ->under-run on 69. byte
+    ->under-run on 70. byte
+    ->under-run on 71. byte
+    ->under-run on 72. byte
+    ->under-run on 73. byte
+    ->under-run on 74. byte
+    ->under-run on 75. byte
+    ->under-run on 76. byte
+    ->under-run on 77. byte
+    ->under-run on 78. byte
+    ->under-run on 79. byte
+    ->no under-run on 80. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 81. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 82. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 83. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 84. byte, since length of frame (without CRC) is only 80 bytes
+  Time: 674812635000
+  TEST 21: TRANSMIT PACKETS AFTER TX UNDER-RUN ON EACH PACKET's BYTE AT 2 TX BDs ( 100Mbps )
+    ->under-run on 61. byte
+    ->under-run on 62. byte
+    ->under-run on 63. byte
+    ->under-run on 64. byte
+    ->under-run on 65. byte
+    ->under-run on 66. byte
+    ->under-run on 67. byte
+    ->under-run on 68. byte
+    ->under-run on 69. byte
+    ->under-run on 70. byte
+    ->under-run on 71. byte
+    ->under-run on 72. byte
+    ->under-run on 73. byte
+    ->under-run on 74. byte
+    ->under-run on 75. byte
+    ->under-run on 76. byte
+    ->under-run on 77. byte
+    ->under-run on 78. byte
+    ->under-run on 79. byte
+    ->no under-run on 80. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 81. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 82. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 83. byte, since length of frame (without CRC) is only 80 bytes
+    ->no under-run on 84. byte, since length of frame (without CRC) is only 80 bytes
+ 
+MAC FULL DUPLEX RECEIVE TEST
+  Time: 675288647000
+  TEST 0: NO RECEIVE WHEN ALL BUFFERS ARE TX ( 10Mbps )
+  Time: 684922639000
+  TEST 1: NO RECEIVE WHEN ALL BUFFERS ARE TX ( 100Mbps )
+  Time: 686451079000
+  TEST 2: RECEIVE PACKET SYNCHRONIZATION WITH RECEIVE DISABLE/ENABLE ( 10Mbps )
+    8 packets (without this one) are checked - packets are received by two in a set
+    From this moment:
+    first one of two packets (including this one) is not accepted due to late RX enable
+    ->RX enable set 3 WB clks after RX_DV
+  Time: 726629929000
+  TEST 3: RECEIVE PACKET SYNCHRONIZATION WITH RECEIVE DISABLE/ENABLE ( 100Mbps )
+    0 packets (without this one) are checked - packets are received by two in a set
+    From this moment:
+    first one of two packets (including this one) is not accepted due to late RX enable
+    ->RX enable set 2 WB clks after RX_DV
+  Time: 731956609000
+  TEST 4: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT ONE RX BD ( 10Mbps )
+    receive small packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    receive small packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    receive small packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 765608449000
+  TEST 5: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT ONE RX BD ( 100Mbps )
+    receive small packets is NOT selected
+    ->packets with lengths from 64 (MINFL) to 128 are checked (length increasing by 1 byte)
+    receive small packets is selected
+    ->packets with lengths from 256 to 1408 are checked (length increasing by 128 bytes)
+    receive small packets is NOT selected
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+  Time: 769183969000
+  TEST 6: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT MAX RX BDs ( 10Mbps )
+    receive small packets is NOT selected
+    using only RX BD 0 out of 128 BDs assigned to RX (wrap at first BD - RX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were received on RX BD 0
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were received on RX BD 0 to RX BD 120 respectively
+    receive small packets is selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were received from RX BD 121 to RX BD 127 and from RX BD 0 to RX BD 2 respectively
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were received from RX BD 3 to RX BD 18 respectively
+  Time: 810685755000
+  TEST 7: RECEIVE PACKETS FROM MINFL TO MAXFL SIZES AT MAX RX BDs ( 100Mbps )
+    receive small packets is NOT selected
+    using only RX BD 0 out of 128 BDs assigned to RX (wrap at first BD - RX BD 0)
+    ->packets with lengths from 64 (MINFL) to 71 are checked (length increasing by 1 byte)
+    ->all packets were received on RX BD 0
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 72 to 192 are checked (length increasing by 1 byte)
+    ->packets were received on RX BD 0 to RX BD 120 respectively
+    receive small packets is selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 256 to 1284 are checked (length increasing by 128 bytes)
+    ->packets were received from RX BD 121 to RX BD 127 and from RX BD 0 to RX BD 2 respectively
+    receive small packets is NOT selected
+    using all 128 BDs assigned to RX (wrap at 128th BD - RX BD 127)
+    ->packets with lengths from 1516 to 1536 (MAXFL) are checked (length increasing by 1 byte)
+    ->packets were received from RX BD 3 to RX BD 18 respectively
+  Time: 815124075000
+  TEST 8: RECEIVE PACKETS FROM 0 TO (MINFL + 12) SIZES AT 8 RX BD ( 10Mbps )
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packets with lengths from 0 to 3 are not received (length increasing by 1 byte)
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packet with length 4 is not received (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs (120..127) assigned to RX (wrap at 4th BD - RX BD 123)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs (120..127) assigned to RX (wrap at 5th BD - RX BD 124)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs (120..127) assigned to RX (wrap at 6th BD - RX BD 125)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs (120..127) assigned to RX (wrap at 7th BD - RX BD 126)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 70 to 77 are checked (length increasing by 1 byte)
+  Time: 818552775000
+  TEST 9: RECEIVE PACKETS FROM 0 TO (MINFL + 12) SIZES AT 8 RX BD ( 100Mbps )
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packets with lengths from 0 to 3 are not received (length increasing by 1 byte)
+    using 1 BD out of 8 BDs (120..127) assigned to RX (wrap at 1st BD - RX BD 120)
+    ->packet with length 4 is not received (length increasing by 1 byte)
+    ->packets with lengths from 5 to 9 are checked (length increasing by 1 byte)
+    using 4 BDs out of 8 BDs (120..127) assigned to RX (wrap at 4th BD - RX BD 123)
+    ->packets with lengths from 10 to 17 are checked (length increasing by 1 byte)
+    using 5 BDs out of 8 BDs (120..127) assigned to RX (wrap at 5th BD - RX BD 124)
+    ->packets with lengths from 18 to 27 are checked (length increasing by 1 byte)
+    using 6 BDs out of 8 BDs (120..127) assigned to RX (wrap at 6th BD - RX BD 125)
+    ->packets with lengths from 28 to 40 are checked (length increasing by 1 byte)
+    using 7 BDs out of 8 BDs (120..127) assigned to RX (wrap at 7th BD - RX BD 126)
+    ->packets with lengths from 41 to 54 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 55 to 69 are checked (length increasing by 1 byte)
+    using 8 BDs out of 8 BDs (120..127) assigned to RX (wrap at 8th BD - RX BD 127)
+    ->packets with lengths from 70 to 77 are checked (length increasing by 1 byte)
+  Time: 819023025000
+  TEST 10: RECEIVE PACKETS AT ONE RX BD AND CHECK ADDRESSES ( 10Mbps )
+    Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    Unicast packet is going to be received without PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is NOT going to be received without PRO bit (wrap at 1st BD)
+    ->packet NOT received
+    Broadcast packet is going to be received with PRO & without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received with PRO & with Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is NOT going to be received with Reject_BRO bit (wrap at 1st BD)
+    ->packet NOT received
+  Time: 819573439000
+  TEST 11: RECEIVE PACKETS AT ONE RX BD AND CHECK ADDRESSES ( 100Mbps )
+    Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    Unicast packet is going to be received without PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is going to be received with PRO bit (wrap at 1st BD)
+    ->packet received
+    non Unicast packet is NOT going to be received without PRO bit (wrap at 1st BD)
+    ->packet NOT received
+    Broadcast packet is going to be received with PRO & without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received without Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is going to be received with PRO & with Reject_BRO bit (wrap at 1st BD)
+    ->packet received
+    Broadcast packet is NOT going to be received with Reject_BRO bit (wrap at 1st BD)
+    ->packet NOT received
+  Time: 819653959000
+  TEST 12: RECEIVE PACKETS AT 8 RX BD WITH RX FIFO AND RX BD OVERRUN ( 10Mbps )
+    packet shoud be successfuly received
+    ->packet received
+  Time: 819724969000
+*E RX buffer descriptor status is not correct: 6000 instead of 4000
+    packet (64Bytes) should be retained in RX FIFO and written to MEM after next RX FIFO overrun
+    ->packet NOT received
+  Time: 819789048000
+*E WB INT signal should not be set
+  Time: 819789409000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+  Time: 819853248000
+*E WB INT signal should not be set
+  Time: 819853609000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+    ->previous packet written into MEM
+  Time: 819857689000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 819857809000
+*E Interrupt Receive Buffer Error was not set, interrupt reg: 10
+  Time: 819857809000
+*E Other interrupts (except Receive Buffer Error) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 819928129000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 819928129000
+*E Wrong length of the packet out from PHY (0 instead of 72)
+  Time: 819928147000
+*E Wrong data of the received packet
+  Time: 819928249000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 819928249000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+  Time: 819998688000
+*E WB INT signal should not be set
+  Time: 819999049000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+  Time: 820003129000
+*E RX buffer descriptor status is not correct: c000 instead of 4040
+  Time: 820003249000
+*E Interrupt Receive Buffer Error was not set, interrupt reg: 10
+  Time: 820003249000
+*E Other interrupts (except Receive Buffer Error) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 820073689000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 820073689000
+*E Wrong length of the packet out from PHY (0 instead of 72)
+  Time: 820073707000
+*E Wrong data of the received packet
+  Time: 820073809000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 820073809000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+  Time: 820153488000
+*E WB INT signal should not be set
+  Time: 820153849000
+*E Any of interrupts was set, interrupt reg: 10, len: 0
+  Time: 820157929000
+*E RX buffer descriptor status is not correct: c000 instead of 4040
+  Time: 820158049000
+*E Interrupt Receive Buffer Error was not set, interrupt reg: 10
+  Time: 820158049000
+*E Other interrupts (except Receive Buffer Error) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 820238089000
+*E RX buffer descriptor status is not correct: c000 instead of 4000
+  Time: 820238089000
+*E Wrong length of the packet out from PHY (0 instead of 84)
+  Time: 820238110000
+*E Wrong data of the received packet
+  Time: 820238209000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 820238209000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet shoud be successfuly received
+    ->packet NOT received
+  Time: 820318129000
+*E RX buffer descriptor status is not correct: e000 instead of 6000
+  Time: 820318129000
+*E Wrong length of the packet out from PHY (0 instead of 84)
+  Time: 820318150000
+*E Wrong data of the received packet
+  Time: 820318249000
+*E Interrupt Receive Buffer was not set, interrupt reg: 10
+  Time: 820318249000
+*E Other interrupts (except Receive Buffer) were set, interrupt reg: 10
+    packet should NOT be received - RX FIFO overrun due to lack of RX BDs
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+  Time: 820480969000
+*E RX buffer descriptor status is not correct: 6000 instead of 4000
+  Time: 820481329000
+  TEST 13: RECEIVE PACKETS AT 8 RX BD WITH RX FIFO AND RX BD OVERRUN ( 100Mbps )
+    packet shoud be successfuly received
+    ->packet received
+    packet (64Bytes) should be retained in RX FIFO and written to MEM after next RX FIFO overrun
+    ->packet NOT received
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+    ->previous packet written into MEM
+    packet shoud be successfuly received
+    ->packet received
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+    packet should NOT be received - RX FIFO overrun
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+    packet shoud be successfuly received
+    ->packet received
+    packet should NOT be received - RX FIFO overrun due to lack of RX BDs
+    ->packet NOT received
+    packet shoud be successfuly received
+    ->packet received
+ 
+MAC FULL DUPLEX FLOW CONTROL TEST
+  Time: 820600337000
+  TEST 0: INSERT CONTROL FRM. WHILE TRANSMITTING NORMAL FRM. AT 4 TX BD ( 10Mbps )
+  Time: 829991351000
+  TEST 1: INSERT CONTROL FRM. WHILE TRANSMITTING NORMAL FRM. AT 4 TX BD ( 100Mbps )
+  Time: 831022451000
+  TEST 2: RECEIVE CONTROL FRAMES WITH PASSALL OPTION TURNED ON AND OFF AT ONE RX BD ( 10Mbps )
+  Time: 832234219000
+  TEST 3: RECEIVE CONTROL FRAMES WITH PASSALL OPTION TURNED ON AND OFF AT ONE RX BD ( 100Mbps )
+  Time: 832383859000
+  TEST 4: RANDOM RECEIVE AND TRANSMIT FRAMES AT ONE TX AND ONE RX BD ( 10Mbps )
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+  Time: 871127179000
+  TEST 5: RANDOM RECEIVE AND TRANSMIT FRAMES AT ONE TX AND ONE RX BD ( 100Mbps )
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames transmitted
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+   ->8 frames received
+ 
+MAC HALF DUPLEX FLOW TEST
+  Time: 876116327000
+  TEST 0: DEFER, COLL. AND LATE COLL. WHILE TRANSMITTING AND RECEIVING FRM. AT 4 TX/RX BD ( 10Mbps )
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 876264399000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 876422439000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 876587679000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 876753279000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 876929619000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 877096059000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 877262859000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 877429959000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 877607619000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+  Time: 877635687000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 877826379000
+*E Wrong data of the transmitted packet
+    ->TX Defer occured
+  Time: 877854487000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 877994859000
+*E Wrong data of the transmitted packet
+    ->Collision occured due to registered inputs
+    ->IPGR2 timing checking
+  Time: 878163519000
+*E Wrong data of the transmitted packet
+    ->Collision occured - last checking
+  Time: 878264599000
+*E Receive packet should be accepted
+    ->IPGR2 timing checking
+  Time: 878342599000
+*E Wrong length of the packet out from PHY (0 instead of 68)
+  Time: 878342616000
+*E Wrong data of the received packet
+  Time: 878342616000
+*E RX buffer descriptor status is not correct: c000 instead of 6081
+  Time: 878342859000
+*E Wrong data of the transmitted packet
+  Time: 878342959000
+*E Interrupt Receive Error was not set, interrupt reg: 1
+  Time: 878363025000
+  TEST 1: DEFER, COLL. AND LATE COLL. WHILE TRANSMITTING AND RECEIVING FRM. AT 4 TX/RX BD ( 100Mbps )
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878385939000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878403099000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878420979000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878438859000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878463639000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878481519000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878499399000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878517399000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878542299000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878560299000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878578419000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878596539000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878621559000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878639799000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878658039000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878676399000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878701539000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878719899000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878738259000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878756739000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878782119000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878800599000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878819199000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878837919000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878863419000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878882139000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878900859000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878919699000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878945439000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878964279000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 878983119000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879002079000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879027939000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879046899000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879065979000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879085059000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879111039000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879130239000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879149439000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879168759000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879194859000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879214179000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879233499000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879252939000
+*E TX buffer descriptor status is not correct: 7800 instead of 7802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879279279000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879298719000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879318279000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+  Time: 879322807000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 879342999000
+*E Wrong data of the transmitted packet
+    ->TX Defer occured
+    ->IPGR2 timing checking
+  Time: 879369459000
+*E TX buffer descriptor status is not correct: 5800 instead of 5802
+    ->TX Defer occured
+  Time: 879374007000
+*E Transmit should NOT start more than 1 CLK after CarrierSense and causing Collision
+    ->IPGR2 timing checking
+  Time: 879389139000
+*E Wrong data of the transmitted packet
+    ->Collision occured due to registered inputs
+    ->IPGR2 timing checking
+  Time: 879408819000
+*E Wrong data of the transmitted packet
+    ->Collision occured - last checking
+  Time: 879420079000
+*E Receive packet should be accepted
+    ->IPGR2 timing checking
+  Time: 879428239000
+*E Wrong length of the packet out from PHY (0 instead of 68)
+  Time: 879428256000
+*E Wrong data of the received packet
+  Time: 879428256000
+*E RX buffer descriptor status is not correct: e000 instead of 6081
+  Time: 879428499000
+*E Wrong data of the transmitted packet
+  Time: 879428599000
+*E Interrupt Receive Error was not set, interrupt reg: 1
+
+
+ END of SIMULATION
+Simulation stopped via $stop(1) at time 879430815 NS + 0
+/projects/ethernet/tadejm/ethernet/bench/verilog/tb_ethernet.v:530   $stop;
+ncsim> quit
