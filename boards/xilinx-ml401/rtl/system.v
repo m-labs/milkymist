@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,6 +119,7 @@ module system(
 // Clock and Reset Generation
 //------------------------------------------------------------------
 wire sys_clk;
+wire hard_reset;
 
 `ifndef SIMULATION
 BUFG clkbuf(
@@ -144,7 +145,7 @@ reg sys_rst;
 initial rst_debounce <= 20'hFFFFF;
 initial sys_rst <= 1'b1;
 always @(posedge sys_clk) begin
-	if(~rst1) /* reset is active low */
+	if(~rst1 | hard_reset) /* reset pin is active low */
 		rst_debounce <= 20'hFFFFF;
 	else if(rst_debounce != 20'd0)
 		rst_debounce <= rst_debounce - 20'd1;
@@ -798,7 +799,9 @@ sysctl #(
 	.csr_do(csr_dr_sysctl),
 
 	.gpio_inputs({dipsw, btn}),
-	.gpio_outputs(gpio_outputs)
+	.gpio_outputs(gpio_outputs),
+
+	.hard_reset(hard_reset)
 );
 
 /* LED0 and LED1 are used as TX/RX indicators. */
@@ -1166,15 +1169,12 @@ eth_top ethernet(
 
 assign phy_mii_data = md_padoe_o ? md_pad_o : 1'bz;
 assign md_pad_i = phy_mii_data;
-
 `else
-
 assign phy_tx_data = 4'b0;
 assign phy_tx_en = 1'b0;
 assign phy_tx_er = 1'b0;
 assign phy_mii_clk = 1'b0;
 assign phy_mii_data = 1'bz;
-
 `endif
 
 endmodule

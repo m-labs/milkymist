@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,6 +91,7 @@ module system(
 //------------------------------------------------------------------
 wire sys_clk;
 wire sys_clk_n;
+wire hard_reset;
 
 `ifndef SIMULATION
 wire sys_clk_dcm;
@@ -158,7 +159,7 @@ reg sys_rst;
 initial rst_debounce <= 20'hFFFFF;
 initial sys_rst <= 1'b1;
 always @(posedge sys_clk) begin
-	if(~rst1) /* reset is active low */
+	if(rst1 | hard_reset)
 		rst_debounce <= 20'hFFFFF;
 	else if(rst_debounce != 20'd0)
 		rst_debounce <= rst_debounce - 20'd1;
@@ -749,7 +750,9 @@ sysctl #(
 	.csr_do(csr_dr_sysctl),
 
 	.gpio_inputs(dipsw),
-	.gpio_outputs(led[3:2]) /* LED0 and LED1 are used as TX/RX indicators. */
+	.gpio_outputs(led[3:2]), /* LED0 and LED1 are used as TX/RX indicators. */
+
+	.hard_reset(hard_reset)
 );
 
 //---------------------------------------------------------------------------

@@ -71,16 +71,6 @@ _system_call_handler:
 	nop; nop; nop; nop
 	nop; nop; nop; nop
 
-_warm_boot_handler:
-	xor     r0, r0, r0
-	wcsr    IE, r0
-	mvhi    r1, hi(_reset_handler)
-	ori     r1, r1, lo(_reset_handler)
-	wcsr    EBA, r1
-	mvi	r2, 1
-	calli   _crt0
-	nop
-
 _crt0:
 	/* Setup stack and global pointer */
 	mvhi    sp, hi(_fstack)

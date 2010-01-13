@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,9 @@ module sysctl #(
 	
 	/* GPIO */
 	input [ninputs-1:0] gpio_inputs,
-	output reg [noutputs-1:0] gpio_outputs
+	output reg [noutputs-1:0] gpio_outputs,
+
+	output reg hard_reset
 );
 
 /*
@@ -100,6 +102,8 @@ always @(posedge sys_clk) begin
 		counter1 <= 32'd0;
 		compare0 <= 32'hFFFFFFFF;
 		compare1 <= 32'hFFFFFFFF;
+
+		hard_reset <= 1'b0;
 	end else begin
 		timer0_irq <= 1'b0;
 		timer1_irq <= 1'b0;
@@ -141,6 +145,8 @@ always @(posedge sys_clk) begin
 					end
 					4'b1001: compare1 <= csr_di;
 					4'b1010: counter1 <= csr_di;
+
+					4'b1111: hard_reset <= 1'b1;
 				endcase
 			end
 		

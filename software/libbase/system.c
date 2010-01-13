@@ -18,6 +18,7 @@
 #include <irq.h>
 #include <uart.h>
 #include <hw/fmlbrg.h>
+#include <hw/sysctl.h>
 
 #include <system.h>
 
@@ -38,8 +39,6 @@ __attribute__((noreturn)) void reboot()
 	uart_force_sync(1); /* flush UART buffers */
 	irq_setmask(0);
 	irq_enable(0);
-	asm volatile(
-		"ori r1, r0, 0x0100\n"
-		"call r1\n"
-	);
+	CSR_SYSTEM_ID = 1; /* Writing to CSR_SYSTEM_ID causes a system reset */
+	while(1);
 }

@@ -1,6 +1,6 @@
 /*
  * Wishbone Arbiter and Address Decoder
- * Copyright (C) 2008, 2009 Sebastien Bourdeauducq - http://lekernel.net
+ * Copyright (C) 2008, 2009, 2010 Sebastien Bourdeauducq
  * Copyright (C) 2000 Johny Chi - chisuhua@yahoo.com.cn
  * This file is part of Milkymist.
  *

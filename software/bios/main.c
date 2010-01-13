@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -445,6 +445,7 @@ static void help()
 	puts("load       - load a file from the memory card");
 	puts("serialboot - attempt SFL boot");
 	puts("cardboot   - attempt booting from memory card");
+	puts("reboot     - system reset");
 }
 
 static char *get_token(char **str)
@@ -484,6 +485,8 @@ static void do_command(char *c)
 	
 	else if(strcmp(token, "serialboot") == 0) serialboot();
 	else if(strcmp(token, "cardboot") == 0) cardboot(0);
+
+	else if(strcmp(token, "reboot") == 0) reboot();
 	
 	else if(strcmp(token, "help") == 0) help();
 	
@@ -565,7 +568,7 @@ static void boot_sequence()
 	}
 }
 
-int main(int warm_boot, char **dummy)
+int main(int i, char **c)
 {
 	char buffer[64];
 
@@ -585,26 +588,20 @@ int main(int warm_boot, char **dummy)
 
 	sdram_enabled = 1;
 	
-	if(!warm_boot) {
-		if(brd_desc->sdram_size > 0) {
-			if(plltest()) {
-				ddrinit();
-				flush_bridge_cache();
+	if(brd_desc->sdram_size > 0) {
+		if(plltest()) {
+			ddrinit();
+			flush_bridge_cache();
 
-				if(memtest(8))
-					boot_sequence();
-				else
-					printf("E: Aborted boot on memory error\n");
-			} else
-				printf("E: Faulty SDRAM clocking\n");
-		} else {
-			printf("I: No SDRAM on this evaluation board, not booting\n");
-			sdram_enabled = 0;
-		}
+			if(memtest(8))
+				boot_sequence();
+			else
+				printf("E: Aborted boot on memory error\n");
+		} else
+			printf("E: Faulty SDRAM clocking\n");
 	} else {
-		printf("I: Warm boot\n");
+		printf("I: No SDRAM on this evaluation board, not booting\n");
 		sdram_enabled = 0;
-		boot_sequence();
 	}
 
 	splash_showerr();

@@ -50,7 +50,9 @@ malloc.o: ../../software/include/malloc.h
 softfloat-glue.o: softfloat.h
 softfloat.o: milieu.h softfloat.h softfloat-macros.h softfloat-specialize.h
 system.o: ../../software/include/irq.h ../../software/include/uart.h
-system.o: ../../software/include/hw/fmlbrg.h ../../software/include/system.h
+system.o: ../../software/include/hw/fmlbrg.h
+system.o: ../../software/include/hw/sysctl.h
+system.o: ../../software/include/hw/common.h ../../software/include/system.h
 uart-async.o: ../../software/include/uart.h ../../software/include/irq.h
 uart-async.o: ../../software/include/hw/uart.h
 uart-async.o: ../../software/include/hw/common.h

@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -206,7 +206,7 @@ static void help()
 	puts("stop       - stop renderer");
 	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
-	puts("reboot     - warm reboot");
+	puts("reboot     - system reset");
 }
 
 /*
