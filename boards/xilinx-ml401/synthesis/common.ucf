@@ -339,10 +339,55 @@ NET "ac97_sync" LOC = D9 | IOSTANDARD = LVCMOS25;
 NET "ac97_clk" TNM_NET = "clkac97";
 TIMESPEC "TSclkac97" = PERIOD "clkac97" 80 HIGH 50%;
 
-# ==== PS/2  ====
+# ==== PS/2 ====
 # "keyboard" connector
 NET "ps2_clk1"  LOC = D2 | IOSTANDARD = LVCMOS25;
 NET "ps2_data1" LOC = G9 | IOSTANDARD = LVCMOS25;
 # "mouse" connector
 NET "ps2_clk2"  LOC = B14 | IOSTANDARD = LVCMOS25;
 NET "ps2_data2" LOC = C14 | IOSTANDARD = LVCMOS25;
+
+# ==== Ethernet ====
+NET "phy_col" LOC = E3;
+NET "phy_crs" LOC = D5;
+NET "phy_dv" LOC = A9;
+NET "phy_rx_clk" LOC = B15;
+NET "phy_rx_data<3>" LOC = C4;
+NET "phy_rx_data<2>" LOC = D4;
+NET "phy_rx_data<1>" LOC = E1;
+NET "phy_rx_data<0>" LOC = F1;
+
+NET "phy_rx_er" LOC = B9;
+NET "phy_tx_clk" LOC = C15;
+NET "phy_mii_clk" LOC = D1;
+NET "phy_mii_int_n" LOC = H4;
+NET "phy_rst_n" LOC = D10;
+NET "phy_tx_data<3>" LOC = G1;
+NET "phy_tx_data<2>" LOC = H3;
+NET "phy_tx_data<1>" LOC = H2;
+NET "phy_tx_data<0>" LOC = H1;
+NET "phy_tx_en" LOC = F4;
+NET "phy_tx_er" LOC = F3;
+NET "phy_mii_data" LOC = G4;
+
+NET "phy_mii_int_n" PULLUP;
+
+# Timing
+NET "phy_rx_clk" TNM_NET = "RXCLK_GRP";
+NET "phy_tx_clk" TNM_NET = "TXCLK_GRP";
+TIMESPEC "TSTXOUT" = FROM "TXCLK_GRP" TO "PADS" 10 ns;
+TIMESPEC "TSRXIN" = FROM "PADS" TO "RXCLK_GRP" 6 ns;
+
+NET "phy_tx_clk" MAXSKEW= 1.0 ns;
+NET "phy_rx_clk" MAXSKEW= 1.0 ns;
+NET "phy_rx_clk" PERIOD = 40 ns HIGH 14 ns;
+NET "phy_tx_clk" PERIOD = 40 ns HIGH 14 ns;
+
+NET "phy_rx_data<3>" IOBDELAY=NONE;
+NET "phy_rx_data<2>" IOBDELAY=NONE;
+NET "phy_rx_data<1>" IOBDELAY=NONE;
+NET "phy_rx_data<0>" IOBDELAY=NONE;
+NET "phy_dv" IOBDELAY=NONE;
+NET "phy_rx_er" IOBDELAY=NONE;
+NET "phy_crs" IOBDELAY=NONE;
+NET "phy_col" IOBDELAY=NONE;

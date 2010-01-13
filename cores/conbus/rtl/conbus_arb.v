@@ -19,18 +19,19 @@ module conbus_arb(
 	input sys_clk,
 	input sys_rst,
 	
-	input [4:0] req,
-	output [4:0] gnt
+	input [5:0] req,
+	output [5:0] gnt
 );
 
-parameter [4:0] grant0 = 5'b00001,
-                grant1 = 5'b00010,
-                grant2 = 5'b00100,
-                grant3 = 5'b01000,
-                grant4 = 5'b10000;
+parameter [5:0] grant0 = 6'b000001,
+                grant1 = 6'b000010,
+                grant2 = 6'b000100,
+                grant3 = 6'b001000,
+                grant4 = 6'b010000,
+                grant5 = 6'b100000;
 
-reg [4:0] state;
-reg [4:0] next_state;
+reg [5:0] state;
+reg [5:0] next_state;
 
 assign gnt = state;
 
@@ -50,6 +51,7 @@ always @(*) begin
 				else if(req[2]) next_state = grant2;
 				else if(req[3]) next_state = grant3;
 				else if(req[4]) next_state = grant4;
+				else if(req[5]) next_state = grant5;
 			end
 		end
 		grant1: begin
@@ -57,6 +59,7 @@ always @(*) begin
 				     if(req[2]) next_state = grant2;
 				else if(req[3]) next_state = grant3;
 				else if(req[4]) next_state = grant4;
+				else if(req[5]) next_state = grant5;
 				else if(req[0]) next_state = grant0;
 			end
 		end
@@ -64,6 +67,7 @@ always @(*) begin
 			if(~req[2]) begin
 				     if(req[3]) next_state = grant3;
 				else if(req[4]) next_state = grant4;
+				else if(req[5]) next_state = grant5;
 				else if(req[0]) next_state = grant0;
 				else if(req[1]) next_state = grant1;
 			end
@@ -71,6 +75,7 @@ always @(*) begin
 		grant3: begin
 			if(~req[3]) begin
 				     if(req[4]) next_state = grant4;
+				else if(req[5]) next_state = grant5;
 				else if(req[0]) next_state = grant0;
 				else if(req[1]) next_state = grant1;
 				else if(req[2]) next_state = grant2;
@@ -78,10 +83,20 @@ always @(*) begin
 		end
 		grant4: begin
 			if(~req[4]) begin
+				     if(req[5]) next_state = grant5;
+				else if(req[0]) next_state = grant0;
+				else if(req[1]) next_state = grant1;
+				else if(req[2]) next_state = grant2;
+				else if(req[3]) next_state = grant3;
+			end
+		end
+		grant5: begin
+			if(~req[5]) begin
 				     if(req[0]) next_state = grant0;
 				else if(req[1]) next_state = grant1;
 				else if(req[2]) next_state = grant2;
 				else if(req[3]) next_state = grant3;
+				else if(req[4]) next_state = grant4;
 			end
 		end
 	endcase

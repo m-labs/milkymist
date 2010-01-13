@@ -97,7 +97,22 @@ module system(
 	inout ps2_clk1,
 	inout ps2_data1,
 	inout ps2_clk2,
-	inout ps2_data2
+	inout ps2_data2,
+
+	// Ethernet
+	output phy_rst_n,
+	input phy_tx_clk,
+	output [3:0] phy_tx_data,
+	output phy_tx_en,
+	output phy_tx_er,
+	input phy_rx_clk,
+	input [3:0] phy_rx_data,
+	input phy_dv,
+	input phy_rx_er,
+	input phy_col,
+	input phy_crs,
+	output phy_mii_clk,
+	inout phy_mii_data
 );
 
 //------------------------------------------------------------------
@@ -163,6 +178,9 @@ assign flash_ac97_reset_n = flash_rstcounter[7];
 wire ac97_rst_n;
 assign ac97_rst_n = flash_rstcounter[7];
 
+/* Just use the same signal for PHY reset */
+assign phy_rst_n = flash_rstcounter[7];
+
 `else
 wire sys_rst;
 assign sys_rst = ~resetin;
@@ -175,7 +193,8 @@ wire [31:0]	cpuibus_adr,
 		cpudbus_adr,
 		ac97bus_adr,
 		pfpubus_adr,
-		tmumbus_adr;
+		tmumbus_adr,
+		ethernetmbus_adr;
 
 wire [2:0]	cpuibus_cti,
 		cpudbus_cti,
@@ -188,30 +207,37 @@ wire [31:0]	cpuibus_dat_r,
 		ac97bus_dat_r,
 		ac97bus_dat_w,
 		pfpubus_dat_w,
-		tmumbus_dat_r;
+		tmumbus_dat_r,
+		ethernetmbus_dat_w,
+		ethernetmbus_dat_r;
 
-wire [3:0]	cpudbus_sel;
+wire [3:0]	cpudbus_sel,
+		ethernetmbus_sel;
 
 wire		cpudbus_we,
-		ac97bus_we;
+		ac97bus_we,
+		ethernetmbus_we;
 
 wire		cpuibus_cyc,
 		cpudbus_cyc,
 		ac97bus_cyc,
 		pfpubus_cyc,
-		tmumbus_cyc;
+		tmumbus_cyc,
+		ethernetmbus_cyc;
 
 wire		cpuibus_stb,
 		cpudbus_stb,
 		ac97bus_stb,
 		pfpubus_stb,
-		tmumbus_stb;
+		tmumbus_stb,
+		ethernetmbus_stb;
 
 wire		cpuibus_ack,
 		cpudbus_ack,
 		ac97bus_ack,
 		tmumbus_ack,
-		pfpubus_ack;
+		pfpubus_ack,
+		ethernetmbus_ack;
 
 //------------------------------------------------------------------
 // Wishbone slave wires
@@ -220,7 +246,8 @@ wire [31:0]	brg_adr,
 		norflash_adr,
 		bram_adr,
 		csrbrg_adr,
-		aceusb_adr;
+		aceusb_adr,
+		ethernet_adr;
 
 wire [2:0]	brg_cti,
 		bram_cti;
@@ -233,33 +260,40 @@ wire [31:0]	brg_dat_r,
 		csrbrg_dat_r,
 		csrbrg_dat_w,
 		aceusb_dat_r,
-		aceusb_dat_w;
+		aceusb_dat_w,
+		ethernet_dat_r,
+		ethernet_dat_w;
 
 wire [3:0]	brg_sel,
-		bram_sel;
+		bram_sel,
+		ethernet_sel;
 
 wire		brg_we,
 		bram_we,
 		csrbrg_we,
-		aceusb_we;
+		aceusb_we,
+		ethernet_we;
 
 wire		brg_cyc,
 		norflash_cyc,
 		bram_cyc,
 		csrbrg_cyc,
-		aceusb_cyc;
+		aceusb_cyc,
+		ethernet_cyc;
 
 wire		brg_stb,
 		norflash_stb,
 		bram_stb,
 		csrbrg_stb,
-		aceusb_stb;
+		aceusb_stb,
+		ethernet_stb;
 
 wire		brg_ack,
 		norflash_ack,
 		bram_ack,
 		csrbrg_ack,
-		aceusb_ack;
+		aceusb_ack,
+		ethernet_ack;
 
 //---------------------------------------------------------------------------
 // Wishbone switch
@@ -270,7 +304,8 @@ conbus #(
 	.s1_addr(3'b001),	// bram		0x20000000
 	.s2_addr(3'b010),	// FML bridge	0x40000000
 	.s3_addr(3'b100),	// CSR bridge	0x80000000
-	.s4_addr(3'b101)	// aceusb	0xa0000000
+	.s4_addr(3'b101),	// aceusb	0xa0000000
+	.s5_addr(3'b110)	// ethernet	0xc0000000
 ) conbus (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -325,6 +360,16 @@ conbus #(
 	.m4_cyc_i(tmumbus_cyc),
 	.m4_stb_i(tmumbus_stb),
 	.m4_ack_o(tmumbus_ack),
+	// Master 5
+	.m5_dat_i(ethernetmbus_dat_w),
+	.m5_dat_o(ethernetmbus_dat_r),
+	.m5_adr_i(ethernetmbus_adr),
+	.m5_cti_i(3'd0),
+	.m5_we_i(ethernetmbus_we),
+	.m5_sel_i(ethernetmbus_sel),
+	.m5_cyc_i(ethernetmbus_cyc),
+	.m5_stb_i(ethernetmbus_stb),
+	.m5_ack_o(ethernetmbus_ack),
 
 	// Slave 0
 	.s0_dat_i(norflash_dat_r),
@@ -367,7 +412,16 @@ conbus #(
 	.s4_we_o(aceusb_we),
 	.s4_cyc_o(aceusb_cyc),
 	.s4_stb_o(aceusb_stb),
-	.s4_ack_i(aceusb_ack)
+	.s4_ack_i(aceusb_ack),
+	// Slave 5
+	.s5_dat_i(ethernet_dat_r),
+	.s5_dat_o(ethernet_dat_w),
+	.s5_adr_o(ethernet_adr),
+	.s5_sel_o(ethernet_sel),
+	.s5_we_o(ethernet_we),
+	.s5_cyc_o(ethernet_cyc),
+	.s5_stb_o(ethernet_stb),
+	.s5_ack_i(ethernet_ack)
 );
 
 //------------------------------------------------------------------
@@ -557,9 +611,11 @@ wire pfpu_irq;
 wire tmu_irq;
 wire keyboard_irq;
 wire mouse_irq;
+wire ethernet_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {19'd0,
+assign cpu_interrupt = {18'd0,
+	ethernet_irq,
 	mouse_irq,
 	keyboard_irq,
 	tmu_irq,
@@ -1056,6 +1112,69 @@ ps2 #(
 `else
 assign csr_dr_mouse = 32'd0;
 assign mouse_irq = 1'd0;
+`endif
+
+`ifdef ENABLE_ETHERNET
+wire md_pad_i;
+wire md_pad_o;
+wire md_padoe_o;
+
+eth_top ethernet(
+	.wb_clk_i(sys_clk),
+	.wb_rst_i(sys_rst),
+
+	/* Slave interface */
+	.wb_adr_i(ethernet_adr[11:2]),
+	.wb_sel_i(ethernet_sel),
+	.wb_we_i(ethernet_we),
+	.wb_cyc_i(ethernet_cyc),
+	.wb_stb_i(ethernet_stb),
+	.wb_ack_o(ethernet_ack),
+	.wb_err_o(),
+	.wb_dat_i(ethernet_dat_w),
+	.wb_dat_o(ethernet_dat_r),
+
+	/* Master interface */
+	.m_wb_adr_o(ethernetmbus_adr),
+	.m_wb_sel_o(ethernetmbus_sel),
+	.m_wb_we_o(ethernetmbus_we),
+	.m_wb_dat_o(ethernetmbus_dat_w),
+	.m_wb_dat_i(ethernetmbus_dat_r),
+	.m_wb_cyc_o(ethernetmbus_cyc),
+	.m_wb_stb_o(ethernetmbus_stb),
+	.m_wb_ack_i(ethernetmbus_ack),
+	.m_wb_err_i(1'b0),
+
+	.int_o(ethernet_irq),
+
+	/* MII */
+	.mtx_clk_pad_i(phy_tx_clk),
+	.mtxd_pad_o(phy_tx_data),
+	.mtxen_pad_o(phy_tx_en),
+	.mtxerr_pad_o(phy_tx_er),
+	.mrx_clk_pad_i(phy_rx_clk),
+	.mrxd_pad_i(phy_rx_data),
+	.mrxdv_pad_i(phy_dv),
+	.mrxerr_pad_i(phy_rx_er),
+	.mcoll_pad_i(phy_col),
+	.mcrs_pad_i(phy_crs),
+	.mdc_pad_o(phy_mii_clk),
+	.md_pad_i(md_pad_i),
+	.md_pad_o(md_pad_o),
+	.md_padoe_o(md_padoe_o)
+);
+
+assign phy_mii_data = md_padoe_o ? md_pad_o : 1'bz;
+assign md_pad_i = phy_mii_data;
+
+`else
+
+assign phy_tx_data = 4'b0;
+assign phy_tx_en = 1'b0;
+assign phy_tx_er = 1'b0;
+assign phy_mii_clk = 1'b0;
+assign phy_mii_data = 1'bz;
+
 `endif
 
 endmodule

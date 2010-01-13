@@ -180,7 +180,7 @@
 `define ETH_MBIST_CTRL_WIDTH 3        // width of MBIST control bus
 
 // Ethernet implemented in Xilinx Chips (uncomment following lines)
-// `define ETH_FIFO_XILINX             // Use Xilinx distributed ram for tx and rx fifo
+`define ETH_FIFO_XILINX             // Use Xilinx distributed ram for tx and rx fifo
 // `define ETH_XILINX_RAMB4            // Selection of the used memory for Buffer descriptors
                                       // Core is going to be implemented in Virtex FPGA and contains Virtex 
                                       // specific elements. 
@@ -329,17 +329,3 @@
 
 // WISHBONE interface is Revision B3 compliant (uncomment when needed)
 //`define ETH_WISHBONE_B3
-
-
-// Following defines are needed when eth_cop.v is used. Otherwise they may be deleted.
-`define ETH_BASE              32'hd0000000
-`define ETH_WIDTH             32'h800
-`define MEMORY_BASE           32'h2000
-`define MEMORY_WIDTH          32'h10000
-
-`define M1_ADDRESSED_S1 ( (m1_wb_adr_i >= `ETH_BASE)    & (m1_wb_adr_i < (`ETH_BASE    + `ETH_WIDTH   )) )
-`define M1_ADDRESSED_S2 ( (m1_wb_adr_i >= `MEMORY_BASE) & (m1_wb_adr_i < (`MEMORY_BASE + `MEMORY_WIDTH)) )
-`define M2_ADDRESSED_S1 ( (m2_wb_adr_i >= `ETH_BASE)    & (m2_wb_adr_i < (`ETH_BASE    + `ETH_WIDTH   )) )
-`define M2_ADDRESSED_S2 ( (m2_wb_adr_i >= `MEMORY_BASE) & (m2_wb_adr_i < (`MEMORY_BASE + `MEMORY_WIDTH)) )
-// Previous defines are only needed for eth_cop.v
-
