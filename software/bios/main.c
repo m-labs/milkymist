@@ -38,18 +38,12 @@ const struct board_desc *brd_desc;
 
 /* SDRAM functions */
 
-static int sdram_enabled;
 static int dqs_ps;
 
 static void ddrinit()
 {
 	volatile unsigned int i;
 
-	if(!sdram_enabled) {
-		printf("E: Command disabled\n");
-		return;
-	}
-	
 	putsnonl("I: Initializing SDRAM [DDR200 CL=2 BL=8]...");
 	/* Bring CKE high */
 	CSR_HPDMC_SYSTEM = HPDMC_SYSTEM_BYPASS|HPDMC_SYSTEM_RESET|HPDMC_SYSTEM_CKE;
@@ -89,11 +83,6 @@ static int plltest()
 {
 	int ok1, ok2;
 
-	if(!sdram_enabled) {
-		printf("E: Command disabled\n");
-		return 0;
-	}
-
 	printf("I: Checking if SDRAM clocking is functional:\n");
 	ok1 = CSR_HPDMC_IODELAY & HPDMC_PLL1_LOCKED;
 	ok2 = CSR_HPDMC_IODELAY & HPDMC_PLL2_LOCKED;
@@ -109,11 +98,6 @@ static int memtest(unsigned int div)
 	unsigned int i;
 	unsigned int size;
 
-	if(!sdram_enabled) {
-		printf("E: Command disabled\n");
-		return 0;
-	}
-	
 	putsnonl("I: SDRAM test...");
 
 	size = brd_desc->sdram_size*1024*1024/(4*div);
@@ -147,11 +131,6 @@ static void calibrate()
 	int quit;
 	char c;
 
-	if(!sdram_enabled) {
-		printf("E: Command disabled\n");
-		return;
-	}
-	
 	printf("================================\n");
 	printf("DDR SDRAM calibration tool\n");
 	printf("================================\n");
@@ -548,7 +527,7 @@ static void display_board()
 
 static const char banner[] =
 	"\nMILKYMIST(tm) v"VERSION" BIOS\thttp://www.milkymist.org\n"
-	"(c) 2007, 2008, 2009 Sebastien Bourdeauducq\n\n"
+	"(c) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq\n\n"
 	"This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, version 3 of the License.\n\n";
@@ -585,24 +564,17 @@ int main(int i, char **c)
 	
 	crcbios();
 	display_board();
-
-	sdram_enabled = 1;
 	
-	if(brd_desc->sdram_size > 0) {
-		if(plltest()) {
-			ddrinit();
-			flush_bridge_cache();
+	if(plltest()) {
+		ddrinit();
+		flush_bridge_cache();
 
-			if(memtest(8))
-				boot_sequence();
-			else
-				printf("E: Aborted boot on memory error\n");
-		} else
-			printf("E: Faulty SDRAM clocking\n");
-	} else {
-		printf("I: No SDRAM on this evaluation board, not booting\n");
-		sdram_enabled = 0;
-	}
+		if(memtest(8))
+			boot_sequence();
+		else
+			printf("E: Aborted boot on memory error\n");
+	} else
+		printf("E: Faulty SDRAM clocking\n");
 
 	splash_showerr();
 	while(1) {

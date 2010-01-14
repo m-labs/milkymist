@@ -31,13 +31,6 @@ static const struct board_desc boards[3] = {
 		.memory_card = MEMCARD_SYSTEMACE
 	},
 	{
-		.id = 0x53334145, /* S3AE */
-		.name = "Avnet Spartan-3A evaluation kit",
-		.clk_frequency = 64000000,
-		.sdram_size = 0,
-		.memory_card = MEMCARD_NONE
-	},
-	{
 		.id = 0x4D4F4E45, /* MONE */
 		.name = "Milkymist One",
 		.clk_frequency = 80000000,
