@@ -360,7 +360,6 @@ NET "phy_rx_data<0>" LOC = F1;
 NET "phy_rx_er" LOC = B9;
 NET "phy_tx_clk" LOC = C15;
 NET "phy_mii_clk" LOC = D1;
-NET "phy_mii_int_n" LOC = H4;
 NET "phy_rst_n" LOC = D10;
 NET "phy_tx_data<3>" LOC = G1;
 NET "phy_tx_data<2>" LOC = H3;
@@ -369,8 +368,6 @@ NET "phy_tx_data<0>" LOC = H1;
 NET "phy_tx_en" LOC = F4;
 NET "phy_tx_er" LOC = F3;
 NET "phy_mii_data" LOC = G4;
-
-NET "phy_mii_int_n" PULLUP;
 
 # Timing
 NET "phy_rx_clk" TNM_NET = "RXCLK_GRP";
