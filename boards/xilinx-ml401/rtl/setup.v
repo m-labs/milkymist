@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 `define ENABLE_TMU
 `define ENABLE_PS2_KEYBOARD
 `define ENABLE_PS2_MOUSE
-`define ENABLE_ETHERNET
+//`define ENABLE_ETHERNET
 
 /*
  * System clock frequency in Hz.
