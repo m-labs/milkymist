@@ -49,11 +49,11 @@ always @(posedge sys_clk) begin
 			read_safe_counter <= 3'd4;
 			read_safe <= 1'b0;
 		end else if(write) begin
-			/* after a write, read is unsafe for 5-CL cycles, therefore we load :
-			 * 3 at CAS Latency 2 (tim_cas = 0)
-			 * 2 at CAS Latency 3 (tim_cas = 1)
+			/* after a write, read is unsafe for 6-CL cycles, therefore we load :
+			 * 4 at CAS Latency 2 (tim_cas = 0)
+			 * 3 at CAS Latency 3 (tim_cas = 1)
 			 */
-			read_safe_counter <= {2'b01, ~tim_cas};
+			read_safe_counter <= {~tim_cas, tim_cas, tim_cas};
 			read_safe <= 1'b0;
 		end else begin
 			if(read_safe_counter == 3'd1)
@@ -76,10 +76,10 @@ always @(posedge sys_clk) begin
 		write_safe <= 1'b1;
 	end else begin
 		if(read) begin
-			write_safe_counter <= {2'b11, tim_cas};
+			write_safe_counter <= {1'b1, tim_cas, ~tim_cas};
 			write_safe <= 1'b0;
 		end else if(write) begin
-			write_safe_counter <= 3'd4;
+			write_safe_counter <= 3'd3;
 			write_safe <= 1'b0;
 		end else begin
 			if(write_safe_counter == 3'd1)
