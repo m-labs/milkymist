@@ -571,6 +571,11 @@ csrbrg csrbrg(
 //---------------------------------------------------------------------------
 // WISHBONE to FML bridge
 //---------------------------------------------------------------------------
+wire dcb_stb;
+wire [`SDRAM_DEPTH-1:0] dcb_adr;
+wire [63:0] dcb_dat;
+wire dcb_hit;
+
 fmlbrg #(
 	.fml_depth(`SDRAM_DEPTH)
 ) fmlbrg (
@@ -593,7 +598,12 @@ fmlbrg #(
 	.fml_ack(fml_brg_ack),
 	.fml_sel(fml_brg_sel),
 	.fml_di(fml_brg_dr),
-	.fml_do(fml_brg_dw)
+	.fml_do(fml_brg_dw),
+
+	.dcb_stb(dcb_stb),
+	.dcb_adr(dcb_adr),
+	.dcb_dat(dcb_dat),
+	.dcb_hit(dcb_hit)
 );
 
 //---------------------------------------------------------------------------
@@ -909,6 +919,11 @@ vga #(
 	.fml_stb(fml_vga_stb),
 	.fml_ack(fml_vga_ack),
 	.fml_di(fml_vga_dr),
+
+	.dcb_stb(dcb_stb),
+	.dcb_adr(dcb_adr),
+	.dcb_dat(dcb_dat),
+	.dcb_hit(dcb_hit),
 	
 	.vga_psave_n(vga_psave_n),
 	.vga_hsync_n(vga_hsync_n),

@@ -33,6 +33,12 @@ module vgafb #(
 	output fml_stb,
 	input fml_ack,
 	input [63:0] fml_di,
+
+	/* Direct Cache Bus */
+	output dcb_stb,
+	output [fml_depth-1:0] dcb_adr,
+	input [63:0] dcb_dat,
+	input dcb_hit,
 	
 	/* VGA pixel clock */
 	input vga_clk,
@@ -173,6 +179,11 @@ vgafb_pixelfeed #(
 	.fml_stb(fml_stb),
 	.fml_ack(fml_ack),
 	.fml_di(fml_di),
+
+	.dcb_stb(dcb_stb),
+	.dcb_adr(dcb_adr),
+	.dcb_dat(dcb_dat),
+	.dcb_hit(dcb_hit),
 	
 	.pixel_valid(pixel_valid),
 	.pixel(pixel_fb),

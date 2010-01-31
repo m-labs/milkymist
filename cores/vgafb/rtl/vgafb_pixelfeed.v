@@ -34,6 +34,11 @@ module vgafb_pixelfeed #(
 	output reg fml_stb,
 	input fml_ack,
 	input [63:0] fml_di,
+
+	output reg dcb_stb,
+	output [fml_depth-1:0] dcb_adr,
+	input [63:0] dcb_dat,
+	input dcb_hit,
 	
 	output pixel_valid,
 	output [15:0] pixel,
@@ -42,6 +47,7 @@ module vgafb_pixelfeed #(
 
 /* FIFO that stores the 64-bit bursts and slices it in 16-bit words */
 
+reg fifo_source_cache;
 reg fifo_stb;
 wire fifo_valid;
 
@@ -50,7 +56,7 @@ vgafb_fifo64to16 fifo64to16(
 	.vga_rst(vga_rst),
 	
 	.stb(fifo_stb),
-	.di(fml_di),
+	.di(fifo_source_cache ? dcb_dat : fml_di),
 	
 	.do_valid(fifo_valid),
 	.do(pixel),
@@ -100,15 +106,31 @@ always @(posedge sys_clk) begin
 	end
 end
 
-/* CONTROLLER */
-reg [2:0] state;
-reg [2:0] next_state;
+/* DCB ADDRESS GENERATOR */
+reg [1:0] dcb_index;
 
-parameter IDLE		= 3'd0;
-parameter WAIT		= 3'd1;
-parameter FETCH2	= 3'd2;
-parameter FETCH3	= 3'd3;
-parameter FETCH4	= 3'd4;
+always @(posedge sys_clk) begin
+	if(dcb_stb)
+		dcb_index <= dcb_index + 2'd1;
+	else
+		dcb_index <= 2'd0;
+end
+
+assign dcb_adr = {fml_adr[fml_depth-1:2], dcb_index};
+
+/* CONTROLLER */
+reg [3:0] state;
+reg [3:0] next_state;
+
+parameter IDLE		= 4'd0;
+parameter CACHE1	= 4'd1;
+parameter CACHE2	= 4'd2;
+parameter CACHE3	= 4'd3;
+parameter CACHE4	= 4'd4;
+parameter FML1		= 4'd5;
+parameter FML2		= 4'd6;
+parameter FML3		= 4'd7;
+parameter FML4		= 4'd8;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -147,6 +169,9 @@ always @(*) begin
 	
 	fml_stb = 1'b0;
 	ignore_clear = 1'b0;
+
+	dcb_stb = 1'b0;
+	fifo_source_cache = 1'b0;
 	
 	case(state)
 		IDLE: begin
@@ -154,25 +179,58 @@ always @(*) begin
 				/* We're in need of pixels ! */
 				next_burst = 1'b1;
 				ignore_clear = 1'b1;
-				next_state = WAIT;
+				dcb_stb = 1'b1; /* Try to fetch from L2 first */
+				next_state = CACHE1;
 			end
 		end
-		WAIT: begin
+		CACHE1: begin
+			fifo_source_cache = 1'b1;
+			if(dcb_hit) begin
+				dcb_stb = 1'b1;
+				if(~ignore) fifo_stb = 1'b1;
+				next_state = CACHE2;
+			end else
+				next_state = FML1; /* Not in L2 cache, fetch from DRAM */
+		end
+		/* No need to check for cache hits anymore:
+		 * - we fetched from the beginning of a line
+		 * - we fetch exactly a line
+		 * - we do not release dcb_stb so the cache controller locks the line
+		 * Therefore, next 3 fetchs always are cache hits.
+		 */
+		CACHE2: begin
+			dcb_stb = 1'b1;
+			fifo_source_cache = 1'b1;
+			if(~ignore) fifo_stb = 1'b1;
+			next_state = CACHE3;
+		end
+		CACHE3: begin
+			dcb_stb = 1'b1;
+			fifo_source_cache = 1'b1;
+			if(~ignore) fifo_stb = 1'b1;
+			next_state = CACHE4;
+		end
+		CACHE4: begin
+			fifo_source_cache = 1'b1;
+			if(~ignore) fifo_stb = 1'b1;
+			next_state = IDLE;
+		end
+		FML1: begin
 			fml_stb = 1'b1;
 			if(fml_ack) begin
 				if(~ignore) fifo_stb = 1'b1;
-				next_state = FETCH2;
+				next_state = FML2;
  			end
 		end
-		FETCH2: begin
+		FML2: begin
 			if(~ignore) fifo_stb = 1'b1;
-			next_state = FETCH3;
+			next_state = FML3;
 		end
-		FETCH3: begin
+		FML3: begin
 			if(~ignore) fifo_stb = 1'b1;
-			next_state = FETCH4;
+			next_state = FML4;
 		end
-		FETCH4: begin
+		FML4: begin
 			if(~ignore) fifo_stb = 1'b1;
 			next_state = IDLE;
 		end
