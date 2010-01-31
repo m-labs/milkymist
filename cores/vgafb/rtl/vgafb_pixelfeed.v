@@ -123,14 +123,15 @@ reg [3:0] state;
 reg [3:0] next_state;
 
 parameter IDLE		= 4'd0;
-parameter CACHE1	= 4'd1;
-parameter CACHE2	= 4'd2;
-parameter CACHE3	= 4'd3;
-parameter CACHE4	= 4'd4;
-parameter FML1		= 4'd5;
-parameter FML2		= 4'd6;
-parameter FML3		= 4'd7;
-parameter FML4		= 4'd8;
+parameter TRYCACHE	= 4'd1;
+parameter CACHE1	= 4'd2;
+parameter CACHE2	= 4'd3;
+parameter CACHE3	= 4'd4;
+parameter CACHE4	= 4'd5;
+parameter FML1		= 4'd6;
+parameter FML2		= 4'd7;
+parameter FML3		= 4'd8;
+parameter FML4		= 4'd9;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -179,9 +180,13 @@ always @(*) begin
 				/* We're in need of pixels ! */
 				next_burst = 1'b1;
 				ignore_clear = 1'b1;
-				dcb_stb = 1'b1; /* Try to fetch from L2 first */
-				next_state = CACHE1;
+				next_state = TRYCACHE;
 			end
+		end
+		/* Try to fetch from L2 first */
+		TRYCACHE: begin
+			dcb_stb = 1'b1;
+			next_state = CACHE1;
 		end
 		CACHE1: begin
 			fifo_source_cache = 1'b1;

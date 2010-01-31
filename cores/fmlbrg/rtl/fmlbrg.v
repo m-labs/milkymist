@@ -61,7 +61,8 @@ wire [4:0] offset = wb_adr_i[4:0];
 wire [cache_depth-1-5:0] index = wb_adr_i[cache_depth-1:5];
 wire [fml_depth-cache_depth-1:0] tag = wb_adr_i[fml_depth-1:cache_depth];
 
-wire [cache_depth-1-5:0] dcb_index = dcb_adr[cache_depth-1:0];
+wire [4:0] dcb_offset = dcb_adr[4:0];
+wire [cache_depth-1-5:0] dcb_index = dcb_adr[cache_depth-1:5];
 wire [fml_depth-cache_depth-1:0] dcb_tag = dcb_adr[fml_depth-1:cache_depth];
 
 wire coincidence = tag == dcb_tag;
@@ -178,7 +179,7 @@ end
 
 assign datamem_a = { index_load ? index : index_r, bcounter_next };
 
-assign datamem_a2 = dcb_index;
+assign datamem_a2 = {dcb_index, dcb_offset[4:3]};
 
 reg datamem_we_wb;
 reg datamem_we_fml;
@@ -431,6 +432,10 @@ always @(posedge sys_clk) begin
 	end
 end
 
-assign dcb_hit = dcb_can_hit & do2_valid & (do2_tag == dcb_tag);
+reg [fml_depth-cache_depth-1:0] dcb_tag_r;
+always @(posedge sys_clk)
+	dcb_tag_r = dcb_tag;
+
+assign dcb_hit = dcb_can_hit & do2_valid & (do2_tag == dcb_tag_r);
 
 endmodule
