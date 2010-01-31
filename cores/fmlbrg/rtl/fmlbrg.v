@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,13 @@ module fmlbrg #(
 	input fml_ack,
 	output [7:0] fml_sel,
 	output [63:0] fml_do,
-	input [63:0] fml_di
+	input [63:0] fml_di,
+
+	/* Direct Cache Bus */
+	input dcb_stb,
+	input [fml_depth-1:0] dcb_adr,
+	output [63:0] dcb_dat,
+	output dcb_hit
 );
 
 /*
@@ -55,6 +61,11 @@ wire [4:0] offset = wb_adr_i[4:0];
 wire [cache_depth-1-5:0] index = wb_adr_i[cache_depth-1:5];
 wire [fml_depth-cache_depth-1:0] tag = wb_adr_i[fml_depth-1:cache_depth];
 
+wire [cache_depth-1-5:0] dcb_index = dcb_adr[cache_depth-1:0];
+wire [fml_depth-cache_depth-1:0] dcb_tag = dcb_adr[fml_depth-1:cache_depth];
+
+wire coincidence = tag == dcb_tag;
+
 /*
  * TAG MEMORY
  *
@@ -65,25 +76,25 @@ wire [fml_depth-cache_depth-1:0] tag = wb_adr_i[fml_depth-1:cache_depth];
 wire [cache_depth-1-5:0] tagmem_a;
 reg tagmem_we;
 wire [fml_depth-cache_depth-1+2:0] tagmem_di;
-reg [fml_depth-cache_depth-1+2:0] tagmem_do;
+wire [fml_depth-cache_depth-1+2:0] tagmem_do;
 
-reg [fml_depth-cache_depth-1+2:0] tags[0:(1 << (cache_depth-5))-1];
+wire [cache_depth-1-5:0] tagmem_a2;
+wire [fml_depth-cache_depth-1+2:0] tagmem_do2;
 
-always @(posedge sys_clk) begin
-	if(tagmem_we) begin
-		tags[tagmem_a] <= tagmem_di;
-		tagmem_do <= tagmem_di;
-	end else
-		tagmem_do <= tags[tagmem_a];
-end
+fmlbrg_tagmem #(
+	.depth(cache_depth-5),
+	.width(fml_depth-cache_depth+2)
+) tagmem (
+	.sys_clk(sys_clk),
 
-// synthesis translate_off
-integer i;
-initial begin
-	for(i=0;i<(1 << (cache_depth-5));i=i+1)
-		tags[i] = 0;
-end
-// synthesis translate_on
+	.a(tagmem_a),
+	.we(tagmem_we),
+	.di(tagmem_di),
+	.do(tagmem_do),
+
+	.a2(tagmem_a2),
+	.do2(tagmem_do2)
+);
 
 reg index_load;
 reg [cache_depth-1-5:0] index_r;
@@ -93,6 +104,8 @@ always @(posedge sys_clk) begin
 end
 
 assign tagmem_a = index;
+
+assign tagmem_a2 = dcb_index;
 
 reg di_valid;
 reg di_dirty;
@@ -106,6 +119,9 @@ wire cache_hit;
 assign do_valid = tagmem_do[fml_depth-cache_depth-1+2];
 assign do_dirty = tagmem_do[fml_depth-cache_depth-1+1];
 assign do_tag = tagmem_do[fml_depth-cache_depth-1:0];
+
+assign do2_valid = tagmem_do2[fml_depth-cache_depth-1+2];
+assign do2_tag = tagmem_do2[fml_depth-cache_depth-1:0];
 
 always @(posedge sys_clk)
 	fml_adr <= {do_tag, index, offset};
@@ -122,6 +138,9 @@ wire [7:0] datamem_we;
 reg [63:0] datamem_di;
 wire [63:0] datamem_do;
 
+wire [cache_depth-3-1:0] datamem_a2;
+wire [63:0] datamem_do2;
+
 fmlbrg_datamem #(
 	.depth(cache_depth-3)
 ) datamem (
@@ -130,7 +149,10 @@ fmlbrg_datamem #(
 	.a(datamem_a),
 	.we(datamem_we),
 	.di(datamem_di),
-	.do(datamem_do)
+	.do(datamem_do),
+
+	.a2(datamem_a2),
+	.do2(datamem_do2)
 );
 
 reg [1:0] bcounter;
@@ -155,6 +177,8 @@ always @(*) begin
 end
 
 assign datamem_a = { index_load ? index : index_r, bcounter_next };
+
+assign datamem_a2 = dcb_index;
 
 reg datamem_we_wb;
 reg datamem_we_fml;
@@ -193,6 +217,7 @@ end
 assign wb_dat_o = wb_adr_i[2] ? datamem_do[31:0] : datamem_do[63:32];
 assign fml_do = datamem_do;
 assign fml_sel = 8'hff;
+assign dcb_dat = datamem_do2;
 
 /* FSM */
 
@@ -323,8 +348,10 @@ always @(*) begin
 				di_dirty = 1'b1;
 			else
 				di_dirty = 1'b0;
-			tagmem_we = 1'b1;
-			next_state = REFILL_WAIT;
+			if(~(dcb_stb & coincidence)) begin
+				tagmem_we = 1'b1;
+				next_state = REFILL_WAIT;
+			end
 		end
 		REFILL_WAIT: next_state = REFILL1; /* one cycle latency for the FML address */
 		REFILL1: begin
@@ -387,5 +414,23 @@ always @(*) begin
 		end
 	endcase
 end
+
+/* Do not hit on a line being refilled */
+reg dcb_can_hit;
+
+always @(posedge sys_clk) begin
+	dcb_can_hit <= 1'b0;
+	if(dcb_stb) begin
+		if((state != REFILL_WAIT)
+		|| (state != REFILL2)
+		|| (state != REFILL3)
+		|| (state != REFILL4))
+			dcb_can_hit <= 1'b1;
+		if(~coincidence)
+			dcb_can_hit <= 1'b1;
+	end
+end
+
+assign dcb_hit = dcb_can_hit & do2_valid & (do2_tag == dcb_tag);
 
 endmodule
