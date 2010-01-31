@@ -112,7 +112,7 @@ parameter divisor_100us = 1;
 reg [16:0] watchdog_timer;
 wire watchdog_timer_done;
 assign watchdog_timer_done = (watchdog_timer == 17'd0);
-always @(sys_clk) begin
+always @(posedge sys_clk) begin
 	if(sys_rst||ps2_clk_out)
 		watchdog_timer <= divisor_100us - 1;
 	else if(~watchdog_timer_done)
