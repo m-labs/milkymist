@@ -117,6 +117,9 @@ wire do_dirty;
 wire [fml_depth-cache_depth-1:0] do_tag;
 wire cache_hit;
 
+wire do2_valid;
+wire [fml_depth-cache_depth-1:0] do2_tag;
+
 assign do_valid = tagmem_do[fml_depth-cache_depth-1+2];
 assign do_dirty = tagmem_do[fml_depth-cache_depth-1+1];
 assign do_tag = tagmem_do[fml_depth-cache_depth-1:0];

@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,7 +116,7 @@ always @(posedge sys_clk) begin
 		dcb_index <= 2'd0;
 end
 
-assign dcb_adr = {fml_adr[fml_depth-1:2], dcb_index};
+assign dcb_adr = {fml_adr[fml_depth-1:5], dcb_index, 3'b000};
 
 /* CONTROLLER */
 reg [3:0] state;

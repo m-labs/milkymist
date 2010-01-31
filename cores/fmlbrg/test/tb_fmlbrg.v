@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,10 @@ wire [7:0] fml_sel;
 wire [63:0] fml_dw;
 reg [63:0] fml_dr;
 
+reg dcb_stb;
+reg [25:0] dcb_adr;
+wire [63:0] dcb_dat;
+wire dcb_hit;
 
 /* Process FML requests */
 reg [1:0] fml_wcount;
@@ -98,7 +102,12 @@ fmlbrg dut(
 	.fml_ack(fml_ack),
 	.fml_sel(fml_sel),
 	.fml_do(fml_dw),
-	.fml_di(fml_dr)
+	.fml_di(fml_dr),
+
+	.dcb_stb(dcb_stb),
+	.dcb_adr(dcb_adr),
+	.dcb_dat(dcb_dat),
+	.dcb_hit(dcb_hit)
 );
 
 task waitclock;
@@ -167,6 +176,9 @@ always begin
 	wb_cyc_i = 1'b0;
 	wb_stb_i = 1'b0;
 	wb_we_i = 1'b0;
+
+	dcb_stb = 1'b0;
+	dcb_adr = 26'd0;
 	
 	waitclock;
 	
@@ -189,6 +201,18 @@ always begin
 	wbwrite(26'h0, 32'habadface);
 	wbread(26'h0);
 	wbread(26'h4);
+
+	$display("Testing: DCB miss");
+	dcb_adr = 26'hfebabe;
+	dcb_stb = 1'b1;
+	waitclock;
+	$display("Result: hit=%b dat=%x", dcb_hit, dcb_dat);
+
+	$display("Testing: DCB hit");
+	dcb_adr = 26'h0;
+	dcb_stb = 1'b1;
+	waitclock;
+	$display("Result: hit=%b dat=%x", dcb_hit, dcb_dat);
 	
 	$finish;
 end
