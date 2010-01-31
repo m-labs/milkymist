@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,9 +51,6 @@ static void banner()
 
 int main()
 {
-#ifdef EMULATION
-	emu_init();
-#endif
 	irq_setmask(0);
 	irq_enable(1);
 	uart_async_init();
@@ -79,9 +76,6 @@ int main()
 			shell_input(readchar());
 		apipe_service();
 		rpipe_service();
-#ifdef EMULATION
-		emu_service();
-#endif
 	}
 	
 	return 0;

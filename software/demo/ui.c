@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,45 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#ifdef EMULATION
-
-#include <cffat.h>
-
-#include "renderer.h"
-
-void ui_init()
-{
-}
-
-void ui_isr_key()
-{
-}
-
-void ui_tick()
-{
-}
-
-int ui_render_from_file(const char *filename)
-{
-	char buffer[8192];
-	int size;
-
-	if(!cffat_init()) return 0;
-	if(!cffat_load(filename, buffer, sizeof(buffer), &size)) return 0;
-	cffat_done();
-	buffer[size] = 0;
-
-	if(!renderer_start(buffer)) return 0;
-	return 1;
-}
-
-void ui_render_stop()
-{
-	renderer_stop();
-}
-
-#else
 
 #include <stdio.h>
 #include <string.h>
@@ -307,5 +268,3 @@ void ui_tick()
 		refresh_screen();
 	}
 }
-
-#endif /* EMULATION */

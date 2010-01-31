@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  */
 
 #include <stdio.h>
-#include <system.h>
 #include <hw/vga.h>
 
 #include "splash.h"
@@ -38,7 +37,6 @@ void splash_display(void *fbadr)
 
 	for(i=0;i<splash_hres*splash_vres;i++)
 		splash_fb[i] = splash_src[i];
-	flush_bridge_cache();
 
 	CSR_VGA_BASEADDRESS = (unsigned int)splash_fb;
 	CSR_VGA_RESET = 0;
@@ -64,5 +62,4 @@ void splash_showerr()
 	for(;y<splash_vres;y++)
 		for(x=0;x<splash_hres;x++)
 			splash_fb[splash_hres*y+x] = color;
-	flush_bridge_cache();
 }

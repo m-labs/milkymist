@@ -27,10 +27,8 @@
 #include <board.h>
 #include <hw/pfpu.h>
 #include <hw/tmu.h>
-#ifndef EMULATION
 #include <hw/sysctl.h>
 #include <hw/gpio.h>
-#endif
 #include <hw/interrupts.h>
 
 #include <hal/vga.h>
@@ -216,9 +214,6 @@ static void help()
  */
 static void pfputest()
 {
-#ifdef EMULATION
-	printf("Not supported in emulation\n");
-#else
 	unsigned int mesh[128][128];
 	unsigned int *pfpu_regs = (unsigned int *)CSR_PFPU_DREGBASE;
 	unsigned int *pfpu_code = (unsigned int *)CSR_PFPU_CODEBASE;
@@ -292,7 +287,6 @@ static void pfputest()
 	CSR_PFPU_CTL = 0; /* Ack interrupt */
 	irq_ack(IRQ_PFPU);
 	irq_setmask(oldmask);
-#endif
 }
 
 static void tmutest_callback(struct tmu_td *td)
