@@ -19,6 +19,8 @@ module tmu2_vdivops(
 	input sys_clk,
 	input sys_rst,
 
+	output busy,
+
 	input pipe_stb_i,
 	output pipe_ack_o,
 	input signed [17:0] ax,
@@ -46,7 +48,6 @@ module tmu2_vdivops(
 	output reg [16:0] diff_dx,
 	output reg diff_dy_positive,
 	output reg [16:0] diff_dy,
-
 	output [11:0] drx_f,
 	output [11:0] dry_f
 );
@@ -105,5 +106,7 @@ always @(posedge sys_clk) begin
 end
 
 assign pipe_ack_o = ~pipe_stb_o | pipe_ack_i;
+
+assign busy = pipe_stb_o;
 
 endmodule

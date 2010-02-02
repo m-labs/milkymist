@@ -141,15 +141,15 @@ tmu2_fetchvertex fetchvertex(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
+	.start(start),
+	.busy(fetchvertex_busy),
+
 	.wbm_adr_o(wbm_adr_o),
 	.wbm_cti_o(wbm_cti_o),
 	.wbm_cyc_o(wbm_cyc_o),
 	.wbm_stb_o(wbm_stb_o),
 	.wbm_ack_i(wbm_ack_i),
 	.wbm_dat_i(wbm_dat_i),
-
-	.start(start),
-	.busy(fetchvertex_busy),
 
 	.vertex_hlast(vertex_hlast),
 	.vertex_vlast(vertex_vlast),
@@ -174,6 +174,7 @@ tmu2_fetchvertex fetchvertex(
 );
 
 /* Stage 2 - Vertical interpolation division operands */
+wire vdivops_busy;
 wire vdivops_pipe_stb;
 wire vdivops_pipe_ack;
 wire signed [17:0] ax_f;
@@ -194,6 +195,8 @@ wire signed [11:0] dry_f;
 tmu2_vdivops(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
+
+	.busy(vdivops_busy),
 
 	.pipe_stb_i(fetchvertex_pipe_stb),
 	.pipe_ack_o(fetchvertex_pipe_ack),

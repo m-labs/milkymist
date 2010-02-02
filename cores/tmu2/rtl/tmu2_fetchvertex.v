@@ -19,15 +19,15 @@ module tmu2_fetchvertex(
 	input sys_clk,
 	input sys_rst,
 
+	input start,
+	output reg busy,
+
 	output [31:0] wbm_adr_o,
 	output [2:0] wbm_cti_o,
 	output wbm_cyc_o,
 	output reg wbm_stb_o,
 	input wbm_ack_i,
 	input [31:0] wbm_dat_i,
-
-	input start,
-	output reg busy,
 
 	input [6:0] vertex_hlast,
 	input [6:0] vertex_vlast,
