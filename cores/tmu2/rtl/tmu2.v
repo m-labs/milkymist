@@ -230,6 +230,10 @@ tmu2_vdivops(
 	.dry_f(dry_f)
 );
 
+/* Stage 3 - Vertical division */
+
+/* Stage 4 - Vertical interpolation */
+
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
 wire decay_pipe_stb;

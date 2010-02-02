@@ -22,7 +22,7 @@ module tmu2_vdiv(
 	output busy,
 
 	input pipe_stb_i,
-	output pipe_ack_o,
+	output reg pipe_ack_o,
 	input [17:0] ax,
 	input [17:0] ay,
 	input [17:0] bx,
@@ -38,7 +38,6 @@ module tmu2_vdiv(
 	input [11:0] drx,
 	input [11:0] dry,
 
-	input [10:0] dst_squarew,
 	input [10:0] dst_squareh,
 
 	output reg pipe_stb_o,
@@ -47,19 +46,18 @@ module tmu2_vdiv(
 	output [17:0] ay_f,
 	output [17:0] bx_f,
 	output [17:0] by_f,
-	input diff_cx_positive_f,
-	input [16:0] diff_cx_q,
-	input [16:0] diff_cx_r,
-	input diff_cy_positive_f,
-	input [16:0] diff_cy_q,
-	input [16:0] diff_cy_r,
-	input diff_dx_positive_f,
-	input [16:0] diff_dx_q,
-	input [16:0] diff_dx_r,
-	input diff_dy_positive_f,
-	input [16:0] diff_dy_q,
-	input [16:0] diff_dy_r,
-
+	output reg diff_cx_positive_f,
+	output [16:0] diff_cx_q,
+	output [16:0] diff_cx_r,
+	output reg diff_cy_positive_f,
+	output [16:0] diff_cy_q,
+	output [16:0] diff_cy_r,
+	output reg diff_dx_positive_f,
+	output [16:0] diff_dx_q,
+	output [16:0] diff_dx_r,
+	output reg diff_dy_positive_f,
+	output [16:0] diff_dy_q,
+	output [16:0] diff_dy_r,
 	output [11:0] drx_f,
 	output [11:0] dry_f
 );
@@ -82,7 +80,7 @@ tmu2_divider17 d_cx(
 
 	.start(start),
 	.dividend(diff_cx),
-	.divisor({dst_squarew, 6'd0}),
+	.divisor({dst_squareh, 6'd0}),
 
 	.ready(ready),
 	.quotient(diff_cx_q),
@@ -106,7 +104,7 @@ tmu2_divider17 d_dx(
 
 	.start(start),
 	.dividend(diff_dx),
-	.divisor({dst_squarew, 6'd0}),
+	.divisor({dst_squareh, 6'd0}),
 
 	.ready(ready),
 	.quotient(diff_dx_q),
@@ -132,6 +130,10 @@ always @(posedge sys_clk) begin
 		ay_f <= ay;
 		bx_f <= bx;
 		by_f <= by;
+		diff_cx_positive_f <= diff_cx_positive;
+		diff_cy_positive_f <= diff_cy_positive;
+		diff_dx_positive_f <= diff_dx_positive;
+		diff_dy_positive_f <= diff_dy_positive;
 		drx_f <= drx;
 		dry_f <= dry;
 	end
