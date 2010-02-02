@@ -41,7 +41,7 @@ always @(posedge sys_clk) begin
 		o <= init;
 	end else if(next_point) begin
 		err = err + r;
-		correct = (errU[16:0] > {1'b0, divisor[16:1]}) & ~errU[17];
+		correct = (err[16:0] > {1'b0, divisor[16:1]}) & ~err[17];
 		if(positive) begin
 			o = o + {1'b0, q};
 			if(correct)

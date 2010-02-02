@@ -17,7 +17,7 @@
 
 /* 17-bit, 17-cycle unsigned integer divider, non pipelined */
 
-module tmu_divider17(
+module tmu2_divider17(
 	input sys_clk,
 	input sys_rst,
 

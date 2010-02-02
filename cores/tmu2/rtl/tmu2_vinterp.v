@@ -94,7 +94,7 @@ always @(posedge sys_clk) begin
 end
 
 /* Interpolators */
-tmu2_geninterp18(
+tmu2_geninterp18 i_cx(
 	.sys_clk(sys_clk),
 	.load(load),
 	.next_point(next_point),
@@ -105,7 +105,7 @@ tmu2_geninterp18(
 	.divisor({dst_squareh, 6'd0}),
 	.o(tsx)
 );
-tmu2_geninterp18(
+tmu2_geninterp18 i_cy(
 	.sys_clk(sys_clk),
 	.load(load),
 	.next_point(next_point),
@@ -116,7 +116,7 @@ tmu2_geninterp18(
 	.divisor({dst_squareh, 6'd0}),
 	.o(tsy)
 );
-tmu2_geninterp18(
+tmu2_geninterp18 i_bx(
 	.sys_clk(sys_clk),
 	.load(load),
 	.next_point(next_point),
@@ -127,7 +127,7 @@ tmu2_geninterp18(
 	.divisor({dst_squareh, 6'd0}),
 	.o(tex)
 );
-tmu2_geninterp18(
+tmu2_geninterp18 i_by(
 	.sys_clk(sys_clk),
 	.load(load),
 	.next_point(next_point),

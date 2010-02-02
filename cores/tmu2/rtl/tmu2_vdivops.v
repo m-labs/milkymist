@@ -70,28 +70,28 @@ always @(posedge sys_clk) begin
 			if(cx > ax) begin
 				diff_cx_positive <= 1'b1;
 				diff_cx <= cx - ax;
-			else
+			end else begin
 				diff_cx_positive <= 1'b0;
 				diff_cx <= ax - cx;
 			end
 			if(cy > ay) begin
 				diff_cy_positive <= 1'b1;
 				diff_cy <= cy - ay;
-			else
+			end else begin
 				diff_cy_positive <= 1'b0;
 				diff_cy <= ay - cy;
 			end
 			if(dx > ax) begin
 				diff_dx_positive <= 1'b1;
 				diff_dx <= dx - ax;
-			else
+			end else begin
 				diff_dx_positive <= 1'b0;
 				diff_dx <= ax - dx;
 			end
 			if(dy > ay) begin
 				diff_dy_positive <= 1'b1;
 				diff_dy <= dy - ay;
-			else
+			end else begin
 				diff_dy_positive <= 1'b0;
 				diff_dy <= ay - dy;
 			end

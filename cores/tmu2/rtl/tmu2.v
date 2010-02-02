@@ -192,7 +192,7 @@ wire [16:0] diff_dy;
 wire signed [11:0] drx_f;
 wire signed [11:0] dry_f;
 
-tmu2_vdivops(
+tmu2_vdivops vdivops(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
@@ -213,6 +213,53 @@ tmu2_vdivops(
 
 	.pipe_stb_o(vdivops_pipe_stb),
 	.pipe_ack_i(vdivops_pipe_ack),
+	.ax_f(ax_f),
+	.ay_f(ay_f),
+	.bx_f(bx_f),
+	.by_f(by_f),
+	.diff_cx_positive(diff_cx_positive),
+	.diff_cx(diff_cx),
+	.diff_cy_positive(diff_cy_positive),
+	.diff_cy(diff_cy),
+	.diff_dx_positive(diff_dx_positive),
+	.diff_dx(diff_dx),
+	.diff_dy_positive(diff_dy_positive),
+	.diff_dy(diff_dy),
+	.drx_f(drx_f),
+	.dry_f(dry_f)
+);
+
+/* Stage 3 - Vertical division */
+wire vdiv_busy;
+wire vdiv_pipe_stb;
+wire vdiv_pipe_ack;
+wire signed [17:0] ax_f2;
+wire signed [17:0] ay_f2;
+wire signed [17:0] bx_f2;
+wire signed [17:0] by_f2;
+wire diff_cx_positive_f;
+wire [16:0] diff_cx_q;
+wire [16:0] diff_cx_r;
+wire diff_cy_positive_f;
+wire [16:0] diff_cy_q;
+wire [16:0] diff_cy_r;
+wire diff_dx_positive_f;
+wire [16:0] diff_dx_q;
+wire [16:0] diff_dx_r;
+wire diff_dy_positive_f;
+wire [16:0] diff_dy_q;
+wire [16:0] diff_dy_r;
+wire signed [11:0] drx_f2;
+wire signed [11:0] dry_f2;
+
+tmu2_vdiv vdiv(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(vdiv_busy),
+
+	.pipe_stb_i(vdivops_pipe_stb),
+	.pipe_ack_o(vdivops_pipe_ack),
 	.ax(ax_f),
 	.ay(ay_f),
 	.bx(bx_f),
@@ -225,14 +272,87 @@ tmu2_vdivops(
 	.diff_dx(diff_dx),
 	.diff_dy_positive(diff_dy_positive),
 	.diff_dy(diff_dy),
+	.drx(drx_f),
+	.dry(dry_f),
 
-	.drx_f(drx_f),
-	.dry_f(dry_f)
+	.dst_squareh(dst_squareh),
+
+	.pipe_stb_o(vdiv_pipe_stb),
+	.pipe_ack_i(vdiv_pipe_ack),
+	.ax_f(ax_f2),
+	.ay_f(ay_f2),
+	.bx_f(bx_f2),
+	.by_f(by_f2),
+	.diff_cx_positive_f(diff_cx_positive_f),
+	.diff_cx_q(diff_cx_q),
+	.diff_cx_r(diff_cx_r),
+	.diff_cy_positive_f(diff_cy_positive_f),
+	.diff_cy_q(diff_cy_q),
+	.diff_cy_r(diff_cy_r),
+	.diff_dx_positive_f(diff_dx_positive_f),
+	.diff_dx_q(diff_dx_q),
+	.diff_dx_r(diff_dx_r),
+	.diff_dy_positive_f(diff_dy_positive_f),
+	.diff_dy_q(diff_dy_q),
+	.diff_dy_r(diff_dy_r),
+	.drx_f(drx_f2),
+	.dry_f(dry_f2)
 );
 
-/* Stage 3 - Vertical division */
-
 /* Stage 4 - Vertical interpolation */
+wire vinterp_busy;
+wire vinterp_pipe_stb;
+wire vinterp_pipe_ack;
+wire [11:0] vx;
+wire [11:0] vy;
+wire [17:0] tsx;
+wire [17:0] tsy;
+wire [17:0] tex;
+wire [17:0] tey;
+
+tmu2_vinterp vinterp(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(vinterp_busy),
+
+	.pipe_stb_i(vdiv_pipe_stb),
+	.pipe_ack_o(vdiv_pipe_ack),
+	.ax(ax_f2),
+	.ay(ay_f2),
+	.bx(bx_f2),
+	.by(by_f2),
+	.diff_cx_positive(diff_cx_positive_f),
+	.diff_cx_q(diff_cx_q),
+	.diff_cx_r(diff_cx_r),
+	.diff_cy_positive(diff_cy_positive_f),
+	.diff_cy_q(diff_cy_q),
+	.diff_cy_r(diff_cy_r),
+	.diff_dx_positive(diff_dx_positive_f),
+	.diff_dx_q(diff_dx_q),
+	.diff_dx_r(diff_dx_r),
+	.diff_dy_positive(diff_dy_positive_f),
+	.diff_dy_q(diff_dy_q),
+	.diff_dy_r(diff_dy_r),
+	.drx(drx_f2),
+	.dry(dry_f2),
+
+	.dst_squareh(dst_squareh),
+
+	.pipe_stb_o(vinterp_pipe_stb),
+	.pipe_ack_i(vinterp_pipe_ack),
+	.x(vx),
+	.y(vy),
+	.tsx(tsx),
+	.tsy(tsy),
+	.tex(tex),
+	.tey(tey)
+);
+
+assign vinterp_pipe_ack = 1'b1;
+always @(posedge sys_clk)
+	if(vinterp_pipe_stb)
+		$display("vx:%d vy:%d tsx:%d tsy:%d tex:%d tey:%d", vx, vy, tsx, tsy, tex, tey);
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
@@ -320,7 +440,7 @@ tmu2_pixout #(
 
 /* FSM to flush the burst assembler at the end */
 
-wire pipeline_busy = fetchvertex_busy;
+wire pipeline_busy = fetchvertex_busy|vdivops_busy|vdiv_busy|vinterp_busy;
 
 parameter IDLE		= 2'd0;
 parameter WAIT_PROCESS	= 2'd1;
