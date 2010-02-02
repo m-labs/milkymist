@@ -53,8 +53,8 @@ module tmu2_ctlif #(
 );
 
 /* VCOMP doesn't like "output reg signed", work around */
-reg signed dst_hoffset;
-reg signed dst_voffset;
+reg signed [11:0] dst_hoffset;
+reg signed [11:0] dst_voffset;
 
 reg old_busy;
 always @(posedge sys_clk) begin

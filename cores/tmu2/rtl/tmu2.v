@@ -173,11 +173,59 @@ tmu2_fetchvertex fetchvertex(
 	.dry(dry)
 );
 
-assign fetchvertex_pipe_ack = 1'b1;
-always @(posedge sys_clk) begin
-	if(fetchvertex_pipe_stb)
-		$display("[%d %d] A(%d %d) B(%d %d) C(%d %d) D(%d %d)", drx, dry, ax, ay, bx, by, cx, cy, dx, dy);
-end
+/* Stage 2 - Vertical interpolation division operands */
+wire vdivops_pipe_stb;
+wire vdivops_pipe_ack;
+wire signed [17:0] ax_f;
+wire signed [17:0] ay_f;
+wire signed [17:0] bx_f;
+wire signed [17:0] by_f;
+wire diff_cx_positive;
+wire [16:0] diff_cx;
+wire diff_cy_positive;
+wire [16:0] diff_cy;
+wire diff_dx_positive;
+wire [16:0] diff_dx;
+wire diff_dy_positive;
+wire [16:0] diff_dy;
+wire signed [11:0] drx_f;
+wire signed [11:0] dry_f;
+
+tmu2_vdivops(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.pipe_stb_i(fetchvertex_pipe_stb),
+	.pipe_ack_o(fetchvertex_pipe_ack),
+	.ax(ax),
+	.ay(ay),
+	.bx(bx),
+	.by(dy),
+	.cx(cx),
+	.cy(dy),
+	.dx(dx),
+	.dy(dy),
+	.drx(drx),
+	.dry(dry),
+
+	.pipe_stb_o(vdivops_pipe_stb),
+	.pipe_ack_i(vdivops_pipe_ack),
+	.ax(ax_f),
+	.ay(ay_f),
+	.bx(bx_f),
+	.by(by_f),
+	.diff_cx_positive(diff_cx_positive),
+	.diff_cx(diff_cx),
+	.diff_cy_positive(diff_cy_positive),
+	.diff_cy(diff_cy),
+	.diff_dx_positive(diff_dx_positive),
+	.diff_dx(diff_dx),
+	.diff_dy_positive(diff_dy_positive),
+	.diff_dy(diff_dy),
+
+	.drx_f(drx_f),
+	.dry_f(dry_f)
+);
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
