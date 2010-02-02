@@ -46,11 +46,15 @@ module tmu2_ctlif #(
 	output reg [fml_depth-1-1:0] dst_fbuf,
 	output reg [10:0] dst_hres,
 	output reg [10:0] dst_vres,
-	output reg signed [11:0] dst_hoffset,
-	output reg signed [11:0] dst_voffset,
+	output [11:0] dst_hoffset,
+	output [11:0] dst_voffset,
 	output reg [10:0] dst_squarew,
 	output reg [10:0] dst_squareh
 );
+
+/* VCOMP doesn't like "output reg signed", work around */
+reg signed dst_hoffset;
+reg signed dst_voffset;
 
 reg old_busy;
 always @(posedge sys_clk) begin
@@ -68,7 +72,7 @@ always @(posedge sys_clk) begin
 		irq <= 1'b0;
 		start <= 1'b0;
 
-		vertex_hlast <= 7'd32,
+		vertex_hlast <= 7'd32;
 		vertex_vlast <= 7'd24;
 
 		brightness <= 6'd63;

@@ -39,26 +39,38 @@ module tmu2_fetchvertex(
 	input [10:0] dst_squarew,
 	input [10:0] dst_squareh,
 
-	output reg pipe_stb,
-	input pipe_ack,
+	output reg pipe_stb_o,
+	input pipe_ack_i,
 
 	/* Texture coordinates */
-	output reg signed [17:0] ax,
-	output reg signed [17:0] ay,
-	output reg signed [17:0] bx,
-	output reg signed [17:0] by,
-	output reg signed [17:0] cx,
-	output reg signed [17:0] cy,
-	output reg signed [17:0] dx,
-	output reg signed [17:0] dy,
+	output  [17:0] ax,
+	output  [17:0] ay,
+	output  [17:0] bx,
+	output  [17:0] by,
+	output  [17:0] cx,
+	output  [17:0] cy,
+	output  [17:0] dx,
+	output [17:0] dy,
 
 	/* Upper-left corner of the destination rectangle */
-	output reg signed [11:0] drx,
-	output reg signed [11:0] dry
+	output [11:0] drx,
+	output [11:0] dry
 );
 
+/* VCOMP doesn't like "output reg signed", work around */
+reg signed ax;
+reg signed ay;
+reg signed bx;
+reg signed by;
+reg signed cx;
+reg signed cy;
+reg signed dx;
+reg signed dy;
+reg signed drx;
+reg signed dry;
+
 assign wbm_cti_o = 3'd0;
-assign wbm_cyc_o = wbm_stb_o
+assign wbm_cyc_o = wbm_stb_o;
 
 /*
  * A B
@@ -68,7 +80,7 @@ assign wbm_cyc_o = wbm_stb_o
 /* Fetch Engine */
 
 /* control signals */
-wire [28:0] fetch_base;
+reg [28:0] fetch_base;
 reg [1:0] fetch_target;
 reg fetch_strobe;
 reg fetch_done;
@@ -144,40 +156,43 @@ reg move_y_down;
 reg move_y_up;
 /* */
 
-reg [6:0] dx;
-reg [6:0] dy;
+reg [6:0] x;
+reg [6:0] y;
 
 always @(posedge sys_clk) begin
 	if(move_reset) begin
-		drx = dst_hoffset;
-		dry = dst_voffset;
-		dx = 7'd0;
-		dy = 7'd0;
+		/* subtract the square dimensions,
+		 * as we are at point D when sending the vertex down the pipeline
+		 */
+		drx = dst_hoffset - {1'b0, dst_squarew};
+		dry = dst_voffset - {1'b0, dst_squareh};
+		x = 7'd0;
+		y = 7'd0;
 	end else begin
-		case({move_x_right, move_x_startline}
+		case({move_x_right, move_x_startline})
 			2'b10: begin
 				drx = drx + {1'b0, dst_squarew};
-				dx = dx + 7'd1;
+				x = x + 7'd1;
 			end
 			2'b01: begin
-				drx = dst_hoffset;
-				dx = 7'd0;
+				drx = dst_hoffset - {1'b0, dst_squarew};
+				x = 7'd0;
 			end
 			default:;
 		endcase
-		case(move_y_down, move_y_up})
+		case({move_y_down, move_y_up})
 			2'b10: begin
 				dry = dry + {1'b0, dst_squareh};
-				dy = dy + 7'd1;
+				y = y + 7'd1;
 			end
 			2'b01: begin
 				dry = dry - {1'b0, dst_squareh};
-				dy = dy - 7'd1;
+				y = y - 7'd1;
 			end
 			default:;
 		endcase
 	end
-	fetch_base = vertex_adr + {dy, dx};
+	fetch_base = vertex_adr + {y, x};
 end
 
 /* Controller */
@@ -200,8 +215,8 @@ always @(posedge sys_clk) begin
 		state <= next_state;
 end
 
-wire last_col = dx == vertex_hlast;
-wire last_row = dy == vertex_vlast;
+wire last_col = x == vertex_hlast;
+wire last_row = y == vertex_vlast;
 
 always @(*) begin
 	fetch_target = 2'bxx;
@@ -216,7 +231,7 @@ always @(*) begin
 
 	busy = 1'b1;
 
-	pipe_stb = 1'b0;
+	pipe_stb_o = 1'b0;
 
 	next_state = state;
 
@@ -261,8 +276,8 @@ always @(*) begin
 		end
 
 		PIPEOUT: begin
-			pipe_stb = 1'b1;
-			if(pipe_ack)
+			pipe_stb_o = 1'b1;
+			if(pipe_ack_i)
 				next_state = NEXT_SQUARE;
 		end
 		NEXT_SQUARE: begin /* assumes we are on point D */

@@ -66,24 +66,24 @@ module tmu2 #(
 
 wire start;
 reg busy;
-wire [6:0] vertex_hlast;		/* < last horizontal vertex index */
-wire [6:0] vertex_vlast;		/* < last vertical vertex index */
-wire [5:0] brightness;			/* < output brightness 0-63 */
-wire chroma_key_en;			/* < enable/disable chroma key filtering */
-wire [15:0] chroma_key;			/* < chroma key (RGB565 color) */
-wire [28:0] vertex_adr;			/* < vertex mesh address (64-bit words) */
-wire [fml_depth-1-1:0] tex_fbuf;	/* < texture address (16-bit words) */
-wire [10:0] tex_hres;			/* < texture horizontal resolution (positive int) */
-wire [10:0] tex_vres;			/* < texture vertical resolution (positive int) */
-wire [17:0] tex_hmask;			/* < binary mask to the X texture coordinates (matches fp width) */
-wire [17:0] tex_vmask;			/* < binary mask to the Y texture coordinates (matches fp width) */
-wire [fml_depth-1-1:0] dst_fbuf;	/* < destination framebuffer address (16-bit words) */
-wire [10:0] dst_hres;			/* < destination horizontal resolution (positive int) */
-wire [10:0] dst_vres;			/* < destination vertical resolution (positive int) */
-wire signed [11:0] dst_hoffset;		/* < X offset added to each pixel (signed int) */
-wire signed [11:0] dst_voffset;		/* < Y offset added to each pixel (signed int) */
-wire [10:0] dst_squarew;		/* < width of each destination square (positive int)*/
-wire [10:0] dst_squareh;		/* < height of each destination square (positive int)*/
+wire [6:0] vertex_hlast;		/* < 04 last horizontal vertex index */
+wire [6:0] vertex_vlast;		/* < 08 last vertical vertex index */
+wire [5:0] brightness;			/* < 0C output brightness 0-63 */
+wire chroma_key_en;			/* < 00 enable/disable chroma key filtering */
+wire [15:0] chroma_key;			/* < 10 chroma key (RGB565 color) */
+wire [28:0] vertex_adr;			/* < 14 vertex mesh address (64-bit words) */
+wire [fml_depth-1-1:0] tex_fbuf;	/* < 18 texture address (16-bit words) */
+wire [10:0] tex_hres;			/* < 1C texture horizontal resolution (positive int) */
+wire [10:0] tex_vres;			/* < 20 texture vertical resolution (positive int) */
+wire [17:0] tex_hmask;			/* < 24 binary mask to the X texture coordinates (matches fp width) */
+wire [17:0] tex_vmask;			/* < 28 binary mask to the Y texture coordinates (matches fp width) */
+wire [fml_depth-1-1:0] dst_fbuf;	/* < 2C destination framebuffer address (16-bit words) */
+wire [10:0] dst_hres;			/* < 30 destination horizontal resolution (positive int) */
+wire [10:0] dst_vres;			/* < 34 destination vertical resolution (positive int) */
+wire signed [11:0] dst_hoffset;		/* < 38 X offset added to each pixel (signed int) */
+wire signed [11:0] dst_voffset;		/* < 3C Y offset added to each pixel (signed int) */
+wire [10:0] dst_squarew;		/* < 40 width of each destination square (positive int)*/
+wire [10:0] dst_squareh;		/* < 44 height of each destination square (positive int)*/
 
 tmu2_ctlif #(
 	.csr_addr(csr_addr),
@@ -121,6 +121,63 @@ tmu2_ctlif #(
 	.dst_squarew(dst_squarew),
 	.dst_squareh(dst_squareh)
 );
+
+/* Stage 1 - Fetch vertices */
+wire fetchvertex_busy;
+wire fetchvertex_pipe_stb;
+wire fetchvertex_pipe_ack;
+wire signed [17:0] ax;
+wire signed [17:0] ay;
+wire signed [17:0] bx;
+wire signed [17:0] by;
+wire signed [17:0] cx;
+wire signed [17:0] cy;
+wire signed [17:0] dx;
+wire signed [17:0] dy;
+wire signed [11:0] drx;
+wire signed [11:0] dry;
+
+tmu2_fetchvertex fetchvertex(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.wbm_adr_o(wbm_adr_o),
+	.wbm_cti_o(wbm_cti_o),
+	.wbm_cyc_o(wbm_cyc_o),
+	.wbm_stb_o(wbm_stb_o),
+	.wbm_ack_i(wbm_ack_i),
+	.wbm_dat_i(wbm_dat_i),
+
+	.start(start),
+	.busy(fetchvertex_busy),
+
+	.vertex_hlast(vertex_hlast),
+	.vertex_vlast(vertex_vlast),
+	.vertex_adr(vertex_adr),
+	.dst_hoffset(dst_hoffset),
+	.dst_voffset(dst_voffset),
+	.dst_squarew(dst_squarew),
+	.dst_squareh(dst_squareh),
+
+	.pipe_stb_o(fetchvertex_pipe_stb),
+	.pipe_ack_i(fetchvertex_pipe_ack),
+	.ax(ax),
+	.ay(ay),
+	.bx(bx),
+	.by(by),
+	.cx(cx),
+	.cy(cy),
+	.dx(dx),
+	.dy(dy),
+	.drx(drx),
+	.dry(dry)
+);
+
+assign fetchvertex_pipe_ack = 1'b1;
+always @(posedge sys_clk) begin
+	if(fetchvertex_pipe_stb)
+		$display("[%d %d] A(%d %d) B(%d %d) C(%d %d) D(%d %d)", drx, dry, ax, ay, bx, by, cx, cy, dx, dy);
+end
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
@@ -208,11 +265,7 @@ tmu2_pixout #(
 
 /* FSM to flush the burst assembler at the end */
 
-wire pipeline_busy = meshgen_busy|reorder_busy
-	|edgedivops_busy|edgediv_busy|edgetrace_busy
-	|scandivops_busy|scandiv_busy|scantrace_busy
-	|clamp_busy|addresses_busy|pixin_busy
-	|decay_busy|burst_busy|pixout_busy;
+wire pipeline_busy = fetchvertex_busy;
 
 parameter IDLE		= 2'd0;
 parameter WAIT_PROCESS	= 2'd1;
