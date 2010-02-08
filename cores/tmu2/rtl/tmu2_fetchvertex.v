@@ -43,18 +43,18 @@ module tmu2_fetchvertex(
 	input pipe_ack_i,
 
 	/* Texture coordinates */
-	output reg signed [17:0] [17:0] ax,
-	output reg signed [17:0] [17:0] ay,
-	output reg signed [17:0] [17:0] bx,
-	output reg signed [17:0] [17:0] by,
-	output reg signed [17:0] [17:0] cx,
-	output reg signed [17:0] [17:0] cy,
-	output reg signed [17:0] [17:0] dx,
-	output reg signed [17:0] [17:0] dy,
+	output reg signed [17:0] ax,
+	output reg signed [17:0] ay,
+	output reg signed [17:0] bx,
+	output reg signed [17:0] by,
+	output reg signed [17:0] cx,
+	output reg signed [17:0] cy,
+	output reg signed [17:0] dx,
+	output reg signed [17:0] dy,
 
 	/* Upper-left corner of the destination rectangle */
-	output reg signed [17:0] [11:0] drx,
-	output reg signed [17:0] [11:0] dry
+	output reg signed [11:0] drx,
+	output reg signed [11:0] dry
 );
 
 assign wbm_cti_o = 3'd0;

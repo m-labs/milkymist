@@ -26,11 +26,8 @@ module tmu2_geninterp18(
 	input [16:0] r,
 	input [16:0] divisor,
 
-	output [17:0] o
+	output reg signed [17:0] o
 );
-
-/* VCOMP doesn't like "output reg signed", work around */
-reg signed [17:0] o;
 
 reg positive_r;
 reg [16:0] q_r;

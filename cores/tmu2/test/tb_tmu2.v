@@ -148,10 +148,10 @@ begin
 	read_addr2 = read_addr[20:0]/2;
 	x = read_addr2 % 640;
 	y = read_addr2 / 640;
-	/*$image_get(x + 0, y, p1);
+	$image_get(x + 0, y, p1);
 	$image_get(x + 1, y, p2);
 	$image_get(x + 2, y, p3);
-	$image_get(x + 3, y, p4);*/
+	$image_get(x + 3, y, p4);
 	fmlr_di = {p1, p2, p3, p4};
 end
 endtask
@@ -195,14 +195,14 @@ begin
 	write_addr2 = write_addr[20:0]/2;
 	x = write_addr2 % 640;
 	y = write_addr2 / 640;
-	/*if(fmlw_sel[7])
+	if(fmlw_sel[7])
 		$image_set(x + 0, y, fmlw_do[63:48]);
 	if(fmlw_sel[5])
 		$image_set(x + 1, y, fmlw_do[47:32]);
 	if(fmlw_sel[3])
 		$image_set(x + 2, y, fmlw_do[31:16]);
 	if(fmlw_sel[1])
-		$image_set(x + 3, y, fmlw_do[15:0]);*/
+		$image_set(x + 3, y, fmlw_do[15:0]);
 end
 endtask
 
@@ -232,7 +232,7 @@ always @(posedge sys_clk) begin
 end
 
 always begin
-	//$image_open;
+	$image_open;
 	
 	/* Reset / Initialize our logic */
 	sys_rst = 1'b1;
@@ -255,7 +255,7 @@ always begin
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 1); /* hmeshlast */
+	csrwrite(32'h04, 2); /* hmeshlast */
 	csrwrite(32'h08, 2); /* vmeshlast */
 
 	/* Start */
@@ -263,7 +263,7 @@ always begin
 	
 	@(posedge irq);
 	
-	//$image_close;
+	$image_close;
 	$finish;
 end
 

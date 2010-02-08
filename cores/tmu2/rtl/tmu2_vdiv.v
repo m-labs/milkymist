@@ -86,7 +86,7 @@ tmu2_divider17 d_cy(
 	.dividend(diff_cy),
 	.divisor({6'd0, dst_squareh}),
 
-	.ready(ready),
+	.ready(),
 	.quotient(diff_cy_q),
 	.remainder(diff_cy_r)
 );
@@ -98,7 +98,7 @@ tmu2_divider17 d_dx(
 	.dividend(diff_dx),
 	.divisor({6'd0, dst_squareh}),
 
-	.ready(ready),
+	.ready(),
 	.quotient(diff_dx_q),
 	.remainder(diff_dx_r)
 );
@@ -110,7 +110,7 @@ tmu2_divider17 d_dy(
 	.dividend(diff_dy),
 	.divisor({6'd0, dst_squareh}),
 
-	.ready(ready),
+	.ready(),
 	.quotient(diff_dy_q),
 	.remainder(diff_dy_r)
 );

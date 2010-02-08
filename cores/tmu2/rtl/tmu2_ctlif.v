@@ -80,8 +80,8 @@ always @(posedge sys_clk) begin
 		tex_fbuf <= {fml_depth{1'b0}};
 		tex_hres <= 11'd512;
 		tex_vres <= 11'd512;
-		tex_hmask <= 18'hfffff;
-		tex_vmask <= 18'hfffff;
+		tex_hmask <= {18{1'b1}};
+		tex_vmask <= {18{1'b1}};
 		
 		dst_fbuf <= {fml_depth{1'b0}};
 		dst_hres <= 11'd640;
