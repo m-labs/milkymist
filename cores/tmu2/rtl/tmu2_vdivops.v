@@ -36,10 +36,10 @@ module tmu2_vdivops(
 
 	output reg pipe_stb_o,
 	input pipe_ack_i,
-	output [17:0] ax_f,
-	output [17:0] ay_f,
-	output [17:0] bx_f,
-	output [17:0] by_f,
+	output reg signed [17:0] ax_f,
+	output reg signed [17:0] ay_f,
+	output reg signed [17:0] bx_f,
+	output reg signed [17:0] by_f,
 	output reg diff_cx_positive,
 	output reg [16:0] diff_cx,
 	output reg diff_cy_positive,
@@ -48,17 +48,9 @@ module tmu2_vdivops(
 	output reg [16:0] diff_dx,
 	output reg diff_dy_positive,
 	output reg [16:0] diff_dy,
-	output [11:0] drx_f,
-	output [11:0] dry_f
+	output reg signed [11:0] drx_f,
+	output reg signed [11:0] dry_f
 );
-
-/* VCOMP doesn't like "output reg signed", work around */
-reg signed [17:0] ax_f;
-reg signed [17:0] ay_f;
-reg signed [17:0] bx_f;
-reg signed [17:0] by_f;
-reg signed [11:0] drx_f;
-reg signed [11:0] dry_f;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)

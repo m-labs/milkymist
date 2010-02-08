@@ -46,15 +46,11 @@ module tmu2_ctlif #(
 	output reg [fml_depth-1-1:0] dst_fbuf,
 	output reg [10:0] dst_hres,
 	output reg [10:0] dst_vres,
-	output [11:0] dst_hoffset,
-	output [11:0] dst_voffset,
+	output reg signed [11:0] dst_hoffset,
+	output reg signed [11:0] dst_voffset,
 	output reg [10:0] dst_squarew,
 	output reg [10:0] dst_squareh
 );
-
-/* VCOMP doesn't like "output reg signed", work around */
-reg signed [11:0] dst_hoffset;
-reg signed [11:0] dst_voffset;
 
 reg old_busy;
 always @(posedge sys_clk) begin

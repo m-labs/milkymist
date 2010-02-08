@@ -43,31 +43,19 @@ module tmu2_fetchvertex(
 	input pipe_ack_i,
 
 	/* Texture coordinates */
-	output [17:0] ax,
-	output [17:0] ay,
-	output [17:0] bx,
-	output [17:0] by,
-	output [17:0] cx,
-	output [17:0] cy,
-	output [17:0] dx,
-	output [17:0] dy,
+	output reg signed [17:0] [17:0] ax,
+	output reg signed [17:0] [17:0] ay,
+	output reg signed [17:0] [17:0] bx,
+	output reg signed [17:0] [17:0] by,
+	output reg signed [17:0] [17:0] cx,
+	output reg signed [17:0] [17:0] cy,
+	output reg signed [17:0] [17:0] dx,
+	output reg signed [17:0] [17:0] dy,
 
 	/* Upper-left corner of the destination rectangle */
-	output [11:0] drx,
-	output [11:0] dry
+	output reg signed [17:0] [11:0] drx,
+	output reg signed [17:0] [11:0] dry
 );
-
-/* VCOMP doesn't like "output reg signed", work around */
-reg signed [17:0] ax;
-reg signed [17:0] ay;
-reg signed [17:0] bx;
-reg signed [17:0] by;
-reg signed [17:0] cx;
-reg signed [17:0] cy;
-reg signed [17:0] dx;
-reg signed [17:0] dy;
-reg signed [11:0] drx;
-reg signed [11:0] dry;
 
 assign wbm_cti_o = 3'd0;
 assign wbm_cyc_o = wbm_stb_o;

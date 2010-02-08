@@ -46,17 +46,13 @@ module tmu2_vinterp(
 
 	output pipe_stb_o,
 	input pipe_ack_i,
-	output [11:0] x,
-	output [11:0] y,
+	output reg signed [11:0] x,
+	output reg signed [11:0] y,
 	output [17:0] tsx,
 	output [17:0] tsy,
 	output [17:0] tex,
 	output [17:0] tey
 );
-
-/* VCOMP doesn't like "output reg signed", work around */
-reg signed [11:0] x;
-reg signed [11:0] y;
 
 reg load;
 reg next_point;

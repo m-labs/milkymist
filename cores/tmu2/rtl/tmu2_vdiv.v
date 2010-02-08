@@ -42,10 +42,10 @@ module tmu2_vdiv(
 
 	output reg pipe_stb_o,
 	input pipe_ack_i,
-	output [17:0] ax_f,
-	output [17:0] ay_f,
-	output [17:0] bx_f,
-	output [17:0] by_f,
+	output reg signed [17:0] ax_f,
+	output reg signed [17:0] ay_f,
+	output reg signed [17:0] bx_f,
+	output reg signed [17:0] by_f,
 	output reg diff_cx_positive_f,
 	output [16:0] diff_cx_q,
 	output [16:0] diff_cx_r,
@@ -58,17 +58,9 @@ module tmu2_vdiv(
 	output reg diff_dy_positive_f,
 	output [16:0] diff_dy_q,
 	output [16:0] diff_dy_r,
-	output [11:0] drx_f,
-	output [11:0] dry_f
+	output reg signed [11:0] drx_f,
+	output reg signed [11:0] dry_f
 );
-
-/* VCOMP doesn't like "output reg signed", work around */
-reg signed [17:0] ax_f;
-reg signed [17:0] ay_f;
-reg signed [17:0] bx_f;
-reg signed [17:0] by_f;
-reg signed [11:0] drx_f;
-reg signed [11:0] dry_f;
 
 /* Divider bank */
 reg start;
