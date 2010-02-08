@@ -64,7 +64,8 @@ always @(posedge sys_clk) begin
 	if(sys_rst)
 		pipe_stb_o <= 1'b0;
 	else begin
-		pipe_stb_o <= 1'b0;
+		if(pipe_ack_i)
+			pipe_stb_o <= 1'b0;
 		if(pipe_stb_i & pipe_ack_o) begin
 			pipe_stb_o <= 1'b1;
 			if(cx > ax) begin
@@ -81,19 +82,19 @@ always @(posedge sys_clk) begin
 				diff_cy_positive <= 1'b0;
 				diff_cy <= ay - cy;
 			end
-			if(dx > ax) begin
+			if(dx > bx) begin
 				diff_dx_positive <= 1'b1;
-				diff_dx <= dx - ax;
+				diff_dx <= dx - bx;
 			end else begin
 				diff_dx_positive <= 1'b0;
-				diff_dx <= ax - dx;
+				diff_dx <= bx - dx;
 			end
-			if(dy > ay) begin
+			if(dy > by) begin
 				diff_dy_positive <= 1'b1;
-				diff_dy <= dy - ay;
+				diff_dy <= dy - by;
 			end else begin
 				diff_dy_positive <= 1'b0;
-				diff_dy <= ay - dy;
+				diff_dy <= by - dy;
 			end
 			ax_f <= ax;
 			ay_f <= ay;

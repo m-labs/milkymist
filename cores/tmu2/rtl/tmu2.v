@@ -173,6 +173,12 @@ tmu2_fetchvertex fetchvertex(
 	.dry(dry)
 );
 
+/*always @(posedge sys_clk) begin
+	if(fetchvertex_pipe_stb & fetchvertex_pipe_ack) begin
+		$display("vertices (%d,%d): %d,%d %d,%d %d,%d %d,%d", drx, dry, ax, ay, bx, by, cx, cy, dx, dy);
+	end
+end*/
+
 /* Stage 2 - Vertical interpolation division operands */
 wire vdivops_busy;
 wire vdivops_pipe_stb;
@@ -203,9 +209,9 @@ tmu2_vdivops vdivops(
 	.ax(ax),
 	.ay(ay),
 	.bx(bx),
-	.by(dy),
+	.by(by),
 	.cx(cx),
-	.cy(dy),
+	.cy(cy),
 	.dx(dx),
 	.dy(dy),
 	.drx(drx),
@@ -228,6 +234,11 @@ tmu2_vdivops vdivops(
 	.drx_f(drx_f),
 	.dry_f(dry_f)
 );
+
+/*always @(posedge sys_clk) begin
+	if(vdivops_pipe_stb & vdivops_pipe_ack)
+		$display("[dif] (%d,%d) cx p:%b v:%d    //    cy p:%b v:%d    //    dx p:%b v:%d    //    dy p:%b v:%d", drx_f, dry_f, diff_cx_positive, diff_cx, diff_cy_positive, diff_cy, diff_dx_positive, diff_dx, diff_dy_positive, diff_dy);
+end*/
 
 /* Stage 3 - Vertical division */
 wire vdiv_busy;
@@ -299,6 +310,11 @@ tmu2_vdiv vdiv(
 	.dry_f(dry_f2)
 );
 
+/*always @(posedge sys_clk) begin
+	if(vdiv_pipe_stb & vdiv_pipe_ack)
+		$display("[div] p:%b q=%d r=%d (%d)", diff_cx_positive_f, diff_cx_q, diff_cx_r, dst_squareh);
+end*/
+
 /* Stage 4 - Vertical interpolation */
 wire vinterp_busy;
 wire vinterp_pipe_stb;
@@ -352,7 +368,7 @@ tmu2_vinterp vinterp(
 assign vinterp_pipe_ack = 1'b1;
 always @(posedge sys_clk)
 	if(vinterp_pipe_stb)
-		$display("vx:%d vy:%d tsx:%d tsy:%d tex:%d tey:%d", vx, vy, tsx, tsy, tex, tey);
+		$display("vx:%d vy:%d     //     tsx:%d tsy:%d     //     tex:%d tey:%d", vx, vy, tsx, tsy, tex, tey);
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;

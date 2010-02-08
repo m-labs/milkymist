@@ -114,7 +114,7 @@ begin
 end
 endtask
 
-/* Handle WB master for mesh reads */
+/* Handle WB master for texture coordinates reads */
 reg [6:0] x;
 reg [6:0] y;
 always @(posedge sys_clk) begin
@@ -123,10 +123,10 @@ always @(posedge sys_clk) begin
 		y = wbm_adr_o[16:10];
 
 		if(wbm_adr_o[2])
-			wbm_dat_i = x*20;
+			wbm_dat_i = y*20*64;
 		else
-			wbm_dat_i = y*20;
-		$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
+			wbm_dat_i = x*20*64+y*7*64;
+		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
 		wbm_ack_i = 1'b0;
@@ -255,7 +255,7 @@ always begin
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 2); /* hmeshlast */
+	csrwrite(32'h04, 1); /* hmeshlast */
 	csrwrite(32'h08, 2); /* vmeshlast */
 
 	/* Start */

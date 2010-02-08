@@ -2,11 +2,17 @@ SOURCES=tb_tmu2.v $(wildcard ../rtl/*.v)
 
 all: sim
 
-sim: vrun
-	./vrun
+#sim: vrun
+#	./vrun
 
-vrun: $(SOURCES)
-	vcomp $(SOURCES)
+#vrun: $(SOURCES)
+#	vcomp $(SOURCES)
+
+all: sim
+
+sim: #vpi_images.so
+	#cver +loadvpi=./vpi_images.so:vpi_register $(SOURCES)
+	cver $(SOURCES)
 
 vpi_images.so: vpi_images.o
 	$(LD) -G -shared -export-dynamic -o vpi_images.so vpi_images.o -lgd -lpng -lz -ljpeg -lfreetype -lm

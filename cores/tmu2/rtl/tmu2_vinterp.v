@@ -22,7 +22,7 @@ module tmu2_vinterp(
 	output busy,
 
 	input pipe_stb_i,
-	output reg pipe_ack_o,
+	output pipe_ack_o,
 	input [17:0] ax,
 	input [17:0] ay,
 	input [17:0] bx,
@@ -44,7 +44,7 @@ module tmu2_vinterp(
 
 	input [10:0] dst_squareh,
 
-	output reg pipe_stb_o,
+	output pipe_stb_o,
 	input pipe_ack_i,
 	output [11:0] x,
 	output [11:0] y,
@@ -61,36 +61,9 @@ reg signed [11:0] y;
 reg load;
 reg next_point;
 
-/* Input registers */
-reg diff_cx_positive_r;
-reg [16:0] diff_cx_q_r;
-reg [16:0] diff_cx_r_r;
-reg diff_cy_positive_r;
-reg [16:0] diff_cy_q_r;
-reg [16:0] diff_cy_r_r;
-reg diff_dx_positive_r;
-reg [16:0] diff_dx_q_r;
-reg [16:0] diff_dx_r_r;
-reg diff_dy_positive_r;
-reg [16:0] diff_dy_q_r;
-reg [16:0] diff_dy_r_r;
-
 always @(posedge sys_clk) begin
-	if(load) begin
+	if(load)
 		x <= drx;
-		diff_cx_positive_r <= diff_cx_positive;
-		diff_cx_q_r <= diff_cx_q;
-		diff_cx_r_r <= diff_cx_r;
-		diff_cy_positive_r <= diff_cy_positive;
-		diff_cy_q_r <= diff_cy_q;
-		diff_cy_r_r <= diff_cy_r;
-		diff_dx_positive_r <= diff_dx_positive;
-		diff_dx_q_r <= diff_dx_q;
-		diff_dx_r_r <= diff_dx_r;
-		diff_dy_positive_r <= diff_dy_positive;
-		diff_dy_q_r <= diff_dy_q;
-		diff_dy_r_r <= diff_dy_r;
-	end
 end
 
 /* Interpolators */
@@ -99,10 +72,10 @@ tmu2_geninterp18 i_cx(
 	.load(load),
 	.next_point(next_point),
 	.init(ax),
-	.positive(diff_cx_positive_r),
-	.q(diff_cx_q_r),
-	.r(diff_cx_r_r),
-	.divisor({dst_squareh, 6'd0}),
+	.positive(diff_cx_positive),
+	.q(diff_cx_q),
+	.r(diff_cx_r),
+	.divisor({6'd0, dst_squareh}),
 	.o(tsx)
 );
 tmu2_geninterp18 i_cy(
@@ -110,10 +83,10 @@ tmu2_geninterp18 i_cy(
 	.load(load),
 	.next_point(next_point),
 	.init(ay),
-	.positive(diff_cy_positive_r),
-	.q(diff_cy_q_r),
-	.r(diff_cy_r_r),
-	.divisor({dst_squareh, 6'd0}),
+	.positive(diff_cy_positive),
+	.q(diff_cy_q),
+	.r(diff_cy_r),
+	.divisor({6'd0, dst_squareh}),
 	.o(tsy)
 );
 tmu2_geninterp18 i_bx(
@@ -121,10 +94,10 @@ tmu2_geninterp18 i_bx(
 	.load(load),
 	.next_point(next_point),
 	.init(bx),
-	.positive(diff_dx_positive_r),
-	.q(diff_dx_q_r),
-	.r(diff_dx_r_r),
-	.divisor({dst_squareh, 6'd0}),
+	.positive(diff_dx_positive),
+	.q(diff_dx_q),
+	.r(diff_dx_r),
+	.divisor({6'd0, dst_squareh}),
 	.o(tex)
 );
 tmu2_geninterp18 i_by(
@@ -132,10 +105,10 @@ tmu2_geninterp18 i_by(
 	.load(load),
 	.next_point(next_point),
 	.init(by),
-	.positive(diff_dy_positive_r),
-	.q(diff_dy_q_r),
-	.r(diff_dy_r_r),
-	.divisor({dst_squareh, 6'd0}),
+	.positive(diff_dy_positive),
+	.q(diff_dy_q),
+	.r(diff_dy_r),
+	.divisor({6'd0, dst_squareh}),
 	.o(tey)
 );
 

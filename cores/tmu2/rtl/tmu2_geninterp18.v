@@ -32,6 +32,20 @@ module tmu2_geninterp18(
 /* VCOMP doesn't like "output reg signed", work around */
 reg signed [17:0] o;
 
+reg positive_r;
+reg [16:0] q_r;
+reg [16:0] r_r;
+reg [16:0] divisor_r;
+
+always @(posedge sys_clk) begin
+	if(load) begin
+		positive_r <= positive;
+		q_r <= q;
+		r_r <= r;
+		divisor_r <= divisor;
+	end
+end
+
 reg [17:0] err;
 reg correct;
 
@@ -40,19 +54,19 @@ always @(posedge sys_clk) begin
 		err <= 18'd0;
 		o <= init;
 	end else if(next_point) begin
-		err = err + r;
-		correct = (err[16:0] > {1'b0, divisor[16:1]}) & ~err[17];
+		err = err + r_r;
+		correct = (err[16:0] > {1'b0, divisor_r[16:1]}) & ~err[17];
 		if(positive) begin
-			o = o + {1'b0, q};
+			o = o + {1'b0, q_r};
 			if(correct)
 				o = o + 18'd1;
 		end else begin
-			o = o - {1'b0, q};
+			o = o - {1'b0, q_r};
 			if(correct)
 				o = o - 18'd1;
 		end
 		if(correct)
-			err = err - {1'b0, divisor};
+			err = err - {1'b0, divisor_r};
 	end
 end
 
