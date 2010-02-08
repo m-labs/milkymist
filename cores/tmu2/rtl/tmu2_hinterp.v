@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module tmu2_vinterp(
+module tmu2_hinterp(
 	input sys_clk,
 	input sys_rst,
 
@@ -23,104 +23,67 @@ module tmu2_vinterp(
 
 	input pipe_stb_i,
 	output pipe_ack_o,
-	input signed [17:0] ax,
-	input signed [17:0] ay,
-	input signed [17:0] bx,
-	input signed [17:0] by,
-	input diff_cx_positive,
-	input [16:0] diff_cx_q,
-	input [16:0] diff_cx_r,
-	input diff_cy_positive,
-	input [16:0] diff_cy_q,
-	input [16:0] diff_cy_r,
-	input diff_dx_positive,
-	input [16:0] diff_dx_q,
-	input [16:0] diff_dx_r,
-	input diff_dy_positive,
-	input [16:0] diff_dy_q,
-	input [16:0] diff_dy_r,
-	input signed [11:0] drx,
-	input signed [11:0] dry,
+	input signed [11:0] x,
+	input signed [11:0] y,
+	input signed [17:0] tsx,
+	input signed [17:0] tsy,
+	input diff_x_positive,
+	input [16:0] diff_x_q,
+	input [16:0] diff_x_r,
+	input diff_y_positive,
+	input [16:0] diff_y_q,
+	input [16:0] diff_y_r,
 
-	input [10:0] dst_squareh,
+	input [10:0] dst_squarew,
 
 	output pipe_stb_o,
 	input pipe_ack_i,
-	output reg signed [11:0] x,
-	output reg signed [11:0] y,
-	output signed [17:0] tsx,
-	output signed [17:0] tsy,
-	output signed [17:0] tex,
-	output signed [17:0] tey
+	output reg signed [11:0] dx,
+	output reg signed [11:0] dy,
+	output reg signed [17:0] tx,
+	output reg signed [17:0] ty
 );
 
 reg load;
 reg next_point;
 
-always @(posedge sys_clk) begin
-	if(load)
-		x <= drx;
-end
-
 /* Interpolators */
-tmu2_geninterp18 i_cx(
+tmu2_geninterp18 i_tx(
 	.sys_clk(sys_clk),
 	.load(load),
 	.next_point(next_point),
-	.init(ax),
-	.positive(diff_cx_positive),
-	.q(diff_cx_q),
-	.r(diff_cx_r),
-	.divisor({6'd0, dst_squareh}),
-	.o(tsx)
+	.init(tsx),
+	.positive(diff_x_positive),
+	.q(diff_x_q),
+	.r(diff_x_r),
+	.divisor({6'd0, dst_squarew}),
+	.o(tx)
 );
-tmu2_geninterp18 i_cy(
+tmu2_geninterp18 i_ty(
 	.sys_clk(sys_clk),
 	.load(load),
 	.next_point(next_point),
-	.init(ay),
-	.positive(diff_cy_positive),
-	.q(diff_cy_q),
-	.r(diff_cy_r),
-	.divisor({6'd0, dst_squareh}),
-	.o(tsy)
-);
-tmu2_geninterp18 i_bx(
-	.sys_clk(sys_clk),
-	.load(load),
-	.next_point(next_point),
-	.init(bx),
-	.positive(diff_dx_positive),
-	.q(diff_dx_q),
-	.r(diff_dx_r),
-	.divisor({6'd0, dst_squareh}),
-	.o(tex)
-);
-tmu2_geninterp18 i_by(
-	.sys_clk(sys_clk),
-	.load(load),
-	.next_point(next_point),
-	.init(by),
-	.positive(diff_dy_positive),
-	.q(diff_dy_q),
-	.r(diff_dy_r),
-	.divisor({6'd0, dst_squareh}),
-	.o(tey)
+	.init(tsy),
+	.positive(diff_y_positive),
+	.q(diff_y_q),
+	.r(diff_y_r),
+	.divisor({6'd0, dst_squarew}),
+	.o(ty)
 );
 
-/* y datapath */
 always @(posedge sys_clk) begin
-	if(load)
-		y <= dry;
-	else if(next_point)
-		y <= y + 12'd1;
+	if(load) begin
+		dx <= x;
+		dy <= y;
+	end else if(next_point)
+		dx <= dx + 12'd1;
 end
 
 /* Controller */
 reg [10:0] remaining_points;
 always @(posedge sys_clk) begin
 	if(load)
-		remaining_points <= dst_squareh - 11'd1;
+		remaining_points <= dst_squarew - 11'd1;
 	else if(next_point)
 		remaining_points <= remaining_points - 11'd1;
 end

@@ -173,12 +173,6 @@ tmu2_fetchvertex fetchvertex(
 	.dry(dry)
 );
 
-/*always @(posedge sys_clk) begin
-	if(fetchvertex_pipe_stb & fetchvertex_pipe_ack) begin
-		$display("vertices (%d,%d): %d,%d %d,%d %d,%d %d,%d", drx, dry, ax, ay, bx, by, cx, cy, dx, dy);
-	end
-end*/
-
 /* Stage 2 - Vertical interpolation division operands */
 wire vdivops_busy;
 wire vdivops_pipe_stb;
@@ -234,11 +228,6 @@ tmu2_vdivops vdivops(
 	.drx_f(drx_f),
 	.dry_f(dry_f)
 );
-
-/*always @(posedge sys_clk) begin
-	if(vdivops_pipe_stb & vdivops_pipe_ack)
-		$display("[dif] (%d,%d) cx p:%b v:%d    //    cy p:%b v:%d    //    dx p:%b v:%d    //    dy p:%b v:%d", drx_f, dry_f, diff_cx_positive, diff_cx, diff_cy_positive, diff_cy, diff_dx_positive, diff_dx, diff_dy_positive, diff_dy);
-end*/
 
 /* Stage 3 - Vertical division */
 wire vdiv_busy;
@@ -310,21 +299,16 @@ tmu2_vdiv vdiv(
 	.dry_f(dry_f2)
 );
 
-/*always @(posedge sys_clk) begin
-	if(vdiv_pipe_stb & vdiv_pipe_ack)
-		$display("[div] p:%b q=%d r=%d (%d)", diff_cx_positive_f, diff_cx_q, diff_cx_r, dst_squareh);
-end*/
-
 /* Stage 4 - Vertical interpolation */
 wire vinterp_busy;
 wire vinterp_pipe_stb;
 wire vinterp_pipe_ack;
-wire [11:0] vx;
-wire [11:0] vy;
-wire [17:0] tsx;
-wire [17:0] tsy;
-wire [17:0] tex;
-wire [17:0] tey;
+wire signed [11:0] vx;
+wire signed [11:0] vy;
+wire signed [17:0] tsx;
+wire signed [17:0] tsy;
+wire signed [17:0] tex;
+wire signed [17:0] tey;
 
 tmu2_vinterp vinterp(
 	.sys_clk(sys_clk),
@@ -365,10 +349,74 @@ tmu2_vinterp vinterp(
 	.tey(tey)
 );
 
-assign vinterp_pipe_ack = 1'b1;
-always @(posedge sys_clk)
+/*always @(posedge sys_clk)
 	if(vinterp_pipe_stb)
-		$display("vx:%d vy:%d     //     tsx:%d tsy:%d     //     tex:%d tey:%d", vx, vy, tsx, tsy, tex, tey);
+		$display("vx:%d vy:%d     //     tsx:%d tsy:%d     //     tex:%d tey:%d", vx, vy, tsx, tsy, tex, tey);*/
+
+/* Stage 5 - Horizontal interpolation division operands */
+wire hdivops_busy;
+wire hdivops_pipe_stb;
+wire hdivops_pipe_ack;
+wire signed [11:0] x_f;
+wire signed [11:0] y_f;
+wire signed [17:0] tsx_f;
+wire signed [17:0] tsy_f;
+wire diff_x_positive;
+wire [16:0] diff_x;
+wire diff_y_positive;
+wire [16:0] diff_y;
+
+tmu2_hdivops hdivops(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(hdivops_busy),
+
+	.pipe_stb_i(vinterp_pipe_stb),
+	.pipe_ack_o(vinterp_pipe_ack),
+	.x(vx),
+	.y(vy),
+	.tsx(tsx),
+	.tsy(tsy),
+	.tex(tex),
+	.tey(tey),
+
+	.pipe_stb_o(hdivops_pipe_stb),
+	.pipe_ack_i(hdivops_pipe_ack),
+	.x_f(x_f),
+	.y_f(y_f),
+	.tsx_f(tsx_f),
+	.tsy_f(tsy_f),
+	.diff_x_positive(diff_x_positive),
+	.diff_x(diff_x),
+	.diff_y_positive(diff_y_positive),
+	.diff_y(diff_y)
+);
+
+/* Stage 6 - Horizontal division */
+wire hdiv_busy;
+wire hdiv_pipe_stb;
+wire hdiv_pipe_ack;
+
+tmu2_hdiv hdiv(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(hdiv_busy),
+
+	.pipe_stb_i(hdivops_pipe_stb),
+	.pipe_ack_o(hdivops_pipe_ack),
+	.x_f(x_f),
+	.y_f(y_f),
+	.tsx_f(tsx_f),
+	.tsy_f(tsy_f),
+	.diff_x_positive(diff_x_positive),
+	.diff_x(diff_x),
+	.diff_y_positive(diff_y_positive),
+	.diff_y(diff_y),
+);
+
+/* Stage 7 - Horizontal interpolation */
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;

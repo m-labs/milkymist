@@ -23,10 +23,10 @@ module tmu2_vdiv(
 
 	input pipe_stb_i,
 	output reg pipe_ack_o,
-	input [17:0] ax,
-	input [17:0] ay,
-	input [17:0] bx,
-	input [17:0] by,
+	input signed [17:0] ax,
+	input signed [17:0] ay,
+	input signed [17:0] bx,
+	input signed [17:0] by,
 	input diff_cx_positive,
 	input [16:0] diff_cx,
 	input diff_cy_positive,
@@ -35,8 +35,8 @@ module tmu2_vdiv(
 	input [16:0] diff_dx,
 	input diff_dy_positive,
 	input [16:0] diff_dy,
-	input [11:0] drx,
-	input [11:0] dry,
+	input signed [11:0] drx,
+	input signed [11:0] dry,
 
 	input [10:0] dst_squareh,
 
