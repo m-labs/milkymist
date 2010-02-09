@@ -26,7 +26,7 @@ module tmu2_geninterp18(
 	input [16:0] r,
 	input [16:0] divisor,
 
-	output reg signed [17:0] o
+	output signed [17:0] o
 );
 
 reg positive_r;
@@ -45,22 +45,24 @@ end
 
 reg [17:0] err;
 reg correct;
+reg signed [17:0] o_r;
+assign o = o_r;
 
 always @(posedge sys_clk) begin
 	if(load) begin
 		err <= 18'd0;
-		o <= init;
+		o_r <= init;
 	end else if(next_point) begin
 		err = err + r_r;
 		correct = (err[16:0] > {1'b0, divisor_r[16:1]}) & ~err[17];
 		if(positive) begin
-			o = o + {1'b0, q_r};
+			o_r = o_r + {1'b0, q_r};
 			if(correct)
-				o = o + 18'd1;
+				o_r = o_r + 18'd1;
 		end else begin
-			o = o - {1'b0, q_r};
+			o_r = o_r - {1'b0, q_r};
 			if(correct)
-				o = o - 18'd1;
+				o_r = o_r - 18'd1;
 		end
 		if(correct)
 			err = err - {1'b0, divisor_r};

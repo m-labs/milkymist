@@ -75,7 +75,6 @@ always @(posedge sys_clk) begin
 	if(load) begin
 		dx <= x;
 		dy <= y;
-		$display("load q:%d r:%d tsx:%d", diff_x_q, diff_x_r, tsx);
 	end else if(next_point)
 		dx <= dx + 12'd1;
 end
