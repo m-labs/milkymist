@@ -35,10 +35,10 @@ module tmu2_clamp(
 
 	output reg pipe_stb_o,
 	input pipe_ack_i,
-	output reg signed [11:0] dx_c,
-	output reg signed [11:0] dy_c,
-	output reg signed [17:0] tx_c,
-	output reg signed [17:0] ty_c
+	output reg [10:0] dx_c,
+	output reg [10:0] dy_c,
+	output reg [16:0] tx_c,
+	output reg [16:0] ty_c
 );
 
 always @(posedge sys_clk) begin
@@ -50,20 +50,20 @@ always @(posedge sys_clk) begin
 		if(pipe_stb_i & pipe_ack_o) begin
 			pipe_stb_o <= (dx >= 12'd0) && (dx < {1'b0, dst_hres})
 				&& (dy >= 12'd0) && (dy < {1'b0, dst_vres});
-			dx_c <= dx;
-			dy_c <= dy;
+			dx_c <= dx[10:0];
+			dy_c <= dy[10:0];
 			if(tx < 18'd0)
-				tx_c <= 18'd0;
+				tx_c <= 17'd0;
 			else if(tx >= {1'b0, tex_hres, 6'd0})
-				tx_c <= {{1'b0, tex_hres} - 12'd1, 6'd0};
+				tx_c <= {tex_hres - 11'd1, 6'd0};
 			else
-				tx_c <= tx;
+				tx_c <= tx[16:0];
 			if(ty < 18'd0)
-				ty_c <= 18'd0;
+				ty_c <= 17'd0;
 			else if(ty >= {1'b0, tex_vres, 6'd0})
-				ty_c <= {{1'b0, tex_vres} - 12'd1, 6'd0};
+				ty_c <= {tex_vres - 11'd1, 6'd0};
 			else
-				ty_c <= ty;
+				ty_c <= ty[16:0];
 		end
 	end
 end

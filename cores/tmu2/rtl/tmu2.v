@@ -516,10 +516,10 @@ tmu2_mask mask(
 wire clamp_busy;
 wire clamp_pipe_stb;
 wire clamp_pipe_ack;
-wire signed [11:0] dstx_c;
-wire signed [11:0] dsty_c;
-wire signed [17:0] tx_c;
-wire signed [17:0] ty_c;
+wire [10:0] dstx_c;
+wire [10:0] dsty_c;
+wire [16:0] tx_c;
+wire [16:0] ty_c;
 
 tmu2_clamp clamp(
 	.sys_clk(sys_clk),
