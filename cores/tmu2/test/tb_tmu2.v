@@ -125,7 +125,7 @@ always @(posedge sys_clk) begin
 		if(wbm_adr_o[2])
 			wbm_dat_i = y*20*64;
 		else
-			wbm_dat_i = x*20*64+y*7*64;
+			wbm_dat_i = x*20*64;//+y*7*64;
 		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
@@ -255,8 +255,8 @@ always begin
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 2); /* hmeshlast */
-	csrwrite(32'h08, 2); /* vmeshlast */
+	csrwrite(32'h04, 1); /* hmeshlast */
+	csrwrite(32'h08, 1); /* vmeshlast */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);

@@ -357,8 +357,8 @@ tmu2_vinterp vinterp(
 wire hdivops_busy;
 wire hdivops_pipe_stb;
 wire hdivops_pipe_ack;
-wire signed [11:0] x_f;
-wire signed [11:0] y_f;
+wire signed [11:0] vx_f;
+wire signed [11:0] vy_f;
 wire signed [17:0] tsx_f;
 wire signed [17:0] tsy_f;
 wire diff_x_positive;
@@ -383,8 +383,8 @@ tmu2_hdivops hdivops(
 
 	.pipe_stb_o(hdivops_pipe_stb),
 	.pipe_ack_i(hdivops_pipe_ack),
-	.x_f(x_f),
-	.y_f(y_f),
+	.x_f(vx_f),
+	.y_f(vy_f),
 	.tsx_f(tsx_f),
 	.tsy_f(tsy_f),
 	.diff_x_positive(diff_x_positive),
@@ -397,6 +397,16 @@ tmu2_hdivops hdivops(
 wire hdiv_busy;
 wire hdiv_pipe_stb;
 wire hdiv_pipe_ack;
+wire signed [11:0] vx_f2;
+wire signed [11:0] vy_f2;
+wire signed [17:0] tsx_f2;
+wire signed [17:0] tsy_f2;
+wire diff_x_positive_f;
+wire [16:0] diff_x_q;
+wire [16:0] diff_x_r;
+wire diff_y_positive_f;
+wire [16:0] diff_y_q;
+wire [16:0] diff_y_r;
 
 tmu2_hdiv hdiv(
 	.sys_clk(sys_clk),
@@ -406,17 +416,74 @@ tmu2_hdiv hdiv(
 
 	.pipe_stb_i(hdivops_pipe_stb),
 	.pipe_ack_o(hdivops_pipe_ack),
-	.x_f(x_f),
-	.y_f(y_f),
-	.tsx_f(tsx_f),
-	.tsy_f(tsy_f),
+	.x(vx_f),
+	.y(vy_f),
+	.tsx(tsx_f),
+	.tsy(tsy_f),
 	.diff_x_positive(diff_x_positive),
 	.diff_x(diff_x),
 	.diff_y_positive(diff_y_positive),
 	.diff_y(diff_y),
+
+	.dst_squarew(dst_squarew),
+
+	.pipe_stb_o(hdiv_pipe_stb),
+	.pipe_ack_i(hdiv_pipe_ack),
+	.x_f(vx_f2),
+	.y_f(vy_f2),
+	.tsx_f(tsx_f2),
+	.tsy_f(tsy_f2),
+	.diff_x_positive_f(diff_x_positive_f),
+	.diff_x_q(diff_x_q),
+	.diff_x_r(diff_x_r),
+	.diff_y_positive_f(diff_y_positive_f),
+	.diff_y_q(diff_y_q),
+	.diff_y_r(diff_y_r)
 );
 
 /* Stage 7 - Horizontal interpolation */
+wire hinterp_busy;
+wire hinterp_pipe_stb;
+wire hinterp_pipe_ack;
+wire signed [11:0] destx;
+wire signed [11:0] desty;
+wire signed [17:0] tx;
+wire signed [17:0] ty;
+
+tmu2_hinterp hinterp(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(hinterp_busy),
+
+	.pipe_stb_i(hdiv_pipe_stb),
+	.pipe_ack_o(hdiv_pipe_ack),
+	.x(vx_f2),
+	.y(vy_f2),
+	.tsx(tsx_f2),
+	.tsy(tsy_f2),
+	.diff_x_positive(diff_x_positive_f),
+	.diff_x_q(diff_x_q),
+	.diff_x_r(diff_x_r),
+	.diff_y_positive(diff_y_positive_f),
+	.diff_y_q(diff_y_q),
+	.diff_y_r(diff_y_r),
+
+	.dst_squarew(dst_squarew),
+
+	.pipe_stb_o(hinterp_pipe_stb),
+	.pipe_ack_i(hinterp_pipe_ack),
+	.dx(destx),
+	.dy(desty),
+	.tx(tx),
+	.ty(ty)
+);
+
+assign hinterp_pipe_ack = 1'b1;
+always @(posedge sys_clk) begin
+	if(hinterp_pipe_stb)
+		$display("(%d,%d) -> (%d,%d)", tx/64, ty/64, destx, desty);
+end
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
@@ -504,7 +571,9 @@ tmu2_pixout #(
 
 /* FSM to flush the burst assembler at the end */
 
-wire pipeline_busy = fetchvertex_busy|vdivops_busy|vdiv_busy|vinterp_busy;
+wire pipeline_busy = fetchvertex_busy
+	|vdivops_busy|vdiv_busy|vinterp_busy
+	|hdivops_busy|hdiv_busy|hinterp_busy;
 
 parameter IDLE		= 2'd0;
 parameter WAIT_PROCESS	= 2'd1;

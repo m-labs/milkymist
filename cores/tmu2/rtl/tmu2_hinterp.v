@@ -40,8 +40,8 @@ module tmu2_hinterp(
 	input pipe_ack_i,
 	output reg signed [11:0] dx,
 	output reg signed [11:0] dy,
-	output reg signed [17:0] tx,
-	output reg signed [17:0] ty
+	output signed [17:0] tx,
+	output signed [17:0] ty
 );
 
 reg load;
@@ -75,6 +75,7 @@ always @(posedge sys_clk) begin
 	if(load) begin
 		dx <= x;
 		dy <= y;
+		$display("load q:%d r:%d tsx:%d", diff_x_q, diff_x_r, tsx);
 	end else if(next_point)
 		dx <= dx + 12'd1;
 end
