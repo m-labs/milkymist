@@ -50,8 +50,8 @@ assign o = o_r;
 
 always @(posedge sys_clk) begin
 	if(load) begin
-		err <= 18'd0;
-		o_r <= init;
+		err = 18'd0;
+		o_r = init;
 	end else if(next_point) begin
 		err = err + r_r;
 		correct = (err[16:0] > {1'b0, divisor_r[16:1]}) & ~err[17];
