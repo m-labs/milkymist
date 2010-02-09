@@ -445,8 +445,8 @@ tmu2_hdiv hdiv(
 wire hinterp_busy;
 wire hinterp_pipe_stb;
 wire hinterp_pipe_ack;
-wire signed [11:0] destx;
-wire signed [11:0] desty;
+wire signed [11:0] dstx;
+wire signed [11:0] dsty;
 wire signed [17:0] tx;
 wire signed [17:0] ty;
 
@@ -473,17 +473,86 @@ tmu2_hinterp hinterp(
 
 	.pipe_stb_o(hinterp_pipe_stb),
 	.pipe_ack_i(hinterp_pipe_ack),
-	.dx(destx),
-	.dy(desty),
+	.dx(dstx),
+	.dy(dsty),
 	.tx(tx),
 	.ty(ty)
 );
 
-assign hinterp_pipe_ack = 1'b1;
+/* Stage 8 - Mask texture coordinates */
+wire mask_busy;
+wire mask_pipe_stb;
+wire mask_pipe_ack;
+wire signed [11:0] dstx_f;
+wire signed [11:0] dsty_f;
+wire signed [17:0] tx_m;
+wire signed [17:0] ty_m;
+
+tmu2_mask mask(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(mask_busy),
+
+	.pipe_stb_i(hinterp_pipe_stb),
+	.pipe_ack_o(hinterp_pipe_ack),
+	.dx(dstx),
+	.dy(dsty),
+	.tx(tx),
+	.ty(ty),
+
+	.tex_hmask(tex_hmask),
+	.tex_vmask(tex_vmask),
+
+	.pipe_stb_o(mask_pipe_stb),
+	.pipe_ack_i(mask_pipe_ack),
+	.dx_f(dstx_f),
+	.dy_f(dsty_f),
+	.tx_m(tx_m),
+	.ty_m(ty_m)
+);
+
+/* Stage 9 - Clamp texture coordinates and filter out off-screen points */
+wire clamp_busy;
+wire clamp_pipe_stb;
+wire clamp_pipe_ack;
+wire signed [11:0] dstx_c;
+wire signed [11:0] dsty_c;
+wire signed [17:0] tx_c;
+wire signed [17:0] ty_c;
+
+tmu2_clamp clamp(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(clamp_busy),
+
+	.pipe_stb_i(mask_pipe_stb),
+	.pipe_ack_o(mask_pipe_ack),
+	.dx(dstx_f),
+	.dy(dsty_f),
+	.tx(tx_m),
+	.ty(ty_m),
+
+	.tex_hres(tex_hres),
+	.tex_vres(tex_vres),
+	.dst_hres(dst_hres),
+	.dst_vres(dst_vres),
+
+	.pipe_stb_o(clamp_pipe_stb),
+	.pipe_ack_i(clamp_pipe_ack),
+	.dx_c(dstx_c),
+	.dy_c(dsty_c),
+	.tx_c(tx_c),
+	.ty_c(ty_c)
+);
+
+assign clamp_pipe_ack = 1'b1;
 always @(posedge sys_clk) begin
-	if(hinterp_pipe_stb)
-		$display("(%d,%d) -> (%d,%d)", tx/64, ty/64, destx, desty);
+	if(clamp_pipe_stb)
+		$display("(%d,%d) -> (%d,%d)", tx_c/64, ty_c/64, dstx_c, dsty_c);
 end
+
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
@@ -573,7 +642,8 @@ tmu2_pixout #(
 
 wire pipeline_busy = fetchvertex_busy
 	|vdivops_busy|vdiv_busy|vinterp_busy
-	|hdivops_busy|hdiv_busy|hinterp_busy;
+	|hdivops_busy|hdiv_busy|hinterp_busy
+	|mask_busy|clamp_busy;
 
 parameter IDLE		= 2'd0;
 parameter WAIT_PROCESS	= 2'd1;

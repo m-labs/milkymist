@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module tmu2_hdivops(
+module tmu2_clamp(
 	input sys_clk,
 	input sys_rst,
 
@@ -23,23 +23,22 @@ module tmu2_hdivops(
 
 	input pipe_stb_i,
 	output pipe_ack_o,
-	input signed [11:0] x,
-	input signed [11:0] y,
-	input signed [17:0] tsx,
-	input signed [17:0] tsy,
-	input signed [17:0] tex,
-	input signed [17:0] tey,
+	input signed [11:0] dx,
+	input signed [11:0] dy,
+	input signed [17:0] tx,
+	input signed [17:0] ty,
+
+	input [10:0] tex_hres,
+	input [10:0] tex_vres,
+	input [10:0] dst_hres,
+	input [10:0] dst_vres,
 
 	output reg pipe_stb_o,
 	input pipe_ack_i,
-	output reg signed [11:0] x_f,
-	output reg signed [11:0] y_f,
-	output reg signed [17:0] tsx_f,
-	output reg signed [17:0] tsy_f,
-	output reg diff_x_positive,
-	output reg [16:0] diff_x,
-	output reg diff_y_positive,
-	output reg [16:0] diff_y
+	output reg signed [11:0] dx_c,
+	output reg signed [11:0] dy_c,
+	output reg signed [17:0] tx_c,
+	output reg signed [17:0] ty_c
 );
 
 always @(posedge sys_clk) begin
@@ -49,25 +48,22 @@ always @(posedge sys_clk) begin
 		if(pipe_ack_i)
 			pipe_stb_o <= 1'b0;
 		if(pipe_stb_i & pipe_ack_o) begin
-			pipe_stb_o <= 1'b1;
-			if(tex > tsx) begin
-				diff_x_positive <= 1'b1;
-				diff_x <= tex - tsx;
-			end else begin
-				diff_x_positive <= 1'b0;
-				diff_x <= tsx - tex;
-			end
-			if(tey > tsy) begin
-				diff_y_positive <= 1'b1;
-				diff_y <= tey - tsy;
-			end else begin
-				diff_y_positive <= 1'b0;
-				diff_y <= tsy - tey;
-			end
-			x_f <= x;
-			y_f <= y;
-			tsx_f <= tsx;
-			tsy_f <= tsy;
+			pipe_stb_o <= (dx >= 12'd0) && (dx < {1'b0, dst_hres})
+				&& (dy >= 12'd0) && (dy < {1'b0, dst_vres});
+			dx_c <= dx;
+			dy_c <= dy;
+			if(tx < 18'd0)
+				tx_c <= 18'd0;
+			else if(tx >= {1'b0, tex_hres, 6'd0})
+				tx_c <= {{1'b0, tex_hres} - 12'd1, 6'd0};
+			else
+				tx_c <= tx;
+			if(ty < 18'd0)
+				ty_c <= 18'd0;
+			else if(ty >= {1'b0, tex_vres, 6'd0})
+				ty_c <= {{1'b0, tex_vres} - 12'd1, 6'd0};
+			else
+				ty_c <= ty;
 		end
 	end
 end
