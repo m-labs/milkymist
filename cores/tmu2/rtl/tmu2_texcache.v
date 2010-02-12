@@ -90,7 +90,7 @@ wire [31:0] datamem_d3;
 wire [31:0] datamem_d4;
 
 reg datamem_we;
-wire [cache_depth-3:0] datamem_aw;
+wire [cache_depth-3-1:0] datamem_aw;
 
 tmu2_qpram32 #(
 	.depth(cache_depth-2)
@@ -258,7 +258,8 @@ parameter DATA2		= 3'd2;
 parameter DATA3		= 3'd3;
 parameter DATA4		= 3'd4;
 parameter WAIT		= 3'd5;
-parameter FLUSH		= 3'd6;
+parameter WAIT2		= 3'd6;
+parameter FLUSH		= 3'd7;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -270,6 +271,8 @@ end
 reg fsm_busy;
 
 always @(*) begin
+	next_state = state;
+
 	tagmem_we = 1'b0;
 	write_valid = 1'b1;
 
@@ -315,7 +318,8 @@ always @(*) begin
 			tagmem_we = 1'b1; /* write tag last as it may unlock the pipeline */
 			next_state = WAIT;
 		end
-		WAIT: next_state = IDLE; /* wait for fetch_needed to reflect the updated tag */
+		WAIT: next_state = WAIT2; /* wait for fetch_needed to reflect the updated tag */
+		WAIT2: next_state = IDLE;
 		FLUSH: begin
 			tagmem_we = 1'b1;
 			write_valid = 1'b0;
