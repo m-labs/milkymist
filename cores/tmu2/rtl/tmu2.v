@@ -557,11 +557,11 @@ end
 wire adrgen_busy;
 wire adrgen_pipe_stb;
 wire adrgen_pipe_ack;
-wire [fml_depth-1:0] dadr;
-wire [fml_depth-1:0] tadra;
-wire [fml_depth-1:0] tadrb;
-wire [fml_depth-1:0] tadrc;
-wire [fml_depth-1:0] tadrd;
+wire [fml_depth-1-1:0] dadr;
+wire [fml_depth-1-1:0] tadra;
+wire [fml_depth-1-1:0] tadrb;
+wire [fml_depth-1-1:0] tadrc;
+wire [fml_depth-1-1:0] tadrd;
 wire [5:0] x_frac;
 wire [5:0] y_frac;
 

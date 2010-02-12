@@ -30,18 +30,18 @@ module tmu2_adrgen #(
 	input [16:0] tx_c,
 	input [16:0] ty_c,
 
-	input [fml_depth-1-1:0] dst_fbuf,
+	input [fml_depth-1-1:0] dst_fbuf, /* in 16-bit words */
 	input [10:0] dst_hres,
-	input [fml_depth-1-1:0] tex_fbuf,
+	input [fml_depth-1-1:0] tex_fbuf, /* in 16-bit words */
 	input [10:0] tex_hres,
 
 	output pipe_stb_o,
 	input pipe_ack_i,
-	output [fml_depth-1:0] dadr,
-	output [fml_depth-1:0] tadra,
-	output [fml_depth-1:0] tadrb,
-	output [fml_depth-1:0] tadrc,
-	output [fml_depth-1:0] tadrd,
+	output [fml_depth-1-1:0] dadr, /* in 16-bit words */
+	output [fml_depth-1-1:0] tadra,
+	output [fml_depth-1-1:0] tadrb,
+	output [fml_depth-1-1:0] tadrc,
+	output [fml_depth-1-1:0] tadrd,
 	output [5:0] x_frac,
 	output [5:0] y_frac,
 );
@@ -51,23 +51,23 @@ module tmu2_adrgen #(
 wire pipe_en;
 
 reg valid_1;
-reg [fml_depth-1:0] dadr_1;
-reg [fml_depth-1:0] tadra_1;
+reg [fml_depth-1-1:0] dadr_1;
+reg [fml_depth-1-1:0] tadra_1;
 reg [5:0] x_frac_1;
 reg [5:0] y_frac_1;
 
 reg valid_2;
-reg [fml_depth-1:0] dadr_2;
-reg [fml_depth-1:0] tadra_2;
+reg [fml_depth-1-1:0] dadr_2;
+reg [fml_depth-1-1:0] tadra_2;
 reg [5:0] x_frac_2;
 reg [5:0] y_frac_2;
 
 reg valid_3;
-reg [fml_depth-1:0] dadr_3;
-reg [fml_depth-1:0] tadra_3;
-reg [fml_depth-1:0] tadrb_3;
-reg [fml_depth-1:0] tadrc_3;
-reg [fml_depth-1:0] tadrd_3;
+reg [fml_depth-1-1:0] dadr_3;
+reg [fml_depth-1-1:0] tadra_3;
+reg [fml_depth-1-1:0] tadrb_3;
+reg [fml_depth-1-1:0] tadrc_3;
+reg [fml_depth-1-1:0] tadrd_3;
 reg [5:0] x_frac_3;
 reg [5:0] y_frac_3;
 
