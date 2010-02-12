@@ -349,10 +349,6 @@ tmu2_vinterp vinterp(
 	.tey(tey)
 );
 
-/*always @(posedge sys_clk)
-	if(vinterp_pipe_stb)
-		$display("vx:%d vy:%d     //     tsx:%d tsy:%d     //     tex:%d tey:%d", vx, vy, tsx, tsy, tex, tey);*/
-
 /* Stage 5 - Horizontal interpolation division operands */
 wire hdivops_busy;
 wire hdivops_pipe_stb;
@@ -547,11 +543,6 @@ tmu2_clamp clamp(
 	.ty_c(ty_c)
 );
 
-/*always @(posedge sys_clk) begin
-	if(clamp_pipe_stb)
-		$display("(%d,%d) -> (%d,%d)", tx_c/64, ty_c/64, dstx_c, dsty_c);
-end*/
-
 /* Stage 10 - Address generator */
 wire adrgen_busy;
 wire adrgen_pipe_stb;
@@ -599,6 +590,13 @@ tmu2_adrgen #(
 always @(posedge sys_clk) begin
 	if(adrgen_pipe_stb)
 		$display("a:%x b:%x c:%x d:%x fx:%d fy:%d", tadra, tadrb, tadrc, tadrd, x_frac, y_frac);
+end*/
+
+/*always @(posedge sys_clk) begin
+	if(adrgen_pipe_stb & adrgen_pipe_ack) begin
+		$display("S %x", tadra[20:0]);
+		$display("D %x", dadr[20:0]);
+	end
 end*/
 
 /* Stage 11 - Texel cache */

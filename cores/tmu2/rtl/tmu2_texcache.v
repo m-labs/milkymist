@@ -78,11 +78,15 @@ reg [fml_depth-1:0] tadrc8_r;
 reg [fml_depth-1:0] tadrd8_r;
 
 always @(posedge sys_clk) begin
-	tadra8_r <= tadra8;
-	tadrb8_r <= tadrb8;
-	tadrc8_r <= tadrc8;
-	tadrd8_r <= tadrd8;
+	if(pipe_ack_o) begin
+		tadra8_r <= tadra8;
+		tadrb8_r <= tadrb8;
+		tadrc8_r <= tadrc8;
+		tadrd8_r <= tadrd8;
+	end
 end
+
+reg retry; /* < retry the old address after a miss */
 
 wire [31:0] datamem_d1;
 wire [31:0] datamem_d2;
@@ -97,13 +101,13 @@ tmu2_qpram32 #(
 ) datamem (
 	.sys_clk(sys_clk),
 
-	.a1(tadra8[cache_depth-1:2]),
+	.a1(retry ? tadra8_r[cache_depth-1:2] : tadra8[cache_depth-1:2]),
 	.d1(datamem_d1),
-	.a2(tadrb8[cache_depth-1:2]),
+	.a2(retry ? tadrb8_r[cache_depth-1:2] : tadrb8[cache_depth-1:2]),
 	.d2(datamem_d2),
-	.a3(tadrc8[cache_depth-1:2]),
+	.a3(retry ? tadrc8_r[cache_depth-1:2] : tadrc8[cache_depth-1:2]),
 	.d3(datamem_d3),
-	.a4(tadrc8[cache_depth-1:2]),
+	.a4(retry ? tadrc8_r[cache_depth-1:2] : tadrc8[cache_depth-1:2]),
 	.d4(datamem_d4),
 
 	.we(datamem_we),
@@ -130,13 +134,13 @@ tmu2_qpram #(
 ) tagmem (
 	.sys_clk(sys_clk),
 
-	.a1(tadra8[cache_depth-1:5]),
+	.a1(retry ? tadra8_r[cache_depth-1:5] : tadra8[cache_depth-1:5]),
 	.d1(tagmem_d1),
-	.a2(tadrb8[cache_depth-1:5]),
+	.a2(retry ? tadrb8_r[cache_depth-1:5] : tadrb8[cache_depth-1:5]),
 	.d2(tagmem_d2),
-	.a3(tadrc8[cache_depth-1:5]),
+	.a3(retry ? tadrc8_r[cache_depth-1:5] : tadrc8[cache_depth-1:5]),
 	.d3(tagmem_d3),
-	.a4(tadrc8[cache_depth-1:5]),
+	.a4(retry ? tadrc8_r[cache_depth-1:5] : tadrc8[cache_depth-1:5]),
 	.d4(tagmem_d4),
 
 	.we(tagmem_we),
@@ -186,6 +190,22 @@ wire hit_d = ignore_d | (~tagmem_we_r & valid_d & (tag_d == tadrd8_r[fml_depth-1
 
 assign pipe_stb_o = access_requested & hit_a & hit_b & hit_c & hit_d;
 assign pipe_ack_o = (pipe_ack_i & pipe_stb_o) | ~access_requested;
+
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		retry <= 1'b0;
+	else begin
+		if(access_requested & ~(hit_a & hit_b & hit_c & hit_d))
+			retry <= 1'b1;
+		if(hit_a & hit_b & hit_c & hit_d)
+			retry <= 1'b0;
+	end
+end
+
+/*always @(posedge sys_clk) begin
+	if(pipe_stb_o)
+		$display("a:%x d:%x", tadra8_r, tcolora);
+end*/
 
 /* FORWARDING */
 
@@ -249,17 +269,18 @@ assign fml_adr = {fetch_adr[fml_depth-1:5], 5'd0};
 
 /* FSM controller */
 
-reg [2:0] state;
-reg [2:0] next_state;
+reg [3:0] state;
+reg [3:0] next_state;
 
-parameter IDLE		= 3'd0;
-parameter DATA1		= 3'd1;
-parameter DATA2		= 3'd2;
-parameter DATA3		= 3'd3;
-parameter DATA4		= 3'd4;
-parameter WAIT		= 3'd5;
-parameter WAIT2		= 3'd6;
-parameter FLUSH		= 3'd7;
+parameter IDLE		= 4'd0;
+parameter DATA1		= 4'd1;
+parameter DATA2		= 4'd2;
+parameter DATA3		= 4'd3;
+parameter DATA4		= 4'd4;
+parameter WAIT		= 4'd5;
+parameter WAIT2		= 4'd6;
+parameter WAIT3		= 4'd7;
+parameter FLUSH		= 4'd8;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -317,7 +338,8 @@ always @(*) begin
 			next_state = WAIT;
 		end
 		WAIT: next_state = WAIT2; /* wait for fetch_needed to reflect the updated tag */
-		WAIT2: next_state = IDLE;
+		WAIT2: next_state = WAIT3;
+		WAIT3: next_state = IDLE;
 		FLUSH: begin
 			tagmem_we = 1'b1;
 			write_valid = 1'b0;
