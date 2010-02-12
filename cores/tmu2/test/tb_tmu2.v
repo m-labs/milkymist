@@ -54,7 +54,7 @@ always #5 sys_clk = ~sys_clk;
 
 tmu2 #(
 	.fml_depth(fml_depth),
-	.pixin_cache_depth(12)
+	.texel_cache_depth(12)
 ) dut (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),

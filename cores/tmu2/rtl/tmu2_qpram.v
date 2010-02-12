@@ -16,7 +16,7 @@
  */
 
 module tmu2_qpram #(
-	parameter depth = 11 /* < log2 of the capacity in words */
+	parameter depth = 11, /* < log2 of the capacity in words */
 	parameter width = 8
 ) (
 	input sys_clk,

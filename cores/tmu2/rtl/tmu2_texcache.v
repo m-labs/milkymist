@@ -267,6 +267,8 @@ always @(posedge sys_clk) begin
 		state <= next_state;
 end
 
+reg fsm_busy;
+
 always @(*) begin
 	tagmem_we = 1'b0;
 	write_valid = 1'b1;
@@ -278,8 +280,11 @@ always @(*) begin
 
 	fml_stb = 1'b0;
 
+	fsm_busy = 1'b1;
+
 	case(state)
 		IDLE: begin
+			fsm_busy = 1'b0;
 			if(fetch_needed) begin
 				fml_stb = 1'b1;
 				next_state = DATA1;
@@ -320,5 +325,7 @@ always @(*) begin
 		end
 	endcase
 end
+
+assign busy = fsm_busy | access_requested;
 
 endmodule

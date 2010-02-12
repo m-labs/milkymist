@@ -16,7 +16,7 @@
  */
 
 module tmu2_dpram #(
-	parameter depth = 11 /* < log2 of the capacity in words */
+	parameter depth = 11, /* < log2 of the capacity in words */
 	parameter width = 32
 ) (
 	input sys_clk,

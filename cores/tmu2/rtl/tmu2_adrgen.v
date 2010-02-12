@@ -43,7 +43,7 @@ module tmu2_adrgen #(
 	output [fml_depth-1-1:0] tadrc,
 	output [fml_depth-1-1:0] tadrd,
 	output [5:0] x_frac,
-	output [5:0] y_frac,
+	output [5:0] y_frac
 );
 
 /* Arithmetic pipeline. Enable signal is shared to ease usage of hard macros. */
