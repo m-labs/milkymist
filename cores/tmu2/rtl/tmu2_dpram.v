@@ -16,22 +16,23 @@
  */
 
 module tmu2_dpram #(
-	parameter depth = 11 /* < log2 of the capacity in 32-bit words */
+	parameter depth = 11 /* < log2 of the capacity in words */
+	parameter width = 32
 ) (
 	input sys_clk,
 
 	input [depth-1:0] a,
 	input we,
-	input [31:0] di,
-	output [31:0] do,
+	input [width-1:0] di,
+	output [width-1:0] do,
 
 	input [depth-1:0] a2,
 	input we2,
-	input [31:0] di2,
-	output [31:0] do2
+	input [width-1:0] di2,
+	output [width-1:0] do2
 );
 
-reg [31:0] ram[0:(1 << depth)-1];
+reg [width-1:0] ram[0:(1 << depth)-1];
 
 reg [depth-1:0] a_r;
 reg [depth-1:0] a2_r;

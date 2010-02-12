@@ -15,65 +15,64 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module tmu2_qpram #(
-	parameter depth = 11 /* < log2 of the capacity in words */
-	parameter width = 8
+module tmu2_qpram32 #(
+	parameter depth = 11 /* < log2 of the capacity in 32-bit words */
 ) (
 	input sys_clk,
 
-	/* Read port 1 */
+	/* 32-bit read port 1 */
 	input [depth-1:0] a1,
-	output [width-1:0] d1,
+	output [31:0] d1,
 
-	/* Read port 2 */
+	/* 32-bit read port 2 */
 	input [depth-1:0] a2,
-	output [width-1:0] d2,
-
-	/* Read port 3 */
+	output [31:0] d2,
+	
+	/* 32-bit read port 3 */
 	input [depth-1:0] a3,
-	output [width-1:0] d3,
-
-	/* Read port 4 */
+	output [31:0] d3,
+	
+	/* 32-bit read port 4 */
 	input [depth-1:0] a4,
-	output [width-1:0] d4,
+	output [31:0] d4,
 
-	/* Write port - we=1 disables read ports 1 and 3 */
+	/* 64-bit write port - we=1 disables read ports */
 	input we,
-	input [depth-1:0] aw,
-	input [width-1:0] dw
+	input [depth-1-1:0] aw,
+	input [63:0] dw
 );
 
 tmu2_dpram #(
 	.depth(depth),
-	.width(width)
+	.width(32)
 ) ram1 (
 	.sys_clk(sys_clk),
 
-	.a(we ? aw : a1),
+	.a(we ? {aw, 1'b0} : a1),
 	.we(we),
-	.di(dw),
+	.di(dw[63:32]),
 	.do(d1),
 
-	.a2(a2),
-	.we2(1'b0),
-	.di2(),
+	.a2(we ? {aw, 1'b1} : a2),
+	.we2(we),
+	.di2(dw[31:0]),
 	.do2(d2)
 );
 
 tmu2_dpram #(
 	.depth(depth),
-	.width(width)
+	.width(32)
 ) ram2 (
 	.sys_clk(sys_clk),
 
-	.a(we ? aw : a3),
+	.a(we ? {aw, 1'b0} : a3),
 	.we(we),
-	.di(dw),
+	.di(dw[63:32]),
 	.do(d3),
 
-	.a2(a4),
-	.we2(1'b0),
-	.di2(),
+	.a2(we ? {aw, 1'b1} : a4),
+	.we2(we),
+	.di2(dw[31:0]),
 	.do2(d4)
 );
 
