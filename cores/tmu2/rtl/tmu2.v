@@ -553,6 +553,48 @@ always @(posedge sys_clk) begin
 		$display("(%d,%d) -> (%d,%d)", tx_c/64, ty_c/64, dstx_c, dsty_c);
 end
 
+/* Stage 10 - Address generator */
+wire adrgen_busy;
+wire adrgen_pipe_stb;
+wire adrgen_pipe_ack;
+wire [fml_depth-1:0] dadr;
+wire [fml_depth-1:0] tadra;
+wire [fml_depth-1:0] tadrb;
+wire [fml_depth-1:0] tadrc;
+wire [fml_depth-1:0] tadrd;
+wire [5:0] x_frac;
+wire [5:0] y_frac;
+
+tmu2_adrgen #(
+	.fml_depth(fml_depth),
+) adrgen (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(adrgen_busy),
+
+	.pipe_stb_i(adrgen_pipe_stb),
+	.pipe_ack_o(adrgen_pipe_ack),
+	.dx_c(dstx_c),
+	.dy_c(dsty_c),
+	.tx_c(tx_c),
+	.ty_c(ty_c),
+
+	.dst_fbuf(dst_fbuf),
+	.dst_hres(dst_hres),
+	.tex_fbuf(tex_fbuf),
+	.tex_hres(tex_hres),
+
+	.pipe_stb_o(adrgen_pipe_stb),
+	.pipe_ack_i(adrgen_pipe_ack),
+	.dadr(dadr),
+	.tadra(tadra),
+	.tadrb(tadrb),
+	.tadrc(tadrc),
+	.tadrd(tadrd),
+	.x_frac(x_frac),
+	.y_frac(y_frac)
+);
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
