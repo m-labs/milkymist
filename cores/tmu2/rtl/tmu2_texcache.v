@@ -97,13 +97,13 @@ tmu2_qpram32 #(
 ) datamem (
 	.sys_clk(sys_clk),
 
-	.a1(tadra8[fml_depth-1:2]),
+	.a1(tadra8[cache_depth-1:2]),
 	.d1(datamem_d1),
-	.a2(tadrb8[fml_depth-1:2]),
+	.a2(tadrb8[cache_depth-1:2]),
 	.d2(datamem_d2),
-	.a3(tadrc8[fml_depth-1:2]),
+	.a3(tadrc8[cache_depth-1:2]),
 	.d3(datamem_d3),
-	.a4(tadrc8[fml_depth-1:2]),
+	.a4(tadrc8[cache_depth-1:2]),
 	.d4(datamem_d4),
 
 	.we(datamem_we),
@@ -239,13 +239,13 @@ reg burst_count;
 reg [1:0] burst_counter;
 always @(posedge sys_clk) begin
 	if(burst_count)
-		burst_counter <= 2'd0;
-	else
 		burst_counter <= burst_counter + 2'd1;
+	else
+		burst_counter <= 2'd0;
 end
 assign datamem_aw = {fetch_adr[cache_depth-1:5], burst_counter};
 
-assign fml_adr = fetch_adr;
+assign fml_adr = {fetch_adr[fml_depth-1:5], 5'd0};
 
 /* FSM controller */
 
@@ -288,10 +288,8 @@ always @(*) begin
 	case(state)
 		IDLE: begin
 			fsm_busy = 1'b0;
-			if(fetch_needed) begin
-				fml_stb = 1'b1;
+			if(fetch_needed)
 				next_state = DATA1;
-			end
 			if(flush)
 				next_state = FLUSH;
 		end

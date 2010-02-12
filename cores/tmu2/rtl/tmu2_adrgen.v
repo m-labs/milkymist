@@ -79,7 +79,7 @@ always @(posedge sys_clk) begin
 	end else if(pipe_en) begin
 		valid_1 <= pipe_stb_i;
 		dadr_1 <= dst_fbuf + dst_hres*dy_c + dx_c;
-		tadra_1 <= tex_fbuf + tex_hres*ty_c[16:6] + ty_c[16:6];
+		tadra_1 <= tex_fbuf + tex_hres*ty_c[16:6] + tx_c[16:6];
 		x_frac_1 <= tx_c[5:0];
 		y_frac_1 <= ty_c[5:0];
 

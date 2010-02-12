@@ -88,8 +88,8 @@ always @(posedge sys_clk) begin
 		dst_vres <= 11'd480;
 		dst_hoffset <= 12'd0;
 		dst_voffset <= 12'd0;
-		dst_squarew <= 11'd20;
-		dst_squareh <= 11'd20;
+		dst_squarew <= 11'd16;
+		dst_squareh <= 11'd16;
 	end else begin
 		irq <= old_busy & ~busy;
 		

@@ -146,8 +146,8 @@ reg [15:0] p3;
 reg [15:0] p4;
 begin
 	read_addr2 = read_addr[20:0]/2;
-	x = read_addr2 % 640;
-	y = read_addr2 / 640;
+	x = read_addr2 % 512;
+	y = read_addr2 / 512;
 	$image_get(x + 0, y, p1);
 	$image_get(x + 1, y, p2);
 	$image_get(x + 2, y, p3);
@@ -166,7 +166,7 @@ always @(posedge sys_clk) begin
 			
 			handle_read;
 			
-			//$display("Starting   FML burst READ at address %x", read_addr);
+			$display("Starting   FML burst READ at address %x", read_addr);
 			
 			fmlr_ack = 1'b1;
 		end
@@ -176,7 +176,7 @@ always @(posedge sys_clk) begin
 		
 		handle_read;
 		
-		//$display("Continuing FML burst READ at address %x", read_addr);
+		$display("Continuing FML burst READ at address %x", read_addr);
 		
 		if(read_burstcount == 4)
 			read_burstcount = 0;

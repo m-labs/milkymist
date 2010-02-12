@@ -547,11 +547,10 @@ tmu2_clamp clamp(
 	.ty_c(ty_c)
 );
 
-assign clamp_pipe_ack = 1'b1;
-always @(posedge sys_clk) begin
+/*always @(posedge sys_clk) begin
 	if(clamp_pipe_stb)
 		$display("(%d,%d) -> (%d,%d)", tx_c/64, ty_c/64, dstx_c, dsty_c);
-end
+end*/
 
 /* Stage 10 - Address generator */
 wire adrgen_busy;
@@ -595,6 +594,12 @@ tmu2_adrgen #(
 	.x_frac(x_frac),
 	.y_frac(y_frac)
 );
+
+/*assign adrgen_pipe_ack = 1'b1;
+always @(posedge sys_clk) begin
+	if(adrgen_pipe_stb)
+		$display("a:%x b:%x c:%x d:%x fx:%d fy:%d", tadra, tadrb, tadrc, tadrd, x_frac, y_frac);
+end*/
 
 /* Stage 11 - Texel cache */
 wire texcache_busy;
@@ -644,6 +649,8 @@ tmu2_texcache #(
 	.y_frac_f(y_frac_f)
 );
 
+//assign texcache_pipe_ack = 1'b1;
+
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
 wire decay_pipe_stb;
@@ -663,10 +670,10 @@ tmu2_decay #(
 	.chroma_key_en(chroma_key_en),
 	.chroma_key(chroma_key),
 	
-	.pipe_stb_i(pixin_pipe_stb),
-	.pipe_ack_o(pixin_pipe_ack),
-	.src_pixel(src_pixel),
-	.dst_addr(dst_addr1),
+	.pipe_stb_i(texcache_pipe_stb),
+	.pipe_ack_o(texcache_pipe_ack),
+	.src_pixel(tcolora),
+	.dst_addr(dadr_f),
 	
 	.pipe_stb_o(decay_pipe_stb),
 	.pipe_ack_i(decay_pipe_ack),
@@ -733,7 +740,10 @@ tmu2_pixout #(
 wire pipeline_busy = fetchvertex_busy
 	|vdivops_busy|vdiv_busy|vinterp_busy
 	|hdivops_busy|hdiv_busy|hinterp_busy
-	|mask_busy|clamp_busy;
+	|mask_busy|clamp_busy
+	|texcache_busy
+	|decay_busy
+	|burst_busy|pixout_busy;
 
 parameter IDLE		= 2'd0;
 parameter WAIT_PROCESS	= 2'd1;
