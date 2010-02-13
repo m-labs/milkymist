@@ -647,7 +647,35 @@ tmu2_texcache #(
 	.y_frac_f(y_frac_f)
 );
 
-//assign texcache_pipe_ack = 1'b1;
+/* Stage 11 - Blend neighbouring pixels for bilinear filtering */
+wire blend_busy;
+wire blend_pipe_stb;
+wire blend_pipe_ack;
+wire [fml_depth-1-1:0] dadr_f2;
+wire [15:0] color;
+
+tmu2_blend #(
+	.fml_depth(fml_depth)
+) blend (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(blend_busy),
+	.pipe_stb_i(texcache_pipe_stb),
+	.pipe_ack_o(texcache_pipe_ack),
+	.dadr(dadr_f),
+	.colora(tcolora),
+	.colorb(tcolorb),
+	.colorc(tcolorc),
+	.colord(tcolord),
+	.x_frac(x_frac_f),
+	.y_frac(y_frac_f),
+
+	.pipe_stb_o(blend_pipe_stb),
+	.pipe_ack_i(blend_pipe_ack),
+	.dadr_f(dadr_f2),
+	.color(color)
+);
 
 /* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
@@ -668,10 +696,10 @@ tmu2_decay #(
 	.chroma_key_en(chroma_key_en),
 	.chroma_key(chroma_key),
 	
-	.pipe_stb_i(texcache_pipe_stb),
-	.pipe_ack_o(texcache_pipe_ack),
-	.src_pixel(tcolora),
-	.dst_addr(dadr_f),
+	.pipe_stb_i(blend_pipe_stb),
+	.pipe_ack_o(blend_pipe_ack),
+	.src_pixel(color),
+	.dst_addr(dadr_f2),
 	
 	.pipe_stb_o(decay_pipe_stb),
 	.pipe_ack_i(decay_pipe_ack),
@@ -740,7 +768,7 @@ wire pipeline_busy = fetchvertex_busy
 	|hdivops_busy|hdiv_busy|hinterp_busy
 	|mask_busy|clamp_busy
 	|texcache_busy
-	|decay_busy
+	|blend_busy|decay_busy
 	|burst_busy|pixout_busy;
 
 parameter IDLE		= 2'd0;

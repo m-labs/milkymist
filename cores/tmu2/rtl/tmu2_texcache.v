@@ -155,11 +155,6 @@ tmu2_qpram #(
 	.dw(tagmem_dw)
 );
 
-/*always @(posedge sys_clk) begin
-	if(tagmem_we)
-		$display("write TAGMEM index:%x valid:%b tag:%x", tagmem_aw, tagmem_dw[1+fml_depth-cache_depth-1], tagmem_dw[fml_depth-cache_depth-1:0]);
-end*/
-
 /* HIT HANDLING */
 
 reg access_requested;

@@ -48,4 +48,23 @@ always @(posedge sys_clk) begin
 	do2 <= ram[a2];
 end
 
+// synthesis translate_off
+
+/*
+ * For some reason, in Verilog the result of an undefined multiplied by zero
+ * seems to be undefined.
+ * This causes problems with pixels that texcache won't fetch because some fractional
+ * parts are zero: the blend unit yields an undefined result on those, instead of ignoring
+ * the contribution of the undefined pixel.
+ * Work around this by initializing the memories.
+ */
+
+integer i;
+initial begin
+	for(i=0;i<(1 << depth);i=i+1)
+		ram[i] = 0;
+end
+
+// synthesis translate_on
+
 endmodule
