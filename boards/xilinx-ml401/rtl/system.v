@@ -1030,7 +1030,7 @@ assign pfpubus_stb = 1'b0;
 // Texture Mapping Unit
 //---------------------------------------------------------------------------
 `ifdef ENABLE_TMU
-tmu #(
+tmu2 #(
 	.csr_addr(4'h6),
 	.fml_depth(`SDRAM_DEPTH)
 ) tmu (

@@ -77,7 +77,7 @@ always @(posedge sys_clk) begin
 		baseaddress <= {fml_depth{1'b0}};
 		
 		nbursts <= 18'd19200;
-		vga_clk_sel <= 2'd00;
+		vga_clk_sel <= 2'b00;
 	end else begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin

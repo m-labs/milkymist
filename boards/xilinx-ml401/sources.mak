@@ -35,7 +35,7 @@ VGAFB_SRC=						\
 	$(CORES_DIR)/vgafb/rtl/vgafb.v
 AC97_SRC=$(wildcard $(CORES_DIR)/ac97/rtl/*.v)
 PFPU_SRC=$(wildcard $(CORES_DIR)/pfpu/rtl/*.v)
-TMU_SRC=$(wildcard $(CORES_DIR)/tmu/rtl/*.v)
+TMU_SRC=$(wildcard $(CORES_DIR)/tmu2/rtl/*.v)
 PS2_SRC=$(wildcard $(CORES_DIR)/ps2/rtl/*.v)
 ETHERNET_SRC=$(wildcard $(CORES_DIR)/ethmac/rtl/*.v)
 

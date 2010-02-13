@@ -195,7 +195,6 @@ assign pipe_ack_o = (pipe_ack_i & pipe_stb_o) | ~access_requested;
 
 assign retry = ~pipe_ack_o;
 
-`define VERIFY_TEXCACHE
 `ifdef VERIFY_TEXCACHE
 
 integer x, y;
