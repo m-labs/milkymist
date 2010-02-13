@@ -174,9 +174,11 @@ reg ignore_b;
 reg ignore_c;
 reg ignore_d;
 always @(posedge sys_clk) begin
-	ignore_b <= x_frac == 6'd0;
-	ignore_c <= y_frac == 6'd0;
-	ignore_d <= (x_frac == 6'd0) && (y_frac == 6'd0);
+	if(pipe_ack_o) begin
+		ignore_b <= x_frac == 6'd0;
+		ignore_c <= y_frac == 6'd0;
+		ignore_d <= (x_frac == 6'd0) && (y_frac == 6'd0);
+	end
 end
 
 wire valid_a = tagmem_d1[1+fml_depth-cache_depth-1];
@@ -197,19 +199,20 @@ assign pipe_stb_o = access_requested & hit_a & hit_b & hit_c & hit_d;
 assign pipe_ack_o = (pipe_ack_i & pipe_stb_o) | ~access_requested;
 
 assign retry = access_requested & ~(hit_a & hit_b & hit_c & hit_d);
-
-/*reg r;
+/*
+reg r;
 integer a;
 always @(posedge sys_clk) begin
+	$display("%t %b%b%b%b %x %x %x %x", $time, hit_a, hit_b, hit_c, hit_d, tadra8_r, tadrb8_r, tadrc8_r, tadrd8_r);
 	if(pipe_stb_o)
 		$display("a:%x d:%x [tag: %x %x] retry:%b index:%x", tadra8_r, tcolora, tag_a, tadra8_r[fml_depth-1:cache_depth], retry, tadra8_r[cache_depth-1:5]);
 	r <= pipe_ack_o & pipe_stb_i;
 	if(pipe_ack_o & pipe_stb_i) begin
-		$display("%t in: a: %x (hit:%b, ack:%b)", $time, tadra8, hit_a, pipe_ack_o);
+		$display("%t in: a: %x", $time, tadra8);
 		a <= tadra8;
 	end
 	if(r)
-		$display("%t ----> (%x) hit:%b, ack:%b", $time, a, hit_a, pipe_ack_o);
+		$display("%t ----> (%x) hit:%b%b%b%b, ack:%b", $time, a, hit_a, hit_b, hit_c, hit_d, pipe_ack_o);
 end*/
 
 /* FORWARDING */
@@ -319,7 +322,6 @@ always @(*) begin
 				next_state = FLUSH;
 		end
 		DATA1: begin
-			//$display("fetch needed! %b %b %b %b", hit_a, hit_b, hit_c, hit_d);
 			fml_stb = 1'b1;
 			datamem_we = 1'b1;
 			if(fml_ack) begin

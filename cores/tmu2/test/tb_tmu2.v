@@ -160,13 +160,12 @@ initial read_burstcount = 0;
 always @(posedge sys_clk) begin
 	fmlr_ack = 1'b0;
 	if(read_burstcount == 0) begin
-		if(fmlr_stb) begin
+		if(fmlr_stb/* && (($random % 9) == 0)*/) begin
 			read_burstcount = 1;
 			read_addr = fmlr_adr;
 			
 			handle_read;
 
-			//fmlr_di = {$random, $random};
 			$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 			
 			fmlr_ack = 1'b1;
@@ -177,7 +176,6 @@ always @(posedge sys_clk) begin
 		
 		handle_read;
 
-		//fmlr_di = {$random, $random};
 		$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 		
 		if(read_burstcount == 4)
@@ -257,8 +255,8 @@ always begin
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 20); /* hmeshlast */
-	csrwrite(32'h08, 20); /* vmeshlast */
+	csrwrite(32'h04, 10); /* hmeshlast */
+	csrwrite(32'h08, 10); /* vmeshlast */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);
