@@ -192,25 +192,6 @@ always @(posedge sys_clk) begin
 	end
 end
 
-`ifdef ldjf
-always @(posedge sys_clk) begin
-	/*if(valid_1) begin
-		$display("%d(%d) %d(%d)", colora_1, pa_1, colorb_1, pb_1);
-		$display("%d(%d) %d(%d)", colorc_1, pc_1, colord_1, pd_1);
-		$display("");
-	end*/
-	if(valid_3) begin
-		$display("%d %d", ra_3, rb_3);
-		$display("%d %d", rc_3, rd_3);
-		$display("");
-	end
-	/*if(valid_4)
-		$display("%d %d %d %d", ra_4, rb_4, rc_4, rd_4);*/
-	/*if(valid_5)
-		$display("%d %d %d", r_5, g_5, b_5);*/
-end
-`endif
-
 /* Glue logic */
 
 assign pipe_stb_o = valid_5;

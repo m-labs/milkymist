@@ -107,7 +107,7 @@ tmu2_qpram32 #(
 	.d2(datamem_d2),
 	.a3(retry ? tadrc8_r[cache_depth-1:2] : tadrc8[cache_depth-1:2]),
 	.d3(datamem_d3),
-	.a4(retry ? tadrc8_r[cache_depth-1:2] : tadrc8[cache_depth-1:2]),
+	.a4(retry ? tadrd8_r[cache_depth-1:2] : tadrd8[cache_depth-1:2]),
 	.d4(datamem_d4),
 
 	.we(datamem_we),
@@ -118,13 +118,6 @@ assign tcolora = tadra8_r[1] ? datamem_d1[15:0] : datamem_d1[31:16];
 assign tcolorb = tadrb8_r[1] ? datamem_d2[15:0] : datamem_d2[31:16];
 assign tcolorc = tadrc8_r[1] ? datamem_d3[15:0] : datamem_d3[31:16];
 assign tcolord = tadrd8_r[1] ? datamem_d4[15:0] : datamem_d4[31:16];
-
-reg [cache_depth-2-1:0] datamem_lastreg;
-reg datamem_retry;
-always @(posedge sys_clk) begin
-	datamem_lastreg <= retry ? tadra8_r[cache_depth-1:2] : tadra8[cache_depth-1:2];
-	datamem_retry <= retry;
-end
 
 wire [1+fml_depth-cache_depth-1:0] tagmem_d1; /* < valid bit + tag */
 wire [1+fml_depth-cache_depth-1:0] tagmem_d2;
@@ -202,20 +195,51 @@ assign pipe_ack_o = (pipe_ack_i & pipe_stb_o) | ~access_requested;
 
 assign retry = ~pipe_ack_o;
 
-/*integer x, y;
+`define VERIFY_TEXCACHE
+`ifdef VERIFY_TEXCACHE
+
+integer x, y;
 reg [15:0] expected;
 always @(posedge sys_clk) begin
 	if(pipe_stb_o & pipe_ack_i) begin
-		$display("%t a:%x d:%x [tag: %x %x] index:%x (datamem_lastreg:%x datamem_retry:%b)", $time, tadra8_r, tcolora, tag_a, tadra8_r[fml_depth-1:cache_depth], tadra8_r[cache_depth-1:5], datamem_lastreg, datamem_retry);
 		x = (tadra8_r/2) % 512;
 		y = (tadra8_r/2) / 512;
 		$image_get(x, y, expected);
 		if(tcolora != expected) begin
-			$display("CACHE TEST FAILED! (%d, %d): expected %x, got %x", x, y, expected, tcolora);
+			$display("CACHE TEST FAILED [A]! (%d, %d): expected %x, got %x", x, y, expected, tcolora);
 			$finish;
 		end
+		if(~ignore_b) begin
+			x = (tadrb8_r/2) % 512;
+			y = (tadrb8_r/2) / 512;
+			$image_get(x, y, expected);
+			if(tcolorb != expected) begin
+				$display("CACHE TEST FAILED [B]! (%d, %d): expected %x, got %x", x, y, expected, tcolorb);
+				$finish;
+			end
+		end
+		if(~ignore_c) begin
+			x = (tadrc8_r/2) % 512;
+			y = (tadrc8_r/2) / 512;
+			$image_get(x, y, expected);
+			if(tcolorc != expected) begin
+				$display("CACHE TEST FAILED [C]! (%d, %d): expected %x, got %x", x, y, expected, tcolorc);
+				$finish;
+			end
+		end
+		if(~ignore_d) begin
+			x = (tadrd8_r/2) % 512;
+			y = (tadrd8_r/2) / 512;
+			$image_get(x, y, expected);
+			if(tcolord != expected) begin
+				$display("CACHE TEST FAILED [D]! (%d, %d): expected %x, got %x", x, y, expected, tcolord);
+				$finish;
+			end
+		end
 	end
-end*/
+end
+
+`endif
 
 /* FORWARDING */
 
