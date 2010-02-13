@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,48 +58,29 @@ static void tmu_start(struct tmu_td *td)
 	CSR_TMU_VMESHLAST = td->vmeshlast;
 	CSR_TMU_BRIGHTNESS = td->brightness;
 	CSR_TMU_CHROMAKEY = td->chromakey;
-	CSR_TMU_SRCMESH = (unsigned int)td->srcmesh;
-	CSR_TMU_SRCFBUF = (unsigned int)td->srcfbuf;
-	CSR_TMU_SRCHRES = td->srchres;
-	CSR_TMU_SRCVRES = td->srcvres;
-	CSR_TMU_DSTMESH = (unsigned int)td->dstmesh;
+
+	CSR_TMU_VERTICESADR = (unsigned int)td->vertices;
+	CSR_TMU_TEXFBUF = (unsigned int)td->texfbuf;
+	CSR_TMU_TEXHRES = td->texhres;
+	CSR_TMU_TEXVRES = td->texvres;
+	CSR_TMU_TEXHMASK = td->texhmask;
+	CSR_TMU_TEXVMASK = td->texvmask;
+
 	CSR_TMU_DSTFBUF = (unsigned int)td->dstfbuf;
 	CSR_TMU_DSTHRES = td->dsthres;
 	CSR_TMU_DSTVRES = td->dstvres;
+	CSR_TMU_DSTHOFFSET = td->dsthoffset;
+	CSR_TMU_DSTVOFFSET = td->dstvoffset;
+	CSR_TMU_DSTSQUAREW = td->dstsquarew;
+	CSR_TMU_DSTSQUAREH = td->dstsquareh;
 
 	CSR_TMU_CTL = td->flags|TMU_CTL_START;
-	//printf("write %d read %d\n", td->flags|TMU_CTL_START, CSR_TMU_CTL);
 }
 
 void tmu_isr()
 {
 	if(queue[consume]->callback)
 		queue[consume]->callback(queue[consume]);
-	if(queue[consume]->profile) {
-		int pixels, clocks, misses, hits;
-
-		printf("TMU: ====================================================\n");
-		pixels = CSR_TMUP_PIXELS;
-		clocks = CSR_TMUP_CLOCKS;
-		printf("TMU: Drawn pixels:                         %d\n", pixels);
-		printf("TMU: Processing time (clock cycles):       %d\n", clocks);
-		printf("TMU: Fill rate (Mpixels/s):                %d\n", (brd_desc->clk_frequency/1000000)*pixels/clocks);
-		printf("TMU: Frames per second:                    %d\n", brd_desc->clk_frequency/clocks);
-		printf("TMU: Geometry rate (Kvertices/s):          %d\n", (brd_desc->clk_frequency/1000)*((CSR_TMU_HMESHLAST+1)*(CSR_TMU_VMESHLAST+1))/clocks);
-		printf("TMU: At point 1:\n");
-		printf("TMU:   - stalled transactions:             %d\n", CSR_TMUP_STALL1);
-		printf("TMU:   - completed transactions:           %d\n", CSR_TMUP_COMPLETE1);
-		printf("TMU: At point 2:\n");
-		printf("TMU:   - stalled transactions:             %d\n", CSR_TMUP_STALL2);
-		printf("TMU:   - completed transactions:           %d\n", CSR_TMUP_COMPLETE2);
-		printf("TMU: Texel cache:\n");
-		misses = CSR_TMUP_MISSES;
-		hits = pixels-misses;
-		printf("TMU:   - hits:                             %d\n", hits);
-		printf("TMU:   - misses:                           %d\n", misses);
-		printf("TMU:   - hit rate:                         %d%%\n", 100*hits/(hits+misses));
-		printf("TMU: ====================================================\n");
-	}
 	consume = (consume + 1) & TMU_TASKQ_MASK;
 	level--;
 

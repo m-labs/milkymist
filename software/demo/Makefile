@@ -61,8 +61,8 @@ cpustats.o: ../../software/include/irq.h ../../software/include/hal/time.h
 cpustats.o: cpustats.h
 eval.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 eval.o: ../../software/include/string.h ../../software/include/hw/pfpu.h
-eval.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
-eval.o: ast.h compiler.h scheduler.h eval.h ../../software/include/hw/tmu.h
+eval.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
+eval.o: ../../software/include/hal/pfpu.h ast.h compiler.h scheduler.h eval.h
 isr.o: ../../software/include/hw/interrupts.h ../../software/include/irq.h
 isr.o: ../../software/include/uart.h ../../software/include/hal/time.h
 isr.o: ../../software/include/hal/slowout.h ../../software/include/hal/snd.h

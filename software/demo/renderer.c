@@ -34,7 +34,7 @@ unsigned int renderer_texsize;
 void renderer_init()
 {
 	renderer_hmeshlast = 32;
-	renderer_vmeshlast = 24;
+	renderer_vmeshlast = 32;
 	renderer_texsize = 512;
 	printf("RDR: renderer ready (mesh:%dx%d, texsize:%d)\n", renderer_hmeshlast, renderer_vmeshlast, renderer_texsize);
 }

@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,31 +32,27 @@
 
 #define TMU_BRIGHTNESS_MAX	(63)
 
-#define CSR_TMU_SRCMESH		MMPTR(0x80006014)
-#define CSR_TMU_SRCFBUF		MMPTR(0x80006018)
-#define CSR_TMU_SRCHRES		MMPTR(0x8000601C)
-#define CSR_TMU_SRCVRES		MMPTR(0x80006020)
+#define CSR_TMU_VERTICESADR	MMPTR(0x80006014)
+#define CSR_TMU_TEXFBUF		MMPTR(0x80006018)
+#define CSR_TMU_TEXHRES		MMPTR(0x8000601C)
+#define CSR_TMU_TEXVRES		MMPTR(0x80006020)
+#define CSR_TMU_TEXHMASK	MMPTR(0x80006024)
+#define CSR_TMU_TEXVMASK	MMPTR(0x80006028)
 
-#define CSR_TMU_DSTMESH		MMPTR(0x80006024)
-#define CSR_TMU_DSTFBUF		MMPTR(0x80006028)
-#define CSR_TMU_DSTHRES		MMPTR(0x8000602C)
-#define CSR_TMU_DSTVRES		MMPTR(0x80006030)
+#define TMU_MASK_FULL		(0x3ffff)
+#define TMU_FIXEDPOINT_SHIFT	(6)
 
-/* Performance counters */
-
-#define CSR_TMUP_PIXELS		MMPTR(0x80006034)
-#define CSR_TMUP_CLOCKS		MMPTR(0x80006038)
-
-#define CSR_TMUP_STALL1		MMPTR(0x8000603C)
-#define CSR_TMUP_COMPLETE1	MMPTR(0x80006040)
-#define CSR_TMUP_STALL2		MMPTR(0x80006044)
-#define CSR_TMUP_COMPLETE2	MMPTR(0x80006048)
-
-#define CSR_TMUP_MISSES		MMPTR(0x8000604C)
+#define CSR_TMU_DSTFBUF		MMPTR(0x8000602C)
+#define CSR_TMU_DSTHRES		MMPTR(0x80006030)
+#define CSR_TMU_DSTVRES		MMPTR(0x80006034)
+#define CSR_TMU_DSTHOFFSET	MMPTR(0x80006038)
+#define CSR_TMU_DSTVOFFSET	MMPTR(0x8000603C)
+#define CSR_TMU_DSTSQUAREW	MMPTR(0x80006040)
+#define CSR_TMU_DSTSQUAREH	MMPTR(0x80006044)
 
 struct tmu_vertex {
-	short int y;
-	short int x;
+	int x;
+	int y;
 } __attribute__((packed));
 
 #define TMU_MESH_MAXSIZE	128

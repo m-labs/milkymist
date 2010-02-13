@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,28 +49,23 @@ static unsigned int fps;
 static unsigned int spam_counter;
 int spam_enabled;
 
-static unsigned short texbufferA[640*480];
-static unsigned short texbufferB[640*480];
+static unsigned short texbufferA[512*512];
+static unsigned short texbufferB[512*512];
 static unsigned short *tex_frontbuffer;
 static unsigned short *tex_backbuffer;
 
-static struct tmu_vertex dst_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
+static struct tmu_vertex scale_tex_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 
 #define SPAM_W		75
 #define SPAM_H		75
 #define SPAM_X		545
 #define SPAM_Y		30
 #define SPAM_CHROMAKEY	0x001f
-#define SPAM_HMESHLAST	5
-#define SPAM_VMESHLAST	5
 
-static struct tmu_vertex spam_src_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
-static struct tmu_vertex spam_dst_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
+static struct tmu_vertex spam_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 
 void rpipe_init()
 {
-	unsigned int x, y;
-	
 	produce = 0;
 	consume = 0;
 	level = 0;
@@ -84,19 +79,23 @@ void rpipe_init()
 	run_wave_bottom_half = 0;
 	run_swap_bottom_half = 0;
 
-	for(y=0;y<=renderer_vmeshlast;y++)
-		for(x=0;x<=renderer_hmeshlast;x++) {
-			dst_vertices[y][x].x = x*vga_hres/renderer_hmeshlast;
-			dst_vertices[y][x].y = y*vga_vres/renderer_vmeshlast;
-		}
+	scale_tex_vertices[0][0].x = 0;
+	scale_tex_vertices[0][0].y = 0;
+	scale_tex_vertices[0][1].x = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
+	scale_tex_vertices[0][1].y = 0;
+	scale_tex_vertices[1][0].x = 0;
+	scale_tex_vertices[1][0].y = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
+	scale_tex_vertices[1][1].x = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
+	scale_tex_vertices[1][1].y = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
 
-	for(y=0;y<=SPAM_VMESHLAST;y++)
-		for(x=0;x<=SPAM_VMESHLAST;x++) {
-			spam_src_vertices[y][x].x = x*SPAM_W/SPAM_HMESHLAST;
-			spam_src_vertices[y][x].y = y*SPAM_H/SPAM_VMESHLAST;
-			spam_dst_vertices[y][x].x = x*SPAM_W/SPAM_HMESHLAST + SPAM_X;
-			spam_dst_vertices[y][x].y = y*SPAM_H/SPAM_VMESHLAST + SPAM_Y;
-	}
+	spam_vertices[0][0].x = 0;
+	spam_vertices[0][0].y = 0;
+	spam_vertices[0][1].x = SPAM_W << TMU_FIXEDPOINT_SHIFT;
+	spam_vertices[0][1].y = 0;
+	spam_vertices[1][0].x = 0;
+	spam_vertices[1][0].y = SPAM_H << TMU_FIXEDPOINT_SHIFT;
+	spam_vertices[1][1].x = SPAM_W << TMU_FIXEDPOINT_SHIFT;
+	spam_vertices[1][1].y = SPAM_H << TMU_FIXEDPOINT_SHIFT;
 
 	tex_frontbuffer = texbufferA;
 	tex_backbuffer = texbufferB;
@@ -117,19 +116,23 @@ static void rpipe_start(struct rpipe_frame *frame)
 {
 	tmu_task1.flags = 0;
 	tmu_task1.hmeshlast = renderer_hmeshlast;
-	tmu_task1.vmeshlast = renderer_vmeshlast;
+	tmu_task1.vmeshlast = renderer_hmeshlast;
 	tmu_task1.brightness = frame->brightness;
 	tmu_task1.chromakey = 0;
-	tmu_task1.srcmesh = &frame->vertices[0][0];
-	tmu_task1.srcfbuf = tex_frontbuffer;
-	tmu_task1.srchres = vga_hres;
-	tmu_task1.srcvres = vga_vres;
-	tmu_task1.dstmesh = &dst_vertices[0][0];
+	tmu_task1.vertices = &frame->vertices[0][0];
+	tmu_task1.texfbuf = tex_frontbuffer;
+	tmu_task1.texhres = renderer_texsize;
+	tmu_task1.texvres = renderer_texsize;
+	tmu_task1.texhmask = TMU_MASK_FULL;
+	tmu_task1.texvmask = TMU_MASK_FULL;
 	tmu_task1.dstfbuf = tex_backbuffer;
-	tmu_task1.dsthres = vga_hres;
-	tmu_task1.dstvres = vga_vres;
+	tmu_task1.dsthres = renderer_texsize;
+	tmu_task1.dstvres = renderer_texsize;
+	tmu_task1.dsthoffset = 0;
+	tmu_task1.dstvoffset = 0;
+	tmu_task1.dstsquarew = renderer_texsize/renderer_hmeshlast;
+	tmu_task1.dstsquareh = renderer_texsize/renderer_vmeshlast;
 
-	tmu_task1.profile = 0;
 	tmu_task1.callback = rpipe_tmu_warpdone;
 	tmu_task1.user = frame;
 	tmu_submit_task(&tmu_task1);
@@ -285,41 +288,50 @@ static void rpipe_wave_bottom_half()
 	flush_bridge_cache();
 
 	tmu_task2.flags = 0;
-	tmu_task2.hmeshlast = renderer_hmeshlast;
-	tmu_task2.vmeshlast = renderer_vmeshlast;
+	tmu_task2.hmeshlast = 1;
+	tmu_task2.vmeshlast = 1;
 	tmu_task2.brightness = TMU_BRIGHTNESS_MAX;
 	tmu_task2.chromakey = 0;
-	tmu_task2.srcmesh = &dst_vertices[0][0];
-	tmu_task2.srcfbuf = tex_backbuffer;
-	tmu_task2.srchres = vga_hres;
-	tmu_task2.srcvres = vga_vres;
-	tmu_task2.dstmesh = &dst_vertices[0][0];
+	tmu_task2.vertices = &scale_tex_vertices[0][0];
+	tmu_task2.texfbuf = tex_backbuffer;
+	tmu_task2.texhres = renderer_texsize;
+	tmu_task2.texvres = renderer_texsize;
+	tmu_task2.texhmask = TMU_MASK_FULL;
+	tmu_task2.texvmask = TMU_MASK_FULL;
 	tmu_task2.dstfbuf = vga_backbuffer;
 	tmu_task2.dsthres = vga_hres;
 	tmu_task2.dstvres = vga_vres;
-	tmu_task2.profile = 0;
+	tmu_task2.dsthoffset = 0;
+	tmu_task2.dstvoffset = 0;
+	tmu_task2.dstsquarew = vga_hres;
+	tmu_task2.dstsquareh = vga_vres;
 	if(spam_enabled)
 		tmu_task2.callback = NULL;
 	else
 		tmu_task2.callback = rpipe_tmu_copydone;
 	tmu_task2.user = NULL;
+	
 	tmu_submit_task(&tmu_task2);
 
 	if(spam_enabled) {
-		tmu_task1.flags = TMU_CTL_CHROMAKEY;
-		tmu_task1.hmeshlast = SPAM_HMESHLAST;
-		tmu_task1.vmeshlast = SPAM_VMESHLAST;
+		tmu_task1.flags = 0;
+		tmu_task1.hmeshlast = 1;
+		tmu_task1.vmeshlast = 1;
 		tmu_task1.brightness = TMU_BRIGHTNESS_MAX;
 		tmu_task1.chromakey = SPAM_CHROMAKEY;
-		tmu_task1.srcmesh = &spam_src_vertices[0][0];
-		tmu_task1.srcfbuf = (unsigned short *)spam_raw;
-		tmu_task1.srchres = SPAM_W;
-		tmu_task1.srcvres = SPAM_H;
-		tmu_task1.dstmesh = &spam_dst_vertices[0][0];
+		tmu_task1.vertices = &spam_vertices[0][0];
+		tmu_task1.texfbuf = (unsigned short *)spam_raw;
+		tmu_task1.texhres = SPAM_W;
+		tmu_task1.texvres = SPAM_H;
+		tmu_task1.texhmask = TMU_MASK_FULL;
+		tmu_task1.texvmask = TMU_MASK_FULL;
 		tmu_task1.dstfbuf = vga_backbuffer;
 		tmu_task1.dsthres = vga_hres;
 		tmu_task1.dstvres = vga_vres;
-		tmu_task1.profile = 0;
+		tmu_task1.dsthoffset = SPAM_X;
+		tmu_task1.dstvoffset = SPAM_Y;
+		tmu_task1.dstsquarew = SPAM_W;
+		tmu_task1.dstsquareh = SPAM_H;
 		tmu_task1.callback = rpipe_tmu_copydone;
 		tmu_task1.user = NULL;
 		tmu_submit_task(&tmu_task1);

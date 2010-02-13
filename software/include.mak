@@ -12,5 +12,5 @@ RANLIB=lm32-elf-ranlib
 #
 INCLUDES=-I$(MMDIR)/software/include -I$(MMDIR)/tools
 ASFLAGS=$(INCLUDES)
-CFLAGS=-O9 -Wall -fomit-frame-pointer -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled -msign-extend-enabled -fno-builtin -fsigned-char -fsingle-precision-constant $(INCLUDES)
+CFLAGS=-O3 -Wall -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled -msign-extend-enabled -fno-builtin -fsigned-char -fsingle-precision-constant $(INCLUDES)
 LDFLAGS=-nostdlib -nodefaultlibs

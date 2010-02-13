@@ -47,8 +47,8 @@ libc.o: ../../software/include/string.h ../../software/include/limits.h
 malloc.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 malloc.o: ../../software/include/string.h ../../software/include/console.h
 malloc.o: ../../software/include/malloc.h
-softfloat-glue.o: softfloat.h
 softfloat.o: milieu.h softfloat.h softfloat-macros.h softfloat-specialize.h
+softfloat-glue.o: softfloat.h
 system.o: ../../software/include/irq.h ../../software/include/uart.h
 system.o: ../../software/include/hw/fmlbrg.h
 system.o: ../../software/include/hw/sysctl.h
@@ -60,11 +60,11 @@ uart-async.o: ../../software/include/hw/interrupts.h
 uart.o: ../../software/include/uart.h ../../software/include/irq.h
 uart.o: ../../software/include/hw/uart.h ../../software/include/hw/common.h
 uart.o: ../../software/include/hw/interrupts.h
+vsnprintf.o: ../../software/include/stdlib.h ../../software/include/stdio.h
+vsnprintf.o: ../../software/include/stdarg.h ../../software/include/string.h
+vsnprintf.o: ../../software/include/ctype.h
 vsnprintf-nofloat.o: ../../software/include/stdlib.h
 vsnprintf-nofloat.o: ../../software/include/stdio.h
 vsnprintf-nofloat.o: ../../software/include/stdarg.h
 vsnprintf-nofloat.o: ../../software/include/string.h
 vsnprintf-nofloat.o: ../../software/include/ctype.h
-vsnprintf.o: ../../software/include/stdlib.h ../../software/include/stdio.h
-vsnprintf.o: ../../software/include/stdarg.h ../../software/include/string.h
-vsnprintf.o: ../../software/include/ctype.h

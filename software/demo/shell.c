@@ -207,6 +207,22 @@ static void help()
 	puts("reboot     - system reset");
 }
 
+static void loadpic(const char *filename)
+{
+	int size;
+	
+	if(*filename == 0) {
+		printf("loadpic <filename>\n");
+		return;
+	}
+
+	if(!cffat_init()) return;
+	if(!cffat_load(filename, (void *)vga_backbuffer, vga_hres*vga_vres*2, &size)) return;
+	cffat_done();
+
+	vga_swap_buffers();
+}
+
 /*
  * Low-level PFPU test, bypassing driver.
  * This test should only be run when the driver task queue
@@ -300,32 +316,34 @@ static void tmutest()
 {
 	int x, y;
 	struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
-	struct tmu_vertex dstmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 	struct tmu_td td;
 	volatile int complete;
 
-	for(y=0;y<=24;y++)
+	for(y=0;y<=32;y++)
 		for(x=0;x<=32;x++) {
-			srcmesh[y][x].x = 30*x;
-			srcmesh[y][x].y = 30*y;
-		
-			dstmesh[y][x].x = 20*x;
-			dstmesh[y][x].y = 20*y;
+			srcmesh[y][x].x = (5*x) << TMU_FIXEDPOINT_SHIFT;
+			srcmesh[y][x].y = (7*y) << TMU_FIXEDPOINT_SHIFT;
 		}
 
+	td.flags = 0;
 	td.hmeshlast = 32;
-	td.vmeshlast = 24;
+	td.vmeshlast = 32;
 	td.brightness = TMU_BRIGHTNESS_MAX;
-	td.srcmesh = &srcmesh[0][0];
-	td.srcfbuf = vga_frontbuffer;
-	td.srchres = vga_hres;
-	td.srcvres = vga_vres;
-	td.dstmesh = &dstmesh[0][0];
+	td.chromakey = 0;
+	td.vertices = &srcmesh[0][0];
+	td.texfbuf = vga_frontbuffer;
+	td.texhres = vga_hres;
+	td.texvres = vga_vres;
+	td.texhmask = TMU_MASK_FULL;
+	td.texvmask = TMU_MASK_FULL;
 	td.dstfbuf = vga_backbuffer;
 	td.dsthres = vga_hres;
 	td.dstvres = vga_vres;
+	td.dsthoffset = 0;
+	td.dstvoffset = 0;
+	td.dstsquarew = vga_hres/32;
+	td.dstsquareh = vga_vres/32;
 	
-	td.profile = 1;
 	td.callback = tmutest_callback;
 	td.user = (void *)&complete;
 
@@ -413,6 +431,7 @@ static void do_command(char *c)
 	else if(strcmp(command, "help") == 0) help();
 
 	/* Test functions and hacks */
+	else if(strcmp(command, "loadpic") == 0) loadpic(param1);
 	else if(strcmp(command, "pfputest") == 0) pfputest();
 	else if(strcmp(command, "tmutest") == 0) tmutest();
 	else if(strcmp(command, "echo") == 0) echo();

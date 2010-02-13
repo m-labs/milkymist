@@ -50,5 +50,5 @@ main.o: ../../software/include/hw/vga.h ../../software/include/hw/fmlbrg.h
 main.o: ../../software/include/hw/sysctl.h ../../software/include/hw/gpio.h
 main.o: ../../software/include/hw/uart.h boot.h splash.h
 splash.o: ../../software/include/stdio.h ../../software/include/stdlib.h
-splash.o: ../../software/include/system.h ../../software/include/hw/vga.h
-splash.o: ../../software/include/hw/common.h splash.h
+splash.o: ../../software/include/hw/vga.h ../../software/include/hw/common.h
+splash.o: splash.h

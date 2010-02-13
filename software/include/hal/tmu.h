@@ -1,16 +1,16 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -30,16 +30,20 @@ struct tmu_td {
 	unsigned int vmeshlast;
 	unsigned int brightness;
 	unsigned short chromakey;
-	struct tmu_vertex *srcmesh;
-	unsigned short *srcfbuf;
-	unsigned int srchres;
-	unsigned int srcvres;
-	struct tmu_vertex *dstmesh;
+	struct tmu_vertex *vertices;
+	unsigned short *texfbuf;
+	unsigned int texhres;
+	unsigned int texvres;
+	unsigned int texhmask;
+	unsigned int texvmask;
 	unsigned short *dstfbuf;
 	unsigned int dsthres;
 	unsigned int dstvres;
+	int dsthoffset;
+	int dstvoffset;
+	unsigned int dstsquarew;
+	unsigned int dstsquareh;
 
-	int profile; /* < prints profiling info after completion */
 	tmu_callback callback;
 	void *user; /* < for application use */
 };
