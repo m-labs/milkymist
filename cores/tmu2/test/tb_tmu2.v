@@ -255,8 +255,8 @@ always begin
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 10); /* hmeshlast */
-	csrwrite(32'h08, 10); /* vmeshlast */
+	csrwrite(32'h04, 20); /* hmeshlast */
+	csrwrite(32'h08, 20); /* vmeshlast */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);

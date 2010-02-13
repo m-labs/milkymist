@@ -119,6 +119,13 @@ assign tcolorb = tadrb8_r[1] ? datamem_d2[15:0] : datamem_d2[31:16];
 assign tcolorc = tadrc8_r[1] ? datamem_d3[15:0] : datamem_d3[31:16];
 assign tcolord = tadrd8_r[1] ? datamem_d4[15:0] : datamem_d4[31:16];
 
+reg [cache_depth-2-1:0] datamem_lastreg;
+reg datamem_retry;
+always @(posedge sys_clk) begin
+	datamem_lastreg <= retry ? tadra8_r[cache_depth-1:2] : tadra8[cache_depth-1:2];
+	datamem_retry <= retry;
+end
+
 wire [1+fml_depth-cache_depth-1:0] tagmem_d1; /* < valid bit + tag */
 wire [1+fml_depth-cache_depth-1:0] tagmem_d2;
 wire [1+fml_depth-cache_depth-1:0] tagmem_d3;
@@ -198,21 +205,21 @@ wire hit_d = ignore_d | (~tagmem_we_r & valid_d & (tag_d == tadrd8_r[fml_depth-1
 assign pipe_stb_o = access_requested & hit_a & hit_b & hit_c & hit_d;
 assign pipe_ack_o = (pipe_ack_i & pipe_stb_o) | ~access_requested;
 
-assign retry = access_requested & ~(hit_a & hit_b & hit_c & hit_d);
-/*
-reg r;
-integer a;
+assign retry = ~pipe_ack_o;
+
+/*integer x, y;
+reg [15:0] expected;
 always @(posedge sys_clk) begin
-	$display("%t %b%b%b%b %x %x %x %x", $time, hit_a, hit_b, hit_c, hit_d, tadra8_r, tadrb8_r, tadrc8_r, tadrd8_r);
-	if(pipe_stb_o)
-		$display("a:%x d:%x [tag: %x %x] retry:%b index:%x", tadra8_r, tcolora, tag_a, tadra8_r[fml_depth-1:cache_depth], retry, tadra8_r[cache_depth-1:5]);
-	r <= pipe_ack_o & pipe_stb_i;
-	if(pipe_ack_o & pipe_stb_i) begin
-		$display("%t in: a: %x", $time, tadra8);
-		a <= tadra8;
+	if(pipe_stb_o & pipe_ack_i) begin
+		$display("%t a:%x d:%x [tag: %x %x] index:%x (datamem_lastreg:%x datamem_retry:%b)", $time, tadra8_r, tcolora, tag_a, tadra8_r[fml_depth-1:cache_depth], tadra8_r[cache_depth-1:5], datamem_lastreg, datamem_retry);
+		x = (tadra8_r/2) % 512;
+		y = (tadra8_r/2) / 512;
+		$image_get(x, y, expected);
+		if(tcolora != expected) begin
+			$display("CACHE TEST FAILED! (%d, %d): expected %x, got %x", x, y, expected, tcolora);
+			$finish;
+		end
 	end
-	if(r)
-		$display("%t ----> (%x) hit:%b%b%b%b, ack:%b", $time, a, hit_a, hit_b, hit_c, hit_d, pipe_ack_o);
 end*/
 
 /* FORWARDING */
