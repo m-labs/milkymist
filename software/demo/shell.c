@@ -223,6 +223,19 @@ static void loadpic(const char *filename)
 	vga_swap_buffers();
 }
 
+static void checker()
+{
+	int x, y;
+
+	for(y=0;y<vga_vres;y++)
+		for(x=0;x<vga_hres;x++)
+			if((x/4+y/4) & 1)
+				vga_backbuffer[y*vga_hres+x] = 0x0000;
+			else
+				vga_backbuffer[y*vga_hres+x] = 0xffff;
+	vga_swap_buffers();
+}
+
 /*
  * Low-level PFPU test, bypassing driver.
  * This test should only be run when the driver task queue
@@ -315,13 +328,13 @@ static void tmutest_callback(struct tmu_td *td)
 static void tmutest()
 {
 	int x, y;
-	struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
+	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(64)));
 	struct tmu_td td;
 	volatile int complete;
 
 	for(y=0;y<=32;y++)
 		for(x=0;x<=32;x++) {
-			srcmesh[y][x].x = (5*x) << TMU_FIXEDPOINT_SHIFT;
+			srcmesh[y][x].x = (10*x) << TMU_FIXEDPOINT_SHIFT;
 			srcmesh[y][x].y = (7*y) << TMU_FIXEDPOINT_SHIFT;
 		}
 
@@ -348,6 +361,7 @@ static void tmutest()
 	td.user = (void *)&complete;
 
 	complete = 0;
+	flush_bridge_cache();
 	tmu_submit_task(&td);
 	while(!complete);
 	vga_swap_buffers();
@@ -432,6 +446,7 @@ static void do_command(char *c)
 
 	/* Test functions and hacks */
 	else if(strcmp(command, "loadpic") == 0) loadpic(param1);
+	else if(strcmp(command, "checker") == 0) checker();
 	else if(strcmp(command, "pfputest") == 0) pfputest();
 	else if(strcmp(command, "tmutest") == 0) tmutest();
 	else if(strcmp(command, "echo") == 0) echo();
