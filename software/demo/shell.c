@@ -376,6 +376,7 @@ static void tmudemo()
 	struct tmu_td td;
 	volatile int complete;
 	int w, speed;
+	int mindelta, xdelta, ydelta;
 
 	if(!cffat_init()) return;
 	if(!cffat_load("lena.raw", (void *)original, vga_hres*vga_vres*2, &size)) return;
@@ -387,28 +388,45 @@ static void tmudemo()
 	
 	speed = 0;
 	w = 512 << TMU_FIXEDPOINT_SHIFT;
-	
-	while(!readchar_nonblock()) {
-		srcmesh[0][0].x = 0;
-		srcmesh[0][0].y = 0;
-		srcmesh[0][1].x = w;
-		srcmesh[0][1].y = 0;
-		srcmesh[1][0].x = 0;
-		srcmesh[1][0].y = w;
-		srcmesh[1][1].x = w;
-		srcmesh[1][1].y = w;
 
-		if(CSR_GPIO_IN & GPIO_PBN)
-			speed += 2;
-		if(CSR_GPIO_IN & GPIO_PBS)
-			speed -= 2;
+	xdelta = 0;
+	ydelta = 0;
+	while(!readchar_nonblock()) {
+		srcmesh[0][0].x = xdelta;
+		srcmesh[0][0].y = ydelta;
+		srcmesh[0][1].x = w+xdelta;
+		srcmesh[0][1].y = ydelta;
+		srcmesh[1][0].x = xdelta;
+		srcmesh[1][0].y = w+ydelta;
+		srcmesh[1][1].x = w+xdelta;
+		srcmesh[1][1].y = w+ydelta;
+
+		if(CSR_GPIO_IN & GPIO_DIP6) {
+			if(CSR_GPIO_IN & GPIO_PBN)
+				ydelta += 16;
+			if(CSR_GPIO_IN & GPIO_PBS)
+				ydelta -= 16;
+			if(CSR_GPIO_IN & GPIO_PBE)
+				xdelta += 16;
+			if(CSR_GPIO_IN & GPIO_PBW)
+				xdelta -= 16;
+		} else {
+			if(CSR_GPIO_IN & GPIO_PBN)
+				speed += 2;
+			if(CSR_GPIO_IN & GPIO_PBS)
+				speed -= 2;
+		}
 		w += speed;
 		if(w < 1) {
 			w = 1;
 			speed = 0;
 		}
-		if(w > (TMU_MASK_FULL >> 1)) {
-			w = (TMU_MASK_FULL >> 1);
+		if(xdelta > ydelta)
+			mindelta = ydelta;
+		else
+			mindelta = xdelta;
+		if(w > ((TMU_MASK_FULL >> 1)+mindelta)) {
+			w = (TMU_MASK_FULL >> 1)+mindelta;
 			speed = 0;
 		}
 		if(speed > 0) speed--;
