@@ -17,6 +17,7 @@
 
 module tmu2_mult2(
 	input sys_clk,
+	input ce,
 
 	input [12:0] a,
 	input [12:0] b,
@@ -45,14 +46,14 @@ DSP48 #(
 	.C(48'd0), // 48-bit cascade input
 	.CARRYIN(1'b0), // Carry input signal
 	.CARRYINSEL(2'd0), // 2-bit carry input select
-	.CEA(1'b1), // A data clock enable input
-	.CEB(1'b1), // B data clock enable input
+	.CEA(ce), // A data clock enable input
+	.CEB(ce), // B data clock enable input
 	.CEC(1'b1), // C data clock enable input
 	.CECARRYIN(1'b1), // CARRYIN clock enable input
 	.CECINSUB(1'b1), // CINSUB clock enable input
 	.CECTRL(1'b1), // Clock Enable input for CTRL regsiters
 	.CEM(1'b1), // Clock Enable input for multiplier regsiters
-	.CEP(1'b1), // Clock Enable input for P regsiters
+	.CEP(ce), // Clock Enable input for P regsiters
 	.CLK(sys_clk), // Clock input
 	.OPMODE(7'h35), // 7-bit operation mode input
 	.PCIN(48'd0), // 48-bit PCIN input

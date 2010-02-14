@@ -696,7 +696,7 @@ tmu2_decay #( // TODO
 
 /*always @(posedge sys_clk) begin
 	if(decay_pipe_stb & decay_pipe_ack) begin
-		$display("%x -> %x", color_d, dadr_f3);
+		$display("%x -> %x", color_d, {dadr_f3, 1'b0});
 	end
 end*/
 

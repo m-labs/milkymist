@@ -29,7 +29,7 @@ module tmu2_writebuffer #(
 	input [15:0] color,
 	input [fml_depth-1-1:0] dadr,
 
-	output [fml_depth-1:0] fml_adr,
+	output reg [fml_depth-1:0] fml_adr,
 	output reg fml_stb,
 	input fml_ack,
 	output reg [7:0] fml_sel,
@@ -69,7 +69,7 @@ tmu2_wb_tagmem #(
 wire [fml_depth-5-1:0] previous_startadr = tagmem_do[fml_depth-5-1+16:16];
 wire hit = previous_startadr == dadr_startadr;
 
-/* For flushing, we insert a new element with enable=0000
+/* For flushing, we insert a new element with enable=0
  * this element is then ignored by the write engine.
  */
 assign tagmem_di = {dadr_startadr,
@@ -116,7 +116,7 @@ wire [3:0] datamem_a;
 wire [3:0] datamem_we;
 wire [3:0] datamem_a2;
 wire [63:0] datamem_do2;
-tmu2_wb_datamem datamem (
+tmu2_wb_datamem datamem(
 	.sys_clk(sys_clk),
 	.a(datamem_a),
 	.we(datamem_we),
@@ -145,7 +145,7 @@ always @(*) begin
 		2'd3: fml_sel = {{2{tagmem_do2[ 3]}}, {2{tagmem_do2[ 2]}}, {2{tagmem_do2[ 1]}}, {2{tagmem_do2[ 0]}}};
 	endcase
 end
-assign fml_adr = {tagmem_do2[fml_depth-5+16-1:16], 5'd0};
+always @(posedge sys_clk) fml_adr <= {tagmem_do2[fml_depth-5+16-1:16], 5'd0};
 
 wire dummy_write = tagmem_do2[15:0] == 16'd0;
 
@@ -198,6 +198,6 @@ always @(*) begin
 	endcase
 end
 
-assign burst_count = fml_ack | (state == WORD2) | (state == WORD3);
+assign burst_count = fml_ack | (state == WORD2) | (state == WORD3) | (state == WORD4);
 
 endmodule

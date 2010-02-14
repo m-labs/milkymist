@@ -123,9 +123,9 @@ always @(posedge sys_clk) begin
 		y = wbm_adr_o[16:10];
 
 		if(wbm_adr_o[2])
-			wbm_dat_i = y*240*64;
+			wbm_dat_i = y*200*64;
 		else
-			wbm_dat_i = x*320*64;
+			wbm_dat_i = x*200*64;
 		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
@@ -160,7 +160,7 @@ initial read_burstcount = 0;
 always @(posedge sys_clk) begin
 	fmlr_ack = 1'b0;
 	if(read_burstcount == 0) begin
-		if(fmlr_stb & (($random % 9) == 0)) begin
+		if(fmlr_stb /*& (($random % 19) == 0)*/) begin
 			read_burstcount = 1;
 			read_addr = fmlr_adr;
 			
@@ -191,18 +191,47 @@ task handle_write;
 integer write_addr2;
 integer x;
 integer y;
+reg [15:0] expected;
 begin
+	if((write_addr < 32'h01000000) || (write_addr >= (32'h01000000+640*480*2))) begin
+		$display("invalid write address! %x", write_addr);
+		$finish;
+	end
 	write_addr2 = write_addr[20:0]/2;
 	x = write_addr2 % 640;
 	y = write_addr2 / 640;
-	if(fmlw_sel[7])
+	if(fmlw_sel[7]) begin
+		$image_get(x + 0, y, expected);
+		if(fmlw_do[63:48] !== expected) begin
+			$display("Error 1 (%d %d) got %x, expected %x", x, y, fmlw_do[63:48], expected);
+			$finish;
+		end
 		$image_set(x + 0, y, fmlw_do[63:48]);
-	if(fmlw_sel[5])
+	end
+	if(fmlw_sel[5]) begin
+		$image_get(x + 1, y, expected);
+		if(fmlw_do[47:32] !== expected) begin
+			$display("Error 2 (%d %d) got %x, expected %x", x, y, fmlw_do[47:32], expected);
+			$finish;
+		end
 		$image_set(x + 1, y, fmlw_do[47:32]);
-	if(fmlw_sel[3])
+	end
+	if(fmlw_sel[3]) begin
+		$image_get(x + 2, y, expected);
+		if(fmlw_do[31:16] !== expected) begin
+			$display("Error 3 (%d %d) got %x, expected %x", x, y, fmlw_do[31:16], expected);
+			$finish;
+		end
 		$image_set(x + 2, y, fmlw_do[31:16]);
-	if(fmlw_sel[1])
+	end
+	if(fmlw_sel[1]) begin
+		$image_get(x + 3, y, expected);
+		if(fmlw_do[15:0] !== expected) begin
+			$display("Error 4 (%d %d) got %x, expected %x", x, y, fmlw_do[15:0], expected);
+			$finish;
+		end
 		$image_set(x + 3, y, fmlw_do[15:0]);
+	end
 end
 endtask
 
@@ -210,7 +239,7 @@ initial write_burstcount = 0;
 always @(posedge sys_clk) begin
 	fmlw_ack = 1'b0;
 	if(write_burstcount == 0) begin
-		if(fmlw_stb & (($random % 9) == 0)) begin
+		if(fmlw_stb & (($random % 29) == 0)) begin
 			write_burstcount = 1;
 			write_addr = fmlw_adr;
 			
@@ -257,8 +286,8 @@ always begin
 
 	csrwrite(32'h04, 1); /* hmeshlast */
 	csrwrite(32'h08, 1); /* vmeshlast */
-	csrwrite(32'h40, 640); /* squarew */
-	csrwrite(32'h44, 480); /* squareh */
+	csrwrite(32'h40, 200); /* squarew */
+	csrwrite(32'h44, 200); /* squareh */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);

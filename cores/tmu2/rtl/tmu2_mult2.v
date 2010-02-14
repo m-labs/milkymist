@@ -17,6 +17,7 @@
 
 module tmu2_mult2(
 	input sys_clk,
+	input ce,
 
 	input [12:0] a,
 	input [12:0] b,
@@ -26,8 +27,10 @@ module tmu2_mult2(
 reg [25:0] temp;
 
 always @(posedge sys_clk) begin
-	temp <= a*b;
-	p <= temp;
+	if(ce) begin
+		temp <= a*b;
+		p <= temp;
+	end
 end
 
 endmodule

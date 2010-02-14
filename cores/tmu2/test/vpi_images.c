@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -225,3 +225,8 @@ void vpi_register()
 	
 	printf("PLI Image I/O functions registered\n");
 }
+
+void (*vlog_startup_routines[])() = {
+	vpi_register,
+	0
+};

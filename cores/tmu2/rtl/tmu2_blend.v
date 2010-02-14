@@ -135,24 +135,28 @@ end
 
 tmu2_mult2 m_pa(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(7'd64 - x_frac),
 	.b(7'd64 - y_frac),
 	.p(pa_2)
 );
 tmu2_mult2 m_pb(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(x_frac),
 	.b(7'd64 - y_frac),
 	.p(pb_2)
 );
 tmu2_mult2 m_pc(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(7'd64 - x_frac),
 	.b(y_frac),
 	.p(pc_2)
 );
 tmu2_mult2 m_pd(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(x_frac),
 	.b(y_frac),
 	.p(pd_2)
@@ -160,72 +164,84 @@ tmu2_mult2 m_pd(
 
 tmu2_mult2 m_ra(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pa_2),
 	.b(ra_2),
 	.p(ra_4)
 );
 tmu2_mult2 m_ga(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pa_2),
 	.b(ga_2),
 	.p(ga_4)
 );
 tmu2_mult2 m_ba(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pa_2),
 	.b(ba_2),
 	.p(ba_4)
 );
 tmu2_mult2 m_rb(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pb_2),
 	.b(rb_2),
 	.p(rb_4)
 );
 tmu2_mult2 m_gb(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pb_2),
 	.b(gb_2),
 	.p(gb_4)
 );
 tmu2_mult2 m_bb(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pb_2),
 	.b(bb_2),
 	.p(bb_4)
 );
 tmu2_mult2 m_rc(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pc_2),
 	.b(rc_2),
 	.p(rc_4)
 );
 tmu2_mult2 m_gc(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pc_2),
 	.b(gc_2),
 	.p(gc_4)
 );
 tmu2_mult2 m_bc(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pc_2),
 	.b(bc_2),
 	.p(bc_4)
 );
 tmu2_mult2 m_rd(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pd_2),
 	.b(rd_2),
 	.p(rd_4)
 );
 tmu2_mult2 m_gd(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pd_2),
 	.b(gd_2),
 	.p(gd_4)
 );
 tmu2_mult2 m_bd(
 	.sys_clk(sys_clk),
+	.ce(pipe_en),
 	.a(pd_2),
 	.b(bd_2),
 	.p(bd_4)
