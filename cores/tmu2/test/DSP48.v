@@ -661,7 +661,6 @@ module DSP48 (BCOUT, P, PCOUT, A, B, BCIN, C, CARRYIN, CARRYINSEL, CEA, CEB, CEC
 	endcase
     end
 
-
 //*** Y mux
 
     always @(qc_o_mux or qopmode_o_mux) begin
