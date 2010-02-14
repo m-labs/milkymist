@@ -123,9 +123,9 @@ always @(posedge sys_clk) begin
 		y = wbm_adr_o[16:10];
 
 		if(wbm_adr_o[2])
-			wbm_dat_i = y*6*64;
+			wbm_dat_i = y*8*64;
 		else
-			wbm_dat_i = x*6*64;
+			wbm_dat_i = x*8*64;
 		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
@@ -160,7 +160,7 @@ initial read_burstcount = 0;
 always @(posedge sys_clk) begin
 	fmlr_ack = 1'b0;
 	if(read_burstcount == 0) begin
-		if(fmlr_stb/* && (($random % 9) == 0)*/) begin
+		if(fmlr_stb) begin
 			read_burstcount = 1;
 			read_addr = fmlr_adr;
 			
@@ -255,8 +255,8 @@ always begin
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 40); /* hmeshlast */
-	csrwrite(32'h08, 30); /* vmeshlast */
+	csrwrite(32'h04, 10); /* hmeshlast */
+	csrwrite(32'h08, 10); /* vmeshlast */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);

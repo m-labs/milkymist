@@ -35,7 +35,30 @@ VGAFB_SRC=						\
 	$(CORES_DIR)/vgafb/rtl/vgafb.v
 AC97_SRC=$(wildcard $(CORES_DIR)/ac97/rtl/*.v)
 PFPU_SRC=$(wildcard $(CORES_DIR)/pfpu/rtl/*.v)
-TMU_SRC=$(wildcard $(CORES_DIR)/tmu2/rtl/*.v)
+TMU_SRC=						\
+	$(CORES_DIR)/tmu2/rtl/tmu2_adrgen.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_clamp.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_dpram.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_hdiv.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_pixout.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2.v			\
+	$(CORES_DIR)/tmu2/rtl/tmu2_ctlif.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_fetchvertex.v	\
+	$(CORES_DIR)/tmu2/rtl/tmu2_hinterp.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_qpram32.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_vdivops.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_decay.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_geninterp18.v	\
+	$(CORES_DIR)/tmu2/rtl/tmu2_mask.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_qpram.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_vdiv.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_burst.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_divider17.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_hdivops.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_texcache.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_vinterp.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_blend_mult2.v	\
+	$(CORES_DIR)/tmu2/rtl/tmu2_mult2_virtex4.v
 PS2_SRC=$(wildcard $(CORES_DIR)/ps2/rtl/*.v)
 ETHERNET_SRC=$(wildcard $(CORES_DIR)/ethmac/rtl/*.v)
 
