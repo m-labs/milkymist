@@ -123,9 +123,9 @@ always @(posedge sys_clk) begin
 		y = wbm_adr_o[16:10];
 
 		if(wbm_adr_o[2])
-			wbm_dat_i = y*234*64;
+			wbm_dat_i = y*240*64;
 		else
-			wbm_dat_i = x*391*64;
+			wbm_dat_i = x*320*64;
 		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
@@ -214,7 +214,7 @@ always @(posedge sys_clk) begin
 			write_burstcount = 1;
 			write_addr = fmlw_adr;
 			
-			//$display("Starting   FML burst WRITE at address %x", write_addr);
+			$display("Starting   FML burst WRITE at address %x data=%x", write_addr, fmlw_do);
 			handle_write;
 			
 			fmlw_ack = 1'b1;
@@ -223,7 +223,7 @@ always @(posedge sys_clk) begin
 		write_addr = write_addr + 8;
 		write_burstcount = write_burstcount + 1;
 		
-		//$display("Continuing FML burst WRITE at address %x", write_addr);
+		$display("Continuing FML burst WRITE at address %x data=%x", write_addr, fmlw_do);
 		handle_write;
 		
 		if(write_burstcount == 4)
@@ -262,7 +262,7 @@ always begin
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);
-	
+
 	@(posedge irq);
 	
 	$image_close;

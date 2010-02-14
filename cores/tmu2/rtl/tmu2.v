@@ -586,19 +586,6 @@ tmu2_adrgen #(
 	.y_frac(y_frac)
 );
 
-/*assign adrgen_pipe_ack = 1'b1;
-always @(posedge sys_clk) begin
-	if(adrgen_pipe_stb)
-		$display("a:%x b:%x c:%x d:%x fx:%d fy:%d", tadra, tadrb, tadrc, tadrd, x_frac, y_frac);
-end*/
-
-/*always @(posedge sys_clk) begin
-	if(adrgen_pipe_stb & adrgen_pipe_ack) begin
-		$display("S %x", tadra[20:0]);
-		$display("D %x", dadr[20:0]);
-	end
-end*/
-
 /* Stage 11 - Texel cache */
 wire texcache_busy;
 wire texcache_pipe_stb;
@@ -677,14 +664,14 @@ tmu2_blend #(
 	.color(color)
 );
 
-/* Stage xx - Apply decay effect. Chroma key filtering is also applied here. */
+/* Stage 11 - Apply decay effect. Chroma key filtering is also applied here. */
 wire decay_busy;
 wire decay_pipe_stb;
 wire decay_pipe_ack;
-wire [15:0] src_pixel_d;
-wire [fml_depth-1-1:0] dst_addr2;
+wire [15:0] color_d;
+wire [fml_depth-1-1:0] dadr_f3;
 
-tmu2_decay #(
+tmu2_decay #( // TODO
 	.fml_depth(fml_depth)
 ) decay (
 	.sys_clk(sys_clk),
@@ -703,56 +690,33 @@ tmu2_decay #(
 	
 	.pipe_stb_o(decay_pipe_stb),
 	.pipe_ack_i(decay_pipe_ack),
-	.src_pixel_d(src_pixel_d),
-	.dst_addr1(dst_addr2)
+	.src_pixel_d(color_d),
+	.dst_addr1(dadr_f3)
 );
 
-/* Stage xx - Burst assembler */
-reg burst_flush;
-wire burst_busy;
-wire burst_pipe_stb;
-wire burst_pipe_ack;
-wire [fml_depth-5-1:0] burst_addr;
-wire [15:0] burst_sel;
-wire [255:0] burst_do;
+/*always @(posedge sys_clk) begin
+	if(decay_pipe_stb & decay_pipe_ack) begin
+		$display("%x -> %x", color_d, dadr_f3);
+	end
+end*/
 
-tmu2_burst #(
+/* Stage 12 - Write buffer */
+reg writebuffer_flush;
+wire writebuffer_busy;
+
+tmu2_writebuffer #(
 	.fml_depth(fml_depth)
-) burst (
+) writebuffer (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 	
-	.flush(burst_flush),
-	.busy(burst_busy),
+	.flush(writebuffer_flush),
+	.busy(writebuffer_busy),
 	
 	.pipe_stb_i(decay_pipe_stb),
 	.pipe_ack_o(decay_pipe_ack),
-	.src_pixel_d(src_pixel_d),
-	.dst_addr(dst_addr2),
-	
-	.pipe_stb_o(burst_pipe_stb),
-	.pipe_ack_i(burst_pipe_ack),
-	.burst_addr(burst_addr),
-	.burst_sel(burst_sel),
-	.burst_do(burst_do)
-);
-
-/* Stage xx - Pixel output */
-wire pixout_busy;
-
-tmu2_pixout #(
-	.fml_depth(fml_depth)
-) pixout (
-	.sys_clk(sys_clk),
-	.sys_rst(sys_rst),
-	
-	.busy(pixout_busy),
-	
-	.pipe_stb_i(burst_pipe_stb),
-	.pipe_ack_o(burst_pipe_ack),
-	.burst_addr(burst_addr),
-	.burst_sel(burst_sel),
-	.burst_do(burst_do),
+	.color(color_d),
+	.dadr(dadr_f3),
 	
 	.fml_adr(fmlw_adr),
 	.fml_stb(fmlw_stb),
@@ -769,7 +733,7 @@ wire pipeline_busy = fetchvertex_busy
 	|mask_busy|clamp_busy
 	|texcache_busy
 	|blend_busy|decay_busy
-	|burst_busy|pixout_busy;
+	|writebuffer_busy;
 
 parameter IDLE		= 2'd0;
 parameter WAIT_PROCESS	= 2'd1;
@@ -790,7 +754,7 @@ always @(*) begin
 	next_state = state;
 
 	busy = 1'b1;
-	burst_flush = 1'b0;
+	writebuffer_flush = 1'b0;
 	
 	case(state)
 		IDLE: begin
@@ -803,7 +767,7 @@ always @(*) begin
 				next_state = FLUSH;
 		end
 		FLUSH: begin
-			burst_flush = 1'b1;
+			writebuffer_flush = 1'b1;
 			next_state = WAIT_FLUSH;
 		end
 		WAIT_FLUSH: begin

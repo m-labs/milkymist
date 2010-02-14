@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module tmu2_decay #(
+module tmu2_decay #( // TODO
 	parameter fml_depth = 26
 ) (
 	input sys_clk,
