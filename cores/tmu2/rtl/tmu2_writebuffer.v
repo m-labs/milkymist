@@ -86,20 +86,19 @@ end
 assign tagmem_we = en;
 
 reg write_done;
-reg [2:0] level;
+reg [1:0] level;
 always @(posedge sys_clk) begin
 	if(sys_rst)
-		level = 3'd0;
+		level = 2'd0;
 	else begin
 		if((en & ~hit) | flush)
-			level = level + 3'd1;
+			level = level + 2'd1;
 		if(write_done)
-			level = level - 3'd1;
-		//$display("level: %d (%b %x %x) di:%x do:%x", level, hit, previous_startadr, dadr_startadr, tagmem_di, tagmem_do);
+			level = level - 2'd1;
 	end
 end
 
-assign pipe_ack_o = ~level[2];
+assign pipe_ack_o = ~(level[1] & level[0]);
 assign en = pipe_ack_o & pipe_stb_i;
 
 /* Write engine */
@@ -198,6 +197,6 @@ always @(*) begin
 	endcase
 end
 
-assign burst_count = fml_ack | (state == WORD2) | (state == WORD3) | (state == WORD4);
+assign burst_count = fml_ack | (state == WORD2) | (state == WORD3);
 
 endmodule

@@ -694,12 +694,6 @@ tmu2_decay #( // TODO
 	.dst_addr1(dadr_f3)
 );
 
-/*always @(posedge sys_clk) begin
-	if(decay_pipe_stb & decay_pipe_ack) begin
-		$display("%x -> %x", color_d, {dadr_f3, 1'b0});
-	end
-end*/
-
 /* Stage 12 - Write buffer */
 reg writebuffer_flush;
 wire writebuffer_busy;

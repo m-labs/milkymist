@@ -61,25 +61,13 @@ sim: vpi_images.so
 sim_virtex4: vpi_images.so
 	cver +loadvpi=./vpi_images.so:vpi_register $(SOURCES_VIRTEX4)
 
-isim: tb_tmu2 vpi_images_icarus.vpi
-	vvp -M. -mvpi_images_icarus tb_tmu2
-
-tb_tmu2: $(SOURCES)
-	iverilog -o tb_tmu2 $(SOURCES)
-
 vpi_images.so: vpi_images.o
 	$(LD) -G -shared -export-dynamic -o vpi_images.so vpi_images.o -lgd -lpng -lz -ljpeg -lfreetype -lm
 
 vpi_images.o: vpi_images.c
 	$(CC) -I/usr/include/cver -fPIC -Wall -O2 -c -o vpi_images.o vpi_images.c
 
-vpi_images_icarus.vpi: vpi_images_icarus.o
-	$(CC) -shared -o vpi_images_icarus.vpi vpi_images_icarus.o -lvpi -lgd -lpng -lz -ljpeg -lfreetype -lm
-
-vpi_images_icarus.o: vpi_images.c
-	$(CC) -I/usr/include/iverilog -fPIC -Wall -O2 -c -o vpi_images_icarus.o vpi_images.c
-
 clean:
-	rm -f verilog.log vpi_images.o vpi_images.so out.png tb_tmu2 vpi_images_icarus.o vpi_images_icarus.vpi
+	rm -f verilog.log vpi_images.o vpi_images.so out.png
 
 .PHONY: clean sim sim_virtex4
