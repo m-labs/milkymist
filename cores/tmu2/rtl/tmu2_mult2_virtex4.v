@@ -31,7 +31,7 @@ DSP48 #(
 	.CARRYINREG(0), // Number of pipeline registers for the CARRYIN input, 0 or 1
 	.CARRYINSELREG(0), // Number of pipeline registers for the CARRYINSEL, 0 or 1
 	.CREG(0), // Number of pipeline registers on the C input, 0 or 1
-	.LEGACY_MODE("NONE"), // Backward compatibility, NONE, MULT18X18 or MULT18X18S
+	.LEGACY_MODE("MULT18X18"), // Backward compatibility, NONE, MULT18X18 or MULT18X18S
 	.MREG(0), // Number of multiplier pipeline registers, 0 or 1
 	.OPMODEREG(0), // Number of pipeline regsiters on OPMODE input, 0 or 1
 	.PREG(1), // Number of pipeline registers on the P output, 0 or 1
@@ -55,7 +55,7 @@ DSP48 #(
 	.CEM(1'b1), // Clock Enable input for multiplier regsiters
 	.CEP(1'b1), // Clock Enable input for P regsiters
 	.CLK(sys_clk), // Clock input
-	.OPMODE(7'h15), // 7-bit operation mode input
+	.OPMODE(7'h35), // 7-bit operation mode input
 	.PCIN(48'd0), // 48-bit PCIN input
 	.RSTA(sys_rst), // Reset input for A pipeline registers
 	.RSTB(sys_rst), // Reset input for B pipeline registers

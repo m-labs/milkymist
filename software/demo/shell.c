@@ -328,7 +328,7 @@ static void tmutest_callback(struct tmu_td *td)
 static void tmutest()
 {
 	int x, y;
-	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(64)));
+	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
 	struct tmu_td td;
 	volatile int complete;
 
@@ -365,6 +365,86 @@ static void tmutest()
 	tmu_submit_task(&td);
 	while(!complete);
 	vga_swap_buffers();
+}
+
+static void tmudemo()
+{
+	int size;
+	unsigned int oldmask;
+	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
+	static unsigned short original[640*480*2] __attribute__((aligned(2)));
+	struct tmu_td td;
+	volatile int complete;
+	int w, speed;
+
+	if(!cffat_init()) return;
+	if(!cffat_load("lena.raw", (void *)original, vga_hres*vga_vres*2, &size)) return;
+	cffat_done();
+
+	/* Disable UI keys */
+	oldmask = irq_getmask();
+	irq_setmask(oldmask & (~IRQ_GPIO));
+	
+	speed = 0;
+	w = 512 << TMU_FIXEDPOINT_SHIFT;
+	
+	while(!readchar_nonblock()) {
+		srcmesh[0][0].x = 0;
+		srcmesh[0][0].y = 0;
+		srcmesh[0][1].x = w;
+		srcmesh[0][1].y = 0;
+		srcmesh[1][0].x = 0;
+		srcmesh[1][0].y = w;
+		srcmesh[1][1].x = w;
+		srcmesh[1][1].y = w;
+
+		if(CSR_GPIO_IN & GPIO_PBN)
+			speed += 2;
+		if(CSR_GPIO_IN & GPIO_PBS)
+			speed -= 2;
+		w += speed;
+		if(w < 1) {
+			w = 1;
+			speed = 0;
+		}
+		if(w > (TMU_MASK_FULL >> 1)) {
+			w = (TMU_MASK_FULL >> 1);
+			speed = 0;
+		}
+		if(speed > 0) speed--;
+		if(speed < 0) speed++;
+		
+
+		td.flags = 0;
+		td.hmeshlast = 1;
+		td.vmeshlast = 1;
+		td.brightness = TMU_BRIGHTNESS_MAX;
+		td.chromakey = 0;
+		td.vertices = &srcmesh[0][0];
+		td.texfbuf = original;
+		td.texhres = vga_hres;
+		td.texvres = vga_vres;
+		td.texhmask = CSR_GPIO_IN & GPIO_DIP7 ? 0x7FFF : TMU_MASK_FULL;
+		td.texvmask = CSR_GPIO_IN & GPIO_DIP8 ? 0x7FFF : TMU_MASK_FULL;
+		td.dstfbuf = vga_backbuffer;
+		td.dsthres = vga_hres;
+		td.dstvres = vga_vres;
+		td.dsthoffset = 0;
+		td.dstvoffset = 0;
+		td.dstsquarew = vga_hres;
+		td.dstsquareh = vga_vres;
+
+		td.callback = tmutest_callback;
+		td.user = (void *)&complete;
+
+		complete = 0;
+		flush_bridge_cache();
+		tmu_submit_task(&td);
+		while(!complete);
+		vga_swap_buffers();
+	}
+	irq_ack(IRQ_GPIO);
+	irq_setmask(oldmask);
 }
 
 static short audio_buffer1[SND_MAX_NSAMPLES*2];
@@ -449,6 +529,7 @@ static void do_command(char *c)
 	else if(strcmp(command, "checker") == 0) checker();
 	else if(strcmp(command, "pfputest") == 0) pfputest();
 	else if(strcmp(command, "tmutest") == 0) tmutest();
+	else if(strcmp(command, "tmudemo") == 0) tmudemo();
 	else if(strcmp(command, "echo") == 0) echo();
 
 	else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
