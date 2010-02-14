@@ -44,10 +44,6 @@ module tmu2_blend #(
 wire pipe_en;
 
 reg valid_1;
-reg [12:0] pa_1;
-reg [12:0] pb_1;
-reg [12:0] pc_1;
-reg [12:0] pd_1;
 reg [15:0] colora_1;
 reg [15:0] colorb_1;
 reg [15:0] colorc_1;
@@ -55,10 +51,10 @@ reg [15:0] colord_1;
 reg [fml_depth-1-1:0] dadr_1;
 
 reg valid_2;
-reg [12:0] pa_2;
-reg [12:0] pb_2;
-reg [12:0] pc_2;
-reg [12:0] pd_2;
+wire [12:0] pa_2;
+wire [12:0] pb_2;
+wire [12:0] pc_2;
+wire [12:0] pd_2;
 reg [15:0] colora_2;
 reg [15:0] colorb_2;
 reg [15:0] colorc_2;
@@ -78,33 +74,21 @@ wire [5:0] gd_2 = colord_2[10:5];
 wire [4:0] bd_2 = colord_2[4:0];
 
 reg valid_3;
-reg [16:0] ra_3;
-reg [17:0] ga_3;
-reg [16:0] ba_3;
-reg [16:0] rb_3;
-reg [17:0] gb_3;
-reg [16:0] bb_3;
-reg [16:0] rc_3;
-reg [17:0] gc_3;
-reg [16:0] bc_3;
-reg [16:0] rd_3;
-reg [17:0] gd_3;
-reg [16:0] bd_3;
 reg [fml_depth-1-1:0] dadr_3;
 
 reg valid_4;
-reg [16:0] ra_4;
-reg [17:0] ga_4;
-reg [16:0] ba_4;
-reg [16:0] rb_4;
-reg [17:0] gb_4;
-reg [16:0] bb_4;
-reg [16:0] rc_4;
-reg [17:0] gc_4;
-reg [16:0] bc_4;
-reg [16:0] rd_4;
-reg [17:0] gd_4;
-reg [16:0] bd_4;
+wire [16:0] ra_4;
+wire [17:0] ga_4;
+wire [16:0] ba_4;
+wire [16:0] rb_4;
+wire [17:0] gb_4;
+wire [16:0] bb_4;
+wire [16:0] rc_4;
+wire [17:0] gc_4;
+wire [16:0] bc_4;
+wire [16:0] rd_4;
+wire [17:0] gd_4;
+wire [16:0] bd_4;
 reg [fml_depth-1-1:0] dadr_4;
 
 reg valid_5;
@@ -121,33 +105,14 @@ always @(posedge sys_clk) begin
 		valid_4 <= 1'b0;
 		valid_5 <= 1'b0;
 	end else if(pipe_en) begin
-		/* Form the products:
-		 * pa = (1-xfrac) * (1-yfrac)
-		 * pb = xfrac     * (1-yfrac)
-		 * pc = (1-xfrac) * yfrac
-		 * pd = xfrac     * yfrac
-		 * (stages 1-2)
-		 *
-		 * Then, we have:
-		 * color = pa*colora + pb*colorb + pc*colorc + pd*colord
-		 * (stages (3-5)
-		 */
 		valid_1 <= pipe_stb_i;
-		pa_1 <= (7'd64 - x_frac)	* (7'd64 - y_frac);
-		pb_1 <= x_frac			* (7'd64 - y_frac);
-		pc_1 <= (7'd64 - x_frac)	* y_frac;
-		pd_1 <= x_frac			* y_frac;
 		dadr_1 <= dadr;
 		colora_1 <= colora;
 		colorb_1 <= colorb;
 		colorc_1 <= colorc;
 		colord_1 <= colord;
-		
+
 		valid_2 <= valid_1;
-		pa_2 <= pa_1;
-		pb_2 <= pb_1;
-		pc_2 <= pc_1;
-		pd_2 <= pd_1;
 		dadr_2 <= dadr_1;
 		colora_2 <= colora_1;
 		colorb_2 <= colorb_1;
@@ -155,33 +120,9 @@ always @(posedge sys_clk) begin
 		colord_2 <= colord_1;
 
 		valid_3 <= valid_2;
-		ra_3 <= pa_2*ra_2;
-		ga_3 <= pa_2*ga_2;
-		ba_3 <= pa_2*ba_2;
-		rb_3 <= pb_2*rb_2;
-		gb_3 <= pb_2*gb_2;
-		bb_3 <= pb_2*bb_2;
-		rc_3 <= pc_2*rc_2;
-		gc_3 <= pc_2*gc_2;
-		bc_3 <= pc_2*bc_2;
-		rd_3 <= pd_2*rd_2;
-		gd_3 <= pd_2*gd_2;
-		bd_3 <= pd_2*bd_2;
 		dadr_3 <= dadr_2;
 
 		valid_4 <= valid_3;
-		ra_4 <= ra_3;
-		ga_4 <= ga_3;
-		ba_4 <= ba_3;
-		rb_4 <= rb_3;
-		gb_4 <= gb_3;
-		bb_4 <= bb_3;
-		rc_4 <= rc_3;
-		gc_4 <= gc_3;
-		bc_4 <= bc_3;
-		rd_4 <= rd_3;
-		gd_4 <= gd_3;
-		bd_4 <= bd_3;
 		dadr_4 <= dadr_3;
 
 		valid_5 <= valid_4;
@@ -191,6 +132,104 @@ always @(posedge sys_clk) begin
 		dadr_5 <= dadr_4;
 	end
 end
+
+tmu2_mult2 m_pa(
+	.sys_clk(sys_clk),
+	.a(7'd64 - x_frac),
+	.b(7'd64 - y_frac),
+	.p(pa_2)
+);
+tmu2_mult2 m_pb(
+	.sys_clk(sys_clk),
+	.a(x_frac),
+	.b(7'd64 - y_frac),
+	.p(pb_2)
+);
+tmu2_mult2 m_pc(
+	.sys_clk(sys_clk),
+	.a(7'd64 - x_frac),
+	.b(y_frac),
+	.p(pc_2)
+);
+tmu2_mult2 m_pd(
+	.sys_clk(sys_clk),
+	.a(x_frac),
+	.b(y_frac),
+	.p(pd_2)
+);
+
+tmu2_mult2 m_ra(
+	.sys_clk(sys_clk),
+	.a(pa_2),
+	.b(ra_2),
+	.p(ra_4)
+);
+tmu2_mult2 m_ga(
+	.sys_clk(sys_clk),
+	.a(pa_2),
+	.b(ga_2),
+	.p(ga_4)
+);
+tmu2_mult2 m_ba(
+	.sys_clk(sys_clk),
+	.a(pa_2),
+	.b(ba_2),
+	.p(ba_4)
+);
+tmu2_mult2 m_rb(
+	.sys_clk(sys_clk),
+	.a(pb_2),
+	.b(rb_2),
+	.p(rb_4)
+);
+tmu2_mult2 m_gb(
+	.sys_clk(sys_clk),
+	.a(pb_2),
+	.b(gb_2),
+	.p(gb_4)
+);
+tmu2_mult2 m_bb(
+	.sys_clk(sys_clk),
+	.a(pb_2),
+	.b(bb_2),
+	.p(bb_4)
+);
+tmu2_mult2 m_rc(
+	.sys_clk(sys_clk),
+	.a(pc_2),
+	.b(rc_2),
+	.p(rc_4)
+);
+tmu2_mult2 m_gc(
+	.sys_clk(sys_clk),
+	.a(pc_2),
+	.b(gc_2),
+	.p(gc_4)
+);
+tmu2_mult2 m_bc(
+	.sys_clk(sys_clk),
+	.a(pc_2),
+	.b(bc_2),
+	.p(bc_4)
+);
+tmu2_mult2 m_rd(
+	.sys_clk(sys_clk),
+	.a(pd_2),
+	.b(rd_2),
+	.p(rd_4)
+);
+tmu2_mult2 m_gd(
+	.sys_clk(sys_clk),
+	.a(pd_2),
+	.b(gd_2),
+	.p(gd_4)
+);
+tmu2_mult2 m_bd(
+	.sys_clk(sys_clk),
+	.a(pd_2),
+	.b(bd_2),
+	.p(bd_4)
+);
 
 /* Glue logic */
 

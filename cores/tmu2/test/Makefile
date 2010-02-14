@@ -2,6 +2,7 @@ SOURCES=tb_tmu2.v \
 ../rtl/tmu2_adrgen.v \
 ../rtl/tmu2_clamp.v \
 ../rtl/tmu2_dpram.v \
+../rtl/tmu2_dpram_sw.v \
 ../rtl/tmu2_hdiv.v \
 ../rtl/tmu2_pixout.v \
 ../rtl/tmu2.v\
@@ -11,6 +12,7 @@ SOURCES=tb_tmu2.v \
 ../rtl/tmu2_qpram32.v \
 ../rtl/tmu2_vdivops.v \
 ../rtl/tmu2_blend.v \
+../rtl/tmu2_mult2.v \
 ../rtl/tmu2_decay.v \
 ../rtl/tmu2_geninterp18.v \
 ../rtl/tmu2_mask.v \
@@ -27,6 +29,7 @@ DSP48.v \
 ../rtl/tmu2_adrgen.v \
 ../rtl/tmu2_clamp.v \
 ../rtl/tmu2_dpram.v \
+../rtl/tmu2_dpram_sw.v \
 ../rtl/tmu2_hdiv.v \
 ../rtl/tmu2_pixout.v \
 ../rtl/tmu2.v \
@@ -45,7 +48,7 @@ DSP48.v \
 ../rtl/tmu2_hdivops.v \
 ../rtl/tmu2_texcache.v \
 ../rtl/tmu2_vinterp.v \
-../rtl/tmu2_blend_mult2.v \
+../rtl/tmu2_blend.v \
 ../rtl/tmu2_mult2_virtex4.v
 
 all: sim

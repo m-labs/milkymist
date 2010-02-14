@@ -43,7 +43,7 @@ module tmu2_qpram #(
 	input [width-1:0] dw
 );
 
-tmu2_dpram #(
+tmu2_dpram_sw #(
 	.depth(depth),
 	.width(width)
 ) ram1 (
@@ -55,12 +55,10 @@ tmu2_dpram #(
 	.do(d1),
 
 	.a2(a2),
-	.we2(1'b0),
-	.di2(),
 	.do2(d2)
 );
 
-tmu2_dpram #(
+tmu2_dpram_sw #(
 	.depth(depth),
 	.width(width)
 ) ram2 (
@@ -72,8 +70,6 @@ tmu2_dpram #(
 	.do(d3),
 
 	.a2(a4),
-	.we2(1'b0),
-	.di2(),
 	.do2(d4)
 );
 

@@ -17,7 +17,6 @@
 
 module tmu2_mult2(
 	input sys_clk,
-	input sys_rst,
 
 	input [12:0] a,
 	input [12:0] b,
@@ -57,13 +56,13 @@ DSP48 #(
 	.CLK(sys_clk), // Clock input
 	.OPMODE(7'h35), // 7-bit operation mode input
 	.PCIN(48'd0), // 48-bit PCIN input
-	.RSTA(sys_rst), // Reset input for A pipeline registers
-	.RSTB(sys_rst), // Reset input for B pipeline registers
-	.RSTC(sys_rst), // Reset input for C pipeline registers
-	.RSTCARRYIN(sys_rst), // Reset input for CARRYIN registers
-	.RSTCTRL(sys_rst), // Reset input for CTRL registers
-	.RSTM(sys_rst), // Reset input for multiplier registers
-	.RSTP(sys_rst), // Reset input for P pipeline registers
+	.RSTA(1'b0), // Reset input for A pipeline registers
+	.RSTB(1'b0), // Reset input for B pipeline registers
+	.RSTC(1'b0), // Reset input for C pipeline registers
+	.RSTCARRYIN(1'b0), // Reset input for CARRYIN registers
+	.RSTCTRL(1'b0), // Reset input for CTRL registers
+	.RSTM(1'b0), // Reset input for multiplier registers
+	.RSTP(1'b0), // Reset input for P pipeline registers
 	.SUBTRACT(1'b0) // SUBTRACT input
 );
 

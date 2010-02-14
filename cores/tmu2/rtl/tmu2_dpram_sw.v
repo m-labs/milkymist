@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Double-port RAM with double write-capable port */
+/* Double-port RAM with single write-capable port */
 
-module tmu2_dpram #(
+module tmu2_dpram_sw #(
 	parameter depth = 11, /* < log2 of the capacity in words */
 	parameter width = 32
 ) (
@@ -29,8 +29,6 @@ module tmu2_dpram #(
 	output reg [width-1:0] do,
 
 	input [depth-1:0] a2,
-	input we2,
-	input [width-1:0] di2,
 	output reg [width-1:0] do2
 );
 
@@ -42,13 +40,9 @@ always @(posedge sys_clk) begin
 		ram[a] <= di;
 	end
 	do <= ram[a];
-end
-
-always @(posedge sys_clk) begin
-	if(we2)
-		ram[a2] <= di2;
 	do2 <= ram[a2];
 end
+
 
 // synthesis translate_off
 
