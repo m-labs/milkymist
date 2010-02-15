@@ -47,7 +47,7 @@ always @(posedge sys_clk) begin
 		wbm_ack_i <= 1'b0;
 	else begin
 		wbm_ack_i <= 1'b0;
-		if(wbm_stb_o & ~wbm_ack_i & (($random % 200) == 0)) begin
+		if(wbm_stb_o & ~wbm_ack_i & (($random % 3) == 0)) begin
 			wbm_ack_i <= 1'b1;
 			$fromfloat(wbm_dat_o, r);
 			$display("DMA write addr %x:%x (%b - %f)", wbm_adr_o, wbm_dat_o, wbm_adr_o[2], r);

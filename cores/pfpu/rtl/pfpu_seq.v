@@ -85,8 +85,8 @@ always @(*) begin
 			alu_rst = 1'b1;
 			pcount_rst = 1'b1;
 			if(dma_ack) begin
-				/* we will be able to insert immediately our word
-				 * into the DMA write queue - carry on.
+				/* we will be able to send immediately our word
+				 * to the DMA engine - carry on.
 				 */
 				pcount_rst = 1'b0;
 				next_state = RUNNING;

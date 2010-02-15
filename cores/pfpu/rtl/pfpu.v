@@ -105,7 +105,6 @@ pfpu_regf regf(
 wire [31:0] dma_adr;
 wire dma_busy;
 wire dma_ack;
-wire [2:0] dma_pending;
 pfpu_dma dma(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -124,9 +123,7 @@ pfpu_dma dma(
 	.wbm_adr_o(wbm_adr_o),
 	.wbm_cyc_o(wbm_cyc_o),
 	.wbm_stb_o(wbm_stb_o),
-	.wbm_ack_i(wbm_ack_i),
-
-	.dma_pending(dma_pending)	/* < to control interface */
+	.wbm_ack_i(wbm_ack_i)
 );
 
 wire vfirst;
@@ -231,8 +228,10 @@ pfpu_ctlif #(
 	.vnext(vnext),			/* < from sequencer */
 	.err_collision(err_collision),	/* < from ALU */
 	.err_stray(err_stray),		/* < from register file */
-	.dma_pending(dma_pending),	/* < from DMA engine */
-	.pc(pc)				/* < from program memory */
+	.pc(pc),			/* < from program memory */
+
+	.wbm_adr_o(wbm_adr_o),		/* < from DMA engine */
+	.wbm_ack_i(wbm_ack_i)		/* < from DMA engine */
 );
 
 endmodule

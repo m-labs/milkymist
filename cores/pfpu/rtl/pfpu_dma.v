@@ -29,93 +29,46 @@ module pfpu_dma(
 	output ack,
 	output busy,
 
-	output reg [31:0] wbm_dat_o,
-	output reg [31:0] wbm_adr_o,
+	output [31:0] wbm_dat_o,
+	output [31:0] wbm_adr_o,
 	output wbm_cyc_o,
-	output wbm_stb_o,
-	input wbm_ack_i,
-
-	output [2:0] dma_pending
+	output reg wbm_stb_o,
+	input wbm_ack_i
 );
 
-/* FIFO logic */
-
-parameter q_width = 7+7+64;
-
-wire q_p;
-wire q_c;
-wire [q_width-1:0] q_i;
-wire [q_width-1:0] q_o;
-wire full;
-wire empty;
-
-reg [1:0] produce;
-reg [1:0] consume;
-reg [2:0] level;
-reg [q_width-1:0] wq[0:3];
+reg write_y;
+reg [28:0] vector_start;
+reg [31:0] dma_d1_r;
+reg [31:0] dma_d2_r;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
-		produce = 2'd0;
-		consume = 2'd0;
-		level = 3'd0;
-	end else begin
-		if(q_p) begin
-			wq[produce] = q_i;
-			produce = produce + 2'd1;
-			level = level + 3'd1;
-		end
-		if(q_c) begin
-			consume = consume + 2'd1;
-			level = level - 3'd1;
-		end
-	end
-end
-
-assign q_o = wq[consume];
-assign full = level[2];
-assign empty = (level == 3'd0);
-
-// synthesis translate_off
-always @(posedge sys_clk) begin
-	if(full & q_p) begin
-		$display("ERROR - Writing to full DMA write queue");
-		$finish;
-	end
-	if(empty & q_c) begin
-		$display("ERROR - Reading from empty DMA write queue");
-		$finish;
-	end
-end
-// synthesis translate_on
-
-/* Interface */
-reg write_y;
-
-assign q_p = dma_en;
-assign q_c = wbm_ack_i & write_y;
-assign q_i = {dma_d1, dma_d2, y, x};
-
-always @(posedge sys_clk) begin
-	wbm_adr_o <= {dma_base, 3'd0} + {q_o[13:0], write_y, 2'd0};
-	wbm_dat_o <= write_y ? q_o[45:14] : q_o[q_width-1:46];
-end
-
-reg bus_not_valid_yet;
-always @(posedge sys_clk)
-	bus_not_valid_yet <= wbm_ack_i;
-
-always @(posedge sys_clk) begin
-	if(sys_rst)
+		vector_start <= 29'd0;
 		write_y <= 1'b0;
-	else if(wbm_ack_i) write_y <= ~write_y;
+		wbm_stb_o <= 1'b0;
+	end else begin
+		if(dma_en) begin
+			wbm_stb_o <= 1'b1;
+			write_y <= 1'b0;
+			vector_start <= dma_base + {y, x};
+			dma_d1_r <= dma_d1;
+			dma_d2_r <= dma_d2;
+		end
+		if(wbm_ack_i) begin
+			if(write_y)
+				wbm_stb_o <= 1'b0;
+			else
+				write_y <= ~write_y;
+		end
+	end
 end
 
-assign wbm_cyc_o = ~empty & ~bus_not_valid_yet;
-assign wbm_stb_o = ~empty & ~bus_not_valid_yet;
+assign wbm_adr_o = {vector_start, write_y, 2'b00};
+assign wbm_dat_o = write_y ? dma_d2_r : dma_d1_r;
 
-assign ack = ~full;
-assign busy = ~empty;
-assign dma_pending = level;
+assign wbm_cyc_o = wbm_stb_o;
+
+assign ack = ~wbm_stb_o;
+assign busy = wbm_stb_o;
 
 endmodule

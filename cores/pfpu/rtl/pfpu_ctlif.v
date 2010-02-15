@@ -53,9 +53,16 @@ module pfpu_ctlif #(
 	input vnext,
 	input err_collision,
 	input err_stray,
-	input [2:0] dma_pending,
-	input [10:0] pc
+	input [10:0] pc,
+
+	input [31:0] wbm_adr_o,
+	input wbm_ack_i
 );
+
+reg [31:0] last_dma;
+always @(posedge sys_clk)
+	if(wbm_ack_i)
+		last_dma <= wbm_adr_o;
 
 reg old_busy;
 always @(posedge sys_clk) begin
@@ -119,7 +126,7 @@ always @(posedge sys_clk) begin
 			4'b0101: csr_do_r <= vertex_counter;
 			4'b0110: csr_do_r <= collision_counter;
 			4'b0111: csr_do_r <= stray_counter;
-			4'b1000: csr_do_r <= dma_pending;
+			4'b1000: csr_do_r <= last_dma;
 			4'b1001: csr_do_r <= pc;
 
 			default: csr_do_r <= 32'bx;

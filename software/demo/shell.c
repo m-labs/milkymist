@@ -282,17 +282,12 @@ static void pfputest()
 	pfpu_code[ 9] = 0x00000005;
 	pfpu_code[10] = 0x00142b80;
 
-	/*printf("Program:\n");
-	for(x=0;x<10;x++)
-		printf("%08x ", pfpu_code[x]);
-	printf("\n");*/
-
 	CSR_PFPU_CTL = PFPU_CTL_START;
 	printf("Waiting for PFPU...\n");
 	timeout = 30;
 	do {
-		printf("%08x vertices:%d collisions:%d strays:%d dma:%d pc:%04x\n",
-			CSR_PFPU_CTL, CSR_PFPU_VERTICES, CSR_PFPU_COLLISIONS, CSR_PFPU_STRAYWRITES, CSR_PFPU_DMAPENDING, 4*CSR_PFPU_PC);
+		printf("%08x vertices:%d collisions:%d strays:%d last:%08x pc:%04x\n",
+			CSR_PFPU_CTL, CSR_PFPU_VERTICES, CSR_PFPU_COLLISIONS, CSR_PFPU_STRAYWRITES, CSR_PFPU_LASTDMA, 4*CSR_PFPU_PC);
 	} while((timeout--) && (CSR_PFPU_CTL & PFPU_CTL_BUSY));
 	if(timeout > 0)
 		printf("OK\n");
