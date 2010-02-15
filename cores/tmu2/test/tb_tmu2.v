@@ -123,9 +123,9 @@ always @(posedge sys_clk) begin
 		y = wbm_adr_o[16:10];
 
 		if(wbm_adr_o[2])
-			wbm_dat_i = y*800*64;
+			wbm_dat_i = y*640*64 - 100*64;
 		else
-			wbm_dat_i = x*800*64;
+			wbm_dat_i = x*480*64 - 100*64;
 		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
@@ -148,7 +148,7 @@ begin
 	read_addr2 = read_addr[20:0]/2;
 	x = read_addr2 % 640;
 	y = read_addr2 / 640;
-	$display("coord: %d %d", x, y);
+
 	$image_get(x + 0, y, p1);
 	$image_get(x + 1, y, p2);
 	$image_get(x + 2, y, p3);
@@ -252,7 +252,7 @@ always begin
 	sys_rst = 1'b0;
 	
 	waitclock;
-	
+
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
@@ -260,8 +260,8 @@ always begin
 	csrwrite(32'h08, 1); /* vmeshlast */
 	csrwrite(32'h1C, 640); /* texhres */
 	csrwrite(32'h20, 480); /* texhres */
-	csrwrite(32'h40, 153); /* squarew */
-	csrwrite(32'h44, 107); /* squareh */
+	csrwrite(32'h40, 50); /* squarew */
+	csrwrite(32'h44, 50); /* squareh */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);

@@ -172,7 +172,7 @@ always @(posedge sys_clk) begin
 	if(pipe_ack_o) begin
 		ignore_b <= x_frac == 6'd0;
 		ignore_c <= y_frac == 6'd0;
-		ignore_d <= (x_frac == 6'd0) && (y_frac == 6'd0);
+		ignore_d <= (x_frac == 6'd0) | (y_frac == 6'd0);
 	end
 end
 
