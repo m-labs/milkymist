@@ -634,11 +634,6 @@ tmu2_texcache #(
 	.y_frac_f(y_frac_f)
 );
 
-/*always @(posedge sys_clk) begin
-	if(texcache_pipe_stb & texcache_pipe_ack)
-		$display("c: %x - %d, %d", tcolora, tex_hres, tex_vres);
-end*/
-
 /* Stage 11 - Blend neighbouring pixels for bilinear filtering */
 wire blend_busy;
 wire blend_pipe_stb;
@@ -699,24 +694,53 @@ tmu2_decay #( // TODO
 	.dst_addr1(dadr_f3)
 );
 
-/* Stage 12 - Write buffer */
-reg writebuffer_flush;
-wire writebuffer_busy;
+/* Stage 12 - Burst assembler */
+reg burst_flush;
+wire burst_busy;
+wire burst_pipe_stb;
+wire burst_pipe_ack;
+wire [fml_depth-5-1:0] burst_addr;
+wire [15:0] burst_sel;
+wire [255:0] burst_do;
 
-tmu2_writebuffer #(
+tmu2_burst #(
 	.fml_depth(fml_depth)
-) writebuffer (
+) burst (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	
-	.flush(writebuffer_flush),
-	.busy(writebuffer_busy),
-	
+
+	.flush(burst_flush),
+	.busy(burst_busy),
+
 	.pipe_stb_i(decay_pipe_stb),
 	.pipe_ack_o(decay_pipe_ack),
-	.color(color_d),
-	.dadr(dadr_f3),
-	
+	.src_pixel_d(color_d),
+	.dst_addr(dadr_f3),
+
+	.pipe_stb_o(burst_pipe_stb),
+	.pipe_ack_i(burst_pipe_ack),
+	.burst_addr(burst_addr),
+	.burst_sel(burst_sel),
+	.burst_do(burst_do)
+);
+
+/* Stage 12 - Pixel output */
+wire pixout_busy;
+
+tmu2_pixout #(
+	.fml_depth(fml_depth)
+) pixout (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(pixout_busy),
+
+	.pipe_stb_i(burst_pipe_stb),
+	.pipe_ack_o(burst_pipe_ack),
+	.burst_addr(burst_addr),
+	.burst_sel(burst_sel),
+	.burst_do(burst_do),
+
 	.fml_adr(fmlw_adr),
 	.fml_stb(fmlw_stb),
 	.fml_ack(fmlw_ack),
@@ -732,7 +756,7 @@ wire pipeline_busy = fetchvertex_busy
 	|mask_busy|clamp_busy
 	|texcache_busy
 	|blend_busy|decay_busy
-	|writebuffer_busy;
+	|burst_busy|pixout_busy;
 
 parameter IDLE		= 2'd0;
 parameter WAIT_PROCESS	= 2'd1;
@@ -753,7 +777,7 @@ always @(*) begin
 	next_state = state;
 
 	busy = 1'b1;
-	writebuffer_flush = 1'b0;
+	burst_flush = 1'b0;
 	
 	case(state)
 		IDLE: begin
@@ -766,7 +790,7 @@ always @(*) begin
 				next_state = FLUSH;
 		end
 		FLUSH: begin
-			writebuffer_flush = 1'b1;
+			burst_flush = 1'b1;
 			next_state = WAIT_FLUSH;
 		end
 		WAIT_FLUSH: begin

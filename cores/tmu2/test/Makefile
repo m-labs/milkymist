@@ -4,9 +4,8 @@ SOURCES=tb_tmu2.v \
 ../rtl/tmu2_dpram.v \
 ../rtl/tmu2_dpram_sw.v \
 ../rtl/tmu2_hdiv.v \
-../rtl/tmu2_wb_datamem.v \
-../rtl/tmu2_wb_tagmem.v \
-../rtl/tmu2_writebuffer.v \
+../rtl/tmu2_burst.v \
+../rtl/tmu2_pixout.v \
 ../rtl/tmu2.v\
 ../rtl/tmu2_ctlif.v \
 ../rtl/tmu2_fetchvertex.v \
@@ -32,9 +31,8 @@ DSP48.v \
 ../rtl/tmu2_dpram.v \
 ../rtl/tmu2_dpram_sw.v \
 ../rtl/tmu2_hdiv.v \
-../rtl/tmu2_wb_datamem.v \
-../rtl/tmu2_wb_tagmem.v \
-../rtl/tmu2_writebuffer.v \
+../rtl/tmu2_burst.v \
+../rtl/tmu2_pixout.v \
 ../rtl/tmu2.v \
 ../rtl/tmu2_ctlif.v \
 ../rtl/tmu2_fetchvertex.v \

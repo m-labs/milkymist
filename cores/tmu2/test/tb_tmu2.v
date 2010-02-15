@@ -148,6 +148,7 @@ begin
 	read_addr2 = read_addr[20:0]/2;
 	x = read_addr2 % 640;
 	y = read_addr2 / 640;
+	$display("coord: %d %d", x, y);
 	$image_get(x + 0, y, p1);
 	$image_get(x + 1, y, p2);
 	$image_get(x + 2, y, p3);

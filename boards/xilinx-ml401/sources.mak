@@ -40,9 +40,8 @@ TMU_SRC=						\
 	$(CORES_DIR)/tmu2/rtl/tmu2_clamp.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_dpram_sw.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_hdiv.v		\
-	$(CORES_DIR)/tmu2/rtl/tmu2_wb_datamem.v		\
-	$(CORES_DIR)/tmu2/rtl/tmu2_wb_tagmem.v		\
-	$(CORES_DIR)/tmu2/rtl/tmu2_writebuffer.v	\
+	$(CORES_DIR)/tmu2/rtl/tmu2_burst.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_pixout.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2.v			\
 	$(CORES_DIR)/tmu2/rtl/tmu2_ctlif.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_fetchvertex.v	\
