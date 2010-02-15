@@ -224,20 +224,20 @@ void compiler_get_initial_regs(struct compiler_state *sc, struct compiler_initia
 void print_opcode(int opcode)
 {
 	switch(opcode) {
-		case PFPU_OPCODE_NOP:   printf("NOP   "); break;
-		case PFPU_OPCODE_FADD:  printf("FADD  "); break;
-		case PFPU_OPCODE_FSUB:  printf("FSUB  "); break;
-		case PFPU_OPCODE_FMUL:  printf("FMUL  "); break;
-		case PFPU_OPCODE_FDIV:  printf("FDIV  "); break;
-		case PFPU_OPCODE_F2I:   printf("F2I   "); break;
-		case PFPU_OPCODE_I2F:   printf("I2F   "); break;
-		case PFPU_OPCODE_VECT:  printf("VECT  "); break;
-		case PFPU_OPCODE_SIN:   printf("SIN   "); break;
-		case PFPU_OPCODE_COS:   printf("COS   "); break;
-		case PFPU_OPCODE_ABOVE: printf("ABOVE "); break;
-		case PFPU_OPCODE_EQUAL: printf("EQUAL "); break;
-		case PFPU_OPCODE_COPY:  printf("COPY  "); break;
-		default:                printf("XXX   "); break;
+		case PFPU_OPCODE_NOP:     printf("NOP     "); break;
+		case PFPU_OPCODE_FADD:    printf("FADD    "); break;
+		case PFPU_OPCODE_FSUB:    printf("FSUB    "); break;
+		case PFPU_OPCODE_FMUL:    printf("FMUL    "); break;
+		case PFPU_OPCODE_FDIV:    printf("FDIV    "); break;
+		case PFPU_OPCODE_F2I:     printf("F2I     "); break;
+		case PFPU_OPCODE_I2F:     printf("I2F     "); break;
+		case PFPU_OPCODE_VECTOUT: printf("VECTOUT "); break;
+		case PFPU_OPCODE_SIN:     printf("SIN     "); break;
+		case PFPU_OPCODE_COS:     printf("COS     "); break;
+		case PFPU_OPCODE_ABOVE:   printf("ABOVE   "); break;
+		case PFPU_OPCODE_EQUAL:   printf("EQUAL   "); break;
+		case PFPU_OPCODE_COPY:    printf("COPY    "); break;
+		default:                  printf("XXX     "); break;
 	}
 }
 
@@ -248,7 +248,7 @@ int get_arity(int opcode)
 		case PFPU_OPCODE_FSUB:
 		case PFPU_OPCODE_FMUL:
 		case PFPU_OPCODE_FDIV:
-		case PFPU_OPCODE_VECT:
+		case PFPU_OPCODE_VECTOUT:
 		case PFPU_OPCODE_EQUAL:
 		case PFPU_OPCODE_ABOVE:
 			return 2;

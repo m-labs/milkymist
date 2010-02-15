@@ -44,6 +44,7 @@ wire [1:0] flags;
 wire [3:0] opcode;
 wire [31:0] r;
 wire r_valid;
+wire dma_en;
 wire err_collision;
 pfpu_alu alu(
 	.sys_clk(sys_clk),
@@ -59,6 +60,8 @@ pfpu_alu alu(
 	.r(r),				/* < to register file */
 	.r_valid(r_valid),		/* < to register file */
 
+	.dma_en(dma_en),		/* < to DMA engine and sequencer */
+
 	.err_collision(err_collision)	/* < to control interface */
 );
 
@@ -72,8 +75,6 @@ wire [31:0] cr_dw;
 wire cr_w_en;
 wire [31:0] r0;
 wire [31:0] r1;
-wire dma_en;
-wire [31:0] dma_d;
 wire err_stray;
 pfpu_regf regf(
 	.sys_clk(sys_clk),
@@ -95,11 +96,8 @@ pfpu_regf regf(
 	.c_di(cr_dw),		/* < from control interface */
 	.c_w_en(cr_w_en),	/* < from control interface */
 	
-	.r0(r0),		/* < from address generator */
-	.r1(r1),		/* < from address generator */
-	
-	.dma_en(dma_en),	/* < to DMA engine and sequencer */
-	.dma_d(dma_d),		/* < to DMA engine */
+	.r0(r0),		/* < from counters */
+	.r1(r1),		/* < from counters */
 
 	.err_stray(err_stray)	/* < to control interface */
 );
@@ -112,9 +110,12 @@ pfpu_dma dma(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
-	.dma_en(dma_en),		/* < from register file */
-	.dma_adr(dma_adr),		/* < from address generator */
-	.dma_d(dma_d),			/* < from register file */
+	.dma_en(dma_en),		/* < from ALU */
+	.dma_base(dma_base),		/* < from control interface */
+	.x(r0[6:0]),			/* < from counters */
+	.y(r1[6:0]),			/* < from counters */
+	.dma_d1(a),			/* < from register file */
+	.dma_d2(b),			/* < from register file */
 
 	.busy(dma_busy),		/* < to sequencer */
 	.ack(dma_ack),			/* < to sequencer */
@@ -130,23 +131,20 @@ pfpu_dma dma(
 
 wire vfirst;
 wire vnext;
-wire [29:0] dma_base;
 wire [6:0] hmesh_last;
 wire [6:0] vmesh_last;
 wire vlast;
-pfpu_addrgen addrgen(
+pfpu_counters counters(
 	.sys_clk(sys_clk),
 	
 	.first(vfirst),			/* < from sequencer */
 	.next(vnext),			/* < from sequencer */
 	
-	.dma_base(dma_base),		/* < from control interface */
 	.hmesh_last(hmesh_last),	/* < from control interface */
 	.vmesh_last(vmesh_last),	/* < from control interface */
 	
 	.r0(r0),			/* < to register file */
 	.r1(r1),			/* < to register file */
-	.dma_adr(dma_adr),		/* < to DMA engine */
 	.last(vlast)			/* < to sequencer */
 );
 
@@ -184,13 +182,13 @@ pfpu_seq seq(
 	
 	.alu_rst(alu_rst),		/* < to ALU */
 	
-	.dma_en(dma_en),		/* < from register file */
+	.dma_en(dma_en),		/* < from ALU */
 	.dma_busy(dma_busy),		/* < from DMA engine */
 	.dma_ack(dma_ack),		/* < from DMA engine */
 	
-	.vfirst(vfirst),		/* < to address generator */
-	.vnext(vnext),			/* < to address generator and control interface */
-	.vlast(vlast),			/* < from address generator */
+	.vfirst(vfirst),		/* < to counters */
+	.vnext(vnext),			/* < to counters and control interface */
+	.vlast(vlast),			/* < from counters */
 	
 	.pcount_rst(pcount_rst),	/* < to program memory */
 	.c_en(c_en),			/* < to register file and program memory */
@@ -215,9 +213,9 @@ pfpu_ctlif #(
 	.start(start),			/* < to sequencer */
 	.busy(busy),			/* < from sequencer */
 	
-	.dma_base(dma_base),		/* < to address generator */
-	.hmesh_last(hmesh_last),	/* < to address generator */
-	.vmesh_last(vmesh_last),	/* < to address generator */
+	.dma_base(dma_base),		/* < to DMA engine */
+	.hmesh_last(hmesh_last),	/* < to counters */
+	.vmesh_last(vmesh_last),	/* < to counters */
 	
 	.cr_addr(cr_addr),		/* < to register file */
 	.cr_di(cr_dr),			/* < from register file */

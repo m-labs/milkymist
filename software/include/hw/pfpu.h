@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@
 #define PFPU_OPCODE_FDIV	(0x4)
 #define PFPU_OPCODE_F2I		(0x5)
 #define PFPU_OPCODE_I2F		(0x6)
-#define PFPU_OPCODE_VECT	(0x7)
+#define PFPU_OPCODE_VECTOUT	(0x7)
 #define PFPU_OPCODE_SIN		(0x8)
 #define PFPU_OPCODE_COS		(0x9)
 #define PFPU_OPCODE_ABOVE	(0xa)
@@ -59,7 +59,7 @@
 #define PFPU_LATENCY_FDIV	(0) /* TODO */
 #define PFPU_LATENCY_F2I	(2)
 #define PFPU_LATENCY_I2F	(3)
-#define PFPU_LATENCY_VECT	(2)
+#define PFPU_LATENCY_VECTOUT	(0)
 #define PFPU_LATENCY_SIN	(4)
 #define PFPU_LATENCY_COS	(4)
 #define PFPU_LATENCY_ABOVE	(2)
@@ -73,13 +73,12 @@
 #define PFPU_REG_X		(0)
 #define PFPU_REG_Y		(1)
 #define PFPU_REG_FLAGS		(2)
-#define PFPU_REG_OUT		(127)
 
 #define PFPU_TRIG_CONV		(8192.0/(2.0*3.14159265358))
 
 static inline int pfpu_is_reserved(int reg)
 {
-	return (reg == PFPU_REG_X)||(reg == PFPU_REG_Y)||(reg == PFPU_REG_FLAGS)||(reg == PFPU_REG_OUT);
+	return (reg == PFPU_REG_X)||(reg == PFPU_REG_Y)||(reg == PFPU_REG_FLAGS);
 }
 
 typedef union {

@@ -41,16 +41,12 @@ module pfpu_regf(
 	/* Address Generator interface */
 	input [31:0] r0,
 	input [31:0] r1,
-	
-	/* DMA interface */
-	output dma_en,
-	output [31:0] dma_d,
-	
+
 	output err_stray
 );
 
 /* Triple-port RAM for most of the registers.
- * R0, R1, R2 and R127 are overlaid on top of it.
+ * R0, R1 and R2 are overlaid on top of it.
  */
 wire [6:0] p1_a;
 wire [31:0] p1_d;
@@ -130,9 +126,5 @@ end
 
 /* Catch writes to register 0 */
 assign err_stray = p3_en & (p3_a == 7'd0);
-
-/* Catch writes to DMA Output Register (R127) */
-assign dma_en = p3_en & (p3_a == 7'd127);
-assign dma_d = p3_d;
 
 endmodule

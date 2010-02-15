@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,8 +44,8 @@ static float bass_att, mid_att, treb_att;
 static struct eval_state *eval;
 static int eval_ready;
 
-static struct rpipe_frame frame1;
-static struct rpipe_frame frame2;
+static struct rpipe_frame frame1 __attribute__((aligned(8)));
+static struct rpipe_frame frame2 __attribute__((aligned(8)));
 static int frame1_free;
 static int frame2_free;
 

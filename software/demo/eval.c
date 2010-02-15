@@ -187,10 +187,7 @@ static int generate_perframe(struct eval_state *sc, struct preset *ast)
 	scheduler_dont_touch(&scheduler, compiler.terminals);
 	scheduler_schedule(&scheduler, compiler.prog, compiler.prog_length);
 	/* patch the program to make a dummy DMA at the end (otherwise PFPU never finishes) */
-	scheduler.prog[scheduler.last_exit].i.opcode = PFPU_OPCODE_COPY;
-	scheduler.last_exit += PFPU_LATENCY_COPY;
-	if(scheduler.last_exit >= PFPU_PROGSIZE) return 0;
-	scheduler.prog[scheduler.last_exit].i.dest = PFPU_REG_OUT;
+	scheduler.prog[scheduler.last_exit].i.opcode = PFPU_OPCODE_VECTOUT;
 
 	#ifdef EVAL_DEBUG
 	printf("======== Per-frame HW program ========\n");
@@ -262,10 +259,9 @@ static int generate_pervertex(struct eval_state *sc, struct preset *ast)
 		sc->pervertex_regs[i] = 0.0f;
 	sc->pervertex_regs[3] = 1.0f/(float)sc->hmeshlast;
 	sc->pervertex_regs[4] = 1.0f/(float)sc->vmeshlast;
-	sc->pervertex_regs[5] = (float)sc->hres;
-	sc->pervertex_regs[6] = (float)sc->vres;
+	sc->pervertex_regs[5] = (float)sc->hres*(1 << TMU_FIXEDPOINT_SHIFT);
+	sc->pervertex_regs[6] = (float)sc->vres*(1 << TMU_FIXEDPOINT_SHIFT);
 	sc->pervertex_regs[13] = PFPU_TRIG_CONV;
-	sc->pervertex_regs[14] = (1 << TMU_FIXEDPOINT_SHIFT);
 
 	vlen = 0;
 	
@@ -313,16 +309,12 @@ static int generate_pervertex(struct eval_state *sc, struct preset *ast)
 	ADD_ISN(PFPU_OPCODE_FADD,	FR( 30), BR( 10), FR( 20)); /* FR20: X */
 	ADD_ISN(PFPU_OPCODE_FADD,	FR( 31), BR( 11), FR( 21)); /* FR21: Y */
 
-	/* Multiply to support the TMU fixed point format */
-	ADD_ISN(PFPU_OPCODE_FMUL,	FR( 20), BR( 14), FR( 25)); /* FR25: X*FP */
-	ADD_ISN(PFPU_OPCODE_FMUL,	FR( 21), BR( 14), FR( 26)); /* FR26: Y*FP */
-
 	/* Convert to screen coordinates and generate vertex */
-	ADD_ISN(PFPU_OPCODE_FMUL,	FR( 25), BR(  5), FR( 22)); /* FR22: X screen float */
-	ADD_ISN(PFPU_OPCODE_FMUL,	FR( 26), BR(  6), FR( 23)); /* FR23: Y screen float */
+	ADD_ISN(PFPU_OPCODE_FMUL,	FR( 20), BR(  5), FR( 22)); /* FR22: X screen float */
+	ADD_ISN(PFPU_OPCODE_FMUL,	FR( 21), BR(  6), FR( 23)); /* FR23: Y screen float */
 	ADD_ISN(PFPU_OPCODE_F2I,	FR( 22), BR(  0), FR( 24)); /* FR26: X screen integer */
 	ADD_ISN(PFPU_OPCODE_F2I,	FR( 23), BR(  0), FR( 25)); /* FR27: Y screen integer */
-	ADD_ISN(PFPU_OPCODE_VECT,	FR( 25), FR( 24), BR(127)); /* put out vector */
+	ADD_ISN(PFPU_OPCODE_VECTOUT,	FR( 25), FR( 24), BR(  0)); /* put out vector */
 
 #undef BR
 #undef FR
@@ -333,7 +325,6 @@ static int generate_pervertex(struct eval_state *sc, struct preset *ast)
 	for(i=0;i<EVAL_PVV_COUNT;i++)
 		scheduler.dont_touch[sc->pvv_allocation[i]] = 1;
 	scheduler.dont_touch[13] = 1; /* PFPU_TRIG_CONV */
-	scheduler.dont_touch[14] = 1; /* 1 << TMU_FIXEDPOINT_SHIFT */
 
 	scheduler_schedule(&scheduler, vprog, vlen);
 

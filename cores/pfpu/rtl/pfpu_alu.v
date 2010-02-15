@@ -27,6 +27,8 @@ module pfpu_alu(
 	
 	output [31:0] r,
 	output r_valid,
+
+	output reg dma_en,
 	
 	output err_collision
 );
@@ -39,6 +41,14 @@ always @(posedge sys_clk) begin
 		opcode_r <= 4'd0;
 	else
 		opcode_r <= opcode;
+end
+
+/* Detect VECTOUT opcodes and trigger DMA */
+always @(posedge sys_clk) begin
+	if(alu_rst)
+		dma_en <= 1'b0;
+	else
+		dma_en <= opcode == 4'h7;
 end
 
 /* Computation units */
@@ -111,20 +121,6 @@ pfpu_i2f i2f(
 	.valid_o(i2f_valid)
 );
 
-wire vect_valid;
-wire [31:0] r_vect;
-pfpu_vect vect(
-	.sys_clk(sys_clk),
-	.alu_rst(alu_rst),
-	
-	.a(a),
-	.b(b),
-	.valid_i(opcode_r == 4'h7),
-	
-	.r(r_vect),
-	.valid_o(vect_valid)
-);
-
 wire sincos_valid;
 wire [31:0] r_sincos;
 pfpu_sincos sincos(
@@ -187,7 +183,6 @@ assign r =
 	|({32{fdiv_valid}}	& r_fdiv)
 	|({32{f2i_valid}}	& r_f2i)
 	|({32{i2f_valid}}	& r_i2f)
-	|({32{vect_valid}}	& r_vect)
 	|({32{sincos_valid}}	& r_sincos)
 	|({32{above_valid}}	& r_above)
 	|({32{equal_valid}}	& r_equal)
@@ -199,19 +194,17 @@ assign r_valid =
 	|fdiv_valid
 	|f2i_valid
 	|i2f_valid
-	|vect_valid
 	|sincos_valid
 	|above_valid
 	|equal_valid
 	|copy_valid;
 
 assign err_collision =
-	 (faddsub_valid & (fmul_valid|fdiv_valid|f2i_valid|i2f_valid|vect_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(fmul_valid    & (fdiv_valid|f2i_valid|i2f_valid|vect_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(fdiv_valid    & (f2i_valid|i2f_valid|vect_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(f2i_valid     & (i2f_valid|vect_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(i2f_valid     & (vect_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(vect_valid    & (sincos_valid|above_valid|equal_valid|copy_valid))
+	 (faddsub_valid & (fmul_valid|fdiv_valid|f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
+	|(fmul_valid    & (fdiv_valid|f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
+	|(fdiv_valid    & (f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
+	|(f2i_valid     & (i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
+	|(i2f_valid     & (sincos_valid|above_valid|equal_valid|copy_valid))
 	|(sincos_valid  & (above_valid|equal_valid|copy_valid))
 	|(above_valid   & (equal_valid|copy_valid))
 	|(equal_valid   & (copy_valid));

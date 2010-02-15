@@ -20,14 +20,17 @@ module pfpu_dma(
 	input sys_rst,
 
 	input dma_en,
-	input [31:0] dma_adr,
-	input [31:0] dma_d,
+	input [28:0] dma_base,
+	input [6:0] x,
+	input [6:0] y,
+	input [31:0] dma_d1,
+	input [31:0] dma_d2,
 
 	output ack,
 	output busy,
 
 	output [31:0] wbm_dat_o,
-	output [31:0] wbm_adr_o,
+	output reg [31:0] wbm_adr_o,
 	output wbm_cyc_o,
 	output wbm_stb_o,
 	input wbm_ack_i,
@@ -37,17 +40,19 @@ module pfpu_dma(
 
 /* FIFO logic */
 
+parameter q_width = 7+7+64;
+
 wire q_p;
 wire q_c;
-wire [63:0] q_i;
-wire [63:0] q_o;
+wire [q_width-1:0] q_i;
+wire [q_width-1:0] q_o;
 wire full;
 wire empty;
 
 reg [1:0] produce;
 reg [1:0] consume;
 reg [2:0] level;
-reg [63:0] wq[0:3];
+reg [q_width-1:0] wq[0:3];
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
@@ -85,13 +90,30 @@ end
 // synthesis translate_on
 
 /* Interface */
+reg write_y;
+
 assign q_p = dma_en;
-assign q_c = wbm_ack_i;
-assign q_i = {dma_d, dma_adr};
-assign wbm_dat_o = q_o[63:32];
-assign wbm_adr_o = q_o[31:0];
-assign wbm_cyc_o = ~empty;
-assign wbm_stb_o = ~empty;
+assign q_c = wbm_ack_i & write_y;
+assign q_i = {dma_d1, dma_d2, y, x};
+
+always @(posedge sys_clk)
+	wbm_adr_o <= {dma_base, 3'd0} + {q_o[13:0], write_y, 2'd0};
+
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		write_y <= 1'b0;
+	else if(wbm_ack_i) write_y <= ~write_y;
+end
+
+assign wbm_dat_o = write_y ? q_o[45:14] : q_o[q_width-1:46];
+
+reg address_not_valid_yet;
+always @(posedge sys_clk)
+	address_not_valid_yet <= q_c;
+
+assign wbm_cyc_o = ~empty & ~address_not_valid_yet;
+assign wbm_stb_o = ~empty & ~address_not_valid_yet;
+
 assign ack = ~full;
 assign busy = ~empty;
 assign dma_pending = level;

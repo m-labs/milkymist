@@ -32,7 +32,7 @@ module pfpu_ctlif #(
 	input busy,
 	
 	/* Address generator interface */
-	output reg [29:0] dma_base,
+	output reg [28:0] dma_base,
 	output reg [6:0] hmesh_last,
 	output reg [6:0] vmesh_last,
 	
@@ -85,7 +85,7 @@ always @(posedge sys_clk) begin
 		irq <= 1'b0;
 		start <= 1'b0;
 		
-		dma_base <= 30'd0;
+		dma_base <= 29'd0;
 		hmesh_last <= 7'd0;
 		vmesh_last <= 7'd0;
 		cp_page <= 2'd0;
@@ -110,7 +110,7 @@ always @(posedge sys_clk) begin
 		case(csr_a[3:0])
 			4'b0000: csr_do_r <= busy;
 
-			4'b0001: csr_do_r <= {dma_base, 2'b00};
+			4'b0001: csr_do_r <= {dma_base, 3'b000};
 			4'b0010: csr_do_r <= hmesh_last;
 			4'b0011: csr_do_r <= vmesh_last;
 
@@ -147,7 +147,7 @@ always @(posedge sys_clk) begin
 						collision_counter <= 11'd0;
 						stray_counter <= 11'd0;
 					end
-					3'b001: dma_base <= csr_di[31:2];
+					3'b001: dma_base <= csr_di[31:3];
 					3'b010: hmesh_last <= csr_di[6:0];
 					3'b011: vmesh_last <= csr_di[6:0];
 					3'b100: cp_page <= csr_di[1:0];
