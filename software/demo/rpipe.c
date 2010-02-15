@@ -54,7 +54,7 @@ static unsigned short texbufferB[512*512];
 static unsigned short *tex_frontbuffer;
 static unsigned short *tex_backbuffer;
 
-static struct tmu_vertex scale_tex_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
+static struct tmu_vertex scale_tex_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
 
 #define SPAM_W		75
 #define SPAM_H		75
@@ -62,7 +62,7 @@ static struct tmu_vertex scale_tex_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 #define SPAM_Y		30
 #define SPAM_CHROMAKEY	0x001f
 
-static struct tmu_vertex spam_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
+static struct tmu_vertex spam_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
 
 void rpipe_init()
 {
@@ -116,7 +116,7 @@ static void rpipe_start(struct rpipe_frame *frame)
 {
 	tmu_task1.flags = 0;
 	tmu_task1.hmeshlast = renderer_hmeshlast;
-	tmu_task1.vmeshlast = renderer_hmeshlast;
+	tmu_task1.vmeshlast = renderer_vmeshlast;
 	tmu_task1.brightness = frame->brightness;
 	tmu_task1.chromakey = 0;
 	tmu_task1.vertices = &frame->vertices[0][0];
@@ -274,7 +274,7 @@ static void rpipe_draw_waves()
 			break;
 	}
 
-	wave_draw(tex_backbuffer, vga_hres, vga_vres, &params, vertices, nvertices);
+	wave_draw(tex_backbuffer, renderer_texsize, renderer_texsize, &params, vertices, nvertices);
 }
 
 static void rpipe_tmu_copydone(struct tmu_td *td)

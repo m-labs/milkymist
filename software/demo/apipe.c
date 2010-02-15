@@ -112,7 +112,7 @@ void apipe_stop()
 
 static struct pfpu_td pfpu_td;
 
-//#define DUMP_MESH
+#define DUMP_MESH
 
 static void pvv_callback(struct pfpu_td *td)
 {
@@ -124,8 +124,8 @@ static void pvv_callback(struct pfpu_td *td)
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
 	#ifdef DUMP_MESH
-	for(y=0;y<6;y++) {
-		for(x=0;x<6;x++)
+	for(y=10;y<13;y++) {
+		for(x=10;x<13;x++)
 			printf("(%02d %02d) ", rpipe_frame->vertices[y][x].y, rpipe_frame->vertices[y][x].x);
 		printf("\n");
 	}

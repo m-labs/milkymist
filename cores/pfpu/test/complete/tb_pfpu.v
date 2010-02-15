@@ -50,7 +50,7 @@ always @(posedge sys_clk) begin
 		if(wbm_stb_o & ~wbm_ack_i & (($random % 200) == 0)) begin
 			wbm_ack_i <= 1'b1;
 			$fromfloat(wbm_dat_o, r);
-			$display("DMA write addr %x:%x (%d;%d - %f - %d %d)", wbm_adr_o, wbm_dat_o, wbm_adr_o[8:2], wbm_adr_o[15:9], r, wbm_dat_o[31:16], wbm_dat_o[15:0]);
+			$display("DMA write addr %x:%x (%b - %f)", wbm_adr_o, wbm_dat_o, wbm_adr_o[2], r);
 		end
 	end
 end
@@ -166,7 +166,7 @@ always begin
 	csrwrite(32'h0814, 32'b0000000_0000011_0000100_0111_0000000); /* VECTOUT R3, R4 */
 	
 	/* DMA base */
-	csrwrite(32'h0004, 32'h12340000);
+	csrwrite(32'h0004, 32'h401de328);
 	
 	/* Start */
 	csrwrite(32'h0000, 32'h00000001);
@@ -197,6 +197,9 @@ always begin
 	csrwrite(32'h0820, 32'b0000000_0000000_0000000_0000_0000000); /* NOP */
 	csrwrite(32'h0824, 32'b0000000_0000000_0000000_0000_0000101); /* NOP | EXIT R5 */
 	csrwrite(32'h0828, 32'b0000000_0000101_0000101_0111_0000000); /* VECTOUT R5, R5 */
+
+	/* DMA base */
+	csrwrite(32'h0004, 32'h401de328);
 	
 	/* Start */
 	csrwrite(32'h0000, 32'h00000001);

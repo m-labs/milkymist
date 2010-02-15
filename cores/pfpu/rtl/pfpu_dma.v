@@ -29,7 +29,7 @@ module pfpu_dma(
 	output ack,
 	output busy,
 
-	output [31:0] wbm_dat_o,
+	output reg [31:0] wbm_dat_o,
 	output reg [31:0] wbm_adr_o,
 	output wbm_cyc_o,
 	output wbm_stb_o,
@@ -96,8 +96,14 @@ assign q_p = dma_en;
 assign q_c = wbm_ack_i & write_y;
 assign q_i = {dma_d1, dma_d2, y, x};
 
-always @(posedge sys_clk)
+always @(posedge sys_clk) begin
 	wbm_adr_o <= {dma_base, 3'd0} + {q_o[13:0], write_y, 2'd0};
+	wbm_dat_o <= write_y ? q_o[45:14] : q_o[q_width-1:46];
+end
+
+reg bus_not_valid_yet;
+always @(posedge sys_clk)
+	bus_not_valid_yet <= wbm_ack_i;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -105,14 +111,8 @@ always @(posedge sys_clk) begin
 	else if(wbm_ack_i) write_y <= ~write_y;
 end
 
-assign wbm_dat_o = write_y ? q_o[45:14] : q_o[q_width-1:46];
-
-reg address_not_valid_yet;
-always @(posedge sys_clk)
-	address_not_valid_yet <= q_c;
-
-assign wbm_cyc_o = ~empty & ~address_not_valid_yet;
-assign wbm_stb_o = ~empty & ~address_not_valid_yet;
+assign wbm_cyc_o = ~empty & ~bus_not_valid_yet;
+assign wbm_stb_o = ~empty & ~bus_not_valid_yet;
 
 assign ack = ~full;
 assign busy = ~empty;

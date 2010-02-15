@@ -241,9 +241,9 @@ static void checker()
  * This test should only be run when the driver task queue
  * is empty.
  */
+static struct tmu_vertex mesh[128][128] __attribute__((aligned(8)));
 static void pfputest()
 {
-	unsigned int mesh[128][128];
 	unsigned int *pfpu_regs = (unsigned int *)CSR_PFPU_DREGBASE;
 	unsigned int *pfpu_code = (unsigned int *)CSR_PFPU_CODEBASE;
 	int x, y;
@@ -255,10 +255,12 @@ static void pfputest()
 	irq_setmask(oldmask & (~IRQ_PFPU));
 
 	for(y=0;y<128;y++)
-		for(x=0;x<128;x++)
-			mesh[y][x] = 0xdeadbeef;
+		for(x=0;x<128;x++) {
+			mesh[y][x].x = 0xdeadbeef;
+			mesh[y][x].y = 0xdeadbeef;
+		}
 
-	CSR_PFPU_MESHBASE = (unsigned int)mesh;
+	CSR_PFPU_MESHBASE = (unsigned int)&mesh;
 	//CSR_PFPU_HMESHLAST = 6;
 	//CSR_PFPU_VMESHLAST = 9;
 
@@ -277,7 +279,8 @@ static void pfputest()
 	pfpu_code[ 6] = 0x00000000;
 	pfpu_code[ 7] = 0x00000000;
 	pfpu_code[ 8] = 0x00000000;
-	pfpu_code[ 9] = 0x0000007f;
+	pfpu_code[ 9] = 0x00000005;
+	pfpu_code[10] = 0x00142b80;
 
 	/*printf("Program:\n");
 	for(x=0;x<10;x++)
@@ -304,12 +307,18 @@ static void pfputest()
 	printf("Result:\n");
 	for(y=0;y<10;y++) {
 		for(x=0;x<12;x++)
-			printf("%08x ", mesh[y][x]);
+			printf("%08x ", mesh[y][x].x);
+		printf("\n");
+	}
+	printf("\n");
+	for(y=0;y<10;y++) {
+		for(x=0;x<12;x++)
+			printf("%08x ", mesh[y][x].y);
 		printf("\n");
 	}
 
 	printf("Program:\n");
-	for(x=0;x<10;x++)
+	for(x=0;x<11;x++)
 		printf("%08x ", pfpu_code[x]);
 	printf("\n");
 

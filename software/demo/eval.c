@@ -314,7 +314,7 @@ static int generate_pervertex(struct eval_state *sc, struct preset *ast)
 	ADD_ISN(PFPU_OPCODE_FMUL,	FR( 21), BR(  6), FR( 23)); /* FR23: Y screen float */
 	ADD_ISN(PFPU_OPCODE_F2I,	FR( 22), BR(  0), FR( 24)); /* FR26: X screen integer */
 	ADD_ISN(PFPU_OPCODE_F2I,	FR( 23), BR(  0), FR( 25)); /* FR27: Y screen integer */
-	ADD_ISN(PFPU_OPCODE_VECTOUT,	FR( 25), FR( 24), BR(  0)); /* put out vector */
+	ADD_ISN(PFPU_OPCODE_VECTOUT,	FR( 24), FR( 25), BR(  0)); /* put out vector */
 
 #undef BR
 #undef FR
