@@ -634,6 +634,11 @@ tmu2_texcache #(
 	.y_frac_f(y_frac_f)
 );
 
+/*always @(posedge sys_clk) begin
+	if(texcache_pipe_stb & texcache_pipe_ack)
+		$display("c: %x - %d, %d", tcolora, tex_hres, tex_vres);
+end*/
+
 /* Stage 11 - Blend neighbouring pixels for bilinear filtering */
 wire blend_busy;
 wire blend_pipe_stb;

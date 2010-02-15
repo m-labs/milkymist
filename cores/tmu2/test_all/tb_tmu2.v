@@ -123,9 +123,9 @@ always @(posedge sys_clk) begin
 		y = wbm_adr_o[16:10];
 
 		if(wbm_adr_o[2])
-			wbm_dat_i = y*7*64;
+			wbm_dat_i = y*800*64;
 		else
-			wbm_dat_i = x*7*64;
+			wbm_dat_i = x*800*64;
 		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
@@ -146,8 +146,8 @@ reg [15:0] p3;
 reg [15:0] p4;
 begin
 	read_addr2 = read_addr[20:0]/2;
-	x = read_addr2 % 512;
-	y = read_addr2 / 512;
+	x = read_addr2 % 640;
+	y = read_addr2 / 640;
 	$image_get(x + 0, y, p1);
 	$image_get(x + 1, y, p2);
 	$image_get(x + 2, y, p3);
@@ -166,7 +166,7 @@ always @(posedge sys_clk) begin
 			
 			handle_read;
 
-			//$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
+			$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 			
 			fmlr_ack = 1'b1;
 		end
@@ -176,7 +176,7 @@ always @(posedge sys_clk) begin
 		
 		handle_read;
 
-		//$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
+		$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 		
 		if(read_burstcount == 4)
 			read_burstcount = 0;
@@ -191,7 +191,6 @@ task handle_write;
 integer write_addr2;
 integer x;
 integer y;
-reg [15:0] expected;
 begin
 	write_addr2 = write_addr[20:0]/2;
 	x = write_addr2 % 640;
@@ -256,10 +255,12 @@ always begin
 	/* Setup */
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 10); /* hmeshlast */
-	csrwrite(32'h08, 10); /* vmeshlast */
-	csrwrite(32'h40, 16); /* squarew */
-	csrwrite(32'h44, 16); /* squareh */
+	csrwrite(32'h04, 1); /* hmeshlast */
+	csrwrite(32'h08, 1); /* vmeshlast */
+	csrwrite(32'h1C, 640); /* texhres */
+	csrwrite(32'h20, 480); /* texhres */
+	csrwrite(32'h40, 153); /* squarew */
+	csrwrite(32'h44, 107); /* squareh */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);
