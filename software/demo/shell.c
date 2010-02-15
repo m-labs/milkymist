@@ -367,12 +367,13 @@ static void tmutest()
 	vga_swap_buffers();
 }
 
+static unsigned short original[640*480*2] __attribute__((aligned(2)));
+
 static void tmudemo()
 {
 	int size;
 	unsigned int oldmask;
 	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
-	static unsigned short original[640*480*2] __attribute__((aligned(2)));
 	struct tmu_td td;
 	volatile int complete;
 	int w, speed;
@@ -382,16 +383,18 @@ static void tmudemo()
 	if(!cffat_load("lena.raw", (void *)original, vga_hres*vga_vres*2, &size)) return;
 	cffat_done();
 
-	/* Disable UI keys */
+	printf("done\n");
+	
+	/* Disable UI keys and slowout */
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_GPIO));
+	irq_setmask(oldmask & (~IRQ_GPIO) & (~IRQ_TIMER1));
 	
 	speed = 0;
 	w = 512 << TMU_FIXEDPOINT_SHIFT;
 
 	xdelta = 0;
 	ydelta = 0;
-	while(!readchar_nonblock()) {
+	while(1) {
 		srcmesh[0][0].x = xdelta;
 		srcmesh[0][0].y = ydelta;
 		srcmesh[0][1].x = w+xdelta;
@@ -457,8 +460,24 @@ static void tmudemo()
 
 		complete = 0;
 		flush_bridge_cache();
+		CSR_TIMER1_CONTROL = 0;
+		CSR_TIMER1_COUNTER = 0;
+		CSR_TIMER1_COMPARE = 0xffffffff;
+		CSR_TIMER1_CONTROL = TIMER_ENABLE;
 		tmu_submit_task(&td);
 		while(!complete);
+		CSR_TIMER1_CONTROL = 0;
+
+		if(readchar_nonblock()) {
+			char c;
+			c = readchar();
+			if(c == 'q') break;
+			if(c == 's') {
+				unsigned int t;
+				t = CSR_TIMER1_COUNTER;
+				printf("Processing cycles: %d (%d Mpixels/s)\n", t, 640*480*100/t);
+			}
+		}
 		vga_swap_buffers();
 	}
 	irq_ack(IRQ_GPIO);

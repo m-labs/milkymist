@@ -671,7 +671,7 @@ wire decay_pipe_ack;
 wire [15:0] color_d;
 wire [fml_depth-1-1:0] dadr_f3;
 
-tmu2_decay #( // TODO
+tmu2_decay #(
 	.fml_depth(fml_depth)
 ) decay (
 	.sys_clk(sys_clk),
@@ -685,13 +685,13 @@ tmu2_decay #( // TODO
 	
 	.pipe_stb_i(blend_pipe_stb),
 	.pipe_ack_o(blend_pipe_ack),
-	.src_pixel(color),
-	.dst_addr(dadr_f2),
+	.color(color),
+	.dadr(dadr_f2),
 	
 	.pipe_stb_o(decay_pipe_stb),
 	.pipe_ack_i(decay_pipe_ack),
-	.src_pixel_d(color_d),
-	.dst_addr1(dadr_f3)
+	.color_d(color_d),
+	.dadr_f(dadr_f3)
 );
 
 /* Stage 12 - Burst assembler */

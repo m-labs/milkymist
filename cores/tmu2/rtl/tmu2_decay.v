@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module tmu2_decay #( // TODO
+module tmu2_decay #(
 	parameter fml_depth = 26
 ) (
 	input sys_clk,
@@ -29,108 +29,69 @@ module tmu2_decay #( // TODO
 	
 	input pipe_stb_i,
 	output pipe_ack_o,
-	input [15:0] src_pixel,
-	input [fml_depth-1-1:0] dst_addr,
+	input [15:0] color,
+	input [fml_depth-1-1:0] dadr,
 	
 	output pipe_stb_o,
 	input pipe_ack_i,
-	output [15:0] src_pixel_d,
-	output reg [fml_depth-1-1:0] dst_addr1
+	output [15:0] color_d,
+	output reg [fml_depth-1-1:0] dadr_f
 );
 
 wire en;
-wire s0_valid;
-reg s1_valid;
-reg s2_valid;
-reg s3_valid;
-
-reg [15:0] src_pixel_r;
+reg valid_1;
+reg valid_2;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
-		s1_valid <= 1'b0;
-		s2_valid <= 1'b0;
-		s3_valid <= 1'b0;
+		valid_1 <= 1'b0;
+		valid_2 <= 1'b0;
 	end else if(en) begin
-		src_pixel_r <= src_pixel;
-		s1_valid <= s0_valid;
-		s2_valid <= s1_valid & ((src_pixel_r != chroma_key) | ~chroma_key_en);
-		s3_valid <= s2_valid;
+		valid_1 <= pipe_stb_i & ((color != chroma_key) | ~chroma_key_en);
+		valid_2 <= valid_1;
 	end
 end
 
-/* Pipeline operation on three stages. */
+/* Pipeline operation on two stages. */
 
-reg [fml_depth-1-1:0] s1_dst_addr;
-reg [fml_depth-1-1:0] s2_dst_addr;
-/* third stage register is output */
+reg [fml_depth-1-1:0] dadr_1;
 
-reg s1_full_brightness;
-reg s2_full_brightness;
-reg s3_full_brightness;
+wire [4:0] r = color[15:11];
+wire [5:0] g = color[10:5];
+wire [4:0] b = color[4:0];
 
-reg [15:0] s1_pixel_full;
-reg [15:0] s2_pixel_full;
-reg [15:0] s3_pixel_full;
+reg [10:0] r_1;
+reg [11:0] g_1;
+reg [10:0] b_1;
 
-wire [5:0] brightness1 = brightness + 6'd1;
-reg [5:0] s1_brightness1;
-
-wire [4:0] r = src_pixel[15:11];
-wire [5:0] g = src_pixel[10:5];
-wire [4:0] b = src_pixel[4:0];
-
-reg [4:0] s1_r;
-reg [5:0] s1_g;
-reg [4:0] s1_b;
-
-reg [10:0] s2_r;
-reg [11:0] s2_g;
-reg [10:0] s2_b;
-
-reg [10:0] s3_r;
-reg [11:0] s3_g;
-reg [10:0] s3_b;
+reg [10:0] r_2;
+reg [11:0] g_2;
+reg [10:0] b_2;
 
 always @(posedge sys_clk) begin
 	if(en) begin
-		s1_dst_addr <= dst_addr;
-		s2_dst_addr <= s1_dst_addr;
-		dst_addr1 <= s2_dst_addr;
+		dadr_1 <= dadr;
+		dadr_f <= dadr_1;
+
+		r_1 <= ({1'b0, brightness} + 7'd1)*r;
+		g_1 <= ({1'b0, brightness} + 7'd1)*g;
+		b_1 <= ({1'b0, brightness} + 7'd1)*b;
 		
-		s1_full_brightness <= brightness == 6'b111111;
-		s2_full_brightness <= s1_full_brightness;
-		s3_full_brightness <= s2_full_brightness;
-		
-		s1_pixel_full <= src_pixel;
-		s2_pixel_full <= s1_pixel_full;
-		s3_pixel_full <= s2_pixel_full;
-		
-		s1_r <= r;
-		s1_g <= g;
-		s1_b <= b;
-		s1_brightness1 <= brightness1;
-		
-		s2_r <= s1_brightness1*s1_r;
-		s2_g <= s1_brightness1*s1_g;
-		s2_b <= s1_brightness1*s1_b;
-		
-		s3_r <= s2_r;
-		s3_g <= s2_g;
-		s3_b <= s2_b;
+		r_2 <= r_1;
+		g_2 <= g_1;
+		b_2 <= b_1;
 	end
 end
 
-assign src_pixel_d = s3_full_brightness ? s3_pixel_full : {s3_r[10:6], s3_g[11:6], s3_b[10:6]};
+assign color_d = {r_2[10:6], g_2[11:6], b_2[10:6]};
 
 /* Pipeline management */
 
-assign busy = s1_valid|s2_valid|s3_valid;
+assign busy = valid_1 | valid_2;
 
-assign s0_valid = pipe_stb_i;
-assign pipe_ack_o = pipe_ack_i;
+assign pipe_ack_o = ~valid_2 | pipe_ack_i;
+assign en = ~valid_2 | pipe_ack_i;
 
-assign en = pipe_ack_i;
-assign pipe_stb_o = s3_valid;
+assign pipe_stb_o = valid_2;
 
 endmodule
