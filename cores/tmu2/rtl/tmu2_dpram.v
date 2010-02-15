@@ -37,10 +37,8 @@ module tmu2_dpram #(
 reg [width-1:0] ram[0:(1 << depth)-1];
 
 always @(posedge sys_clk) begin
-	if(we) begin
-		//$display("%m a=%x", a);
+	if(we)
 		ram[a] <= di;
-	end
 	do <= ram[a];
 end
 

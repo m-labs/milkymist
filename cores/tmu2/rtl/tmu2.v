@@ -664,7 +664,7 @@ tmu2_blend #(
 	.color(color)
 );
 
-/* Stage 11 - Apply decay effect. Chroma key filtering is also applied here. */
+/* Stage 11 - Apply decay effect and chroma key filtering. */
 wire decay_busy;
 wire decay_pipe_stb;
 wire decay_pipe_ack;
@@ -714,8 +714,8 @@ tmu2_burst #(
 
 	.pipe_stb_i(decay_pipe_stb),
 	.pipe_ack_o(decay_pipe_ack),
-	.src_pixel_d(color_d),
-	.dst_addr(dadr_f3),
+	.color(color_d),
+	.dadr(dadr_f3),
 
 	.pipe_stb_o(burst_pipe_stb),
 	.pipe_ack_i(burst_pipe_ack),
