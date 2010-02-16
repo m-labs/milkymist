@@ -202,8 +202,8 @@ static int wave_mode_5(struct wave_vertex *vertices)
 		x0 = 2.0*s1*s2;
 		y0 = s1*s1 - s2*s2;
 
-		vertices[i].x = (float)vga_hres*((x0*cos_rot - y0*sin_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_x);
-		vertices[i].y = (float)vga_vres*((x0*sin_rot + y0*cos_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_y);
+		vertices[i].x = (float)renderer_texsize*((x0*cos_rot - y0*sin_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_x);
+		vertices[i].y = (float)renderer_texsize*((x0*sin_rot + y0*cos_rot)*bh_frame->wave_scale*0.5 + bh_frame->wave_y);
 	}
 
 	return nvertices;
@@ -240,7 +240,7 @@ static void rpipe_draw_waves()
 	params.wave_r = bh_frame->wave_r;
 	params.wave_g = bh_frame->wave_g;
 	params.wave_b = bh_frame->wave_b;
-	params.wave_a = bh_frame->wave_a+10; // XXX HACK try to make picture less dark
+	params.wave_a = bh_frame->wave_a;
 	
 	params.treb = bh_frame->treb;
 

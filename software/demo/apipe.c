@@ -49,6 +49,8 @@ static struct rpipe_frame frame2 __attribute__((aligned(8)));
 static int frame1_free;
 static int frame2_free;
 
+static unsigned int all_frames;
+
 static struct rpipe_frame *alloc_rpipe_frame()
 {
 	if(frame1_free) return &frame1;
@@ -81,6 +83,7 @@ void apipe_init()
 	eval_ready = 1;
 	frame1_free = 1;
 	frame2_free = 1;
+	all_frames = 0;
 	printf("API: analysis pipeline ready\n");
 }
 
@@ -139,11 +142,22 @@ static void pvv_callback(struct pfpu_td *td)
 static void pfv_callback(struct pfpu_td *td)
 {
 	struct rpipe_frame *rpipe_frame;
+	int brightness256, brightness64, frame_mod;
 
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
-	// XXX HACK try to make picture less dark
-	rpipe_frame->brightness = 62; //63.0f*eval_read_pfv(eval, pfv_decay);
+	brightness256 = 257.0f*eval_read_pfv(eval, pfv_decay);
+	brightness64 = brightness256 >> 2;
+	brightness256 &= 3;
+	frame_mod = rpipe_frame->framenr & 3;
+	if((brightness256 == 1) && (frame_mod == 0))
+		brightness64++;
+	if((brightness256 == 2) && ((frame_mod == 0)||(frame_mod == 2)))
+		brightness64++;
+	if((brightness256 == 3) && (frame_mod != 3))
+		brightness64++;
+	if(brightness64 > 63) brightness64 = 63;
+	rpipe_frame->brightness = brightness64;
 
 	rpipe_frame->wave_mode = eval_read_pfv(eval, pfv_wave_mode);
 	rpipe_frame->wave_scale = eval_read_pfv(eval, pfv_wave_scale);
@@ -215,6 +229,7 @@ static void analyzer_bottom_half()
 
 	rpipe_frame->time = time;
 	rpipe_frame->treb = ftreb;
+	rpipe_frame->framenr = all_frames++;
 
 	eval_pfv_fill_td(eval, &pfpu_td, pfv_callback, rpipe_frame);
 	pfpu_submit_task(&pfpu_td);

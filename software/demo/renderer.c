@@ -27,9 +27,9 @@
 #include "apipe.h"
 #include "renderer.h"
 
-unsigned int renderer_hmeshlast;
-unsigned int renderer_vmeshlast;
-unsigned int renderer_texsize;
+int renderer_hmeshlast;
+int renderer_vmeshlast;
+int renderer_texsize;
 
 void renderer_init()
 {

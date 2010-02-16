@@ -86,7 +86,11 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 	if(b > 31) b = 31;
 
 	ctx.color = MAKERGB565(r, g, b);
-	ctx.alpha = 64.0*wave_o; /* line drawing code treats >= 64 as 64, no need to clamp */
+	/*
+	 * HACK: Boost wave opacity (80 instead of 64).
+	 * Line drawing code treats >= 64 as 64, no need to clamp
+	 */
+	ctx.alpha = 80.0*wave_o;
 
 	// Original code:
 	// glLineStipple(2, 0xAAAA);

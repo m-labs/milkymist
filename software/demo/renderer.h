@@ -18,9 +18,9 @@
 #ifndef __RENDERER_H
 #define __RENDERER_H
 
-extern unsigned int renderer_hmeshlast;
-extern unsigned int renderer_vmeshlast;
-extern unsigned int renderer_texsize;
+extern int renderer_hmeshlast;
+extern int renderer_vmeshlast;
+extern int renderer_texsize;
 
 void renderer_init();
 int renderer_start(char *preset_code);

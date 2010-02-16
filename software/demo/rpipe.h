@@ -38,6 +38,7 @@ struct rpipe_frame {
 	float wave_r, wave_b, wave_g, wave_a;
 	float treb;
 	float time;
+	unsigned int framenr;
 	unsigned int nsamples; /* < audio samples */
 	short *samples;
 	rpipe_callback callback;
