@@ -36,4 +36,18 @@
 #define GETG(c) (((c) & GMASK) >> GSHIFT)
 #define GETB(c) (((c) & BMASK) >> BSHIFT)
 
+static inline short int float_to_rgb565(float rf, float gf, float bf)
+{
+	unsigned int r, g, b;
+	
+	r = 31.0*rf;
+	g = 63.0*gf;
+	b = 31.0*bf;
+	if(r > 31) r = 31;
+	if(g > 63) g = 63;
+	if(b > 31) b = 31;
+	
+	return MAKERGB565(r, g, b);
+}
+
 #endif /* __COLOR_H */

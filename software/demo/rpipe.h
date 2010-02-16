@@ -24,7 +24,7 @@ struct rpipe_frame;
 
 typedef void (*rpipe_callback)(struct rpipe_frame *frame);
 
-/* Align this structure to a 64-bit boundary so that HW is able to read vertices correctly */
+/* Align this structure to a 64-bit boundary so that HW is able to read/write vertices correctly */
 struct rpipe_frame {
 	struct tmu_vertex vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE];
 	unsigned int brightness;
@@ -35,7 +35,11 @@ struct rpipe_frame {
 	int wave_maximize_color;
 	int wave_thick;
 	float wave_x, wave_y;
-	float wave_r, wave_b, wave_g, wave_a;
+	float wave_r, wave_g, wave_b, wave_a;
+	float ob_size;
+	float ob_r, ob_g, ob_b, ob_a;
+	float ib_size;
+	float ib_r, ib_g, ib_b, ib_a;
 	int tex_wrap;
 	float treb;
 	float time;

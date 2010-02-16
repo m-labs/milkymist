@@ -27,6 +27,8 @@
 #include "renderer.h"
 #include "wave.h"
 #include "cpustats.h"
+#include "color.h"
+#include "line.h"
 #include "rpipe.h"
 
 #include "spam.h"
@@ -171,6 +173,57 @@ int rpipe_input(struct rpipe_frame *frame)
 	return 1;
 }
 
+static void border_rect(int x0, int y0, int x1, int y1, short int color, unsigned int alpha)
+{
+	int y;
+	struct line_context ctx;
+
+	line_init_context(&ctx, tex_backbuffer, renderer_texsize, renderer_texsize);
+	ctx.color = color;
+	ctx.alpha = alpha;
+	for(y=y0;y<=y1;y++)
+		hline(&ctx, y, x0, x1);
+}
+
+static void rpipe_draw_borders()
+{
+	unsigned int of;
+	unsigned int iff;
+	unsigned int texof;
+	short int ob_color, ib_color;
+	unsigned int ob_alpha, ib_alpha;
+	int cmax;
+
+	of = renderer_texsize*bh_frame->ob_size*.5;
+	iff = renderer_texsize*bh_frame->ib_size*.5;
+
+	if(of > 30) of = 30;
+	if(iff > 30) iff = 30;
+	
+	texof = renderer_texsize-of;
+	cmax = renderer_texsize-1;
+
+	if((of != 0) && (bh_frame->ob_a != 0.0)) {
+		ob_color = float_to_rgb565(bh_frame->ob_r, bh_frame->ob_g, bh_frame->ob_b);
+		ob_alpha = 80.0*bh_frame->ob_a;
+
+		border_rect(0, 0, of, cmax, ob_color, ob_alpha);
+		border_rect(of, 0, texof, of, ob_color, ob_alpha);
+		border_rect(texof, 0, cmax, cmax, ob_color, ob_alpha);
+		border_rect(of, texof, texof, cmax, ob_color, ob_alpha);
+	}
+
+	if((iff != 0) && (bh_frame->ib_a != 0.0)) {
+		ib_color = float_to_rgb565(bh_frame->ib_r, bh_frame->ib_g, bh_frame->ib_b);
+		ib_alpha = 80.0*bh_frame->ib_a;
+
+		border_rect(of, of, of+iff, texof, ib_color, ib_alpha);
+		border_rect(of+iff, of, texof-iff, of+iff, ib_color, ib_alpha);
+		border_rect(texof-iff, of, texof, texof, ib_color, ib_alpha);
+		border_rect(of+iff, texof-iff, texof-iff, texof, ib_color, ib_alpha);
+	}
+}
+
 /* TODO: implement missing wave modes */
 
 static int wave_mode_0(struct wave_vertex *vertices)
@@ -183,7 +236,7 @@ static int wave_mode_1(struct wave_vertex *vertices)
 	return 0;
 }
 
-static int wave_mode_2(struct wave_vertex *vertices)
+static int wave_mode_23(struct wave_vertex *vertices)
 {
 	int nvertices;
 	int i;
@@ -202,14 +255,31 @@ static int wave_mode_2(struct wave_vertex *vertices)
 	return nvertices;
 }
 
-static int wave_mode_3(struct wave_vertex *vertices)
-{
-	return 0;
-}
-
 static int wave_mode_4(struct wave_vertex *vertices)
 {
-	return 0;
+	int nvertices;
+	float wave_x;
+	int i;
+	float dy_adj;
+	float s1, s2;
+	float scale;
+
+	nvertices = 128;
+
+	// TODO: rotate using wave_mystery
+	wave_x = bh_frame->wave_x*.75 + .125;
+	scale = 4.0*(float)renderer_texsize/505.0;
+
+	for(i=1;i<=nvertices;i++) {
+		s1 = bh_frame->samples[8*i]/32768.0;
+		s2 = bh_frame->samples[8*i-2]/32768.0;
+		
+		dy_adj = s1*20.0*bh_frame->wave_scale-s2*20.0*bh_frame->wave_scale;
+		vertices[i-1].x = s1*20.0*bh_frame->wave_scale+(float)renderer_texsize*bh_frame->wave_x;
+		vertices[i-1].y = (i*scale)+dy_adj;
+	}
+
+	return nvertices;
 }
 
 static int wave_mode_5(struct wave_vertex *vertices)
@@ -240,10 +310,33 @@ static int wave_mode_5(struct wave_vertex *vertices)
 
 static int wave_mode_6(struct wave_vertex *vertices)
 {
-	return 0;
+	int nvertices;
+	int i;
+	float inc;
+	float offset;
+	float s;
+
+	nvertices = 128;
+
+	// TODO: rotate/scale by wave_mystery
+
+	inc = (float)renderer_texsize/(float)nvertices;
+	offset = (float)renderer_texsize*bh_frame->wave_x;
+	for(i=0;i<nvertices;i++) {
+		s = bh_frame->samples[8*i]/32768.0;
+		vertices[i].x = s*20.0*bh_frame->wave_scale+offset;
+		vertices[i].y = i*inc;
+	}
+	
+	return nvertices;
 }
 
 static int wave_mode_7(struct wave_vertex *vertices)
+{
+	return 0;
+}
+
+static int wave_mode_8(struct wave_vertex *vertices)
 {
 	return 0;
 }
@@ -281,10 +374,8 @@ static void rpipe_draw_waves()
 			nvertices = wave_mode_1(vertices);
 			break;
 		case 2:
-			nvertices = wave_mode_2(vertices);
-			break;
 		case 3:
-			nvertices = wave_mode_3(vertices);
+			nvertices = wave_mode_23(vertices);
 			break;
 		case 4:
 			nvertices = wave_mode_4(vertices);
@@ -297,6 +388,9 @@ static void rpipe_draw_waves()
 			break;
 		case 7:
 			nvertices = wave_mode_7(vertices);
+			break;
+		case 8:
+			nvertices = wave_mode_8(vertices);
 			break;
 		default:
 			nvertices = 0;
@@ -313,6 +407,7 @@ static void rpipe_tmu_copydone(struct tmu_td *td)
 
 static void rpipe_wave_bottom_half()
 {
+	rpipe_draw_borders();
 	rpipe_draw_waves();
 	flush_bridge_cache();
 

@@ -53,6 +53,16 @@ static const char pfv_names[EVAL_PFV_COUNT][IDENTIFIER_SIZE] = {
 	"wave_g",
 	"wave_b",
 	"wave_a",
+	"ob_size",
+	"ob_r",
+	"ob_g",
+	"ob_b",
+	"ob_a",
+	"ib_size",
+	"ib_r",
+	"ib_g",
+	"ib_b",
+	"ib_a",
 	"bTexWrap",
 
 	"time",
@@ -140,18 +150,33 @@ void eval_reinit_all_pfv(struct eval_state *sc)
 	eval_reinit_pfv(sc, pfv_dy);
 	eval_reinit_pfv(sc, pfv_zoom);
 	eval_reinit_pfv(sc, pfv_decay);
+	
 	eval_reinit_pfv(sc, pfv_wave_mode);
 	eval_reinit_pfv(sc, pfv_wave_scale);
 	eval_reinit_pfv(sc, pfv_wave_additive);
 	eval_reinit_pfv(sc, pfv_wave_usedots);
 	eval_reinit_pfv(sc, pfv_wave_maximize_color);
 	eval_reinit_pfv(sc, pfv_wave_thick);
+	
 	eval_reinit_pfv(sc, pfv_wave_x);
 	eval_reinit_pfv(sc, pfv_wave_y);
 	eval_reinit_pfv(sc, pfv_wave_r);
 	eval_reinit_pfv(sc, pfv_wave_g);
 	eval_reinit_pfv(sc, pfv_wave_b);
 	eval_reinit_pfv(sc, pfv_wave_a);
+
+	eval_reinit_pfv(sc, pfv_ob_size);
+	eval_reinit_pfv(sc, pfv_ob_r);
+	eval_reinit_pfv(sc, pfv_ob_g);
+	eval_reinit_pfv(sc, pfv_ob_b);
+	eval_reinit_pfv(sc, pfv_ob_a);
+
+	eval_reinit_pfv(sc, pfv_ib_size);
+	eval_reinit_pfv(sc, pfv_ib_r);
+	eval_reinit_pfv(sc, pfv_ib_g);
+	eval_reinit_pfv(sc, pfv_ib_b);
+	eval_reinit_pfv(sc, pfv_ib_a);
+	
 	eval_reinit_pfv(sc, pfv_tex_wrap);
 }
 

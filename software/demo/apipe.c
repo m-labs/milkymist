@@ -161,17 +161,31 @@ static void pfv_callback(struct pfpu_td *td)
 
 	rpipe_frame->wave_mode = eval_read_pfv(eval, pfv_wave_mode);
 	rpipe_frame->wave_scale = eval_read_pfv(eval, pfv_wave_scale);
-	rpipe_frame->wave_additive = eval_read_pfv(eval, pfv_wave_additive) != 0.0f;
-	rpipe_frame->wave_usedots = eval_read_pfv(eval, pfv_wave_usedots) != 0.0f;
-	rpipe_frame->wave_maximize_color = eval_read_pfv(eval, pfv_wave_maximize_color) != 0.0f;
-	rpipe_frame->wave_thick = eval_read_pfv(eval, pfv_wave_thick) != 0.0f;
+	rpipe_frame->wave_additive = eval_read_pfv(eval, pfv_wave_additive) != 0.0;
+	rpipe_frame->wave_usedots = eval_read_pfv(eval, pfv_wave_usedots) != 0.0;
+	rpipe_frame->wave_maximize_color = eval_read_pfv(eval, pfv_wave_maximize_color) != 0.0;
+	rpipe_frame->wave_thick = eval_read_pfv(eval, pfv_wave_thick) != 0.0;
+	
 	rpipe_frame->wave_x = eval_read_pfv(eval, pfv_wave_x);
 	rpipe_frame->wave_y = eval_read_pfv(eval, pfv_wave_y);
 	rpipe_frame->wave_r = eval_read_pfv(eval, pfv_wave_r);
 	rpipe_frame->wave_g = eval_read_pfv(eval, pfv_wave_g);
 	rpipe_frame->wave_b = eval_read_pfv(eval, pfv_wave_b);
 	rpipe_frame->wave_a = eval_read_pfv(eval, pfv_wave_a);
-	rpipe_frame->tex_wrap = eval_read_pfv(eval, pfv_tex_wrap);
+
+	rpipe_frame->ob_size = eval_read_pfv(eval, pfv_ob_size);
+	rpipe_frame->ob_r = eval_read_pfv(eval, pfv_ob_r);
+	rpipe_frame->ob_g = eval_read_pfv(eval, pfv_ob_g);
+	rpipe_frame->ob_b = eval_read_pfv(eval, pfv_ob_b);
+	rpipe_frame->ob_a = eval_read_pfv(eval, pfv_ob_a);
+
+	rpipe_frame->ib_size = eval_read_pfv(eval, pfv_ib_size);
+	rpipe_frame->ib_r = eval_read_pfv(eval, pfv_ib_r);
+	rpipe_frame->ib_g = eval_read_pfv(eval, pfv_ib_g);
+	rpipe_frame->ib_b = eval_read_pfv(eval, pfv_ib_b);
+	rpipe_frame->ib_a = eval_read_pfv(eval, pfv_ib_a);
+
+	rpipe_frame->tex_wrap = eval_read_pfv(eval, pfv_tex_wrap) != 0.0;
 
 	eval_pfv_to_pvv(eval);
 	eval_pvv_fill_td(eval, &pfpu_td, &rpipe_frame->vertices[0][0], pvv_callback, rpipe_frame);

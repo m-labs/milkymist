@@ -30,7 +30,6 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 {
 	struct line_context ctx;
 	float wave_r, wave_g, wave_b;
-	unsigned int r, g, b;
 	float wave_o;
 	int i;
 
@@ -78,14 +77,8 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 		}
 	}
 
-	r = 31.0*wave_r;
-	g = 63.0*wave_g;
-	b = 31.0*wave_b;
-	if(r > 31) r = 31;
-	if(g > 63) g = 63;
-	if(b > 31) b = 31;
+	ctx.color = float_to_rgb565(wave_r, wave_g, wave_b);
 
-	ctx.color = MAKERGB565(r, g, b);
 	/*
 	 * HACK: Boost wave opacity (80 instead of 64).
 	 * Line drawing code treats >= 64 as 64, no need to clamp

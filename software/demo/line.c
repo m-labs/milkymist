@@ -65,7 +65,7 @@ static void setpixel(struct line_context *ctx, unsigned int x, unsigned int y)
 	}
 }
 
-static void hline(struct line_context *ctx, int y, int x1, int x2)
+void hline(struct line_context *ctx, int y, int x1, int x2)
 {
 	int ymin = y - (ctx->thickness >> 1);
 	int ymax = ymin + ctx->thickness - 1;
@@ -83,7 +83,7 @@ static void hline(struct line_context *ctx, int y, int x1, int x2)
 	}
 }
 
-static void vline(struct line_context *ctx, int x, int y1, int y2)
+void vline(struct line_context *ctx, int x, int y1, int y2)
 {
 	int xmin = x - (ctx->thickness >> 1);
 	int xmax = xmin + ctx->thickness - 1;
