@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ int renderer_start(char *preset_code)
 	if(!ast) return 0;
 	printf("RDR: preset parsing successful\n");
 
-	eval_init(&eval, renderer_hmeshlast, renderer_vmeshlast, vga_hres, vga_vres);
+	eval_init(&eval, renderer_hmeshlast, renderer_vmeshlast, renderer_texsize, renderer_texsize);
 	if(!eval_load_preset(&eval, ast)) return 0;
 	printf("RDR: preset compilation successful\n");
 	free_ast(ast);

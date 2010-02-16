@@ -112,7 +112,7 @@ void apipe_stop()
 
 static struct pfpu_td pfpu_td;
 
-#define DUMP_MESH
+//#define DUMP_MESH
 
 static void pvv_callback(struct pfpu_td *td)
 {
@@ -142,7 +142,8 @@ static void pfv_callback(struct pfpu_td *td)
 
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
-	rpipe_frame->brightness = 63.0f*eval_read_pfv(eval, pfv_decay);
+	// XXX HACK try to make picture less dark
+	rpipe_frame->brightness = 62; //63.0f*eval_read_pfv(eval, pfv_decay);
 
 	rpipe_frame->wave_mode = eval_read_pfv(eval, pfv_wave_mode);
 	rpipe_frame->wave_scale = eval_read_pfv(eval, pfv_wave_scale);

@@ -240,7 +240,7 @@ static void rpipe_draw_waves()
 	params.wave_r = bh_frame->wave_r;
 	params.wave_g = bh_frame->wave_g;
 	params.wave_b = bh_frame->wave_b;
-	params.wave_a = bh_frame->wave_a;
+	params.wave_a = bh_frame->wave_a+10; // XXX HACK try to make picture less dark
 	
 	params.treb = bh_frame->treb;
 
@@ -314,7 +314,7 @@ static void rpipe_wave_bottom_half()
 	tmu_submit_task(&tmu_task2);
 
 	if(spam_enabled) {
-		tmu_task1.flags = 0;
+		tmu_task1.flags = TMU_CTL_CHROMAKEY;
 		tmu_task1.hmeshlast = 1;
 		tmu_task1.vmeshlast = 1;
 		tmu_task1.brightness = TMU_BRIGHTNESS_MAX;

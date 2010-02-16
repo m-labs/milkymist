@@ -259,8 +259,8 @@ static int generate_pervertex(struct eval_state *sc, struct preset *ast)
 		sc->pervertex_regs[i] = 0.0f;
 	sc->pervertex_regs[3] = 1.0f/(float)sc->hmeshlast;
 	sc->pervertex_regs[4] = 1.0f/(float)sc->vmeshlast;
-	sc->pervertex_regs[5] = (float)sc->hres*(1 << TMU_FIXEDPOINT_SHIFT);
-	sc->pervertex_regs[6] = (float)sc->vres*(1 << TMU_FIXEDPOINT_SHIFT);
+	sc->pervertex_regs[5] = (float)(sc->hres << TMU_FIXEDPOINT_SHIFT);
+	sc->pervertex_regs[6] = (float)(sc->vres << TMU_FIXEDPOINT_SHIFT);
 	sc->pervertex_regs[13] = PFPU_TRIG_CONV;
 
 	vlen = 0;

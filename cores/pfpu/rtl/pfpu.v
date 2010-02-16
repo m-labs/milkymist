@@ -102,7 +102,7 @@ pfpu_regf regf(
 	.err_stray(err_stray)	/* < to control interface */
 );
 
-wire [31:0] dma_adr;
+wire [28:0] dma_base;
 wire dma_busy;
 wire dma_ack;
 pfpu_dma dma(
