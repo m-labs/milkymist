@@ -171,6 +171,7 @@ static void pfv_callback(struct pfpu_td *td)
 	rpipe_frame->wave_g = eval_read_pfv(eval, pfv_wave_g);
 	rpipe_frame->wave_b = eval_read_pfv(eval, pfv_wave_b);
 	rpipe_frame->wave_a = eval_read_pfv(eval, pfv_wave_a);
+	rpipe_frame->tex_wrap = eval_read_pfv(eval, pfv_tex_wrap);
 
 	eval_pfv_to_pvv(eval);
 	eval_pvv_fill_td(eval, &pfpu_td, &rpipe_frame->vertices[0][0], pvv_callback, rpipe_frame);
@@ -219,6 +220,8 @@ static void analyzer_bottom_half()
 	time_get(&ts);
 	time = (float)ts.sec + (float)ts.usec/1000000.0f;
 
+	eval_reinit_all_pfv(eval);
+	
 	eval_write_pfv(eval, pfv_time, time);
 	eval_write_pfv(eval, pfv_bass, fbass);
 	eval_write_pfv(eval, pfv_mid, fmid);

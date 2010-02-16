@@ -36,6 +36,7 @@ struct rpipe_frame {
 	int wave_thick;
 	float wave_x, wave_y;
 	float wave_r, wave_b, wave_g, wave_a;
+	int tex_wrap;
 	float treb;
 	float time;
 	unsigned int framenr;

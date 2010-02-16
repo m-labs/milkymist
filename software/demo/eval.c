@@ -53,6 +53,7 @@ static const char pfv_names[EVAL_PFV_COUNT][IDENTIFIER_SIZE] = {
 	"wave_g",
 	"wave_b",
 	"wave_a",
+	"bTexWrap",
 
 	"time",
 	"bass",
@@ -118,6 +119,40 @@ void eval_reset_pfv(struct eval_state *sc)
 	int i;
 	for(i=0;i<PFPU_REG_COUNT;i++)
 		sc->perframe_regs_current[i] = sc->perframe_regs_init[i];
+}
+
+int eval_reinit_pfv(struct eval_state *sc, int pfv)
+{
+	int r;
+
+	r = sc->pfv_allocation[pfv];
+	if(r < 0) return 0;
+	sc->perframe_regs_current[r] = sc->perframe_regs_init[r];
+	return 1;
+}
+
+void eval_reinit_all_pfv(struct eval_state *sc)
+{
+	eval_reinit_pfv(sc, pfv_cx);
+	eval_reinit_pfv(sc, pfv_cy);
+	eval_reinit_pfv(sc, pfv_rot);
+	eval_reinit_pfv(sc, pfv_dx);
+	eval_reinit_pfv(sc, pfv_dy);
+	eval_reinit_pfv(sc, pfv_zoom);
+	eval_reinit_pfv(sc, pfv_decay);
+	eval_reinit_pfv(sc, pfv_wave_mode);
+	eval_reinit_pfv(sc, pfv_wave_scale);
+	eval_reinit_pfv(sc, pfv_wave_additive);
+	eval_reinit_pfv(sc, pfv_wave_usedots);
+	eval_reinit_pfv(sc, pfv_wave_maximize_color);
+	eval_reinit_pfv(sc, pfv_wave_thick);
+	eval_reinit_pfv(sc, pfv_wave_x);
+	eval_reinit_pfv(sc, pfv_wave_y);
+	eval_reinit_pfv(sc, pfv_wave_r);
+	eval_reinit_pfv(sc, pfv_wave_g);
+	eval_reinit_pfv(sc, pfv_wave_b);
+	eval_reinit_pfv(sc, pfv_wave_a);
+	eval_reinit_pfv(sc, pfv_tex_wrap);
 }
 
 static int generate_perframe(struct eval_state *sc, struct preset *ast)

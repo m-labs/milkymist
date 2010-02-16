@@ -112,8 +112,23 @@ static void rpipe_tmu_warpdone(struct tmu_td *td)
 	run_wave_bottom_half = 1;
 }
 
+static unsigned int get_tmu_wrap_mask(unsigned int x)
+{
+	unsigned int s;
+
+	s = 1 << TMU_FIXEDPOINT_SHIFT;
+	return (x-1)*s+s-1;
+}
+
 static void rpipe_start(struct rpipe_frame *frame)
 {
+	unsigned int mask;
+	
+	if(frame->tex_wrap)
+		mask = get_tmu_wrap_mask(renderer_texsize);
+	else
+		mask = TMU_MASK_FULL;
+	
 	tmu_task1.flags = 0;
 	tmu_task1.hmeshlast = renderer_hmeshlast;
 	tmu_task1.vmeshlast = renderer_vmeshlast;
@@ -123,8 +138,8 @@ static void rpipe_start(struct rpipe_frame *frame)
 	tmu_task1.texfbuf = tex_frontbuffer;
 	tmu_task1.texhres = renderer_texsize;
 	tmu_task1.texvres = renderer_texsize;
-	tmu_task1.texhmask = TMU_MASK_FULL;
-	tmu_task1.texvmask = TMU_MASK_FULL;
+	tmu_task1.texhmask = mask;
+	tmu_task1.texvmask = mask;
 	tmu_task1.dstfbuf = tex_backbuffer;
 	tmu_task1.dsthres = renderer_texsize;
 	tmu_task1.dstvres = renderer_texsize;
@@ -170,7 +185,21 @@ static int wave_mode_1(struct wave_vertex *vertices)
 
 static int wave_mode_2(struct wave_vertex *vertices)
 {
-	return 0;
+	int nvertices;
+	int i;
+	float s1, s2;
+
+	nvertices = 128-32;
+
+	for(i=0;i<nvertices;i++) {
+		s1 = bh_frame->samples[8*i     ]/32768.0;
+		s2 = bh_frame->samples[8*i+32+1]/32768.0;
+		
+		vertices[i].x = (s1*bh_frame->wave_scale*0.5 + bh_frame->wave_x)*renderer_texsize;
+		vertices[i].y = (s2*bh_frame->wave_scale*0.5 + bh_frame->wave_x)*renderer_texsize;
+	}
+	
+	return nvertices;
 }
 
 static int wave_mode_3(struct wave_vertex *vertices)
@@ -193,8 +222,8 @@ static int wave_mode_5(struct wave_vertex *vertices)
 
 	nvertices = 128-64;
 
-	cos_rot = cosf(bh_frame->time*0.3f);
-	sin_rot = sinf(bh_frame->time*0.3f);
+	cos_rot = cosf(bh_frame->time*0.3);
+	sin_rot = sinf(bh_frame->time*0.3);
 
 	for(i=0;i<nvertices;i++) {
 		s1 = bh_frame->samples[8*i     ]/32768.0;

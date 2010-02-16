@@ -49,6 +49,7 @@ enum {
 	pfv_wave_g,
 	pfv_wave_b,
 	pfv_wave_a,
+	pfv_tex_wrap,
 
 	pfv_time,
 	pfv_bass,
@@ -66,8 +67,14 @@ struct eval_state;
 /* fills in a task descriptor to evaluate per-frame equations */
 void eval_pfv_fill_td(struct eval_state *sc, struct pfpu_td *td, pfpu_callback callback, void *user);
 
-/* restores preset's initial conditions */
+/* restores preset's initial conditions (and reset user variables) */
 void eval_reset_pfv(struct eval_state *sc);
+
+/* restore a variable's initial condition */
+int eval_reinit_pfv(struct eval_state *sc, int pfv);
+
+/* restore all variable's initial conditions (and keep user variables) */
+void eval_reinit_all_pfv(struct eval_state *sc);
 
 /* reads the value of a per-frame variable
  * (from perframe_regs_current or initial conditions)
