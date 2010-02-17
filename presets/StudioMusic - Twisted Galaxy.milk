@@ -58,4 +58,4 @@ per_frame_1=wave_r = wave_r + 0.400*( 0.60*sin(0.933*time) + 0.40*sin(1.045*time
 per_frame_2=wave_g = wave_g + 0.400*( 0.60*sin(0.900*time) + 0.40*sin(0.956*time) );
 per_frame_3=wave_b = wave_b + 0.400*( 0.60*sin(0.910*time) + 0.40*sin(0.920*time) );
 per_frame_4=rot = rot + 0.040*( 0.60*sin(0.381*time) + 0.40*sin(0.579*time) );
-per_frame_5=zoom=max(0.98, min(0.15+0.8*bass_att, 1.75 ));
+per_frame_5=zoom=1.9 //max(0.98, min(0.15+0.8*bass_att, 1.75 ));
