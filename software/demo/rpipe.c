@@ -364,11 +364,12 @@ static int wave_mode_6(struct wave_vertex *vertices)
 	// TODO: rotate/scale by wave_mystery
 
 	inc = (float)renderer_texsize/(float)nvertices;
-	offset = (float)renderer_texsize*bh_frame->wave_x;
+	offset = (float)renderer_texsize*(1.0-bh_frame->wave_x);
 	for(i=0;i<nvertices;i++) {
 		s = bh_frame->samples[8*i]/32768.0;
-		vertices[i].x = s*20.0*bh_frame->wave_scale+offset;
-		vertices[i].y = i*inc;
+		// nb: x and y reversed to simulate default rotation from wave_mystery
+		vertices[i].y = s*20.0*bh_frame->wave_scale+offset;
+		vertices[i].x = i*inc;
 	}
 	
 	return nvertices;
