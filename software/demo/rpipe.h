@@ -40,6 +40,10 @@ struct rpipe_frame {
 	float ob_r, ob_g, ob_b, ob_a;
 	float ib_size;
 	float ib_r, ib_g, ib_b, ib_a;
+	float mv_x, mv_y;
+	float mv_dx, mv_dy;
+	float mv_l;
+	float mv_r, mv_g, mv_b, mv_a;
 	int tex_wrap;
 	float treb;
 	float time;

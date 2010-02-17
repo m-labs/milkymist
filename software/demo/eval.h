@@ -49,6 +49,7 @@ enum {
 	pfv_wave_g,
 	pfv_wave_b,
 	pfv_wave_a,
+
 	pfv_ob_size,
 	pfv_ob_r,
 	pfv_ob_g,
@@ -59,6 +60,17 @@ enum {
 	pfv_ib_g,
 	pfv_ib_b,
 	pfv_ib_a,
+
+	pfv_mv_x,
+	pfv_mv_y,
+	pfv_mv_dx,
+	pfv_mv_dy,
+	pfv_mv_l,
+	pfv_mv_r,
+	pfv_mv_g,
+	pfv_mv_b,
+	pfv_mv_a,
+
 	pfv_tex_wrap,
 
 	pfv_time,

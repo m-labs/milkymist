@@ -53,6 +53,7 @@ static const char pfv_names[EVAL_PFV_COUNT][IDENTIFIER_SIZE] = {
 	"wave_g",
 	"wave_b",
 	"wave_a",
+	
 	"ob_size",
 	"ob_r",
 	"ob_g",
@@ -63,6 +64,17 @@ static const char pfv_names[EVAL_PFV_COUNT][IDENTIFIER_SIZE] = {
 	"ib_g",
 	"ib_b",
 	"ib_a",
+
+	"nMotionVectorsX",
+	"nMotionVectorsY",
+	"mv_dx",
+	"mv_dy",
+	"mv_l",
+	"mv_r",
+	"mv_g",
+	"mv_b",
+	"mv_a",
+	
 	"bTexWrap",
 
 	"time",
@@ -94,15 +106,21 @@ static void load_defaults(struct eval_state *sc)
 	int i;
 
 	for(i=0;i<EVAL_PFV_COUNT;i++)
-		sc->pfv_initial[i] = 0.0f;
-	sc->pfv_initial[pfv_zoom] = 1.0f;
-	sc->pfv_initial[pfv_decay] = 1.0f;
-	sc->pfv_initial[pfv_wave_mode] = 1.0f;
-	sc->pfv_initial[pfv_wave_scale] = 1.0f;
-	sc->pfv_initial[pfv_wave_r] = 1.0f;
-	sc->pfv_initial[pfv_wave_g] = 1.0f;
-	sc->pfv_initial[pfv_wave_b] = 1.0f;
-	sc->pfv_initial[pfv_wave_a] = 1.0f;
+		sc->pfv_initial[i] = 0.0;
+	sc->pfv_initial[pfv_zoom] = 1.0;
+	sc->pfv_initial[pfv_decay] = 1.0;
+	sc->pfv_initial[pfv_wave_mode] = 1.0;
+	sc->pfv_initial[pfv_wave_scale] = 1.0;
+	sc->pfv_initial[pfv_wave_r] = 1.0;
+	sc->pfv_initial[pfv_wave_g] = 1.0;
+	sc->pfv_initial[pfv_wave_b] = 1.0;
+	sc->pfv_initial[pfv_wave_a] = 1.0;
+
+	sc->pfv_initial[pfv_mv_x] = 16.0;
+	sc->pfv_initial[pfv_mv_y] = 12.0;
+	sc->pfv_initial[pfv_mv_dx] = 0.02;
+	sc->pfv_initial[pfv_mv_dy] = 0.02;
+	sc->pfv_initial[pfv_mv_l] = 1.0;
 }
 
 static void generate_initial(struct eval_state *sc, struct preset *ast)
@@ -176,6 +194,16 @@ void eval_reinit_all_pfv(struct eval_state *sc)
 	eval_reinit_pfv(sc, pfv_ib_g);
 	eval_reinit_pfv(sc, pfv_ib_b);
 	eval_reinit_pfv(sc, pfv_ib_a);
+
+	eval_reinit_pfv(sc, pfv_mv_x);
+	eval_reinit_pfv(sc, pfv_mv_y);
+	eval_reinit_pfv(sc, pfv_mv_dx);
+	eval_reinit_pfv(sc, pfv_mv_dy);
+	eval_reinit_pfv(sc, pfv_mv_l);
+	eval_reinit_pfv(sc, pfv_mv_r);
+	eval_reinit_pfv(sc, pfv_mv_g);
+	eval_reinit_pfv(sc, pfv_mv_b);
+	eval_reinit_pfv(sc, pfv_mv_a);
 	
 	eval_reinit_pfv(sc, pfv_tex_wrap);
 }

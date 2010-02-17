@@ -173,6 +173,44 @@ int rpipe_input(struct rpipe_frame *frame)
 	return 1;
 }
 
+static void draw_dot(struct line_context *ctx, int x, int y, unsigned int l)
+{
+	// TODO: make them round and nice looking
+	l >>= 1;
+	hline(ctx, y, x-l, x+l);
+}
+
+static void rpipe_draw_motion_vectors()
+{
+	int x, y;
+	struct line_context ctx;
+	float offsetx;
+	float intervalx;
+	float offsety;
+	float intervaly;
+	int nx, ny;
+	int l;
+
+	l = bh_frame->mv_l;
+	if(l > 10) l = 10;
+	
+	line_init_context(&ctx, tex_backbuffer, renderer_texsize, renderer_texsize);
+	ctx.color = float_to_rgb565(bh_frame->mv_r, bh_frame->mv_g, bh_frame->mv_b);
+	ctx.alpha = bh_frame->mv_a+0.5;
+	ctx.thickness = l;
+
+	offsetx = bh_frame->mv_dx*(float)renderer_texsize;
+	intervalx = (float)renderer_texsize/bh_frame->mv_x;
+	offsety = bh_frame->mv_dy*renderer_texsize;
+	intervaly = (float)renderer_texsize/bh_frame->mv_y;
+
+	nx = bh_frame->mv_x+0.5;
+	ny = bh_frame->mv_y+0.5;
+	for(y=0;y<ny;y++)
+		for (x=0;x<ny;x++)
+			draw_dot(&ctx, offsetx+x*intervalx, offsety+y*intervaly, l);
+}
+
 static void border_rect(int x0, int y0, int x1, int y1, short int color, unsigned int alpha)
 {
 	int y;
@@ -407,6 +445,7 @@ static void rpipe_tmu_copydone(struct tmu_td *td)
 
 static void rpipe_wave_bottom_half()
 {
+	rpipe_draw_motion_vectors();
 	rpipe_draw_borders();
 	rpipe_draw_waves();
 	flush_bridge_cache();

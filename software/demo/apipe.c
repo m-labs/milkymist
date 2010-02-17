@@ -146,7 +146,7 @@ static void pfv_callback(struct pfpu_td *td)
 
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
-	brightness256 = 257.0f*eval_read_pfv(eval, pfv_decay);
+	brightness256 = 256.0*eval_read_pfv(eval, pfv_decay) + 0.5;
 	brightness64 = brightness256 >> 2;
 	brightness256 &= 3;
 	frame_mod = rpipe_frame->framenr & 3;
@@ -184,6 +184,16 @@ static void pfv_callback(struct pfpu_td *td)
 	rpipe_frame->ib_g = eval_read_pfv(eval, pfv_ib_g);
 	rpipe_frame->ib_b = eval_read_pfv(eval, pfv_ib_b);
 	rpipe_frame->ib_a = eval_read_pfv(eval, pfv_ib_a);
+
+	rpipe_frame->mv_x = eval_read_pfv(eval, pfv_mv_x);
+	rpipe_frame->mv_y = eval_read_pfv(eval, pfv_mv_y);
+	rpipe_frame->mv_dx = eval_read_pfv(eval, pfv_mv_dx);
+	rpipe_frame->mv_dy = eval_read_pfv(eval, pfv_mv_dy);
+	rpipe_frame->mv_l = eval_read_pfv(eval, pfv_mv_l);
+	rpipe_frame->mv_r = eval_read_pfv(eval, pfv_mv_r);
+	rpipe_frame->mv_g = eval_read_pfv(eval, pfv_mv_g);
+	rpipe_frame->mv_b = eval_read_pfv(eval, pfv_mv_b);
+	rpipe_frame->mv_a = eval_read_pfv(eval, pfv_mv_a);
 
 	rpipe_frame->tex_wrap = eval_read_pfv(eval, pfv_tex_wrap) != 0.0;
 
