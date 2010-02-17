@@ -246,6 +246,11 @@ void snd_isr_dmaw()
 		"wcsr DCC, r0\n"
 		"nop\n"
 	);
+
+	if(record_level == 0) {
+		printf("SND: stray DMAW irq\n");
+		return;
+	}
 	
 	/* NB. the callback can give us buffers by calling snd_record_refill() */
 	record_callback(record_queue[record_consume], record_user);

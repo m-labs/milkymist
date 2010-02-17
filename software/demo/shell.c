@@ -164,7 +164,7 @@ static void render(const char *filename)
 		return;
 	}
 
-	ui_render_from_file(filename);
+	ui_render_from_file(filename, 0);
 }
 
 static void spam()

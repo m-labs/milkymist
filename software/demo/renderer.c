@@ -46,12 +46,17 @@ int renderer_start(char *preset_code)
 	struct preset *ast;
 
 	ast = generate_ast(preset_code);
-	if(!ast) return 0;
-	printf("RDR: preset parsing successful\n");
+	if(!ast) {
+		printf("RDR: preset parsing failed\n");
+		return 0;
+	}
 
 	eval_init(&eval, renderer_hmeshlast, renderer_vmeshlast, renderer_texsize, renderer_texsize);
-	if(!eval_load_preset(&eval, ast)) return 0;
-	printf("RDR: preset compilation successful\n");
+	if(!eval_load_preset(&eval, ast)) {
+		printf("RDR: preset loading failed\n");
+		return 0;
+	}
+	
 	free_ast(ast);
 
 	apipe_start(&eval);

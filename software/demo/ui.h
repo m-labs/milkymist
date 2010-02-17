@@ -18,7 +18,7 @@
 #ifndef __UI_H
 #define __UI_H
 
-int ui_render_from_file(const char *filename);
+int ui_render_from_file(const char *filename, int random);
 void ui_render_stop();
 
 void ui_init();

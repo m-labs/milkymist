@@ -43,6 +43,7 @@ static int switch_count;
 static int display_title;
 static char preset_author[128];
 static char preset_title[128];
+static int preset_lifetime;
 
 #define MAX_PRESETS 64
 static char preset_list[MAX_PRESETS][64];
@@ -54,7 +55,7 @@ static void refresh_screen()
 	switch(state) {
 		case STATE_MAIN:
 			hdlcd_clear();
-			hdlcd_printf("Milkymist v"VERSION"\n[OK] Preset list");
+			hdlcd_printf("Milkymist v"VERSION"\n[UP]List [DN]Rnd");
 			break;
 		case STATE_PRESETLIST:
 			hdlcd_printf("%16s\n[UP] [DOWN] [OK]", preset_list[preset_list_index]);
@@ -70,7 +71,10 @@ static void refresh_screen()
 			for(;i<16;i++)
 				firstline[i] = ' ';
 			firstline[16] = 0;
-			hdlcd_printf("%s\nFPS:%02d  CPU:%02d%% ", firstline, rpipe_fps(), cpustats_load());
+			if(display_title || (preset_lifetime == -1))
+				hdlcd_printf("%s\nFPS:%02d  CPU:%02d%% ", firstline, rpipe_fps(), cpustats_load());
+			else
+				hdlcd_printf("%s\nTime rem.: %02d   ", firstline, preset_lifetime);
 			break;
 		}
 	}
@@ -105,7 +109,7 @@ static int getname_cb(const char *filename, const char *longname, void *param)
 	return 1;
 }
 
-int ui_render_from_file(const char *filename)
+int ui_render_from_file(const char *filename, int random)
 {
 	char buffer[8192];
 	int size;
@@ -119,6 +123,10 @@ int ui_render_from_file(const char *filename)
 	buffer[size] = 0;
 
 	if(!renderer_start(buffer)) return 0;
+	if(random)
+		preset_lifetime = (rand() % 70) + 10;
+	else
+		preset_lifetime = -1;
 	state = STATE_RENDERING;
 	switch_count = 0;
 	display_title = 0;
@@ -135,9 +143,14 @@ void ui_render_stop()
 
 static int listpresets_cb(const char *filename, const char *longname, void *param)
 {
-	if(preset_list_count < MAX_PRESETS) {
-		strcpy(preset_list[preset_list_count], filename);
-		preset_list_count++;
+	int len;
+
+	len = strlen(filename);
+	if((len > 4) && (strcmp(filename+len-4, ".MIL") == 0)) {
+		if(preset_list_count < MAX_PRESETS) {
+			strcpy(preset_list[preset_list_count], filename);
+			preset_list_count++;
+		}
 	}
 	return 1;
 }
@@ -169,10 +182,20 @@ static void select_preset(int up)
 
 static void start_preset()
 {
-	if(!ui_render_from_file(preset_list[preset_list_index])) {
+	if(!ui_render_from_file(preset_list[preset_list_index], 0)) {
 		state = STATE_MAIN;
 		refresh_screen();
 	}
+}
+
+static void random_mode()
+{
+	preset_list_count = 0;
+	if(!cffat_init()) return;
+	cffat_list_files(listpresets_cb, NULL);
+	cffat_done();
+	if(preset_list_count > 0)
+		ui_render_from_file(preset_list[rand() % preset_list_count], 1);
 }
 
 enum {
@@ -222,7 +245,8 @@ static void handle_key(unsigned int n)
 
 	switch(state) {
 		case STATE_MAIN:
-			if(n == KEY_C) list_presets();
+			if(n == KEY_N) list_presets();
+			else if(n == KEY_S) random_mode();
 			break;
 		case STATE_PRESETLIST:
 			switch(n) {
@@ -260,6 +284,14 @@ void ui_isr_key()
 void ui_tick()
 {
 	if(state == STATE_RENDERING) {
+		if(preset_lifetime != -1) {
+			preset_lifetime--;
+			if(preset_lifetime == 0) {
+				renderer_stop();
+				ui_render_from_file(preset_list[rand() % preset_list_count], 1);
+				return;
+			}
+		}
 		switch_count++;
 		if(switch_count > 2) {
 			display_title = !display_title;

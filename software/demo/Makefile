@@ -103,7 +103,7 @@ rpipe.o: ../../software/include/irq.h ../../software/include/system.h
 rpipe.o: ../../software/include/math.h ../../software/include/hw/interrupts.h
 rpipe.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
 rpipe.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
-rpipe.o: renderer.h wave.h cpustats.h rpipe.h spam.h
+rpipe.o: renderer.h wave.h cpustats.h color.h line.h rpipe.h spam.h
 scanner.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 scanner.o: ../../software/include/string.h ../../software/include/malloc.h
 scanner.o: scanner.h parser.h
