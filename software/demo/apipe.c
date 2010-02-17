@@ -74,12 +74,12 @@ static void free_rpipe_frame(struct rpipe_frame *rpipe_frame)
 void apipe_init()
 {
 	run_analyzer_bottom_half = 0;
-	peak_bass = 0;
-	peak_mid = 0;
-	peak_treb = 0;
-	bass_att = 0.0f;
-	mid_att = 0.0f;
-	treb_att = 0.0f;
+	peak_bass = 1740164;
+	peak_mid = 1062625;
+	peak_treb = 928140;
+	bass_att = 0.0;
+	mid_att = 0.0;
+	treb_att = 0.0;
 	eval_ready = 1;
 	frame1_free = 1;
 	frame2_free = 1;

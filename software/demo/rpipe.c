@@ -259,10 +259,10 @@ static void rpipe_draw_borders()
 		ib_color = float_to_rgb565(bh_frame->ib_r, bh_frame->ib_g, bh_frame->ib_b);
 		ib_alpha = 80.0*bh_frame->ib_a;
 
-		border_rect(of, of, of+iff, texof, ib_color, ib_alpha);
-		border_rect(of+iff, of, texof-iff, of+iff, ib_color, ib_alpha);
-		border_rect(texof-iff, of, texof, texof, ib_color, ib_alpha);
-		border_rect(of+iff, texof-iff, texof-iff, texof, ib_color, ib_alpha);
+		border_rect(of, of, of+iff-1, texof-1, ib_color, ib_alpha);
+		border_rect(of+iff, of, texof-iff-1, of+iff-1, ib_color, ib_alpha);
+		border_rect(texof-iff, of, texof-1, texof-1, ib_color, ib_alpha);
+		border_rect(of+iff, texof-iff, texof-iff-1, texof-1, ib_color, ib_alpha);
 	}
 }
 
@@ -317,8 +317,9 @@ static int wave_mode_4(struct wave_vertex *vertices)
 		s2 = bh_frame->samples[8*i-2]/32768.0;
 		
 		dy_adj = s1*20.0*bh_frame->wave_scale-s2*20.0*bh_frame->wave_scale;
-		vertices[i-1].x = s1*20.0*bh_frame->wave_scale+(float)renderer_texsize*bh_frame->wave_x;
-		vertices[i-1].y = (i*scale)+dy_adj;
+		// nb: x and y reversed to simulate default rotation from wave_mystery
+		vertices[i-1].y = s1*20.0*bh_frame->wave_scale+(float)renderer_texsize*bh_frame->wave_x;
+		vertices[i-1].x = (i*scale)+dy_adj;
 	}
 
 	return nvertices;

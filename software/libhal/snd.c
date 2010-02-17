@@ -257,10 +257,8 @@ void snd_isr_dmaw()
 
 	if(record_level > 0)
 		record_start(record_queue[record_consume]);
-	else {
-		printf("SND: recording overrun\n");
+	else
 		record_overrun = 1;
-	}
 }
 
 void snd_record_empty()
@@ -311,10 +309,8 @@ void snd_record_start(snd_callback callback, unsigned int nsamples, void *user)
 
 	if(record_level > 0)
 		record_start(record_queue[record_consume]);
-	else {
-		printf("SND: recording overrun\n");
+	else
 		record_overrun = 1;
-	}
 }
 
 void snd_record_stop()
