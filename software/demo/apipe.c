@@ -143,11 +143,13 @@ static void pfv_callback(struct pfpu_td *td)
 {
 	struct rpipe_frame *rpipe_frame;
 	int brightness256, brightness64, frame_mod;
+	float decay;
 
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
-	brightness256 = 256.0*eval_read_pfv(eval, pfv_decay) + 0.5;
-	brightness64 = brightness256 >> 2;
+	decay = eval_read_pfv(eval, pfv_decay);
+	brightness256 = 255.0*decay+3.5;
+	brightness64 = (brightness256 >> 2)-1;
 	brightness256 &= 3;
 	frame_mod = rpipe_frame->framenr & 3;
 	if((brightness256 == 1) && (frame_mod == 0))
@@ -156,6 +158,7 @@ static void pfv_callback(struct pfpu_td *td)
 		brightness64++;
 	if((brightness256 == 3) && (frame_mod != 3))
 		brightness64++;
+	if(brightness64 < 0) brightness64 = 0;
 	if(brightness64 > 63) brightness64 = 63;
 	rpipe_frame->brightness = brightness64;
 

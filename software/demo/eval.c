@@ -275,6 +275,8 @@ static int generate_perframe(struct eval_state *sc, struct preset *ast)
 	scheduler_dont_touch(&scheduler, compiler.terminals);
 	scheduler_schedule(&scheduler, compiler.prog, compiler.prog_length);
 	/* patch the program to make a dummy DMA at the end (otherwise PFPU never finishes) */
+	scheduler.last_exit++;
+	if(scheduler.last_exit == PFPU_PROGSIZE) return 0;
 	scheduler.prog[scheduler.last_exit].i.opcode = PFPU_OPCODE_VECTOUT;
 
 	#ifdef EVAL_DEBUG

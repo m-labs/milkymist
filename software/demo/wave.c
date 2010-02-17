@@ -33,6 +33,8 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 	float wave_o;
 	int i;
 
+	if(nvertices == 0) return;
+	
 	line_init_context(&ctx, framebuffer, hres, vres);
 
 	//TODO: implement modulate_opacity_by_volume

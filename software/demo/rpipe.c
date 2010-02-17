@@ -191,6 +191,10 @@ static void rpipe_draw_motion_vectors()
 	int nx, ny;
 	int l;
 
+	if(bh_frame->mv_a == 0.0) return;
+	if(bh_frame->mv_x == 0.0) return;
+	if(bh_frame->mv_y == 0.0) return;
+	
 	l = bh_frame->mv_l;
 	if(l > 10) l = 10;
 	
