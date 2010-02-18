@@ -1,4 +1,4 @@
-TEX=tmu.tex
+TEX=tmu2.tex
 
 DVI=$(TEX:.tex=.dvi)
 PS=$(TEX:.tex=.ps)

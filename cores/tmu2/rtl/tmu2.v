@@ -82,8 +82,8 @@ wire [10:0] dst_hres;			/* < 30 destination horizontal resolution (positive int)
 wire [10:0] dst_vres;			/* < 34 destination vertical resolution (positive int) */
 wire signed [11:0] dst_hoffset;		/* < 38 X offset added to each pixel (signed int) */
 wire signed [11:0] dst_voffset;		/* < 3C Y offset added to each pixel (signed int) */
-wire [10:0] dst_squarew;		/* < 40 width of each destination square (positive int)*/
-wire [10:0] dst_squareh;		/* < 44 height of each destination square (positive int)*/
+wire [10:0] dst_squarew;		/* < 40 width of each destination rectangle (positive int)*/
+wire [10:0] dst_squareh;		/* < 44 height of each destination rectangle (positive int)*/
 
 tmu2_ctlif #(
 	.csr_addr(csr_addr),
