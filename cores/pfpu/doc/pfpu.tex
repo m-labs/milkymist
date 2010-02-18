@@ -15,13 +15,13 @@
 
 \title{Programmable Floating Point Unit}
 \author{S\'ebastien Bourdeauducq}
-\date{December 2009}
+\date{February 2010}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
 \maketitle{}
 \section{Overview}
-The Programmable Floating Point Unit (PFPU) is a floating point microprocessor optimized for fast computation of triangle strip vertices (mesh) used by the Milkymist texture mapping unit.
+The Programmable Floating Point Unit (PFPU) is a floating point VLIW microprocessor optimized for fast computation of triangle strip vertices (mesh) used by the Milkymist texture mapping unit.
 
 It is designed for repetitive evaluation of the same mathematical function on a large number of points, using 32-bit floating point numbers. Furthermore, it contains specifically crafted DMA engine and address generator which enable the output DMA buffer to be ready to be used immediately by the texture mapping unit.
 
@@ -48,9 +48,7 @@ R1 & R & W & -- & Mesh Y coordinate of the currently computed point (same remark
 \hline
 R2 & RW & -- & RW & ALU flags (typically comparison result). \\
 \hline
-R3--R30 & RW & -- & RW & General purpose 32-bit registers. \\
-\hline
-R127 & W & -- & -- & Output register. Writing to this register stores the value into system memory via DMA, and restarts the microcode to compute the next point. \\
+R3--R127 & RW & -- & RW & General purpose 32-bit registers. \\
 \hline
 \end{tabularx}\\
 
@@ -80,18 +78,18 @@ All instructions that do not write to the register file must have the ``destinat
 \subsection{Address generator}
 The address generator iterates over all the points of a rectangular mesh. At each point, the ``X coordinate'' and ``Y coordinate'' registers are updated, and the DMA target address is computed.
 
-The function used to compute the DMA target address is the same as the one of the texture mapping unit :
+The function used to compute the DMA target address is the same as the one of the texture mapping unit:
 
 \begin{equation*}
-base + 4 \cdot (128 \cdot y + x)
+base + 8 \cdot (128 \cdot y + x)
 \end{equation*}
 
 \subsection{Arithmetic and logical unit (ALU)}
 The ALU contains several computation units that perform arithmetic, binary and logic operations.
 
-At every cycle, a computation unit is selected using the ``opcode'' part of the instuction, according to the table below. The computation unit finishes its computation a number of cycles later, and the result is written to the register given in the instruction which is active at this time. It is the responsibility of the compiler to avoid output conflicts ; that is to say, that only one unit may finish its computation at a given cycle.
+At every cycle, a computation unit is selected using the ``opcode'' part of the instuction, according to the table below. The computation unit finishes its computation a number of cycles later, and the result is written to the register given in the instruction which is active at this time. It is the responsibility of the compiler to avoid output conflicts; that is to say, that only one unit may finish its computation at a given cycle.
 
-A computation unit can be parallel or sequential. A parallel unit can accept a new operation at each cycle (it's typically a pipeline). A sequential unit can only accept a new operation when it is not already busy processing one (it's typically a FSM with a datapath) ; and trying to push a new operation into a busy sequential unit results in undefined behaviour.
+A computation unit can be parallel or sequential. A parallel unit can accept a new operation at each cycle (it's typically a pipeline). A sequential unit can only accept a new operation when it is not already busy processing one (it's typically a FSM with a datapath); and trying to push a new operation into a busy sequential unit results in undefined behaviour.
 
 Each computation unit can have one, two or three arguments. If the unit has one argument, operand A is used, and operand B and flags are ignored. If the unit has two arguments, operands A and B are used. If the unit has three arguments, all operands and flags are used.
 
@@ -115,7 +113,7 @@ F2I & 5 & Parallel & 2 & Convert float to integer. \\
 \hline
 I2F & 6 & Parallel & 3 & Convert integer to float. \\
 \hline
-VECT & 7 & Parallel & 2 & Make vector. \\
+VECTOUT & 7 & Parallel & -- & Write 2x32-bit vector to memory and terminate program. \\
 \hline
 SIN & 8 & Parallel & 4 & Sine table look-up. \\
 \hline
@@ -130,7 +128,7 @@ COPY & c & Parallel & 2 & Result is A. \\
 \end{tabularx}\\
 
 \subsubsection{Relationship with IEEE754}
-When using floating point numbers, the PFPU uses the same number representation as IEEE754 (1-bit sign, 8-bit biased exponent, 23-bit mantissa). This is made to ease interfacing with IEEE754-compliant systems and software ; however, the PFPU does not comply with IEEE754 and notoriously differs from the norm in the following points :
+When using floating point numbers, the PFPU uses the same number representation as IEEE754 (1-bit sign, 8-bit biased exponent, 23-bit mantissa). This is made to ease interfacing with IEEE754-compliant systems and software; however, the PFPU does not comply with IEEE754 and notoriously differs from the norm in the following points:
 
 \paragraph{Denormal numbers.} The PFPU represents zero as any number that has a zero biased exponent, and the other bits are don't care. This means that denormal numbers are treated as zero. Therefore, when writing a floating point number to the PFPU, no special care should be taken to check if it's denormal or not (except for the obvious loss of precision). However, when reading a floating point number from the PFPU, if its exponent is zero, then its other bits are invalid. They must be ignored unless your use of the number can tolerate the introduced noise.
 
@@ -152,10 +150,10 @@ The floating point division is not implemented in this release.
 \subsubsection{Integer conversions}
 The PFPU supports conversion to and from 32-bit signed integers, using two's complement. When doing a float to integer conversion, the decimal part is truncated.
 
-\subsubsection{Make vector}
-This operation is used to format the output of the PFPU so that it can be directly read as a vertex coordinate by the texture mapping unit.
+\subsubsection{Vector output}
+This instruction takes two 32-bit integers A and B as input, and writes them in order to memory (A is written first). It formats the output of the PFPU so that it can be directly read as a vertex coordinate by the texture mapping unit.
 
-It takes two 32-bit integers A and B as input, and concatenates their 16 lowest significant bits to make a 32-bit vector composed of two 16-bit integers (in Verilog syntax, you get \verb!{A[15:0], B[15:0]}! as output).
+Executing this instruction terminates the PFPU program.
 
 \subsubsection{Sine and cosine table look-up}
 This computes $sin(\frac{2 \cdot \pi \cdot A}{8192})$ or $cos(\frac{2 \cdot \pi \cdot A}{8192})$ for a signed integer input A. A can be of the whole 32-bit signed integer range ($-2^{31}$ to $2^{31}-1$) and the result will be correct, which makes preliminary range reduction to $[0;2\cdot\pi]$ unnecessary in practical cases. To compute sine or cosine, all you would need to do is a floating point multiplication by $\frac{8192}{2 \cdot \pi}$, conversion to integer, and sine/cosine table look-up.
@@ -222,7 +220,7 @@ The PFPU is equipped with one active-high edge-sensitive interrupt line.
 An interrupt is triggered when a microcode has finished execution and all resulting data has been sent through the bus master.
 
 \section*{Copyright notice}
-Copyright \copyright 2007-2009 S\'ebastien Bourdeauducq. \\
+Copyright \copyright 2007-2010 S\'ebastien Bourdeauducq. \\
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.3; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the LICENSE.FDL file at the root of the Milkymist source distribution.
 
 \end{document}
