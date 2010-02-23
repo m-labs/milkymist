@@ -116,6 +116,7 @@
 \def\issn#1{\gdef\@issn{#1}}
 \def\isrn#1{\gdef\@isrn{#1}}
 \def\isbn#1{\@isbntrue \gdef\@isbn{#1}}
+\def\tmnotice#1{\gdef\@tmnotice{#1}}
 \def\dedication#1{\@dedicationtrue \gdef\@dedication{#1}}
 \newif\if@isbn \@isbnfalse
 \newif\if@dedication \@dedicationfalse
@@ -131,6 +132,7 @@
 \def\@trita{\@latex@warning{No TRITA number given}}
 \def\@issn{\@latex@warning{No ISSN given}}
 \def\@isrn{\@latex@warning{No ISRN given}}
+\def\@tmnotice{\relax}
 \let\thanks\empty
 \newcommand\@make@title@page{%
   \thispagestyle{empty}%
@@ -179,7 +181,7 @@
     ISSN~\@issn \\
     ISRN~\@isrn \\[1.5em]
   \fi%
-  \copyright \space \@author, \@date \\[1.5em]
+  \copyright \space \@author, \@date. \@tmnotice \\[1.5em]
   \@publisher, \@imprint \par
   \newpage
   \global\let\@maketitle\relax
@@ -196,6 +198,7 @@
   \global\let\issn\relax
   \global\let\isrn\relax
   \global\let\isbn\relax
+  \global\let\tmnotice\relax
   \global\let\dedication\relax
   \global\let\and\relax
 }
