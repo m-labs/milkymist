@@ -256,7 +256,7 @@ The architecture of the memory controller, dubbed HPDMC (for ``High Performance 
 
 The control interface is used by the system to configure the controller, and also to issue the start-up sequence to the SDRAM. Indeed, SDRAM chips require a sophisticated sequence of commands upon power-up. In many memory controller designs, a hardware finite state machine is used to issue this command sequence. In order to save hardware resources, the system used  here leaves this task to the software, and, for this purpose, includes a ``bypass MUX'' that routes directly a configuration and status register of HPDMC to the SDRAM command and address pins. Once the SoC has run a software routine that sends the correct initialization sequence to the SDRAM, it switches permanently the bypass MUX to the ``SDRAM management unit'' and can use off-chip memory normally.
 
-The SDRAM management unit is a finite state machine that translates the two high-level memory commands of ``read address'' and ``write address'' into a series of lower-level commands understandable by the SDRAM chips (precharge bank, select row, read from row, etc.). The management unit is responsible for detecting page hits and issuing periodic DRAM refresh cycles.
+The SDRAM management unit is a finite state machine that translates the two high-level memory commands ``read burst at address'' and ``write burst at address'' into a series of lower-level commands understandable by the SDRAM chips (precharge bank, select row, read from row, etc.). The management unit is responsible for keeping track of the open rows, detecting page hits, switching rows, and issuing periodic DRAM refresh cycles.
 
 The management unit is connected to the ``data path controller'', that follows the activities performed by the management unit in order to decide the direction of the bidirectional I/O pins (they should be set as outputs for writes and as input for reads). The data path controller is also responsible for sending signals to the management unit that indicate if it is safe to perform certain low-level operations. For example, the \verb!read_safe! signal goes low immediately after a read command is issued, because if another one were sent immediately after, the two resulting bursts would overlap in time and this could not work because there is only one set of data pins. Eventually, the data path controller takes into account the SDRAM write and read latencies to generate an acknowledgement signal when the data is actually there (or needs to be sent to the SDRAM) after a ``read row'' or ``write row'' command has been sent to the SDRAM.
 
@@ -274,11 +274,22 @@ TODO
 \chapter{SoC interconnect}
 The general SoC block diagram and its interconnect is outlined in~\ref{fig:block}. Not all the blocks are ready at the time of this writing, nor all of them are within the scope of this Master's thesis!
 
+More specifically, the following components are not developed yet:
+\begin{itemize}
+\item Ethernet controller
+\item microSD controller (the current prototype use a CF card through Xilinx SystemACE)
+\item USB controller
+\item Video input
+\item IR receiver
+\item MIDI controller
+\item DMX512 controller
+\end{itemize}
+
 This chapter explains how the different interconnect buses work, what their features are, why they are there, and how they are communicate with each other.
 
 \begin{figure}
 \centering
-\includegraphics[height=175mm]{soc_architecture.eps}
+\includegraphics[height=170mm]{soc_architecture.eps}
 \caption{SoC block diagram}
 \label{fig:block}
 \end{figure}
@@ -289,6 +300,13 @@ This chapter explains how the different interconnect buses work, what their feat
 \section{Bridging Wishbone to FML}
 
 \chapter{Software execution environment}
+\section{LatticeMico32}
+The heart of the software execution capabilities of the SoC is the LatticeMico32 microprocessor core~\cite{mico32}. It is a classic 6-stage in-order pipelined RISC processor with a custom instruction set supported by the GNU (GCC-based) compiler toolchain. It supports separate instruction and data caches with up to two ways. There are an optional barrel shifter, pipelined multiplier and multi-cycle divider.
+
+The Milkymist system-on-chip uses LatticeMico32 with 2-way caches of 16KB each, and all the optional features enabled.
+
+At the time this thesis is written, LatticeMico32 is the only hardware component that I have not developed specifically for the Milkymist project.
+
 \section{Capabilities}
 Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
 
@@ -299,12 +317,54 @@ Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this 
 \label{fig:linux}
 \end{figure}
 
-\section{Benchmarking and tuning}
+\section{Benchmarking}
+The performance of the Milkymist SoC was compared to Microblaze~\cite{microblaze}, the proprietary Xilinx softcore SoC platform.
 
-\chapter{Fast texture mapping}
+The benchmark used was the ``consumer'' MiBench~\cite{mibench} suite. By contrast to traditional benchmarks such as SPEC, MiBench is tailored to typical workloads of embedded systems. Only two benchmarks are missing from the ``consumer'' set: \verb!tiff2rgba! (it tried to use too much contiguous memory for the nommu Milkymist/Linux allocator to handle) and \verb!lame! (it crashed on Microblaze).
+
+All tests were run on a Xilinx ML401 (XC4VLX25 FPGA) development board, with a system frequency of 100MHz.
+
+For Milkymist, the configuration used was the default one of the port to the ML401 board:
+\begin{itemize}
+\item Processor with hardware multiplier, divider and barrel shifter
+\item 16KB L1 instruction and data (write-through) cache (2-way set-associative)
+\item No memory management unit (LatticeMico32 does not have one)
+\item 16KB FML bridge write-back L2 cache (direct mapped)
+\item HPDMC DDR SDRAM controller, 32-bit SDRAM bus width
+\item 100MHz DDR SDRAM clock
+\item Video output running at standard VGA resolution, consuming approximately 300MBps of memory bandwidth
+\item Software: GCC 4.2.1 and Linux 2.6.23.
+\end{itemize}
+
+For Microblaze, the configuration is as follows:
+\begin{itemize}
+\item Processor with hardware multiplier, divider and barrel shifter
+\item 16KB L1 instruction and data (write-through) cache (direct mapped, multi-way caches are not supported)
+\item Full memory management unit
+\item No L2 cache (not supported)
+\item MPMC DDR SDRAM controller, 32-bit SDRAM bus width
+\item 100MHz DDR SDRAM clock
+\item No video output
+\item Software: GCC 4.1.2 and Linux 2.6.32.4.
+\end{itemize}
+
+The comparison seems clearly in favor of Milkymist, with a rough 15\%-35\% (depending on the benchmark) reduction in execution time. Details are shown in Figure~\ref{fig:mmvsmb}.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=75mm]{mm_vs_mb.eps}
+\caption{Comparative MiBench results of Milkymist and Microblaze.}
+\label{fig:mmvsmb}
+\end{figure}
+
+The root causes of this performance improvement were not investigated; but since LatticeMico32 and Microblaze share a very close architecture, it is suspected that these differences are vastly explained by the combination of the low-latency HPDMC controller and the improved caches.
+
+The main point of this comparison is to confirm the viability of Milkymist as a powerful SoC platform, that can withstand the competition with commercial solutions.
+
+\chapter{Texture mapping unit}
 \label{ch:tmu}
 
-\chapter{The floating point coprocessor}
+\chapter{Floating point coprocessor}
 
 \bibliography{thesis}{}
 \bibliographystyle{plain}
