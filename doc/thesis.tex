@@ -157,17 +157,140 @@ Thus, most of today's SDRAM controllers do a lot to optimize bandwidth but have 
 An extreme example of these memory controller bandwidth optimizations is the MemMax\textregistered ~DRAM scheduler~\cite{memmax}. This unit sits on top of an already existing memory controller (which already has its own latency), adding seven stages of complex and high-latency pipelining that produces an efficient - but compute-intensive - DRAM schedule. The actual efficiency of this system has been questioned~\cite{dramqos} because of that significant increase in latency.
 
 \section{An alternative approach}
-The out-of-order execution and hardware multithreading processor optimizations discussed above are however complex and impractical in the context of small and cheap embedded systems, especially those targetted at small FPGAs. For example, the OpenSPARC~\cite{opensparc}.
+The out-of-order execution and hardware multithreading processor optimizations discussed above that cope with high memory latency are complex and impractical in the context of small and cheap embedded systems, especially those targetted at FPGA implementations. For example, FPGA implementations of the OpenSPARC~\cite{opensparc} processor, which employs such optimizations, typically require an expensive high-end Xilinx XUPV5 board whose Virtex-5 FPGA alone costs roughly 13000 SEK.
 
-\section{Benchmarking}
+Milkymist therefore uses simple in-order execution schemes in its CPU and in its accelerators, and strives to improve performance by focusing on reducing the memory latency.
 
-\chapter{Configuration and Status Register (CSR) bus}
-\section{General SoC interconnect: the Wishbone bus and its limitations}
-\section{Saving resources and helping timing closure}
+The memory system features that improve latency (but also bandwidth) are discussed below.
+
+\section{Memory system features}
+\subsection{Single SDRAM and system clock domain}
+The typical operating frequency of early SDR and DDR SDRAM (technologies that are prior to DDR2 and do not have a clock divider for the internal DRAM core) is close to the 100MHz frequency at which the FPGA is able to meet timing for the complete SoC. Thus, it was decided to run the DRAM and the system synchronously in order to remove the need for any clock domain transfer logic and reduce latency. The SDRAM I/O registers are clocked by the system clock, and timing of the SDRAM interface is met through the use of calibrated on-chip delay elements and delay-locked-loops (DLLs) to generate the off-chip SDRAM clock and the data strobes.
+
+\subsection{Page mode control algorithm}
+The Milkymist memory controller takes the so-called ``page mode gamble'': after an access, the DRAM row is left open in the hope that the next transaction to the memory bank will occur within the same row. If the memory controller is right, the read of write command can be immediately registered into the SDRAM, and only the CAS or write latency is incurred. If the memory controller is wrong, it must first precharge the DRAM bank and open the correct row, causing extra delays.
+
+Thus, if the memory controller is often wrong, taking the page mode gamble will actually impact performance negatively. However, a study has shown~\cite{pagemode} that, with typical memory timings, the point at which the gamble pays off is for a page hit probability of 0.375 only, attainable with many practical memory access patterns.
+
+Page hit probability is also improved by the ability of the Milkymist memory controller to track open rows independently in each of the four memory banks that commercial SDRAM chips are equipped with.
+
+This optimization positively affects both latency and bandwidth.
+
+\subsection{Burst accesses}
+All memory accesses are made using bursts, i.e. when an access for a word is made, the following words are also read or written. Burst mode is a feature of the SDRAM chips: only one read of write command is sent to them, and several words are transferred on subsequent clock cycles.
+
+Using bursts frees the bus and DRAM control signals while other words are transferred, allowing the issue of new commands overlapping the data phase of the previous transaction.
+
+Burst access is a form of prefetching that improves latency. It is only efficient when the prefetched data can be used by the requesting bus master. In the Milkymist system-on-chip, this is often the case:
+\begin{itemize}
+\item The CPU core has a cache which accesses memory by complete cache lines. Thus, if the cache line length is a multiple of the burst length, the bursts can be easily fully memorized.
+\item The video framebuffer repeatedly reads the same block of data in a sequential manner, and can easily make full use of the prefetched data assuming that is has sufficient on-chip buffer space.
+\item The texture mapping unit also has a cache and a write buffer which work well with burst accesses. This will be discussed in Chapter~\ref{ch:tmu}.
+\end{itemize}
+
+\subsection{Burst reordering}
+This feature enables the use of the critical-word-first scheme in caches, reducing the overall memory latency.
+
+When a request is issued at an address which is not a multiple of the burst length, the order of the words in the burst is changed so that the first word that comes out is the very word that is at the requested memory address. The prefetch address is then incremented and wraps to stay within the same burst.
+
+For example, assuming a burst length of 4:
+\begin{itemize}
+\item a request at address 0 fetches words 0, 1, 2 and 3 (in this order)
+\item a request at address 2 fetches words 2, 3, 0 and 1 (in this order)
+\end{itemize}
+
+\subsection{Pipelining}
+The memory bus of Milkymist~\cite{fml} is pipelined. During the transfer of the prefetched (burst) data, a new request can be issued. This is illustrated for a read request by the table below:
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Address} & A1 & A1 & A1 & A2 & A2 & A2 & A2 \\
+\hline
+\textbf{Data} & -- & -- & M(A1) & M(A1+1) & M(A1+2) & M(A1+3) & M(A2) \\
+\hline
+\end{tabular}\\
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Address (cont.)} & -- & -- & --\\
+\hline
+\textbf{Data (cont.)} & M(A2+1) & M(A2+2) & M(A2+3) \\
+\hline
+\end{tabular}
+
+Together with burst access, this helps acheiving high performance: the memory controller can hide DRAM latencies and row switch delays by issuing the requests to the DRAM in advance, while the previous transaction is still transferring data.
+
+\section{Practical implementation}
+The Milkymist SoC uses 32-bit DDR SDRAM, configured to its maximum burst length of 8. Since the DDR SDRAM transfers two words per clock cycles (one on each edge), this is turned by the I/O registers into bursts of four 64-bit words synchronous to the system clock.
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Task} & \textbf{Required bandwidth} \\
+\hline
+VGA framebuffer, 1024x768, 75Hz, 16bpp & 950Mbps \\
+\hline
+Texture mapping, 1024x768, 30fps, 16bpp & 750Mbps \\
+\hline
+NTSC input, 720x576, 30fps, 16bpp & 200Mbps \\
+\hline
+Software and misc. & 300Mbps \\
+\hline
+\textbf{Total} & \textbf{2.2Gbps} \\
+\hline
+\end{tabular}
+\label{tab:membw}
+\caption{Estimate of the memory bandwidth consumption}
+\end{table}
+
+The memory is run at 100MHz, yielding a peak theoretical bandwidth of 6.4Gbps, which is more than enough for the intended video synthesis application (Table~\ref{tab:membw}). This bandwidth is however never attained: events such as switching DRAM rows which takes significant time and, to a lesser extent, DRAM refreshes introduce dead times on the data bus. Furthermore, a bandwidth margin is kept to enable potential future extensions such as the support of 24bpp or 32bpp color depths, which would increase bandwidth consumption.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=85mm]{hpdmc_block.eps}
+\caption{Block diagram of the HPDMC architecture.}\label{fig:hpdmc_block}
+\end{figure}
+
+The architecture of the memory controller, dubbed HPDMC (for ``High Performance Dynamic Memory Controller''), is outlined in Figure~\ref{fig:hpdmc_block}.
+
+The control interface is used by the system to configure the controller, and also to issue the start-up sequence to the SDRAM. Indeed, SDRAM chips require a sophisticated sequence of commands upon power-up. In many memory controller designs, a hardware finite state machine is used to issue this command sequence. In order to save hardware resources, the system used  here leaves this task to the software, and, for this purpose, includes a ``bypass MUX'' that routes directly a configuration and status register of HPDMC to the SDRAM command and address pins. Once the SoC has run a software routine that sends the correct initialization sequence to the SDRAM, it switches permanently the bypass MUX to the ``SDRAM management unit'' and can use off-chip memory normally.
+
+The SDRAM management unit is a finite state machine that translates the two high-level memory commands of ``read address'' and ``write address'' into a series of lower-level commands understandable by the SDRAM chips (precharge bank, select row, read from row, etc.). The management unit is responsible for detecting page hits and issuing periodic DRAM refresh cycles.
+
+The management unit is connected to the ``data path controller'', that follows the activities performed by the management unit in order to decide the direction of the bidirectional I/O pins (they should be set as outputs for writes and as input for reads). The data path controller is also responsible for sending signals to the management unit that indicate if it is safe to perform certain low-level operations. For example, the \verb!read_safe! signal goes low immediately after a read command is issued, because if another one were sent immediately after, the two resulting bursts would overlap in time and this could not work because there is only one set of data pins. Eventually, the data path controller takes into account the SDRAM write and read latencies to generate an acknowledgement signal when the data is actually there (or needs to be sent to the SDRAM) after a ``read row'' or ``write row'' command has been sent to the SDRAM.
+
+Finally, the bus interface is a piece of glue logic that connects the SoC pipelined memory bus (FML) to the data path controller and the management unit.
+
+HPDMC has been implemented in Verilog HDL, tested and debugged in RTL simulation using a DDR SDRAM Verilog model from Micron, integrated into the SoC, synthesized into FPGA technology, and eventually calibrated and tested by software routines running on the actual hardware.
+
+This design of memory controller, specifically crafted for the Milkymist project and released under the GNU GPL license on websites such as OpenCores.org, has been picked up by the NASA for a software defined radio project and may be put up on board the international space station in 2011.
+
+\section{Performance measurement}
+To measure how well HPDMC performs in the real Milkymist system, a logic core has been added to the SoC that snoops on the memory bus activity in order to report the average latency and bandwidth. Results are summarized in Table xxx.
+
+TODO
+
+\chapter{SoC interconnect}
+The general SoC block diagram and its interconnect is outlined in~\ref{fig:block}. Not all the blocks are ready at the time of this writing, nor all of them are within the scope of this Master's thesis!
+
+This chapter explains how the different interconnect buses work, what their features are, why they are there, and how they are communicate with each other.
+
+\begin{figure}
+\centering
+\includegraphics[height=175mm]{soc_architecture.eps}
+\caption{SoC block diagram}
+\label{fig:block}
+\end{figure}
+
+\section{General SoC interconnect: the Wishbone bus}
+\section{Configuration and Status Register: the CSR bus}
+\section{High-throughput memory access bus: the FML bus}
+\section{Bridging Wishbone to FML}
 
 \chapter{Software execution environment}
 \section{Capabilities}
-Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this is a community effort, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
+Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
 
 \begin{figure}[htp]
 \centering
@@ -179,6 +302,7 @@ Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this 
 \section{Benchmarking and tuning}
 
 \chapter{Fast texture mapping}
+\label{ch:tmu}
 
 \chapter{The floating point coprocessor}
 
