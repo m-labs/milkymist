@@ -42,7 +42,7 @@ The open source model means that any individual, if he or she has the required l
 \label{fig:ikos}
 \end{figure}
 
-But today, the cost of fast high-density FPGAs is falling and these devices are becoming available to the general public. For an example of this trend, I would mention the Ikos Pegasus application specific integrated circuit (ASIC) emulator, whose insides are depicted in Figure~\ref{fig:ikos}. The CPU core used in the system-on-chip described in this thesis occupies alone 60\% of the resources of one of the XC4036XL FPGAs of this device, and runs at 30MHz. The Ikos Pegasus was a state-of-the-art device a decade ago. It consumes up to 3 kilowatts of power, weights dozens of kilos and costed the equivalent of several millions of SEK. The same CPU core now occupies about 15\% of a modern FPGA costing less than 500 SEK, where it runs in excess of 100MHz.
+But today, the cost of fast high-density FPGAs is falling and these devices are becoming available to the general public. For an example of this trend, I would mention the Ikos Pegasus application specific integrated circuit (ASIC) emulator, whose insides are depicted in figure~\ref{fig:ikos}. The CPU core used in the system-on-chip described in this thesis occupies alone 60\% of the resources of one of the XC4036XL FPGAs of this device, and runs at 30MHz. The Ikos Pegasus was a state-of-the-art device a decade ago. It consumes up to 3 kilowatts of power, weights dozens of kilos and costed the equivalent of several millions of SEK. The same CPU core now occupies about 15\% of a modern FPGA costing less than 500 SEK, where it runs in excess of 100MHz.
 
 This evolution makes it possible to implement complex high-performance system-on-chips (SoC) that can be modified and improved by anyone, thanks to the flexibility of the FPGA platform.
 
@@ -252,7 +252,7 @@ The memory is run at 100MHz, yielding a peak theoretical bandwidth of 6.4Gbps, w
 \caption{Block diagram of the HPDMC architecture.}\label{fig:hpdmc_block}
 \end{figure}
 
-The architecture of the memory controller, dubbed HPDMC (for ``High Performance Dynamic Memory Controller''), is outlined in Figure~\ref{fig:hpdmc_block}.
+The architecture of the memory controller, dubbed HPDMC (for ``High Performance Dynamic Memory Controller''), is outlined in figure~\ref{fig:hpdmc_block}.
 
 The control interface is used by the system to configure the controller, and also to issue the start-up sequence to the SDRAM. Indeed, SDRAM chips require a sophisticated sequence of commands upon power-up. In many memory controller designs, a hardware finite state machine is used to issue this command sequence. In order to save hardware resources, the system used  here leaves this task to the software, and, for this purpose, includes a ``bypass MUX'' that routes directly a configuration and status register of HPDMC to the SDRAM command and address pins. Once the SoC has run a software routine that sends the correct initialization sequence to the SDRAM, it switches permanently the bypass MUX to the ``SDRAM management unit'' and can use off-chip memory normally.
 
@@ -301,14 +301,22 @@ This chapter explains how the different interconnect buses work, what their feat
 
 \chapter{Software execution environment}
 \section{LatticeMico32}
-The heart of the software execution capabilities of the SoC is the LatticeMico32 microprocessor core~\cite{mico32}. It is a classic 6-stage in-order pipelined RISC processor with a custom instruction set supported by the GNU (GCC-based) compiler toolchain. It supports separate instruction and data caches with up to two ways. There are an optional barrel shifter, pipelined multiplier and multi-cycle divider.
+The heart of the software execution capabilities of the SoC is the LatticeMico32 microprocessor core~\cite{mico32}. It is a classic 6-stage in-order pipelined RISC processor (figure~\ref{fig:lm32arch}) with a custom instruction set supported by the GNU (GCC-based) compiler toolchain. It supports separate instruction and data caches with up to two ways. There are an optional barrel shifter, pipelined multiplier and multi-cycle divider.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=90mm]{lm32arch.eps}
+\caption{LatticeMico32 architecture (Lattice Semiconductor).}
+\label{fig:lm32arch}
+\end{figure}
+
 
 The Milkymist system-on-chip uses LatticeMico32 with 2-way caches of 16KB each, and all the optional features enabled.
 
 At the time this thesis is written, LatticeMico32 is the only hardware component that I have not developed specifically for the Milkymist project.
 
 \section{Capabilities}
-Linux has been ported to the Milkymist SoC (Figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
+Linux has been ported to the Milkymist SoC (figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
 
 \begin{figure}[htp]
 \centering
@@ -348,7 +356,11 @@ For Microblaze, the configuration is as follows:
 \item Software: GCC 4.1.2 and Linux 2.6.32.4.
 \end{itemize}
 
-The comparison seems clearly in favor of Milkymist, with a rough 15\%-35\% (depending on the benchmark) reduction in execution time. Details are shown in Figure~\ref{fig:mmvsmb}.
+The comparison seems clearly in favor of Milkymist, with a rough 15\%-35\% (depending on the benchmark) reduction in execution time. Details are shown in figure~\ref{fig:mmvsmb} and in tables \ref{tab:milkymistspeed} and \ref{tab:microblazespeed}. Deviation is computed as:
+\begin{equation}
+\frac{|t_{1}-t_{2}|}{min(t_{1}, t_{2})}
+\end{equation}
+It is meant to check that the results are deterministic and reproducible.
 
 \begin{figure}[htp]
 \centering
@@ -356,6 +368,53 @@ The comparison seems clearly in favor of Milkymist, with a rough 15\%-35\% (depe
 \caption{Comparative MiBench results of Milkymist and Microblaze.}
 \label{fig:mmvsmb}
 \end{figure}
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Benchmark} & \textbf{Run 1} & \textbf{Run 2} & \textbf{Average} & \textbf{Deviation}  \\
+\hline
+jpeg & 2.57 s & 2.54 s & 2.56 s & 1.18 \% \\
+\hline
+mad & 5.84 s & 5.87 s & 5.86 s & 0.51 \% \\
+\hline
+tiff2bw & 9.51 s & 9.69 s & 9.6 s & 1.89 \% \\
+\hline
+tiffdither & 19.28 s & 19.3 s & 19.29 s & 0.10 \% \\
+\hline
+tiffmedian & 26.48 s & 26.26 s & 26.37 s & 0.84 \% \\
+\hline
+typeset & 21.44 s & 21.79 s & 21.62 s & 1.63 \% \\
+\hline
+\end{tabular}
+\label{tab:milkymistspeed}
+\caption{User execution times on Milkymist 0.2.}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Benchmark} & \textbf{Run 1} & \textbf{Run 2} & \textbf{Average} & \textbf{Deviation}  \\
+\hline
+jpeg & 3.42 s & 3.58 s & 3.5 s & 4.68 \% \\
+\hline
+mad & 6.72 s & 7.11 s & 6.92 s & 5.80 \% \\
+\hline
+tiff2bw & 15.19 s & 14.12 s & 14.66 s & 7.58 \% \\
+\hline
+tiffdither & 24.72 s & 24.68 s & 24.7 s & 0.16 \% \\
+\hline
+tiffmedian & 35.02 s & 33.05 s & 34.04 s & 5.96 \% \\
+\hline
+typeset & 28.91 s & 28.83 s & 28.87 s & 0.28 \% \\
+\hline
+\end{tabular}
+\label{tab:microblazespeed}
+\caption{User execution times on Microblaze 10.1.}
+\end{table}
+
 
 The root causes of this performance improvement were not investigated; but since LatticeMico32 and Microblaze share a very close architecture, it is suspected that these differences are vastly explained by the combination of the low-latency HPDMC controller and the improved caches.
 
