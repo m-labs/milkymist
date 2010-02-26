@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,18 @@
 #ifndef __INTERRUPTS_H
 #define __INTERRUPTS_H
 
-#define IRQ_GPIO		(0x00000001)
-#define IRQ_TIMER0		(0x00000002)
-#define IRQ_TIMER1		(0x00000004)
-#define IRQ_UARTRX		(0x00000008)
-#define IRQ_UARTTX		(0x00000010)
-#define IRQ_AC97CRREQUEST	(0x00000020)
-#define IRQ_AC97CRREPLY		(0x00000040)
-#define IRQ_AC97DMAR		(0x00000080)
-#define IRQ_AC97DMAW		(0x00000100)
-#define IRQ_PFPU		(0x00000200)
-#define IRQ_TMU			(0x00000400)
-#define IRQ_PS2KEYBOARD		(0x00000800)
-#define IRQ_PS2MOUSE		(0x00001000)
+#define IRQ_GPIO		(0x00000001) /* 0 */
+#define IRQ_TIMER0		(0x00000002) /* 1 */
+#define IRQ_TIMER1		(0x00000004) /* 2 */
+#define IRQ_UARTRX		(0x00000008) /* 3 */
+#define IRQ_UARTTX		(0x00000010) /* 4 */
+#define IRQ_AC97CRREQUEST	(0x00000020) /* 5 */
+#define IRQ_AC97CRREPLY		(0x00000040) /* 6 */
+#define IRQ_AC97DMAR		(0x00000080) /* 7 */
+#define IRQ_AC97DMAW		(0x00000100) /* 8 */
+#define IRQ_PFPU		(0x00000200) /* 9 */
+#define IRQ_TMU			(0x00000400) /* 10 */
+#define IRQ_PS2KEYBOARD		(0x00000800) /* 11 */
+#define IRQ_PS2MOUSE		(0x00001000) /* 12 */
 
 #endif /* __INTERRUPTS_H */
