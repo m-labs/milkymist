@@ -200,7 +200,8 @@ wire [31:0]	cpuibus_adr,
 wire [2:0]	cpuibus_cti,
 		cpudbus_cti,
 		ac97bus_cti,
-		tmumbus_cti;
+		tmumbus_cti,
+		ethernetmbus_cti;
 
 wire [31:0]	cpuibus_dat_r,
 		cpudbus_dat_r,
@@ -365,7 +366,7 @@ conbus #(
 	.m5_dat_i(ethernetmbus_dat_w),
 	.m5_dat_o(ethernetmbus_dat_r),
 	.m5_adr_i(ethernetmbus_adr),
-	.m5_cti_i(3'd0),
+	.m5_cti_i(ethernetmbus_cti),
 	.m5_we_i(ethernetmbus_we),
 	.m5_sel_i(ethernetmbus_sel),
 	.m5_cyc_i(ethernetmbus_cyc),
@@ -415,14 +416,14 @@ conbus #(
 	.s4_stb_o(aceusb_stb),
 	.s4_ack_i(aceusb_ack),
 	// Slave 5
-	.s5_dat_i(ethernet_dat_r),
-	.s5_dat_o(ethernet_dat_w),
-	.s5_adr_o(ethernet_adr),
-	.s5_sel_o(ethernet_sel),
-	.s5_we_o(ethernet_we),
-	.s5_cyc_o(ethernet_cyc),
-	.s5_stb_o(ethernet_stb),
-	.s5_ack_i(ethernet_ack)
+	.s5_dat_i(32'bx),
+	.s5_dat_o(),
+	.s5_adr_o(),
+	.s5_sel_o(),
+	.s5_we_o(),
+	.s5_cyc_o(),
+	.s5_stb_o(),
+	.s5_ack_i(1'b0)
 );
 
 //------------------------------------------------------------------
@@ -439,7 +440,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_pfpu,
 		csr_dr_tmu,
 		csr_dr_ps2,
-		csr_dr_mouse;
+		csr_dr_mouse,
+		csr_dr_ethernet;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -565,6 +567,7 @@ csrbrg csrbrg(
 		|csr_dr_tmu
 		|csr_dr_ps2
 		|csr_dr_mouse
+		|csr_dr_ethernet
 	)
 );
 
@@ -1133,58 +1136,53 @@ assign mouse_irq = 1'd0;
 `endif
 
 `ifdef ENABLE_ETHERNET
-wire md_pad_i;
-wire md_pad_o;
-wire md_padoe_o;
+minimac #(
+	.csr_addr(4'h9)
+) ethernet (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
 
-eth_top ethernet(
-	.wb_clk_i(sys_clk),
-	.wb_rst_i(sys_rst),
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_ethernet),
 
-	/* Slave interface */
-	.wb_adr_i(ethernet_adr[11:2]),
-	.wb_sel_i(ethernet_sel),
-	.wb_we_i(ethernet_we),
-	.wb_cyc_i(ethernet_cyc),
-	.wb_stb_i(ethernet_stb),
-	.wb_ack_o(ethernet_ack),
-	.wb_err_o(),
-	.wb_dat_i(ethernet_dat_w),
-	.wb_dat_o(ethernet_dat_r),
+	.wbm_adr_o(ethernetmbus_adr),
+	.wbm_cti_o(ethernetmbus_cti),
+	.wbm_we_o(ethernetmbus_we),
+	.wbm_cyc_o(ethernetmbus_cyc),
+	.wbm_stb_o(ethernetmbus_stb),
+	.wbm_ack_i(ethernetmbus_ack),
+	.wbm_sel_o(ethernetmbus_sel),
+	.wbm_dat_o(ethernetmbus_dat_w),
+	.wbm_dat_i(ethernetmbus_dat_r),
 
-	/* Master interface */
-	.m_wb_adr_o(ethernetmbus_adr),
-	.m_wb_sel_o(ethernetmbus_sel),
-	.m_wb_we_o(ethernetmbus_we),
-	.m_wb_dat_o(ethernetmbus_dat_w),
-	.m_wb_dat_i(ethernetmbus_dat_r),
-	.m_wb_cyc_o(ethernetmbus_cyc),
-	.m_wb_stb_o(ethernetmbus_stb),
-	.m_wb_ack_i(ethernetmbus_ack),
-	.m_wb_err_i(1'b0),
+	.irq(ethernet_irq),
 
-	.int_o(ethernet_irq),
-
-	/* MII */
-	.mtx_clk_pad_i(phy_tx_clk),
-	.mtxd_pad_o(phy_tx_data),
-	.mtxen_pad_o(phy_tx_en),
-	.mtxerr_pad_o(phy_tx_er),
-	.mrx_clk_pad_i(phy_rx_clk),
-	.mrxd_pad_i(phy_rx_data),
-	.mrxdv_pad_i(phy_dv),
-	.mrxerr_pad_i(phy_rx_er),
-	.mcoll_pad_i(phy_col),
-	.mcrs_pad_i(phy_crs),
-	.mdc_pad_o(phy_mii_clk),
-	.md_pad_i(md_pad_i),
-	.md_pad_o(md_pad_o),
-	.md_padoe_o(md_padoe_o)
+	.phy_tx_clk(phy_tx_clk),
+	.phy_tx_data(phy_tx_data),
+	.phy_tx_en(phy_tx_en),
+	.phy_tx_er(phy_tx_er),
+	.phy_rx_clk(phy_rx_clk),
+	.phy_rx_data(phy_rx_data),
+	.phy_dv(phy_dv),
+	.phy_rx_er(phy_rx_er),
+	.phy_col(phy_col),
+	.phy_crs(phy_crs),
+	.phy_mii_clk(phy_mii_clk),
+	.phy_mii_data(phy_mii_data)
 );
-
-assign phy_mii_data = md_padoe_o ? md_pad_o : 1'bz;
-assign md_pad_i = phy_mii_data;
 `else
+assign csr_dr_ethernet = 32'd0;
+
+assign ethernetmbus_adr = 32'bx;
+assign ethernetmbus_cti = 3'bx;
+assign ethernetmbus_we = 1'bx;
+assign ethernetmbus_cyc = 1'b0;
+assign ethernetmbus_stb = 1'b0;
+assign ethernetmbus_sel = 3'bx;
+assign ethernetmbus_dat_w = 32'bx;
+
 assign phy_tx_data = 4'b0;
 assign phy_tx_en = 1'b0;
 assign phy_tx_er = 1'b0;

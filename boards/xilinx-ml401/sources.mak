@@ -60,6 +60,6 @@ TMU_SRC=						\
 	$(CORES_DIR)/tmu2/rtl/tmu2_blend.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_mult2_virtex4.v
 PS2_SRC=$(wildcard $(CORES_DIR)/ps2/rtl/*.v)
-ETHERNET_SRC=$(wildcard $(CORES_DIR)/ethmac/rtl/*.v)
+ETHERNET_SRC=$(wildcard $(CORES_DIR)/minimac/rtl/*.v)
 
 CORES_SRC=$(CONBUS_SRC) $(LM32_SRC) $(FMLARB_SRC) $(FMLBRG_SRC) $(CSRBRG_SRC) $(NORFLASH_SRC) $(BRAM_SRC) $(UART_SRC) $(SYSCTL_SRC) $(ACEUSB_SRC) $(HPDMC_SRC) $(VGAFB_SRC) $(AC97_SRC) $(PFPU_SRC) $(TMU_SRC) $(PS2_SRC) $(ETHERNET_SRC)
