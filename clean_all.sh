@@ -9,6 +9,7 @@ cd $BASEDIR/tools && make clean
 cd $BASEDIR/software/libbase && make clean
 cd $BASEDIR/software/libmath && make clean
 cd $BASEDIR/software/libhal && make clean
+cd $BASEDIR/software/libnet && make clean
 cd $BASEDIR/software/bios && make clean
 cd $BASEDIR/software/demo && make clean
 

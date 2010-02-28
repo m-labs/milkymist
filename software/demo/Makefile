@@ -30,8 +30,8 @@ spam.h: spam.raw
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@
 
-boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase.a $(MMDIR)/software/libmath/libmath.a $(MMDIR)/software/libhal/libhal.a
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libhal --start-group $(OBJECTS) -lbase -lmath -lhal --end-group
+boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase.a $(MMDIR)/software/libmath/libmath.a $(MMDIR)/software/libhal/libhal.a $(MMDIR)/software/libnet/libnet.a
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group $(OBJECTS) -lbase -lmath -lhal -lnet --end-group
 	chmod -x $@
 
 .PHONY: clean depend
@@ -122,7 +122,8 @@ shell.o: ../../software/include/hw/interrupts.h
 shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
 shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
 shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
-shell.o: line.h wave.h rpipe.h cpustats.h shell.h ui.h
+shell.o: ../../software/include/net/mdio.h line.h wave.h rpipe.h cpustats.h
+shell.o: shell.h ui.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h ui.h

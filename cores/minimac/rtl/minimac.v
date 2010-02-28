@@ -67,8 +67,26 @@ minimac_ctlif #(
 	.irq_rx(irq_rx),
 	.irq_tx(irq_tx),
 
+	.speed10(),
+	.promisc(),
+	.macaddr(),
+
+	.rx_valid(),
+	.rx_adr(),
+	.rx_incrcount(),
+	.rx_endframe(),
+
+	.tx_valid(),
+	.tx_adr(),
+	.tx_bytecount(),
+	.tx_next(),
+
 	.phy_mii_clk(phy_mii_clk),
 	.phy_mii_data(phy_mii_data)
 );
+
+assign phy_tx_data = 4'h0;
+assign phy_tx_en = 1'b0;
+assign phy_tx_er = 1'b0;
 
 endmodule

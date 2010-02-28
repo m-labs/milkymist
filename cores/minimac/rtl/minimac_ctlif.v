@@ -24,7 +24,7 @@ module minimac_ctlif #(
 	input [13:0] csr_a,
 	input csr_we,
 	input [31:0] csr_di,
-	output [31:0] csr_do,
+	output reg [31:0] csr_do,
 
 	output reg irq_rx,
 	output reg irq_tx,
@@ -112,6 +112,7 @@ always @(posedge sys_clk) begin
 
 		mii_data_oe <= 1'b0;
 		mii_data_do <= 1'b0;
+		phy_mii_clk <= 1'b0;
 
 		slot0_state <= 2'b00;
 		slot0_adr <= 30'd0;
@@ -142,6 +143,7 @@ always @(posedge sys_clk) begin
 					5'd2 : macaddr[23:0] <= csr_di[23:0];
 
 					5'd3 : begin
+						phy_mii_clk <= csr_di[3];
 						mii_data_oe <= csr_di[2];
 						mii_data_do <= csr_di[0];
 					end
@@ -183,7 +185,7 @@ always @(posedge sys_clk) begin
 				5'd1 : csr_do <= macaddr[47:24];
 				5'd2 : csr_do <= macaddr[23:0];
 
-				5'd3 : csr_do <= {mii_data_oe, mii_data_di, mii_data_do};
+				5'd3 : csr_do <= {phy_mii_clk, mii_data_oe, mii_data_di, mii_data_do};
 				
 				5'd4 : csr_do <= slot0_state;
 				5'd5 : csr_do <= slot0_adr;

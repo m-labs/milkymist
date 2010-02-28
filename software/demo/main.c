@@ -59,23 +59,23 @@ int main()
 	cpustats_init();
 	time_init();
 	mem_init();
-	vga_init();
-	snd_init();
-	pfpu_init();
-	tmu_init();
-	renderer_init();
-	apipe_init();
-	rpipe_init();
-	slowout_init();
-	hdlcd_init();
-	ui_init();
+	//vga_init();
+	//snd_init();
+	//pfpu_init();
+	//tmu_init();
+	//renderer_init();
+	//apipe_init();
+	//rpipe_init();
+	//slowout_init();
+	//hdlcd_init();
+	//ui_init();
 	shell_init();
 	
 	while(1) {
 		if(readchar_nonblock())
 			shell_input(readchar());
-		apipe_service();
-		rpipe_service();
+		//apipe_service();
+		//rpipe_service();
 	}
 	
 	return 0;
