@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ struct board_desc {
 	unsigned int ddr_idelay;
 	unsigned int ddr_dqsdelay;
 	unsigned int memory_card;
+	unsigned int ethernet_phyadr;
 };
 
 const struct board_desc *get_board_desc_id(unsigned int id);

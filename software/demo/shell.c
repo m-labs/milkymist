@@ -226,7 +226,7 @@ static void mdior(char *reg)
 		return;
 	}
 
-	printf("%02x\n", mdio_read(0, reg2));
+	printf("%04x\n", mdio_read(brd_desc->ethernet_phyadr, reg2));
 }
 
 static void mdiow(char *reg, char *value)
@@ -250,7 +250,7 @@ static void mdiow(char *reg, char *value)
 		return;
 	}
 
-	mdio_write(0, reg2, value2);
+	mdio_write(brd_desc->ethernet_phyadr, reg2, value2);
 }
 
 
