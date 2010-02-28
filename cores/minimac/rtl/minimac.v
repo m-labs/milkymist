@@ -26,7 +26,8 @@ module minimac #(
 	input [31:0] csr_di,
 	output [31:0] csr_do,
 
-	output irq,
+	output irq_rx,
+	output irq_tx,
 
 	output [31:0] wbm_adr_o,
 	output [2:0] wbm_cti_o,
@@ -50,6 +51,24 @@ module minimac #(
 	input phy_crs,
 	output phy_mii_clk,
 	inout phy_mii_data
+);
+
+minimac_ctlif #(
+	.csr_addr(csr_addr)
+) ctlif (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_di),
+	.csr_do(csr_do),
+
+	.irq_rx(irq_rx),
+	.irq_tx(irq_tx),
+
+	.phy_mii_clk(phy_mii_clk),
+	.phy_mii_data(phy_mii_data)
 );
 
 endmodule

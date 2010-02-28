@@ -625,11 +625,13 @@ wire pfpu_irq;
 wire tmu_irq;
 wire keyboard_irq;
 wire mouse_irq;
-wire ethernet_irq;
+wire ethernetrx_irq;
+wire ethernettx_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {18'd0,
-	ethernet_irq,
+assign cpu_interrupt = {17'd0,
+	ethernettx_irq,
+	ethernetrx_irq,
 	mouse_irq,
 	keyboard_irq,
 	tmu_irq,
@@ -1157,7 +1159,8 @@ minimac #(
 	.wbm_dat_o(ethernetmbus_dat_w),
 	.wbm_dat_i(ethernetmbus_dat_r),
 
-	.irq(ethernet_irq),
+	.irq_rx(ethernetrx_irq),
+	.irq_tx(ethernettx_irq),
 
 	.phy_tx_clk(phy_tx_clk),
 	.phy_tx_data(phy_tx_data),
@@ -1182,6 +1185,9 @@ assign ethernetmbus_cyc = 1'b0;
 assign ethernetmbus_stb = 1'b0;
 assign ethernetmbus_sel = 3'bx;
 assign ethernetmbus_dat_w = 32'bx;
+
+assign ethernetrx_irq = 1'b0;
+assign ethernettx_irq = 1'b0;
 
 assign phy_tx_data = 4'b0;
 assign phy_tx_en = 1'b0;
