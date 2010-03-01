@@ -30,6 +30,7 @@
 #include <hw/sysctl.h>
 #include <hw/gpio.h>
 #include <hw/interrupts.h>
+#include <hw/minimac.h>
 
 #include <hal/vga.h>
 #include <hal/snd.h>
@@ -576,6 +577,17 @@ static void echo()
 	}
 }
 
+static char ethbuffer[2000];
+
+static void rxtest()
+{
+	CSR_MINIMAC_ADDR0 = (unsigned int)&ethbuffer[0];
+	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
+	while((CSR_MINIMAC_STATE0 != MINIMAC_STATE_PENDING) && (!readchar_nonblock()));
+	printf("Length: %d\n", CSR_MINIMAC_COUNT0);
+	dump_bytes((unsigned int *)ethbuffer, CSR_MINIMAC_COUNT0, 0);
+}
+
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -623,6 +635,7 @@ static void do_command(char *c)
 	else if(strcmp(command, "tmutest") == 0) tmutest();
 	else if(strcmp(command, "tmudemo") == 0) tmudemo();
 	else if(strcmp(command, "echo") == 0) echo();
+	else if(strcmp(command, "rxtest") == 0) rxtest();
 
 	else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 }

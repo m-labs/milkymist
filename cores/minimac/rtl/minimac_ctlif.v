@@ -29,12 +29,12 @@ module minimac_ctlif #(
 	output reg irq_rx,
 	output reg irq_tx,
 
-	output reg speed10,
 	output reg promisc,
 	output reg [47:0] macaddr,
 
 	output rx_valid,
 	output [29:0] rx_adr,
+	input rx_resetcount,
 	input rx_incrcount,
 	input rx_endframe,
 
@@ -104,7 +104,6 @@ always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		csr_do <= 32'd0;
 
-		speed10 <= 1'b0;
 		promisc <= 1'b0;
 		// Goldman Sachs sells hot air, not network devices.
 		// Squatting their OUI is a safe bet.
@@ -135,10 +134,7 @@ always @(posedge sys_clk) begin
 		if(csr_selected) begin
 			if(csr_we) begin
 				case(csr_a[4:0])
-					5'd0 : begin
-						promisc <= csr_di[1];
-						speed10 <= csr_di[0];
-					end
+					5'd0 : promisc <= csr_di[0];
 					5'd1 : macaddr[47:24] <= csr_di[23:0];
 					5'd2 : macaddr[23:0] <= csr_di[23:0];
 
@@ -181,23 +177,23 @@ always @(posedge sys_clk) begin
 				endcase
 			end
 			case(csr_a[4:0])
-				5'd0 : csr_do <= {promisc, speed10};
+				5'd0 : csr_do <= promisc;
 				5'd1 : csr_do <= macaddr[47:24];
 				5'd2 : csr_do <= macaddr[23:0];
 
 				5'd3 : csr_do <= {phy_mii_clk, mii_data_oe, mii_data_di, mii_data_do};
 				
 				5'd4 : csr_do <= slot0_state;
-				5'd5 : csr_do <= slot0_adr;
+				5'd5 : csr_do <= {slot0_adr, 2'd0};
 				5'd6 : csr_do <= slot0_count;
 				5'd7 : csr_do <= slot1_state;
-				5'd8 : csr_do <= slot1_adr;
+				5'd8 : csr_do <= {slot1_adr, 2'd0};
 				5'd9 : csr_do <= slot1_count;
 				5'd10: csr_do <= slot2_state;
-				5'd11: csr_do <= slot2_adr;
+				5'd11: csr_do <= {slot2_adr, 2'd0};
 				5'd12: csr_do <= slot2_count;
 				5'd13: csr_do <= slot3_state;
-				5'd14: csr_do <= slot3_adr;
+				5'd14: csr_do <= {slot3_adr, 2'd0};
 				5'd15: csr_do <= slot3_count;
 
 				5'd16: csr_do <= tx_adr;
@@ -205,6 +201,16 @@ always @(posedge sys_clk) begin
 			endcase
 		end
 
+		if(rx_resetcount) begin
+			if(select0)
+				slot0_count <= 11'd0;
+			if(select1)
+				slot1_count <= 11'd0;
+			if(select2)
+				slot2_count <= 11'd0;
+			if(select3)
+				slot3_count <= 11'd0;
+		end
 		if(rx_incrcount) begin
 			if(select0)
 				slot0_count <= slot0_count + 11'd1;

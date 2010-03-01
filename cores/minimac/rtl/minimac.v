@@ -53,6 +53,18 @@ module minimac #(
 	inout phy_mii_data
 );
 
+assign wbm_cti_o = 3'd0;
+assign wbm_we_o = 1'b0;
+
+wire promisc;
+wire [47:0] macaddr;
+
+wire rx_valid;
+wire [29:0] rx_adr;
+wire rx_resetcount;
+wire rx_incrcount;
+wire rx_endframe;
+
 minimac_ctlif #(
 	.csr_addr(csr_addr)
 ) ctlif (
@@ -67,14 +79,14 @@ minimac_ctlif #(
 	.irq_rx(irq_rx),
 	.irq_tx(irq_tx),
 
-	.speed10(),
-	.promisc(),
-	.macaddr(),
+	.promisc(promisc),
+	.macaddr(macaddr),
 
-	.rx_valid(),
-	.rx_adr(),
-	.rx_incrcount(),
-	.rx_endframe(),
+	.rx_valid(rx_valid),
+	.rx_adr(rx_adr),
+	.rx_resetcount(rx_resetcount),
+	.rx_incrcount(rx_incrcount),
+	.rx_endframe(rx_endframe),
 
 	.tx_valid(),
 	.tx_adr(),
@@ -83,6 +95,31 @@ minimac_ctlif #(
 
 	.phy_mii_clk(phy_mii_clk),
 	.phy_mii_data(phy_mii_data)
+);
+
+minimac_rx rx(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.wbm_adr_o(wbm_adr_o),
+	.wbm_cyc_o(wbm_cyc_o),
+	.wbm_stb_o(wbm_stb_o),
+	.wbm_ack_i(wbm_ack_i),
+	.wbm_dat_o(wbm_dat_o),
+
+	.promisc(promisc),
+	.macaddr(macaddr),
+
+	.rx_valid(rx_valid),
+	.rx_adr(rx_adr),
+	.rx_resetcount(rx_resetcount),
+	.rx_incrcount(rx_incrcount),
+	.rx_endframe(rx_endframe),
+
+	.phy_rx_clk(phy_rx_clk),
+	.phy_rx_data(phy_rx_data),
+	.phy_dv(phy_dv),
+	.phy_rx_er(phy_rx_er)
 );
 
 assign phy_tx_data = 4'h0;
