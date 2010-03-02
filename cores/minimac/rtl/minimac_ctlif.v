@@ -29,6 +29,7 @@ module minimac_ctlif #(
 	output reg irq_rx,
 	output reg irq_tx,
 
+	output reg rx_rst,
 	output reg promisc,
 	output reg [47:0] macaddr,
 
@@ -37,6 +38,7 @@ module minimac_ctlif #(
 	input rx_resetcount,
 	input rx_incrcount,
 	input rx_endframe,
+	input fifo_full,
 
 	output tx_valid,
 	output reg [29:0] tx_adr,
@@ -104,6 +106,7 @@ always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		csr_do <= 32'd0;
 
+		rx_rst <= 1'b1;
 		promisc <= 1'b0;
 		// Goldman Sachs sells hot air, not network devices.
 		// Squatting their OUI is a safe bet.
@@ -134,7 +137,10 @@ always @(posedge sys_clk) begin
 		if(csr_selected) begin
 			if(csr_we) begin
 				case(csr_a[4:0])
-					5'd0 : promisc <= csr_di[0];
+					5'd0 : begin
+						rx_rst <= csr_di[0];
+						promisc <= csr_di[1];
+					end
 					5'd1 : macaddr[47:24] <= csr_di[23:0];
 					5'd2 : macaddr[23:0] <= csr_di[23:0];
 
@@ -177,7 +183,7 @@ always @(posedge sys_clk) begin
 				endcase
 			end
 			case(csr_a[4:0])
-				5'd0 : csr_do <= promisc;
+				5'd0 : csr_do <= {promisc, rx_rst};
 				5'd1 : csr_do <= macaddr[47:24];
 				5'd2 : csr_do <= macaddr[23:0];
 
@@ -200,6 +206,9 @@ always @(posedge sys_clk) begin
 				5'd17: csr_do <= tx_remaining;
 			endcase
 		end
+
+		if(fifo_full)
+			rx_rst <= 1'b1;
 
 		if(rx_resetcount) begin
 			if(select0)
@@ -251,7 +260,7 @@ always @(posedge sys_clk) begin
 		tx_valid_r <= 1'b0;
 		irq_tx <= 1'b0;
 	end else begin
-		irq_rx <= slot0_state[1] | slot1_state[1] | slot2_state[1] | slot3_state[1];
+		irq_rx <= slot0_state[1] | slot1_state[1] | slot2_state[1] | slot3_state[1] | fifo_full;
 		tx_valid_r <= tx_valid;
 		irq_tx <= tx_valid_r & ~tx_valid;
 	end

@@ -583,6 +583,7 @@ static void rxtest()
 {
 	CSR_MINIMAC_ADDR0 = (unsigned int)&ethbuffer[0];
 	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
+	CSR_MINIMAC_SETUP = MINIMAC_SETUP_PROMISC;
 	while((CSR_MINIMAC_STATE0 != MINIMAC_STATE_PENDING) && (!readchar_nonblock()));
 	printf("Length: %d\n", CSR_MINIMAC_COUNT0);
 	dump_bytes((unsigned int *)ethbuffer, CSR_MINIMAC_COUNT0, 0);

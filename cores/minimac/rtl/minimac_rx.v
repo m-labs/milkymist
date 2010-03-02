@@ -18,6 +18,7 @@
 module minimac_rx(
 	input sys_clk,
 	input sys_rst,
+	input rx_rst,
 
 	output [31:0] wbm_adr_o,
 	output wbm_cyc_o,
@@ -34,6 +35,8 @@ module minimac_rx(
 	output rx_incrcount,
 	output reg rx_endframe,
 
+	output fifo_full,
+
 	input phy_rx_clk,
 	input [3:0] phy_rx_data,
 	input phy_dv,
@@ -48,7 +51,7 @@ wire fifo_eof;
 wire [7:0] fifo_data;
 minimac_rxfifo rx(
 	.sys_clk(sys_clk),
-	.sys_rst(sys_rst),
+	.rx_rst(rx_rst),
 
 	.phy_rx_clk(phy_rx_clk),
 	.phy_rx_data(phy_rx_data),
@@ -58,14 +61,16 @@ minimac_rxfifo rx(
 	.empty(fifo_empty),
 	.ack(fifo_ack),
 	.eof(fifo_eof),
-	.data(fifo_data)
+	.data(fifo_data),
+
+	.fifo_full(fifo_full)
 );
 
 reg start_of_frame;
 reg end_of_frame;
 reg in_frame;
 always @(posedge sys_clk) begin
-	if(sys_rst)
+	if(sys_rst|rx_rst)
 		in_frame <= 1'b0;
 	else begin
 		if(start_of_frame)
@@ -78,7 +83,7 @@ end
 reg loadbyte_en;
 reg [1:0] loadbyte_counter;
 always @(posedge sys_clk) begin
-	if(sys_rst)
+	if(sys_rst|rx_rst)
 		loadbyte_counter <= 1'b0;
 	else begin
 		if(start_of_frame)
@@ -92,16 +97,18 @@ always @(posedge sys_clk) begin
 				2'd2: wbm_dat_o[15: 8] <= fifo_data;
 				2'd3: wbm_dat_o[ 7: 0] <= fifo_data;
 			endcase
+			$display("FIFO DATA: %x", fifo_data);
 		end
 	end
 end
 wire full_word = &loadbyte_counter;
+wire empty_word = loadbyte_counter == 2'd0;
 
 parameter MTU = 11'd1500;
 
 reg [10:0] maxcount;
 always @(posedge sys_clk) begin
-	if(sys_rst)
+	if(sys_rst|rx_rst)
 		maxcount <= MTU;
 	else begin
 		if(start_of_frame)
@@ -128,13 +135,14 @@ always @(posedge sys_clk) begin
 end
 assign wbm_adr_o = {adr, 2'd0};
 
-reg [1:0] state;
-reg [1:0] next_state;
+reg [2:0] state;
+reg [2:0] next_state;
 
-parameter IDLE		= 2'd0;
-parameter LOADBYTE	= 2'd1;
-parameter WBSTROBE	= 2'd2;
-parameter NOMORE	= 2'd3;
+parameter IDLE		= 3'd0;
+parameter LOADBYTE	= 3'd1;
+parameter WBSTROBE	= 3'd2;
+parameter SENDLAST	= 3'd3;
+parameter NOMORE	= 3'd3;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -163,11 +171,16 @@ always @(*) begin
 		IDLE: begin
 			if(~fifo_empty & rx_valid) begin
 				if(fifo_eof) begin
+					fifo_ack = 1'b1;
 					if(in_frame) begin
 						if(fifo_data[0])
 							rx_resetcount = 1'b1;
-						else
-							rx_endframe = 1'b1;
+						else begin
+							if(empty_word)
+								rx_endframe = 1'b1;
+							else
+								next_state = SENDLAST;
+						end
 						end_of_frame = 1'b1;
 					end
 				end else begin
@@ -180,8 +193,10 @@ always @(*) begin
 		LOADBYTE: begin
 			loadbyte_en = 1'b1;
 			fifo_ack = 1'b1;
-			if(full_word)
+			if(full_word & rx_valid)
 				next_state = WBSTROBE;
+			else
+				next_state = IDLE;
 		end
 		WBSTROBE: begin
 			wbm_stb_o = 1'b1;
@@ -191,6 +206,13 @@ always @(*) begin
 				else
 					next_state = NOMORE;
 				next_wb_adr = 1'b1;
+			end
+		end
+		SENDLAST: begin
+			wbm_stb_o = 1'b1;
+			if(wbm_ack_i) begin
+				rx_endframe = 1'b1;
+				next_state = IDLE;
 			end
 		end
 		NOMORE: begin

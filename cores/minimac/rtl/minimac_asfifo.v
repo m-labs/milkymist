@@ -56,7 +56,7 @@ module minimac_asfifo
     assign NextReadAddressEn  = ReadEn_in  & ~Empty_out;
            
     //Addreses (Gray counters) logic:
-    vgafb_graycounter #(
+    minimac_graycounter #(
 		.COUNTER_WIDTH( ADDRESS_WIDTH )
     ) GrayCounter_pWr (
         .GrayCount_out(pNextWordToWrite),
@@ -66,7 +66,7 @@ module minimac_asfifo
         .Clk(WClk)
        );
        
-    vgafb_graycounter #(
+    minimac_graycounter #(
 		.COUNTER_WIDTH( ADDRESS_WIDTH )
     ) GrayCounter_pRd (
         .GrayCount_out(pNextWordToRead),

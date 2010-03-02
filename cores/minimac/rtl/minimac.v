@@ -56,6 +56,7 @@ module minimac #(
 assign wbm_cti_o = 3'd0;
 assign wbm_we_o = 1'b0;
 
+wire rx_rst;
 wire promisc;
 wire [47:0] macaddr;
 
@@ -64,6 +65,8 @@ wire [29:0] rx_adr;
 wire rx_resetcount;
 wire rx_incrcount;
 wire rx_endframe;
+
+wire fifo_full;
 
 minimac_ctlif #(
 	.csr_addr(csr_addr)
@@ -79,6 +82,7 @@ minimac_ctlif #(
 	.irq_rx(irq_rx),
 	.irq_tx(irq_tx),
 
+	.rx_rst(rx_rst),
 	.promisc(promisc),
 	.macaddr(macaddr),
 
@@ -87,6 +91,8 @@ minimac_ctlif #(
 	.rx_resetcount(rx_resetcount),
 	.rx_incrcount(rx_incrcount),
 	.rx_endframe(rx_endframe),
+
+	.fifo_full(fifo_full),
 
 	.tx_valid(),
 	.tx_adr(),
@@ -100,6 +106,7 @@ minimac_ctlif #(
 minimac_rx rx(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
+	.rx_rst(rx_rst),
 
 	.wbm_adr_o(wbm_adr_o),
 	.wbm_cyc_o(wbm_cyc_o),
@@ -115,6 +122,8 @@ minimac_rx rx(
 	.rx_resetcount(rx_resetcount),
 	.rx_incrcount(rx_incrcount),
 	.rx_endframe(rx_endframe),
+
+	.fifo_full(fifo_full),
 
 	.phy_rx_clk(phy_rx_clk),
 	.phy_rx_data(phy_rx_data),
