@@ -29,15 +29,13 @@ module minimac #(
 	output irq_rx,
 	output irq_tx,
 
-	output [31:0] wbm_adr_o,
-	output [2:0] wbm_cti_o,
-	output wbm_we_o,
-	output wbm_cyc_o,
-	output wbm_stb_o,
-	input wbm_ack_i,
-	output [3:0] wbm_sel_o,
-	output [31:0] wbm_dat_o,
-	input [31:0] wbm_dat_i,
+	// WE=1 and SEL=1111 are assumed
+	output [31:0] wbrx_adr_o,
+	output [2:0] wbrx_cti_o,
+	output wbrx_cyc_o,
+	output wbrx_stb_o,
+	input wbrx_ack_i,
+	output [31:0] wbrx_dat_o,
 
 	input phy_tx_clk,
 	output [3:0] phy_tx_data,
@@ -53,13 +51,9 @@ module minimac #(
 	inout phy_mii_data
 );
 
-assign wbm_cti_o = 3'd0;
-assign wbm_we_o = 1'b1;
-assign wbm_sel_o = 4'hf;
+assign wbrx_cti_o = 3'd0;
 
 wire rx_rst;
-wire promisc;
-wire [47:0] macaddr;
 
 wire rx_valid;
 wire [29:0] rx_adr;
@@ -84,8 +78,6 @@ minimac_ctlif #(
 	.irq_tx(irq_tx),
 
 	.rx_rst(rx_rst),
-	.promisc(promisc),
-	.macaddr(macaddr),
 
 	.rx_valid(rx_valid),
 	.rx_adr(rx_adr),
@@ -109,11 +101,11 @@ minimac_rx rx(
 	.sys_rst(sys_rst),
 	.rx_rst(rx_rst),
 
-	.wbm_adr_o(wbm_adr_o),
-	.wbm_cyc_o(wbm_cyc_o),
-	.wbm_stb_o(wbm_stb_o),
-	.wbm_ack_i(wbm_ack_i),
-	.wbm_dat_o(wbm_dat_o),
+	.wbm_adr_o(wbrx_adr_o),
+	.wbm_cyc_o(wbrx_cyc_o),
+	.wbm_stb_o(wbrx_stb_o),
+	.wbm_ack_i(wbrx_ack_i),
+	.wbm_dat_o(wbrx_dat_o),
 
 	.promisc(promisc),
 	.macaddr(macaddr),

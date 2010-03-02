@@ -195,13 +195,13 @@ wire [31:0]	cpuibus_adr,
 		ac97bus_adr,
 		pfpubus_adr,
 		tmumbus_adr,
-		ethernetmbus_adr;
+		ethernetrxbus_adr;
 
 wire [2:0]	cpuibus_cti,
 		cpudbus_cti,
 		ac97bus_cti,
 		tmumbus_cti,
-		ethernetmbus_cti;
+		ethernetrxbus_cti;
 
 wire [31:0]	cpuibus_dat_r,
 		cpudbus_dat_r,
@@ -210,36 +210,33 @@ wire [31:0]	cpuibus_dat_r,
 		ac97bus_dat_w,
 		pfpubus_dat_w,
 		tmumbus_dat_r,
-		ethernetmbus_dat_w,
-		ethernetmbus_dat_r;
+		ethernetrxbus_dat_w;
 
-wire [3:0]	cpudbus_sel,
-		ethernetmbus_sel;
+wire [3:0]	cpudbus_sel;
 
 wire		cpudbus_we,
-		ac97bus_we,
-		ethernetmbus_we;
+		ac97bus_we;
 
 wire		cpuibus_cyc,
 		cpudbus_cyc,
 		ac97bus_cyc,
 		pfpubus_cyc,
 		tmumbus_cyc,
-		ethernetmbus_cyc;
+		ethernetrxbus_cyc;
 
 wire		cpuibus_stb,
 		cpudbus_stb,
 		ac97bus_stb,
 		pfpubus_stb,
 		tmumbus_stb,
-		ethernetmbus_stb;
+		ethernetrxbus_stb;
 
 wire		cpuibus_ack,
 		cpudbus_ack,
 		ac97bus_ack,
 		tmumbus_ack,
 		pfpubus_ack,
-		ethernetmbus_ack;
+		ethernetrxbus_ack;
 
 //------------------------------------------------------------------
 // Wishbone slave wires
@@ -248,8 +245,7 @@ wire [31:0]	brg_adr,
 		norflash_adr,
 		bram_adr,
 		csrbrg_adr,
-		aceusb_adr,
-		ethernet_adr;
+		aceusb_adr;
 
 wire [2:0]	brg_cti,
 		bram_cti;
@@ -262,40 +258,33 @@ wire [31:0]	brg_dat_r,
 		csrbrg_dat_r,
 		csrbrg_dat_w,
 		aceusb_dat_r,
-		aceusb_dat_w,
-		ethernet_dat_r,
-		ethernet_dat_w;
+		aceusb_dat_w;
 
 wire [3:0]	brg_sel,
-		bram_sel,
-		ethernet_sel;
+		bram_sel;
 
 wire		brg_we,
 		bram_we,
 		csrbrg_we,
-		aceusb_we,
-		ethernet_we;
+		aceusb_we;
 
 wire		brg_cyc,
 		norflash_cyc,
 		bram_cyc,
 		csrbrg_cyc,
-		aceusb_cyc,
-		ethernet_cyc;
+		aceusb_cyc;
 
 wire		brg_stb,
 		norflash_stb,
 		bram_stb,
 		csrbrg_stb,
-		aceusb_stb,
-		ethernet_stb;
+		aceusb_stb;
 
 wire		brg_ack,
 		norflash_ack,
 		bram_ack,
 		csrbrg_ack,
-		aceusb_ack,
-		ethernet_ack;
+		aceusb_ack;
 
 //---------------------------------------------------------------------------
 // Wishbone switch
@@ -363,15 +352,15 @@ conbus #(
 	.m4_stb_i(tmumbus_stb),
 	.m4_ack_o(tmumbus_ack),
 	// Master 5
-	.m5_dat_i(ethernetmbus_dat_w),
-	.m5_dat_o(ethernetmbus_dat_r),
-	.m5_adr_i(ethernetmbus_adr),
-	.m5_cti_i(ethernetmbus_cti),
-	.m5_we_i(ethernetmbus_we),
-	.m5_sel_i(ethernetmbus_sel),
-	.m5_cyc_i(ethernetmbus_cyc),
-	.m5_stb_i(ethernetmbus_stb),
-	.m5_ack_o(ethernetmbus_ack),
+	.m5_dat_i(ethernetrxbus_dat_w),
+	.m5_dat_o(),
+	.m5_adr_i(ethernetrxbus_adr),
+	.m5_cti_i(ethernetrxbus_cti),
+	.m5_we_i(1'b1),
+	.m5_sel_i(4'hf),
+	.m5_cyc_i(ethernetrxbus_cyc),
+	.m5_stb_i(ethernetrxbus_stb),
+	.m5_ack_o(ethernetrxbus_ack),
 
 	// Slave 0
 	.s0_dat_i(norflash_dat_r),
@@ -1149,15 +1138,12 @@ minimac #(
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_ethernet),
 
-	.wbm_adr_o(ethernetmbus_adr),
-	.wbm_cti_o(ethernetmbus_cti),
-	.wbm_we_o(ethernetmbus_we),
-	.wbm_cyc_o(ethernetmbus_cyc),
-	.wbm_stb_o(ethernetmbus_stb),
-	.wbm_ack_i(ethernetmbus_ack),
-	.wbm_sel_o(ethernetmbus_sel),
-	.wbm_dat_o(ethernetmbus_dat_w),
-	.wbm_dat_i(ethernetmbus_dat_r),
+	.wbrx_adr_o(ethernetrxbus_adr),
+	.wbrx_cti_o(ethernetrxbus_cti),
+	.wbrx_cyc_o(ethernetrxbus_cyc),
+	.wbrx_stb_o(ethernetrxbus_stb),
+	.wbrx_ack_i(ethernetrxbus_ack),
+	.wbrx_dat_o(ethernetrxbus_dat_w),
 
 	.irq_rx(ethernetrx_irq),
 	.irq_tx(ethernettx_irq),
@@ -1178,13 +1164,13 @@ minimac #(
 `else
 assign csr_dr_ethernet = 32'd0;
 
-assign ethernetmbus_adr = 32'bx;
-assign ethernetmbus_cti = 3'bx;
-assign ethernetmbus_we = 1'bx;
-assign ethernetmbus_cyc = 1'b0;
-assign ethernetmbus_stb = 1'b0;
-assign ethernetmbus_sel = 3'bx;
-assign ethernetmbus_dat_w = 32'bx;
+assign ethernetrxbus_adr = 32'bx;
+assign ethernetrxbus_cti = 3'bx;
+assign ethernetrxbus_we = 1'bx;
+assign ethernetrxbus_cyc = 1'b0;
+assign ethernetrxbus_stb = 1'b0;
+assign ethernetrxbus_sel = 3'bx;
+assign ethernetrxbus_dat_w = 32'bx;
 
 assign ethernetrx_irq = 1'b0;
 assign ethernettx_irq = 1'b0;

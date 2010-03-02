@@ -104,7 +104,6 @@ always @(posedge sys_clk) begin
 				2'd2: wbm_dat_o[15: 8] <= fifo_data;
 				2'd3: wbm_dat_o[ 7: 0] <= fifo_data;
 			endcase
-			$display("FIFO DATA: %x", fifo_data);
 		end
 	end
 end

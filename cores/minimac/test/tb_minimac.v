@@ -155,14 +155,8 @@ initial begin
 	waitclock;
 
 	csrwrite(32'h00, 0);
-	csrwrite(32'h14, 32'h10000000);
-	csrwrite(32'h10, 1);
-	csrwrite(32'h20, 32'h20000000);
-	csrwrite(32'h1C, 1);
-	csrwrite(32'h2C, 32'h30000000);
-	csrwrite(32'h28, 1);
-	csrwrite(32'h38, 32'h40000000);
-	csrwrite(32'h34, 1);
+	csrwrite(32'h0C, 32'h10000000);
+	csrwrite(32'h08, 1);
 
 	#3000;
 	csrread(32'h00);

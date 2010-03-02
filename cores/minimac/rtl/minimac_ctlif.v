@@ -30,8 +30,6 @@ module minimac_ctlif #(
 	output reg irq_tx,
 
 	output reg rx_rst,
-	output reg promisc,
-	output reg [47:0] macaddr,
 
 	output rx_valid,
 	output [29:0] rx_adr,
@@ -107,10 +105,6 @@ always @(posedge sys_clk) begin
 		csr_do <= 32'd0;
 
 		rx_rst <= 1'b1;
-		promisc <= 1'b0;
-		// Goldman Sachs sells hot air, not network devices.
-		// Squatting their OUI is a safe bet.
-		macaddr <= 48'hf871fe030405;
 
 		mii_data_oe <= 1'b0;
 		mii_data_do <= 1'b0;
@@ -136,74 +130,67 @@ always @(posedge sys_clk) begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin
 			if(csr_we) begin
-				case(csr_a[4:0])
-					5'd0 : begin
-						rx_rst <= csr_di[0];
-						promisc <= csr_di[1];
-					end
-					5'd1 : macaddr[47:24] <= csr_di[23:0];
-					5'd2 : macaddr[23:0] <= csr_di[23:0];
+				case(csr_a[3:0])
+					4'd0 : rx_rst <= csr_di[0];
 
-					5'd3 : begin
+					4'd1 : begin
 						phy_mii_clk <= csr_di[3];
 						mii_data_oe <= csr_di[2];
 						mii_data_do <= csr_di[0];
 					end
 
-					5'd4 : begin
+					4'd2 : begin
 						slot0_state <= csr_di[1:0];
 						slot0_count <= 11'd0;
 					end
-					5'd5 : slot0_adr <= csr_di[31:2];
+					4'd3 : slot0_adr <= csr_di[31:2];
 					// slot0_count is read-only
-					5'd7 : begin
+					4'd5 : begin
 						slot1_state <= csr_di[1:0];
 						slot1_count <= 11'd0;
 					end
-					5'd8 : slot1_adr <= csr_di[31:2];
+					4'd6 : slot1_adr <= csr_di[31:2];
 					// slot1_count is read-only
-					5'd10: begin
+					4'd8 : begin
 						slot2_state <= csr_di[1:0];
 						slot2_count <= 11'd0;
 					end
-					5'd11: slot2_adr <= csr_di[31:2];
+					4'd9 : slot2_adr <= csr_di[31:2];
 					// slot2_count is read-only
-					5'd13: begin
+					4'd11: begin
 						slot3_state <= csr_di[1:0];
 						slot3_count <= 11'd0;
 					end
-					5'd14: slot3_adr <= csr_di[31:2];
+					4'd12: slot3_adr <= csr_di[31:2];
 					// slot3_count is read-only
 
-					5'd16: csr_do <= tx_adr;
-					5'd17: begin
+					4'd14: csr_do <= tx_adr;
+					4'd15: begin
 						csr_do <= tx_remaining;
 						tx_bytecount <= 2'd0;
 					end
 				endcase
 			end
-			case(csr_a[4:0])
-				5'd0 : csr_do <= {promisc, rx_rst};
-				5'd1 : csr_do <= macaddr[47:24];
-				5'd2 : csr_do <= macaddr[23:0];
+			case(csr_a[3:0])
+				4'd0 : csr_do <= rx_rst;
 
-				5'd3 : csr_do <= {phy_mii_clk, mii_data_oe, mii_data_di, mii_data_do};
+				4'd1 : csr_do <= {phy_mii_clk, mii_data_oe, mii_data_di, mii_data_do};
 				
-				5'd4 : csr_do <= slot0_state;
-				5'd5 : csr_do <= {slot0_adr, 2'd0};
-				5'd6 : csr_do <= slot0_count;
-				5'd7 : csr_do <= slot1_state;
-				5'd8 : csr_do <= {slot1_adr, 2'd0};
-				5'd9 : csr_do <= slot1_count;
-				5'd10: csr_do <= slot2_state;
-				5'd11: csr_do <= {slot2_adr, 2'd0};
-				5'd12: csr_do <= slot2_count;
-				5'd13: csr_do <= slot3_state;
-				5'd14: csr_do <= {slot3_adr, 2'd0};
-				5'd15: csr_do <= slot3_count;
+				4'd2 : csr_do <= slot0_state;
+				4'd3 : csr_do <= {slot0_adr, 2'd0};
+				4'd4 : csr_do <= slot0_count;
+				4'd5 : csr_do <= slot1_state;
+				4'd6 : csr_do <= {slot1_adr, 2'd0};
+				4'd7 : csr_do <= slot1_count;
+				4'd8 : csr_do <= slot2_state;
+				4'd9 : csr_do <= {slot2_adr, 2'd0};
+				4'd10: csr_do <= slot2_count;
+				4'd11: csr_do <= slot3_state;
+				4'd12: csr_do <= {slot3_adr, 2'd0};
+				4'd13: csr_do <= slot3_count;
 
-				5'd16: csr_do <= tx_adr;
-				5'd17: csr_do <= tx_remaining;
+				4'd14: csr_do <= tx_adr;
+				4'd15: csr_do <= tx_remaining;
 			endcase
 		end
 

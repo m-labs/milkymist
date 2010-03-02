@@ -119,11 +119,11 @@ shell.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 shell.o: ../../software/include/hw/tmu.h ../../software/include/hw/sysctl.h
 shell.o: ../../software/include/hw/gpio.h
 shell.o: ../../software/include/hw/interrupts.h
-shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
-shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
-shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
-shell.o: ../../software/include/net/mdio.h line.h wave.h rpipe.h cpustats.h
-shell.o: shell.h ui.h
+shell.o: ../../software/include/hw/minimac.h ../../software/include/hal/vga.h
+shell.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
+shell.o: ../../software/include/hal/tmu.h ../../software/include/hal/time.h
+shell.o: ../../software/include/hal/brd.h ../../software/include/net/mdio.h
+shell.o: line.h wave.h rpipe.h cpustats.h shell.h ui.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h ui.h
