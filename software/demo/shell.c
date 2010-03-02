@@ -586,6 +586,10 @@ static void rxtest()
 	CSR_MINIMAC_SETUP = MINIMAC_SETUP_PROMISC;
 	while((CSR_MINIMAC_STATE0 != MINIMAC_STATE_PENDING) && (!readchar_nonblock()));
 	printf("Length: %d\n", CSR_MINIMAC_COUNT0);
+	asm volatile( /* Invalidate Level-1 data cache */
+		"wcsr DCC, r0\n"
+		"nop\n"
+	);
 	dump_bytes((unsigned int *)ethbuffer, CSR_MINIMAC_COUNT0, 0);
 }
 

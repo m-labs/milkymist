@@ -22,7 +22,7 @@ module minimac_rx(
 
 	output [31:0] wbm_adr_o,
 	output wbm_cyc_o,
-	output reg wbm_stb_o,
+	output wbm_stb_o,
 	input wbm_ack_i,
 	output reg [31:0] wbm_dat_o,
 
@@ -31,9 +31,9 @@ module minimac_rx(
 
 	input rx_valid,
 	input [29:0] rx_adr,
-	output reg rx_resetcount,
+	output rx_resetcount,
 	output rx_incrcount,
-	output reg rx_endframe,
+	output rx_endframe,
 
 	output fifo_full,
 
@@ -43,7 +43,14 @@ module minimac_rx(
 	input phy_rx_er
 );
 
-assign wbm_cyc_o = wbm_stb_o;
+reg rx_resetcount_r;
+reg rx_endframe_r;
+assign rx_resetcount = rx_resetcount_r;
+assign rx_endframe = rx_endframe_r;
+
+reg bus_stb;
+assign wbm_cyc_o = bus_stb;
+assign wbm_stb_o = bus_stb;
 
 wire fifo_empty;
 reg fifo_ack;
@@ -155,15 +162,15 @@ always @(*) begin
 	next_state = state;
 	fifo_ack = 1'b0;
 
-	rx_resetcount = 1'b0;
-	rx_endframe = 1'b0;
+	rx_resetcount_r = 1'b0;
+	rx_endframe_r = 1'b0;
 
 	start_of_frame = 1'b0;
 	end_of_frame = 1'b0;
 
 	loadbyte_en = 1'b0;
 
-	wbm_stb_o = 1'b0;
+	bus_stb = 1'b0;
 
 	next_wb_adr = 1'b0;
 
@@ -174,10 +181,10 @@ always @(*) begin
 					fifo_ack = 1'b1;
 					if(in_frame) begin
 						if(fifo_data[0])
-							rx_resetcount = 1'b1;
+							rx_resetcount_r = 1'b1;
 						else begin
 							if(empty_word)
-								rx_endframe = 1'b1;
+								rx_endframe_r = 1'b1;
 							else
 								next_state = SENDLAST;
 						end
@@ -199,7 +206,7 @@ always @(*) begin
 				next_state = IDLE;
 		end
 		WBSTROBE: begin
-			wbm_stb_o = 1'b1;
+			bus_stb = 1'b1;
 			if(wbm_ack_i) begin
 				if(still_place)
 					next_state = IDLE;
@@ -209,9 +216,9 @@ always @(*) begin
 			end
 		end
 		SENDLAST: begin
-			wbm_stb_o = 1'b1;
+			bus_stb = 1'b1;
 			if(wbm_ack_i) begin
-				rx_endframe = 1'b1;
+				rx_endframe_r = 1'b1;
 				next_state = IDLE;
 			end
 		end
@@ -219,7 +226,7 @@ always @(*) begin
 			fifo_ack = 1'b1;
 			if(~fifo_empty & rx_valid) begin
 				if(fifo_eof) begin
-					rx_resetcount = 1'b1;
+					rx_resetcount_r = 1'b1;
 					end_of_frame = 1'b1;
 					next_state = IDLE;
 				end

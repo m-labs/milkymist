@@ -54,7 +54,8 @@ module minimac #(
 );
 
 assign wbm_cti_o = 3'd0;
-assign wbm_we_o = 1'b0;
+assign wbm_we_o = 1'b1;
+assign wbm_sel_o = 4'hf;
 
 wire rx_rst;
 wire promisc;
