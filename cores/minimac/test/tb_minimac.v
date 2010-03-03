@@ -27,6 +27,12 @@ reg phy_rx_clk;
 initial phy_rx_clk = 1'b0;
 always #20 phy_rx_clk = ~phy_rx_clk;
 
+/* 25MHz TX clock */
+reg phy_tx_clk;
+initial phy_tx_clk = 1'b0;
+always #20 phy_tx_clk = ~phy_tx_clk;
+
+
 reg sys_rst;
 
 reg [13:0] csr_a;
@@ -34,17 +40,26 @@ reg csr_we;
 reg [31:0] csr_di;
 wire [31:0] csr_do;
 
-wire [31:0] wbm_adr_o;
-wire [2:0] wbm_cti_o;
-wire wbm_cyc_o;
-wire wbm_stb_o;
-reg wbm_ack_i;
-wire [31:0] wbm_dat_o;
-wire wbm_we_o;
+wire [31:0] wbrx_adr_o;
+wire [2:0] wbrx_cti_o;
+wire wbrx_cyc_o;
+wire wbrx_stb_o;
+reg wbrx_ack_i;
+wire [31:0] wbrx_dat_o;
+
+wire [31:0] wbtx_adr_o;
+wire [2:0] wbtx_cti_o;
+wire wbtx_cyc_o;
+wire wbtx_stb_o;
+reg wbtx_ack_i;
+reg [31:0] wbtx_dat_i;
 
 reg [3:0] phy_rx_data;
 reg phy_dv;
 reg phy_rx_er;
+
+wire phy_tx_en;
+wire [3:0] phy_tx_data;
 
 minimac #(
 	.csr_addr(4'h0)
@@ -57,22 +72,26 @@ minimac #(
 	.csr_di(csr_di),
 	.csr_do(csr_do),
 
-	.wbm_adr_o(wbm_adr_o),
-	.wbm_cti_o(wbm_cti_o),
-	.wbm_we_o(wbm_we_o),
-	.wbm_cyc_o(wbm_cyc_o),
-	.wbm_stb_o(wbm_stb_o),
-	.wbm_ack_i(wbm_ack_i),
-	.wbm_sel_o(),
-	.wbm_dat_o(wbm_dat_o),
-	.wbm_dat_i(),
+	.wbrx_adr_o(wbrx_adr_o),
+	.wbrx_cti_o(wbrx_cti_o),
+	.wbrx_cyc_o(wbrx_cyc_o),
+	.wbrx_stb_o(wbrx_stb_o),
+	.wbrx_ack_i(wbrx_ack_i),
+	.wbrx_dat_o(wbrx_dat_o),
+
+	.wbtx_adr_o(wbtx_adr_o),
+	.wbtx_cti_o(wbtx_cti_o),
+	.wbtx_cyc_o(wbtx_cyc_o),
+	.wbtx_stb_o(wbtx_stb_o),
+	.wbtx_ack_i(wbtx_ack_i),
+	.wbtx_dat_i(wbtx_dat_i),
 
 	.irq_rx(),
 	.irq_tx(),
 
-	.phy_tx_clk(),
-	.phy_tx_data(),
-	.phy_tx_en(),
+	.phy_tx_clk(phy_tx_clk),
+	.phy_tx_data(phy_tx_data),
+	.phy_tx_en(phy_tx_en),
 	.phy_tx_er(),
 	.phy_rx_clk(phy_rx_clk),
 	.phy_rx_data(phy_rx_data),
@@ -114,11 +133,20 @@ end
 endtask
 
 always @(posedge sys_clk) begin
-	if(wbm_cyc_o & wbm_stb_o & ~wbm_ack_i & (($random % 5) == 0)) begin
-		$display("Write(%b): %x <- %x", wbm_we_o, wbm_adr_o, wbm_dat_o);
-		wbm_ack_i = 1'b1;
+	if(wbrx_cyc_o & wbrx_stb_o & ~wbrx_ack_i & (($random % 5) == 0)) begin
+		$display("Write: %x <- %x", wbrx_adr_o, wbrx_dat_o);
+		wbrx_ack_i = 1'b1;
 	end else
-		wbm_ack_i = 1'b0;
+		wbrx_ack_i = 1'b0;
+end
+
+always @(posedge sys_clk) begin
+	if(wbtx_cyc_o & wbtx_stb_o & ~wbtx_ack_i & (($random % 5) == 0)) begin
+		wbtx_dat_i = $random;
+		$display("Read : %x -> %x", wbtx_adr_o, wbtx_dat_i);
+		wbtx_ack_i = 1'b1;
+	end else
+		wbtx_ack_i = 1'b0;
 end
 
 

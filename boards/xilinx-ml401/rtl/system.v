@@ -195,13 +195,15 @@ wire [31:0]	cpuibus_adr,
 		ac97bus_adr,
 		pfpubus_adr,
 		tmumbus_adr,
-		ethernetrxbus_adr;
+		ethernetrxbus_adr,
+		ethernettxbus_adr;
 
 wire [2:0]	cpuibus_cti,
 		cpudbus_cti,
 		ac97bus_cti,
 		tmumbus_cti,
-		ethernetrxbus_cti;
+		ethernetrxbus_cti,
+		ethernettxbus_cti;
 
 wire [31:0]	cpuibus_dat_r,
 		cpudbus_dat_r,
@@ -210,7 +212,8 @@ wire [31:0]	cpuibus_dat_r,
 		ac97bus_dat_w,
 		pfpubus_dat_w,
 		tmumbus_dat_r,
-		ethernetrxbus_dat_w;
+		ethernetrxbus_dat_w,
+		ethernettxbus_dat_r;
 
 wire [3:0]	cpudbus_sel;
 
@@ -222,21 +225,24 @@ wire		cpuibus_cyc,
 		ac97bus_cyc,
 		pfpubus_cyc,
 		tmumbus_cyc,
-		ethernetrxbus_cyc;
+		ethernetrxbus_cyc,
+		ethernettxbus_cyc;
 
 wire		cpuibus_stb,
 		cpudbus_stb,
 		ac97bus_stb,
 		pfpubus_stb,
 		tmumbus_stb,
-		ethernetrxbus_stb;
+		ethernetrxbus_stb,
+		ethernettxbus_stb;
 
 wire		cpuibus_ack,
 		cpudbus_ack,
 		ac97bus_ack,
 		tmumbus_ack,
 		pfpubus_ack,
-		ethernetrxbus_ack;
+		ethernetrxbus_ack,
+		ethernettxbus_ack;
 
 //------------------------------------------------------------------
 // Wishbone slave wires
@@ -295,8 +301,7 @@ conbus #(
 	.s1_addr(3'b001),	// bram		0x20000000
 	.s2_addr(3'b010),	// FML bridge	0x40000000
 	.s3_addr(3'b100),	// CSR bridge	0x80000000
-	.s4_addr(3'b101),	// aceusb	0xa0000000
-	.s5_addr(3'b110)	// ethernet	0xc0000000
+	.s4_addr(3'b101)	// aceusb	0xa0000000
 ) conbus (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -361,6 +366,16 @@ conbus #(
 	.m5_cyc_i(ethernetrxbus_cyc),
 	.m5_stb_i(ethernetrxbus_stb),
 	.m5_ack_o(ethernetrxbus_ack),
+	// Master 6
+	.m6_dat_i(),
+	.m6_dat_o(ethernettxbus_dat_r),
+	.m6_adr_i(ethernettxbus_adr),
+	.m6_cti_i(ethernettxbus_cti),
+	.m6_we_i(1'b0),
+	.m6_sel_i(4'hf),
+	.m6_cyc_i(ethernettxbus_cyc),
+	.m6_stb_i(ethernettxbus_stb),
+	.m6_ack_o(ethernettxbus_ack),
 
 	// Slave 0
 	.s0_dat_i(norflash_dat_r),
@@ -403,16 +418,7 @@ conbus #(
 	.s4_we_o(aceusb_we),
 	.s4_cyc_o(aceusb_cyc),
 	.s4_stb_o(aceusb_stb),
-	.s4_ack_i(aceusb_ack),
-	// Slave 5
-	.s5_dat_i(32'bx),
-	.s5_dat_o(),
-	.s5_adr_o(),
-	.s5_sel_o(),
-	.s5_we_o(),
-	.s5_cyc_o(),
-	.s5_stb_o(),
-	.s5_ack_i(1'b0)
+	.s4_ack_i(aceusb_ack)
 );
 
 //------------------------------------------------------------------
@@ -1144,6 +1150,13 @@ minimac #(
 	.wbrx_stb_o(ethernetrxbus_stb),
 	.wbrx_ack_i(ethernetrxbus_ack),
 	.wbrx_dat_o(ethernetrxbus_dat_w),
+
+	.wbtx_adr_o(ethernettxbus_adr),
+	.wbtx_cti_o(ethernettxbus_cti),
+	.wbtx_cyc_o(ethernettxbus_cyc),
+	.wbtx_stb_o(ethernettxbus_stb),
+	.wbtx_ack_i(ethernettxbus_ack),
+	.wbtx_dat_i(ethernettxbus_dat_r),
 
 	.irq_rx(ethernetrx_irq),
 	.irq_tx(ethernettx_irq),

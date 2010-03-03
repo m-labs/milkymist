@@ -30,6 +30,7 @@ module minimac_ctlif #(
 	output reg irq_tx,
 
 	output reg rx_rst,
+	output reg tx_rst,
 
 	output rx_valid,
 	output [29:0] rx_adr,
@@ -105,6 +106,7 @@ always @(posedge sys_clk) begin
 		csr_do <= 32'd0;
 
 		rx_rst <= 1'b1;
+		tx_rst <= 1'b1;
 
 		mii_data_oe <= 1'b0;
 		mii_data_do <= 1'b0;
@@ -131,7 +133,10 @@ always @(posedge sys_clk) begin
 		if(csr_selected) begin
 			if(csr_we) begin
 				case(csr_a[3:0])
-					4'd0 : rx_rst <= csr_di[0];
+					4'd0 : begin
+						tx_rst <= csr_di[1];
+						rx_rst <= csr_di[0];
+					end
 
 					4'd1 : begin
 						phy_mii_clk <= csr_di[3];
@@ -172,7 +177,7 @@ always @(posedge sys_clk) begin
 				endcase
 			end
 			case(csr_a[3:0])
-				4'd0 : csr_do <= rx_rst;
+				4'd0 : csr_do <= {tx_rst, rx_rst};
 
 				4'd1 : csr_do <= {phy_mii_clk, mii_data_oe, mii_data_di, mii_data_do};
 				

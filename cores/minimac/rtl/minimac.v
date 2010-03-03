@@ -37,6 +37,14 @@ module minimac #(
 	input wbrx_ack_i,
 	output [31:0] wbrx_dat_o,
 
+	// WE=0 is assumed
+	output [31:0] wbtx_adr_o,
+	output [2:0] wbtx_cti_o,
+	output wbtx_cyc_o,
+	output wbtx_stb_o,
+	input wbtx_ack_i,
+	input [31:0] wbtx_dat_i,
+
 	input phy_tx_clk,
 	output [3:0] phy_tx_data,
 	output phy_tx_en,
@@ -52,8 +60,10 @@ module minimac #(
 );
 
 assign wbrx_cti_o = 3'd0;
+assign wbtx_cti_o = 3'd0;
 
 wire rx_rst;
+wire tx_rst;
 
 wire rx_valid;
 wire [29:0] rx_adr;
@@ -62,6 +72,11 @@ wire rx_incrcount;
 wire rx_endframe;
 
 wire fifo_full;
+
+wire tx_valid;
+wire [29:0] tx_adr;
+wire [1:0] tx_bytecount;
+wire tx_next;
 
 minimac_ctlif #(
 	.csr_addr(csr_addr)
@@ -78,6 +93,7 @@ minimac_ctlif #(
 	.irq_tx(irq_tx),
 
 	.rx_rst(rx_rst),
+	.tx_rst(tx_rst),
 
 	.rx_valid(rx_valid),
 	.rx_adr(rx_adr),
@@ -87,10 +103,10 @@ minimac_ctlif #(
 
 	.fifo_full(fifo_full),
 
-	.tx_valid(),
-	.tx_adr(),
-	.tx_bytecount(),
-	.tx_next(),
+	.tx_valid(tx_valid),
+	.tx_adr(tx_adr),
+	.tx_bytecount(tx_bytecount),
+	.tx_next(tx_next),
 
 	.phy_mii_clk(phy_mii_clk),
 	.phy_mii_data(phy_mii_data)
@@ -107,9 +123,6 @@ minimac_rx rx(
 	.wbm_ack_i(wbrx_ack_i),
 	.wbm_dat_o(wbrx_dat_o),
 
-	.promisc(promisc),
-	.macaddr(macaddr),
-
 	.rx_valid(rx_valid),
 	.rx_adr(rx_adr),
 	.rx_resetcount(rx_resetcount),
@@ -124,8 +137,27 @@ minimac_rx rx(
 	.phy_rx_er(phy_rx_er)
 );
 
-assign phy_tx_data = 4'h0;
-assign phy_tx_en = 1'b0;
+minimac_tx tx(
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+	.tx_rst(tx_rst),
+
+	.tx_valid(tx_valid),
+	.tx_adr(tx_adr),
+	.tx_bytecount(tx_bytecount),
+	.tx_next(tx_next),
+
+	.wbtx_adr_o(wbtx_adr_o),
+	.wbtx_cyc_o(wbtx_cyc_o),
+	.wbtx_stb_o(wbtx_stb_o),
+	.wbtx_ack_i(wbtx_ack_i),
+	.wbtx_dat_i(wbtx_dat_i),
+
+	.phy_tx_clk(phy_tx_clk),
+	.phy_tx_en(phy_tx_en),
+	.phy_tx_data(phy_tx_data)
+);
+
 assign phy_tx_er = 1'b0;
 
 endmodule

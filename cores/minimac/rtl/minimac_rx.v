@@ -26,9 +26,6 @@ module minimac_rx(
 	input wbm_ack_i,
 	output reg [31:0] wbm_dat_o,
 
-	input promisc,
-	input [47:0] macaddr,
-
 	input rx_valid,
 	input [29:0] rx_adr,
 	output rx_resetcount,
@@ -56,7 +53,7 @@ wire fifo_empty;
 reg fifo_ack;
 wire fifo_eof;
 wire [7:0] fifo_data;
-minimac_rxfifo rx(
+minimac_rxfifo rxfifo(
 	.sys_clk(sys_clk),
 	.rx_rst(rx_rst),
 
@@ -110,7 +107,7 @@ end
 wire full_word = &loadbyte_counter;
 wire empty_word = loadbyte_counter == 2'd0;
 
-parameter MTU = 11'd1500;
+parameter MTU = 11'd1530;
 
 reg [10:0] maxcount;
 always @(posedge sys_clk) begin
