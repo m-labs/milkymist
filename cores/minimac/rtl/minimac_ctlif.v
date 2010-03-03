@@ -169,9 +169,9 @@ always @(posedge sys_clk) begin
 					4'd12: slot3_adr <= csr_di[31:2];
 					// slot3_count is read-only
 
-					4'd14: csr_do <= tx_adr;
+					4'd14: tx_adr <= csr_di[31:2];
 					4'd15: begin
-						csr_do <= tx_remaining;
+						tx_remaining <= csr_di[10:0];
 						tx_bytecount <= 2'd0;
 					end
 				endcase

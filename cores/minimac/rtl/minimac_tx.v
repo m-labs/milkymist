@@ -85,11 +85,12 @@ reg purge;
 
 /* fetch FSM */
 
-reg state;
-reg next_state;
+reg [1:0] state;
+reg [1:0] next_state;
 
-parameter IDLE  = 1'b0;
-parameter FETCH = 1'b1;
+parameter IDLE  = 2'd0;
+parameter FETCH = 2'd1;
+parameter WRITE1 = 2'd2;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -123,7 +124,12 @@ always @(*) begin
 			bus_stb = 1'b1;
 			load_input = 1'b1;
 			if(wbtx_ack_i)
-				next_state = IDLE;
+				next_state = WRITE1;
+		end
+		WRITE1: begin
+			stb = 1'b1;
+			tx_next = 1'b1;
+			next_state = IDLE;
 		end
 	endcase
 end

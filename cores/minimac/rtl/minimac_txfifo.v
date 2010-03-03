@@ -67,7 +67,7 @@ reg tx_rst1;
 reg tx_rst2;
 always @(posedge phy_tx_clk) begin
 	tx_rst1 <= tx_rst;
-	tx_rst2 <= tx_rst2;
+	tx_rst2 <= tx_rst1;
 end
 
 wire interframe_gap;

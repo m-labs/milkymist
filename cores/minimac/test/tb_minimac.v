@@ -61,6 +61,9 @@ reg phy_rx_er;
 wire phy_tx_en;
 wire [3:0] phy_tx_data;
 
+wire irq_rx;
+wire irq_tx;
+
 minimac #(
 	.csr_addr(4'h0)
 ) ethernet (
@@ -86,8 +89,8 @@ minimac #(
 	.wbtx_ack_i(wbtx_ack_i),
 	.wbtx_dat_i(wbtx_dat_i),
 
-	.irq_rx(),
-	.irq_tx(),
+	.irq_rx(irq_rx),
+	.irq_tx(irq_tx),
 
 	.phy_tx_clk(phy_tx_clk),
 	.phy_tx_data(phy_tx_data),
@@ -157,14 +160,19 @@ always @(posedge phy_rx_clk) begin
 		//$display("rx: %x", phy_rx_data);
 		if(($random % 125) == 0) begin
 			phy_dv <= 1'b0;
-			$display("** stopping transmission");
+			//$display("** stopping transmission");
 		end
 	end else begin
 		if(($random % 12) == 0) begin
 			phy_dv <= 1'b1;
-			$display("** starting transmission");
+			//$display("** starting transmission");
 		end
 	end
+end
+
+always @(posedge phy_tx_clk) begin
+	if(phy_tx_en)
+		$display("tx: %x", phy_tx_data);
 end
 
 initial begin
@@ -182,7 +190,7 @@ initial begin
 
 	waitclock;
 
-	csrwrite(32'h00, 0);
+	/*csrwrite(32'h00, 0);
 	csrwrite(32'h0C, 32'h10000000);
 	csrwrite(32'h08, 1);
 
@@ -192,7 +200,21 @@ initial begin
 	csrread(32'h14);
 	csrread(32'h20);
 	csrread(32'h2C);
-	csrread(32'h38);
+	csrread(32'h38);*/
+
+	waitclock;
+	waitclock;
+	waitclock;
+	waitclock;
+
+	csrwrite(32'h00, 1);
+	csrwrite(32'h3C, 72);
+
+	csrread(32'h3C);
+
+	@(posedge irq_tx);
+
+	#30000;
 	
 	$finish;
 end
