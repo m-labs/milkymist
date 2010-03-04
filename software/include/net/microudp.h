@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CRC_H
-#define __CRC_H
+#ifndef _NET_MICROUDP_H
+#define _NET_MICROUDP_H
 
-unsigned short crc16(const unsigned char *buffer, int len);
-unsigned int crc32(const unsigned char *buffer, unsigned int len);
+#define IPTOINT(a, b, c, d) ((a << 24)|(b << 16)|(c << 8)|d)
 
-#endif
+void microudp_start(unsigned char *macaddr, unsigned int ip);
+void microudp_service();
+void microudp_shutdown();
+
+#endif /* _NET_MICROUDP_H */

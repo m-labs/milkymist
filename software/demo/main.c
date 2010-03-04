@@ -33,6 +33,8 @@
 #include <hal/slowout.h>
 #include <hal/hdlcd.h>
 
+#include <net/microudp.h>
+
 #include "apipe.h"
 #include "rpipe.h"
 #include "renderer.h"
@@ -49,12 +51,15 @@ static void banner()
 			  "\e[0m           SoC demo program\n\n\n");
 }
 
+static unsigned char macadr[] = {0xf8, 0x71, 0xfe, 0x01, 0x02, 0x03};
+
 int main()
 {
 	irq_setmask(0);
 	irq_enable(1);
 	uart_async_init();
 	banner();
+	microudp_start(macadr, IPTOINT(192,168,0,42));
 	brd_init();
 	cpustats_init();
 	time_init();
@@ -74,6 +79,7 @@ int main()
 	while(1) {
 		if(readchar_nonblock())
 			shell_input(readchar());
+		microudp_service();
 		//apipe_service();
 		//rpipe_service();
 	}
