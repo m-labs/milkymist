@@ -224,24 +224,26 @@ int microudp_arp_resolve(unsigned int ip)
 	return 0;
 }
 
-static unsigned short ip_checksum(unsigned int r, void *buffer, unsigned int length)
+static unsigned short ip_checksum(unsigned int r, void *buffer, unsigned int length, int complete)
 {
-	unsigned short *ptr;
+	unsigned char *ptr;
 	int i;
 
-	ptr = (unsigned short *)buffer;
+	ptr = (unsigned char *)buffer;
 	length >>= 1;
 
 	for(i=0;i<length;i++)
-		r += ptr[i];
+		r += ((unsigned int)(ptr[2*i]) << 8)|(unsigned int)(ptr[2*i+1]) ;
 
 	/* Add overflows */
-	r += (r >> 16) & 0xffff;
-	r += (r >> 16) & 0xffff;
+	while(r >> 16)
+		r = (r & 0xffff) + (r >> 16);
 
-	r = ~r;
-	r &= 0xffff;
-	if(r == 0) r = 0xffff;
+	if(complete) {
+		r = ~r;
+		r &= 0xffff;
+		if(r == 0) r = 0xffff;
+	}
 	return r;
 }
 
@@ -286,7 +288,7 @@ int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int
 	h.src_ip = txbuffer.frame.contents.udp.ip.src_ip = my_ip;
 	h.dst_ip = txbuffer.frame.contents.udp.ip.dst_ip = cached_ip;
 	txbuffer.frame.contents.udp.ip.checksum = ip_checksum(0, &txbuffer.frame.contents.udp.ip,
-		sizeof(struct ip_header));
+		sizeof(struct ip_header), 1);
 
 	txbuffer.frame.contents.udp.udp.src_port = src_port;
 	txbuffer.frame.contents.udp.udp.dst_port = dst_port;
@@ -294,13 +296,13 @@ int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int
 	txbuffer.frame.contents.udp.udp.checksum = 0;
 
 	h.zero = 0;
-	r = ip_checksum(0, &h, sizeof(struct pseudo_header));
+	r = ip_checksum(0, &h, sizeof(struct pseudo_header), 0);
 	if(length & 1) {
 		txbuffer.frame.contents.udp.payload[length] = 0;
 		length++;
 	}
 	r = ip_checksum(r, &txbuffer.frame.contents.udp.udp,
-		sizeof(struct udp_header)+length);
+		sizeof(struct udp_header)+length, 1);
 	txbuffer.frame.contents.udp.udp.checksum = r;
 	
 	send_packet();
