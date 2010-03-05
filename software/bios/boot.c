@@ -236,10 +236,12 @@ void netboot()
 	}
 	
 	cmdline_adr = SDRAM_BASE+0x1000000;
-	if(tftp_get_v(ip, "cmdline.txt", (void *)cmdline_adr) <= 0) {
+	size = tftp_get_v(ip, "cmdline.txt", (void *)cmdline_adr);
+	if(size <= 0) {
 		printf("I: No command line parameters found\n");
 		cmdline_adr = 0;
-	}
+	} else
+		*((char *)(cmdline_adr+size)) = 0x00;
 
 	initrdstart_adr = SDRAM_BASE+0x1002000;
 	size = tftp_get_v(ip, "initrd.bin", (void *)initrdstart_adr);
@@ -296,10 +298,12 @@ void cardboot(int alt)
 	}
 
 	cmdline_adr = SDRAM_BASE+0x1000000;
-	if(tryload("CMDLINE.TXT", cmdline_adr) <= 0) {
+	size = tryload("CMDLINE.TXT", cmdline_adr);
+	if(size <= 0) {
 		printf("I: No command line parameters found (CMDLINE.TXT)\n");
 		cmdline_adr = 0;
-	}
+	} else
+		*((char *)(cmdline_adr+size)) = 0x00;
 
 	initrdstart_adr = SDRAM_BASE+0x1002000;
 	size = tryload("INITRD.BIN", initrdstart_adr);

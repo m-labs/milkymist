@@ -21,11 +21,10 @@ clean:
 
 mdio.o: ../../software/include/hw/minimac.h
 mdio.o: ../../software/include/hw/common.h ../../software/include/net/mdio.h
-microudp.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 microudp.o: ../../software/include/crc.h ../../software/include/hw/minimac.h
 microudp.o: ../../software/include/hw/common.h
 microudp.o: ../../software/include/hw/sysctl.h
 microudp.o: ../../software/include/net/microudp.h
-tftp.o: ../../software/include/stdio.h ../../software/include/stdlib.h
-tftp.o: ../../software/include/string.h ../../software/include/net/microudp.h
+tftp.o: ../../software/include/string.h ../../software/include/stdlib.h
+tftp.o: ../../software/include/net/microudp.h
 tftp.o: ../../software/include/net/tftp.h
