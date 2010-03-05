@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=mdio.o microudp.o
+OBJECTS=mdio.o microudp.o tftp.o
 
 all: libnet.a
 
@@ -16,6 +16,7 @@ depend:
 
 clean:
 	rm -f *.o libnet.a .*~ *~ Makefile.bak
+
 # DO NOT DELETE
 
 mdio.o: ../../software/include/hw/minimac.h

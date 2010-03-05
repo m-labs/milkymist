@@ -34,6 +34,7 @@
 #include <hal/hdlcd.h>
 
 #include <net/microudp.h>
+#include <net/tftp.h>
 
 #include "apipe.h"
 #include "rpipe.h"
@@ -53,15 +54,24 @@ static void banner()
 
 static unsigned char macadr[] = {0xf8, 0x71, 0xfe, 0x01, 0x02, 0x03};
 
+static char tftp_buffer[128*1024];
+
 int main()
 {
+	int len, i;
+	
 	irq_setmask(0);
 	irq_enable(1);
 	uart_async_init();
 	banner();
+	
 	microudp_start(macadr, IPTOINT(192,168,0,42));
-	if(microudp_arp_resolve(IPTOINT(192,168,0,17)))
-		microudp_send(568, 9374, 45);
+	len = tftp_get(IPTOINT(192,168,0,14), "programme.txt", tftp_buffer);
+	microudp_shutdown();
+	printf("Got %d bytes\n", len);
+	for(i=0;i<len;i++)
+		writechar(tftp_buffer[i]);
+	
 	brd_init();
 	cpustats_init();
 	time_init();

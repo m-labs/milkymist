@@ -15,19 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __NET_MICROUDP_H
-#define __NET_MICROUDP_H
+#ifndef __NET_TFTP_H
+#define __NET_TFTP_H
 
-#define IPTOINT(a, b, c, d) ((a << 24)|(b << 16)|(c << 8)|d)
+int tftp_get(unsigned int ip, const char *filename, char *buffer);
 
-typedef void (*udp_callback)(unsigned int src_ip, unsigned short src_port, unsigned short dst_port, void *data, unsigned int length);
+#endif /* __NET_TFTP_H */
 
-void microudp_start(unsigned char *macaddr, unsigned int ip);
-int microudp_arp_resolve(unsigned int ip);
-void *microudp_get_tx_buffer();
-int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int length);
-void microudp_set_callback(udp_callback callback);
-void microudp_service();
-void microudp_shutdown();
-
-#endif /* __NET_MICROUDP_H */

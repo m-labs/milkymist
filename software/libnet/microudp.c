@@ -32,7 +32,7 @@ struct ethernet_header {
 	unsigned short ethertype;
 } __attribute__((packed));
 
-static void fill_eth_header(struct ethernet_header *h, unsigned char *destmac, unsigned char *srcmac, unsigned short ethertype)
+static void fill_eth_header(struct ethernet_header *h, const unsigned char *destmac, const unsigned char *srcmac, unsigned short ethertype)
 {
 	int i;
 
@@ -139,6 +139,7 @@ static unsigned int cached_ip;
 
 static void process_arp()
 {
+	if(rxlen < 68) return;
 	if(rxbuffer.frame.contents.arp.hwtype != ARP_HWTYPE_ETHERNET) return;
 	if(rxbuffer.frame.contents.arp.proto != ARP_PROTO_IP) return;
 	if(rxbuffer.frame.contents.arp.hwsize != 6) return;
@@ -177,7 +178,7 @@ static void process_arp()
 	}
 }
 
-static const char broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+static const unsigned char broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 int microudp_arp_resolve(unsigned int ip)
 {
@@ -310,8 +311,27 @@ int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int
 	return 1;
 }
 
+static udp_callback rx_callback;
+
 static void process_ip()
 {
+	if(rxlen < (sizeof(struct ethernet_header)+sizeof(struct udp_frame))) return;
+	/* We don't verify UDP and IP checksums and rely on the Ethernet checksum solely */
+	if(rxbuffer.frame.contents.udp.ip.version != IP_IPV4) return;
+	if(rxbuffer.frame.contents.udp.ip.diff_services != 0) return;
+	if(rxbuffer.frame.contents.udp.ip.total_length < sizeof(struct udp_frame)) return;
+	if(rxbuffer.frame.contents.udp.ip.fragment_offset != IP_DONT_FRAGMENT) return;
+	if(rxbuffer.frame.contents.udp.ip.proto != IP_PROTO_UDP) return;
+	if(rxbuffer.frame.contents.udp.ip.dst_ip != my_ip) return;
+	if(rxbuffer.frame.contents.udp.udp.length < sizeof(struct udp_header)) return;
+
+	if(rx_callback)
+		rx_callback(rxbuffer.frame.contents.udp.ip.src_ip, rxbuffer.frame.contents.udp.udp.src_port, rxbuffer.frame.contents.udp.udp.dst_port, rxbuffer.frame.contents.udp.payload, rxbuffer.frame.contents.udp.udp.length-sizeof(struct udp_header));
+}
+
+void microudp_set_callback(udp_callback callback)
+{
+	rx_callback = callback;
 }
 
 static void process_frame()
@@ -330,6 +350,7 @@ static void process_frame()
 	computed_crc = crc32(&rxbuffer.raw[8], rxlen-12);
 	if(received_crc != computed_crc) return;
 
+	rxlen -= 4; /* strip CRC here to be consistent with TX */
 	if(rxbuffer.frame.eth_header.ethertype == ETHERTYPE_ARP) process_arp();
 	else if(rxbuffer.frame.eth_header.ethertype == ETHERTYPE_IP) process_ip();
 }
@@ -345,6 +366,8 @@ void microudp_start(unsigned char *macaddr, unsigned int ip)
 	cached_ip = 0;
 	for(i=0;i<6;i++)
 		cached_mac[i] = 0;
+
+	rx_callback = (udp_callback)0;
 	
 	CSR_MINIMAC_ADDR0 = (unsigned int)&rxbuffer;
 	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
@@ -361,8 +384,8 @@ void microudp_service()
 		rxlen = CSR_MINIMAC_COUNT0;
 		process_frame();
 		CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
-		CSR_MINIMAC_SETUP = 0;
 	}
+	CSR_MINIMAC_SETUP = 0;
 }
 
 void microudp_shutdown()
