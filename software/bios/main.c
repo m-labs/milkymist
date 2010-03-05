@@ -423,6 +423,7 @@ static void help()
 	puts("ls         - list files on the memory card");
 	puts("load       - load a file from the memory card");
 	puts("serialboot - attempt SFL boot");
+	puts("netboot    - boot via TFTP");
 	puts("cardboot   - attempt booting from memory card");
 	puts("reboot     - system reset");
 }
@@ -463,6 +464,7 @@ static void do_command(char *c)
 	else if(strcmp(token, "load") == 0) load(get_token(&c), get_token(&c));
 	
 	else if(strcmp(token, "serialboot") == 0) serialboot();
+	else if(strcmp(token, "netboot") == 0) netboot();
 	else if(strcmp(token, "cardboot") == 0) cardboot(0);
 
 	else if(strcmp(token, "reboot") == 0) reboot();
@@ -534,9 +536,10 @@ static const char banner[] =
 
 static void boot_sequence()
 {
-	splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-4)));
+	splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-1)));
 	if(test_user_abort()) {
 		serialboot(1);
+		netboot();
 		if(brd_desc->memory_card != MEMCARD_NONE) {
 			if(CSR_GPIO_IN & GPIO_DIP1)
 				cardboot(1);

@@ -106,26 +106,26 @@ struct ethernet_frame {
 
 typedef union {
 	struct ethernet_frame frame;
-	unsigned char raw[1530];
+	unsigned char raw[1532];
 } ethernet_buffer;
 
 
 static int rxlen;
-static ethernet_buffer rxbuffer __attribute__((aligned(4)));
+static ethernet_buffer *rxbuffer;
 static int txlen;
-static ethernet_buffer txbuffer __attribute__((aligned(4)));
+static ethernet_buffer *txbuffer;
 
 static void send_packet()
 {
 	unsigned int crc;
 	
-	crc = crc32(&txbuffer.raw[8], txlen-8);
-	txbuffer.raw[txlen  ] = (crc & 0xff);
-	txbuffer.raw[txlen+1] = (crc & 0xff00) >> 8;
-	txbuffer.raw[txlen+2] = (crc & 0xff0000) >> 16;
-	txbuffer.raw[txlen+3] = (crc & 0xff000000) >> 24;
+	crc = crc32(&txbuffer->raw[8], txlen-8);
+	txbuffer->raw[txlen  ] = (crc & 0xff);
+	txbuffer->raw[txlen+1] = (crc & 0xff00) >> 8;
+	txbuffer->raw[txlen+2] = (crc & 0xff0000) >> 16;
+	txbuffer->raw[txlen+3] = (crc & 0xff000000) >> 24;
 	txlen += 4;
-	CSR_MINIMAC_TXADR = (unsigned int)&txbuffer;
+	CSR_MINIMAC_TXADR = (unsigned int)txbuffer;
 	CSR_MINIMAC_TXREMAINING = txlen;
 	while(CSR_MINIMAC_TXREMAINING != 0);
 }
@@ -140,38 +140,38 @@ static unsigned int cached_ip;
 static void process_arp()
 {
 	if(rxlen < 68) return;
-	if(rxbuffer.frame.contents.arp.hwtype != ARP_HWTYPE_ETHERNET) return;
-	if(rxbuffer.frame.contents.arp.proto != ARP_PROTO_IP) return;
-	if(rxbuffer.frame.contents.arp.hwsize != 6) return;
-	if(rxbuffer.frame.contents.arp.protosize != 4) return;
-	if(rxbuffer.frame.contents.arp.opcode == ARP_OPCODE_REPLY) {
-		if(rxbuffer.frame.contents.arp.sender_ip == cached_ip) {
+	if(rxbuffer->frame.contents.arp.hwtype != ARP_HWTYPE_ETHERNET) return;
+	if(rxbuffer->frame.contents.arp.proto != ARP_PROTO_IP) return;
+	if(rxbuffer->frame.contents.arp.hwsize != 6) return;
+	if(rxbuffer->frame.contents.arp.protosize != 4) return;
+	if(rxbuffer->frame.contents.arp.opcode == ARP_OPCODE_REPLY) {
+		if(rxbuffer->frame.contents.arp.sender_ip == cached_ip) {
 			int i;
 			for(i=0;i<6;i++)
-				cached_mac[i] = rxbuffer.frame.contents.arp.sender_mac[i];
+				cached_mac[i] = rxbuffer->frame.contents.arp.sender_mac[i];
 		}
 		return;
 	}
-	if(rxbuffer.frame.contents.arp.opcode == ARP_OPCODE_REQUEST) {
-		if(rxbuffer.frame.contents.arp.target_ip == my_ip) {
+	if(rxbuffer->frame.contents.arp.opcode == ARP_OPCODE_REQUEST) {
+		if(rxbuffer->frame.contents.arp.target_ip == my_ip) {
 			int i;
 			
-			fill_eth_header(&txbuffer.frame.eth_header,
-				rxbuffer.frame.contents.arp.sender_mac,
+			fill_eth_header(&txbuffer->frame.eth_header,
+				rxbuffer->frame.contents.arp.sender_mac,
 				my_mac,
 				ETHERTYPE_ARP);
 			txlen = 68;
-			txbuffer.frame.contents.arp.hwtype = ARP_HWTYPE_ETHERNET;
-			txbuffer.frame.contents.arp.proto = ARP_PROTO_IP;
-			txbuffer.frame.contents.arp.hwsize = 6;
-			txbuffer.frame.contents.arp.protosize = 4;
-			txbuffer.frame.contents.arp.opcode = ARP_OPCODE_REPLY;
-			txbuffer.frame.contents.arp.sender_ip = my_ip;
+			txbuffer->frame.contents.arp.hwtype = ARP_HWTYPE_ETHERNET;
+			txbuffer->frame.contents.arp.proto = ARP_PROTO_IP;
+			txbuffer->frame.contents.arp.hwsize = 6;
+			txbuffer->frame.contents.arp.protosize = 4;
+			txbuffer->frame.contents.arp.opcode = ARP_OPCODE_REPLY;
+			txbuffer->frame.contents.arp.sender_ip = my_ip;
 			for(i=0;i<6;i++)
-				txbuffer.frame.contents.arp.sender_mac[i] = my_mac[i];
-			txbuffer.frame.contents.arp.target_ip = rxbuffer.frame.contents.arp.sender_ip;
+				txbuffer->frame.contents.arp.sender_mac[i] = my_mac[i];
+			txbuffer->frame.contents.arp.target_ip = rxbuffer->frame.contents.arp.sender_ip;
 			for(i=0;i<6;i++)
-				txbuffer.frame.contents.arp.target_mac[i] = rxbuffer.frame.contents.arp.sender_mac[i];
+				txbuffer->frame.contents.arp.target_mac[i] = rxbuffer->frame.contents.arp.sender_mac[i];
 			send_packet();
 		}
 		return;
@@ -196,22 +196,22 @@ int microudp_arp_resolve(unsigned int ip)
 
 	for(tries=0;tries<5;tries++) {
 		/* Send an ARP request */
-		fill_eth_header(&txbuffer.frame.eth_header,
+		fill_eth_header(&txbuffer->frame.eth_header,
 				broadcast,
 				my_mac,
 				ETHERTYPE_ARP);
 		txlen = 68;
-		txbuffer.frame.contents.arp.hwtype = ARP_HWTYPE_ETHERNET;
-		txbuffer.frame.contents.arp.proto = ARP_PROTO_IP;
-		txbuffer.frame.contents.arp.hwsize = 6;
-		txbuffer.frame.contents.arp.protosize = 4;
-		txbuffer.frame.contents.arp.opcode = ARP_OPCODE_REQUEST;
-		txbuffer.frame.contents.arp.sender_ip = my_ip;
+		txbuffer->frame.contents.arp.hwtype = ARP_HWTYPE_ETHERNET;
+		txbuffer->frame.contents.arp.proto = ARP_PROTO_IP;
+		txbuffer->frame.contents.arp.hwsize = 6;
+		txbuffer->frame.contents.arp.protosize = 4;
+		txbuffer->frame.contents.arp.opcode = ARP_OPCODE_REQUEST;
+		txbuffer->frame.contents.arp.sender_ip = my_ip;
 		for(i=0;i<6;i++)
-			txbuffer.frame.contents.arp.sender_mac[i] = my_mac[i];
-		txbuffer.frame.contents.arp.target_ip = ip;
+			txbuffer->frame.contents.arp.sender_mac[i] = my_mac[i];
+		txbuffer->frame.contents.arp.target_ip = ip;
 		for(i=0;i<6;i++)
-			txbuffer.frame.contents.arp.target_mac[i] = 0;
+			txbuffer->frame.contents.arp.target_mac[i] = 0;
 		send_packet();
 
 		/* Do we get a reply ? */
@@ -250,7 +250,7 @@ static unsigned short ip_checksum(unsigned int r, void *buffer, unsigned int len
 
 void *microudp_get_tx_buffer()
 {
-	return txbuffer.frame.contents.udp.payload;
+	return txbuffer->frame.contents.udp.payload;
 }
 
 struct pseudo_header {
@@ -273,38 +273,38 @@ int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int
 	txlen = length + sizeof(struct ethernet_header) + sizeof(struct udp_frame) + 8;
 	if(txlen < 72) txlen = 72;
 	
-	fill_eth_header(&txbuffer.frame.eth_header,
+	fill_eth_header(&txbuffer->frame.eth_header,
 		cached_mac,
 		my_mac,
 		ETHERTYPE_IP);
 	
-	txbuffer.frame.contents.udp.ip.version = IP_IPV4;
-	txbuffer.frame.contents.udp.ip.diff_services = 0;
-	txbuffer.frame.contents.udp.ip.total_length = length + sizeof(struct udp_frame);
-	txbuffer.frame.contents.udp.ip.identification = 0;
-	txbuffer.frame.contents.udp.ip.fragment_offset = IP_DONT_FRAGMENT;
-	txbuffer.frame.contents.udp.ip.ttl = IP_TTL;
-	h.proto = txbuffer.frame.contents.udp.ip.proto = IP_PROTO_UDP;
-	txbuffer.frame.contents.udp.ip.checksum = 0;
-	h.src_ip = txbuffer.frame.contents.udp.ip.src_ip = my_ip;
-	h.dst_ip = txbuffer.frame.contents.udp.ip.dst_ip = cached_ip;
-	txbuffer.frame.contents.udp.ip.checksum = ip_checksum(0, &txbuffer.frame.contents.udp.ip,
+	txbuffer->frame.contents.udp.ip.version = IP_IPV4;
+	txbuffer->frame.contents.udp.ip.diff_services = 0;
+	txbuffer->frame.contents.udp.ip.total_length = length + sizeof(struct udp_frame);
+	txbuffer->frame.contents.udp.ip.identification = 0;
+	txbuffer->frame.contents.udp.ip.fragment_offset = IP_DONT_FRAGMENT;
+	txbuffer->frame.contents.udp.ip.ttl = IP_TTL;
+	h.proto = txbuffer->frame.contents.udp.ip.proto = IP_PROTO_UDP;
+	txbuffer->frame.contents.udp.ip.checksum = 0;
+	h.src_ip = txbuffer->frame.contents.udp.ip.src_ip = my_ip;
+	h.dst_ip = txbuffer->frame.contents.udp.ip.dst_ip = cached_ip;
+	txbuffer->frame.contents.udp.ip.checksum = ip_checksum(0, &txbuffer->frame.contents.udp.ip,
 		sizeof(struct ip_header), 1);
 
-	txbuffer.frame.contents.udp.udp.src_port = src_port;
-	txbuffer.frame.contents.udp.udp.dst_port = dst_port;
-	h.length = txbuffer.frame.contents.udp.udp.length = length + sizeof(struct udp_header);
-	txbuffer.frame.contents.udp.udp.checksum = 0;
+	txbuffer->frame.contents.udp.udp.src_port = src_port;
+	txbuffer->frame.contents.udp.udp.dst_port = dst_port;
+	h.length = txbuffer->frame.contents.udp.udp.length = length + sizeof(struct udp_header);
+	txbuffer->frame.contents.udp.udp.checksum = 0;
 
 	h.zero = 0;
 	r = ip_checksum(0, &h, sizeof(struct pseudo_header), 0);
 	if(length & 1) {
-		txbuffer.frame.contents.udp.payload[length] = 0;
+		txbuffer->frame.contents.udp.payload[length] = 0;
 		length++;
 	}
-	r = ip_checksum(r, &txbuffer.frame.contents.udp.udp,
+	r = ip_checksum(r, &txbuffer->frame.contents.udp.udp,
 		sizeof(struct udp_header)+length, 1);
-	txbuffer.frame.contents.udp.udp.checksum = r;
+	txbuffer->frame.contents.udp.udp.checksum = r;
 	
 	send_packet();
 
@@ -317,16 +317,16 @@ static void process_ip()
 {
 	if(rxlen < (sizeof(struct ethernet_header)+sizeof(struct udp_frame))) return;
 	/* We don't verify UDP and IP checksums and rely on the Ethernet checksum solely */
-	if(rxbuffer.frame.contents.udp.ip.version != IP_IPV4) return;
-	if(rxbuffer.frame.contents.udp.ip.diff_services != 0) return;
-	if(rxbuffer.frame.contents.udp.ip.total_length < sizeof(struct udp_frame)) return;
-	if(rxbuffer.frame.contents.udp.ip.fragment_offset != IP_DONT_FRAGMENT) return;
-	if(rxbuffer.frame.contents.udp.ip.proto != IP_PROTO_UDP) return;
-	if(rxbuffer.frame.contents.udp.ip.dst_ip != my_ip) return;
-	if(rxbuffer.frame.contents.udp.udp.length < sizeof(struct udp_header)) return;
+	if(rxbuffer->frame.contents.udp.ip.version != IP_IPV4) return;
+	if(rxbuffer->frame.contents.udp.ip.diff_services != 0) return;
+	if(rxbuffer->frame.contents.udp.ip.total_length < sizeof(struct udp_frame)) return;
+	if(rxbuffer->frame.contents.udp.ip.fragment_offset != IP_DONT_FRAGMENT) return;
+	if(rxbuffer->frame.contents.udp.ip.proto != IP_PROTO_UDP) return;
+	if(rxbuffer->frame.contents.udp.ip.dst_ip != my_ip) return;
+	if(rxbuffer->frame.contents.udp.udp.length < sizeof(struct udp_header)) return;
 
 	if(rx_callback)
-		rx_callback(rxbuffer.frame.contents.udp.ip.src_ip, rxbuffer.frame.contents.udp.udp.src_port, rxbuffer.frame.contents.udp.udp.dst_port, rxbuffer.frame.contents.udp.payload, rxbuffer.frame.contents.udp.udp.length-sizeof(struct udp_header));
+		rx_callback(rxbuffer->frame.contents.udp.ip.src_ip, rxbuffer->frame.contents.udp.udp.src_port, rxbuffer->frame.contents.udp.udp.dst_port, rxbuffer->frame.contents.udp.payload, rxbuffer->frame.contents.udp.udp.length-sizeof(struct udp_header));
 }
 
 void microudp_set_callback(udp_callback callback)
@@ -341,23 +341,27 @@ static void process_frame()
 	unsigned int computed_crc;
 
 	for(i=0;i<7;i++)
-		if(rxbuffer.frame.eth_header.preamble[i] != 0x55) return;
-	if(rxbuffer.frame.eth_header.preamble[7] != 0xd5) return;
-	received_crc = ((unsigned int)rxbuffer.raw[rxlen-1] << 24)
-		|((unsigned int)rxbuffer.raw[rxlen-2] << 16)
-		|((unsigned int)rxbuffer.raw[rxlen-3] <<  8)
-		|((unsigned int)rxbuffer.raw[rxlen-4]);
-	computed_crc = crc32(&rxbuffer.raw[8], rxlen-12);
+		if(rxbuffer->frame.eth_header.preamble[i] != 0x55) return;
+	if(rxbuffer->frame.eth_header.preamble[7] != 0xd5) return;
+	received_crc = ((unsigned int)rxbuffer->raw[rxlen-1] << 24)
+		|((unsigned int)rxbuffer->raw[rxlen-2] << 16)
+		|((unsigned int)rxbuffer->raw[rxlen-3] <<  8)
+		|((unsigned int)rxbuffer->raw[rxlen-4]);
+	computed_crc = crc32(&rxbuffer->raw[8], rxlen-12);
 	if(received_crc != computed_crc) return;
 
 	rxlen -= 4; /* strip CRC here to be consistent with TX */
-	if(rxbuffer.frame.eth_header.ethertype == ETHERTYPE_ARP) process_arp();
-	else if(rxbuffer.frame.eth_header.ethertype == ETHERTYPE_IP) process_ip();
+	if(rxbuffer->frame.eth_header.ethertype == ETHERTYPE_ARP) process_arp();
+	else if(rxbuffer->frame.eth_header.ethertype == ETHERTYPE_IP) process_ip();
 }
 
-void microudp_start(unsigned char *macaddr, unsigned int ip)
+void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 {
 	int i;
+	char *_buffers = (char *)buffers;
+
+	rxbuffer = (ethernet_buffer *)_buffers;
+	txbuffer = (ethernet_buffer *)(_buffers + sizeof(ethernet_buffer));
 
 	for(i=0;i<6;i++)
 		my_mac[i] = macaddr[i];
@@ -369,7 +373,7 @@ void microudp_start(unsigned char *macaddr, unsigned int ip)
 
 	rx_callback = (udp_callback)0;
 	
-	CSR_MINIMAC_ADDR0 = (unsigned int)&rxbuffer;
+	CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer;
 	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
 	CSR_MINIMAC_SETUP = 0;
 }

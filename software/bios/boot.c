@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,10 @@
 #include <cffat.h>
 #include <crc.h>
 #include <sfl.h>
+
+#include <net/microudp.h>
+#include <net/tftp.h>
+
 #include <hw/hpdmc.h>
 
 #include "boot.h"
@@ -47,7 +51,7 @@ static void __attribute__((noinline)) __attribute__((noreturn)) boot(unsigned in
 }
 
 /* Note that we do not use the hw timer so that this function works
- * even if the system controller has been disabled at synthesis.
+ * even if the system controller does not.
  */
 static int check_ack()
 {
@@ -188,6 +192,49 @@ void serialboot()
 	}
 }
 
+static unsigned char macadr[] = {0xf8, 0x71, 0xfe, 0x01, 0x02, 0x03};
+
+void netboot()
+{
+	int size;
+	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
+	unsigned int ip;
+
+	printf("I: Booting from network...\n");
+	printf("I: MAC      : %02x:%02x:%02x:%02x:%02x:%02x\n", macadr[0], macadr[1], macadr[2], macadr[3], macadr[4], macadr[5]);
+	printf("I: Local IP : 192.168.0.42\n");
+	printf("I: Remote IP: 192.168.0.14\n");
+
+	ip = IPTOINT(192,168,0,14);
+	
+	microudp_start(macadr, IPTOINT(192,168,0,42), (void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-2)));
+	
+	if(tftp_get(ip, "boot.bin", (void *)SDRAM_BASE) <= 0) {
+		printf("E: Unable to download boot.bin\n");
+		return;
+	}
+	
+	cmdline_adr = SDRAM_BASE+0x1000000;
+	if(tftp_get(ip, "cmdline.txt", (void *)cmdline_adr) <= 0) {
+		printf("I: No command line parameters found\n");
+		cmdline_adr = 0;
+	}
+
+	initrdstart_adr = SDRAM_BASE+0x1002000;
+	size = tftp_get(ip, "initrd.bin", (void *)initrdstart_adr);
+	if(size <= 0) {
+		printf("I: No initial ramdisk found\n");
+		initrdstart_adr = 0;
+		initrdend_adr = 0;
+	} else
+		initrdend_adr = initrdstart_adr + size - 1;
+
+	microudp_shutdown();
+
+	printf("I: Booting...\n");
+	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
+}
+
 static int tryload(char *filename, unsigned int address)
 {
 	int devsize, realsize;
@@ -200,10 +247,11 @@ static int tryload(char *filename, unsigned int address)
 		cffat_done();
 		return -1;
 	}
-	printf("I: Read a %d byte image from %s, CRC32 %08x\n", realsize, filename, crc32((unsigned char *)SDRAM_BASE, realsize));
+	printf("I: Read a %d byte image from %s\n", realsize, filename);
 	
 	return realsize;
 }
+
 
 void cardboot(int alt)
 {

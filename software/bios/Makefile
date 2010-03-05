@@ -11,8 +11,8 @@ all: bios_splash.bin
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@ write
 
-bios.elf: linker.ld $(OBJECTS)
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libbase -lbase-light
+bios.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase-light.a $(MMDIR)/software/libnet/libnet.a
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lbase-light -lnet
 	chmod -x $@
 
 splash.raw: splash.png
@@ -38,7 +38,8 @@ boot.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 boot.o: ../../software/include/console.h ../../software/include/uart.h
 boot.o: ../../software/include/system.h ../../software/include/board.h
 boot.o: ../../software/include/cffat.h ../../software/include/crc.h
-boot.o: ../../tools/sfl.h ../../software/include/hw/hpdmc.h
+boot.o: ../../tools/sfl.h ../../software/include/net/microudp.h
+boot.o: ../../software/include/net/tftp.h ../../software/include/hw/hpdmc.h
 boot.o: ../../software/include/hw/common.h boot.h
 main.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 main.o: ../../software/include/console.h ../../software/include/string.h

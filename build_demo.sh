@@ -53,14 +53,6 @@ if [ "$?" != 0 ] ; then
 else
         echo "OK"
 fi
-echo -n "  Networking library..."
-cd $BASEDIR/software/libnet && make >> $LOGFILE 2>&1
-if [ "$?" != 0 ] ; then
-        echo "FAILED"
-	exit 1
-else
-        echo "OK"
-fi
 echo -n "  Demonstration firmware..."
 cd $BASEDIR/software/demo && make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
