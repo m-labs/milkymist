@@ -194,6 +194,27 @@ void serialboot()
 
 static unsigned char macadr[] = {0xf8, 0x71, 0xfe, 0x01, 0x02, 0x03};
 
+#define LOCALIP1 192
+#define LOCALIP2 168
+#define LOCALIP3 0
+#define LOCALIP4 42
+#define REMOTEIP1 192
+#define REMOTEIP2 168
+#define REMOTEIP3 0
+#define REMOTEIP4 14
+
+static int tftp_get_v(unsigned int ip, const char *filename, char *buffer)
+{
+	int r;
+
+	r = tftp_get(ip, filename, buffer);
+	if(r > 0)
+		printf("I: Successfully downloaded %d bytes from %s over TFTP\n", r, filename);
+	else
+		printf("I: Unable to download %s over TFTP\n", filename);
+	return r;
+}
+
 void netboot()
 {
 	int size;
@@ -202,26 +223,26 @@ void netboot()
 
 	printf("I: Booting from network...\n");
 	printf("I: MAC      : %02x:%02x:%02x:%02x:%02x:%02x\n", macadr[0], macadr[1], macadr[2], macadr[3], macadr[4], macadr[5]);
-	printf("I: Local IP : 192.168.0.42\n");
-	printf("I: Remote IP: 192.168.0.14\n");
+	printf("I: Local IP : %d.%d.%d.%d\n", LOCALIP1, LOCALIP2, LOCALIP3, LOCALIP4);
+	printf("I: Remote IP: %d.%d.%d.%d\n", REMOTEIP1, REMOTEIP2, REMOTEIP3, REMOTEIP4);
 
-	ip = IPTOINT(192,168,0,14);
+	ip = IPTOINT(REMOTEIP1, REMOTEIP2, REMOTEIP3, REMOTEIP4);
 	
-	microudp_start(macadr, IPTOINT(192,168,0,42), (void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-2)));
+	microudp_start(macadr, IPTOINT(LOCALIP1, LOCALIP2, LOCALIP3, LOCALIP4), (void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-2)));
 	
-	if(tftp_get(ip, "boot.bin", (void *)SDRAM_BASE) <= 0) {
-		printf("E: Unable to download boot.bin\n");
+	if(tftp_get_v(ip, "boot.bin", (void *)SDRAM_BASE) <= 0) {
+		printf("E: Network boot failed\n");
 		return;
 	}
 	
 	cmdline_adr = SDRAM_BASE+0x1000000;
-	if(tftp_get(ip, "cmdline.txt", (void *)cmdline_adr) <= 0) {
+	if(tftp_get_v(ip, "cmdline.txt", (void *)cmdline_adr) <= 0) {
 		printf("I: No command line parameters found\n");
 		cmdline_adr = 0;
 	}
 
 	initrdstart_adr = SDRAM_BASE+0x1002000;
-	size = tftp_get(ip, "initrd.bin", (void *)initrdstart_adr);
+	size = tftp_get_v(ip, "initrd.bin", (void *)initrdstart_adr);
 	if(size <= 0) {
 		printf("I: No initial ramdisk found\n");
 		initrdstart_adr = 0;

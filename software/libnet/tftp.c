@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <string.h>
 #include <net/microudp.h>
 #include <net/tftp.h>
@@ -66,7 +65,7 @@ static void rx_callback(unsigned int src_ip, unsigned short src_port, unsigned s
 	opcode = ((unsigned short)(data[0]) << 8)|((unsigned short)(data[1]));
 	block = ((unsigned short)(data[2]) << 8)|((unsigned short)(data[3]));
 	if(block < 1) return;
-	if(opcode == 3) {
+	if(opcode == 3) { /* Data */
 		length -= 4;
 		offset = (block-1)*512;
 		for(i=0;i<length;i++)
@@ -78,6 +77,10 @@ static void rx_callback(unsigned int src_ip, unsigned short src_port, unsigned s
 		length = format_ack(packet_data, block);
 		microudp_send(PORT_IN, src_port, length);
 	}
+	if(opcode == 5) { /* Error */
+		total_length = -1;
+		transfer_finished = 1;
+	}
 }
 
 int tftp_get(unsigned int ip, const char *filename, char *buffer)
@@ -86,10 +89,8 @@ int tftp_get(unsigned int ip, const char *filename, char *buffer)
 	int tries;
 	int i;
 	
-	if(!microudp_arp_resolve(ip)) {
-		printf("TFTP: ARP resolution failed\n");
+	if(!microudp_arp_resolve(ip))
 		return -1;
-	}
 
 	microudp_set_callback(rx_callback);
 
@@ -109,7 +110,6 @@ int tftp_get(unsigned int ip, const char *filename, char *buffer)
 		if((total_length > 0) || transfer_finished) break;
 		tries--;
 		if(tries == 0) {
-			printf("TFTP: timeout\n");
 			microudp_set_callback(NULL);
 			return -1;
 		}

@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <crc.h>
 #include <hw/minimac.h>
 #include <hw/sysctl.h>
