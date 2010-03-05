@@ -60,6 +60,8 @@ int main()
 	uart_async_init();
 	banner();
 	microudp_start(macadr, IPTOINT(192,168,0,42));
+	if(microudp_arp_resolve(IPTOINT(192,168,0,15)))
+		microudp_send(568, 9374, 45);
 	brd_init();
 	cpustats_init();
 	time_init();

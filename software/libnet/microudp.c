@@ -65,16 +65,48 @@ struct arp_frame {
 	unsigned char padding[18];
 } __attribute__((packed));
 
+#define IP_IPV4			0x45
+#define IP_DONT_FRAGMENT	0x4000
+#define IP_TTL			64
+#define IP_PROTO_UDP		0x11
+
+struct ip_header {
+	unsigned char version;
+	unsigned char diff_services;
+	unsigned short total_length;
+	unsigned short identification;
+	unsigned short fragment_offset;
+	unsigned char ttl;
+	unsigned char proto;
+	unsigned short checksum;
+	unsigned int src_ip;
+	unsigned int dst_ip;
+} __attribute__((packed));
+
+struct udp_header {
+	unsigned short src_port;
+	unsigned short dst_port;
+	unsigned short length;
+	unsigned short checksum;
+} __attribute__((packed));
+
+struct udp_frame {
+	struct ip_header ip;
+	struct udp_header udp;
+	char payload[];
+} __attribute__((packed));
+
 struct ethernet_frame {
 	struct ethernet_header eth_header;
 	union {
 		struct arp_frame arp;
+		struct udp_frame udp;
 	} contents;
 } __attribute__((packed));
 
 typedef union {
 	struct ethernet_frame frame;
-	unsigned char raw[2000];
+	unsigned char raw[1530];
 } ethernet_buffer;
 
 
@@ -83,11 +115,10 @@ static ethernet_buffer rxbuffer __attribute__((aligned(4)));
 static int txlen;
 static ethernet_buffer txbuffer __attribute__((aligned(4)));
 
-static void sendpacket()
+static void send_packet()
 {
 	unsigned int crc;
 	
-	while(CSR_MINIMAC_TXREMAINING != 0);
 	crc = crc32(&txbuffer.raw[8], txlen-8);
 	txbuffer.raw[txlen  ] = (crc & 0xff);
 	txbuffer.raw[txlen+1] = (crc & 0xff00) >> 8;
@@ -96,13 +127,14 @@ static void sendpacket()
 	txlen += 4;
 	CSR_MINIMAC_TXADR = (unsigned int)&txbuffer;
 	CSR_MINIMAC_TXREMAINING = txlen;
+	while(CSR_MINIMAC_TXREMAINING != 0);
 }
 
-static unsigned char mymac[6];
-static unsigned int myip;
+static unsigned char my_mac[6];
+static unsigned int my_ip;
 
 /* ARP cache - one entry only */
-static char cached_mac[6];
+static unsigned char cached_mac[6];
 static unsigned int cached_ip;
 
 static void process_arp()
@@ -120,12 +152,12 @@ static void process_arp()
 		return;
 	}
 	if(rxbuffer.frame.contents.arp.opcode == ARP_OPCODE_REQUEST) {
-		if(rxbuffer.frame.contents.arp.target_ip == myip) {
+		if(rxbuffer.frame.contents.arp.target_ip == my_ip) {
 			int i;
 			
 			fill_eth_header(&txbuffer.frame.eth_header,
 				rxbuffer.frame.contents.arp.sender_mac,
-				mymac,
+				my_mac,
 				ETHERTYPE_ARP);
 			txlen = 68;
 			txbuffer.frame.contents.arp.hwtype = ARP_HWTYPE_ETHERNET;
@@ -133,16 +165,147 @@ static void process_arp()
 			txbuffer.frame.contents.arp.hwsize = 6;
 			txbuffer.frame.contents.arp.protosize = 4;
 			txbuffer.frame.contents.arp.opcode = ARP_OPCODE_REPLY;
-			txbuffer.frame.contents.arp.sender_ip = myip;
+			txbuffer.frame.contents.arp.sender_ip = my_ip;
 			for(i=0;i<6;i++)
-				txbuffer.frame.contents.arp.sender_mac[i] = mymac[i];
+				txbuffer.frame.contents.arp.sender_mac[i] = my_mac[i];
 			txbuffer.frame.contents.arp.target_ip = rxbuffer.frame.contents.arp.sender_ip;
 			for(i=0;i<6;i++)
 				txbuffer.frame.contents.arp.target_mac[i] = rxbuffer.frame.contents.arp.sender_mac[i];
-			sendpacket();
+			send_packet();
 		}
 		return;
 	}
+}
+
+static const char broadcast[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+int microudp_arp_resolve(unsigned int ip)
+{
+	int i;
+	int tries;
+	int timeout;
+
+	if(cached_ip == ip) {
+		for(i=0;i<6;i++)
+			if(cached_mac[i]) return 1;
+	}
+	cached_ip = ip;
+	for(i=0;i<6;i++)
+		cached_mac[i] = 0;
+
+	for(tries=0;tries<5;tries++) {
+		/* Send an ARP request */
+		fill_eth_header(&txbuffer.frame.eth_header,
+				broadcast,
+				my_mac,
+				ETHERTYPE_ARP);
+		txlen = 68;
+		txbuffer.frame.contents.arp.hwtype = ARP_HWTYPE_ETHERNET;
+		txbuffer.frame.contents.arp.proto = ARP_PROTO_IP;
+		txbuffer.frame.contents.arp.hwsize = 6;
+		txbuffer.frame.contents.arp.protosize = 4;
+		txbuffer.frame.contents.arp.opcode = ARP_OPCODE_REQUEST;
+		txbuffer.frame.contents.arp.sender_ip = my_ip;
+		for(i=0;i<6;i++)
+			txbuffer.frame.contents.arp.sender_mac[i] = my_mac[i];
+		txbuffer.frame.contents.arp.target_ip = ip;
+		for(i=0;i<6;i++)
+			txbuffer.frame.contents.arp.target_mac[i] = 0;
+		send_packet();
+
+		/* Do we get a reply ? */
+		for(timeout=0;timeout<2000000;timeout++) {
+			microudp_service();
+			for(i=0;i<6;i++)
+				if(cached_mac[i]) return 1;
+		}
+	}
+
+	return 0;
+}
+
+static unsigned short ip_checksum(unsigned int r, void *buffer, unsigned int length)
+{
+	unsigned short *ptr;
+	int i;
+
+	ptr = (unsigned short *)buffer;
+	length >>= 1;
+
+	for(i=0;i<length;i++)
+		r += ptr[i];
+
+	/* Add overflows */
+	r += (r >> 16) & 0xffff;
+	r += (r >> 16) & 0xffff;
+
+	r = ~r;
+	r &= 0xffff;
+	if(r == 0) r = 0xffff;
+	return r;
+}
+
+void *microudp_get_tx_buffer()
+{
+	return txbuffer.frame.contents.udp.payload;
+}
+
+struct pseudo_header {
+	unsigned int src_ip;
+	unsigned int dst_ip;
+	unsigned char zero;
+	unsigned char proto;
+	unsigned short length;
+} __attribute__((packed));
+
+int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int length)
+{
+	struct pseudo_header h;
+	unsigned int r;
+	
+	if((cached_mac[0] == 0) && (cached_mac[1] == 0) && (cached_mac[2] == 0)
+		&& (cached_mac[3] == 0) && (cached_mac[4] == 0) && (cached_mac[5] == 0))
+		return 0;
+
+	txlen = length + sizeof(struct ethernet_header) + sizeof(struct udp_frame) + 8;
+	if(txlen < 72) txlen = 72;
+	
+	fill_eth_header(&txbuffer.frame.eth_header,
+		cached_mac,
+		my_mac,
+		ETHERTYPE_IP);
+	
+	txbuffer.frame.contents.udp.ip.version = IP_IPV4;
+	txbuffer.frame.contents.udp.ip.diff_services = 0;
+	txbuffer.frame.contents.udp.ip.total_length = length + sizeof(struct udp_frame);
+	txbuffer.frame.contents.udp.ip.identification = 0;
+	txbuffer.frame.contents.udp.ip.fragment_offset = IP_DONT_FRAGMENT;
+	txbuffer.frame.contents.udp.ip.ttl = IP_TTL;
+	h.proto = txbuffer.frame.contents.udp.ip.proto = IP_PROTO_UDP;
+	txbuffer.frame.contents.udp.ip.checksum = 0;
+	h.src_ip = txbuffer.frame.contents.udp.ip.src_ip = my_ip;
+	h.dst_ip = txbuffer.frame.contents.udp.ip.dst_ip = cached_ip;
+	txbuffer.frame.contents.udp.ip.checksum = ip_checksum(0, &txbuffer.frame.contents.udp.ip,
+		sizeof(struct ip_header));
+
+	txbuffer.frame.contents.udp.udp.src_port = src_port;
+	txbuffer.frame.contents.udp.udp.dst_port = dst_port;
+	h.length = txbuffer.frame.contents.udp.udp.length = length + sizeof(struct udp_header);
+	txbuffer.frame.contents.udp.udp.checksum = 0;
+
+	h.zero = 0;
+	r = ip_checksum(0, &h, sizeof(struct pseudo_header));
+	if(length & 1) {
+		txbuffer.frame.contents.udp.payload[length] = 0;
+		length++;
+	}
+	r = ip_checksum(r, &txbuffer.frame.contents.udp.udp,
+		sizeof(struct udp_header)+length);
+	txbuffer.frame.contents.udp.udp.checksum = r;
+	
+	send_packet();
+
+	return 1;
 }
 
 static void process_ip()
@@ -174,8 +337,8 @@ void microudp_start(unsigned char *macaddr, unsigned int ip)
 	int i;
 
 	for(i=0;i<6;i++)
-		mymac[i] = macaddr[i];
-	myip = ip;
+		my_mac[i] = macaddr[i];
+	my_ip = ip;
 
 	cached_ip = 0;
 	for(i=0;i<6;i++)
@@ -202,4 +365,11 @@ void microudp_service()
 
 void microudp_shutdown()
 {
+	CSR_MINIMAC_STATE0 = MINIMAC_STATE_EMPTY;
+	CSR_MINIMAC_TXREMAINING = 0;
+	/* This transfer should be last. It will make the CPU request the Wishbone bus,
+	 * and therefore, when it completes,
+	 * it makes sure that any ongoing DMA bus transaction is finished.
+	 */
+	CSR_MINIMAC_SETUP = MINIMAC_SETUP_RXRST|MINIMAC_SETUP_TXRST;
 }
