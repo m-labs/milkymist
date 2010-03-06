@@ -55,7 +55,7 @@ always @(posedge sys_clk) begin
 	end else if(next_point) begin
 		err = err + r_r;
 		correct = (err[16:0] > {1'b0, divisor_r[16:1]}) & ~err[17];
-		if(positive) begin
+		if(positive_r) begin
 			o_r = o_r + {1'b0, q_r};
 			if(correct)
 				o_r = o_r + 18'd1;
