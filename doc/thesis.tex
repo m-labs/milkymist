@@ -132,6 +132,7 @@ This thesis focuses on the computer architecture problems and concepts behind th
 
 \chapter{Memory subsystem}
 \section{Attacking the memory wall}
+\label{sec:memorywall}
 A recurrent point in many modern computer systems is the memory performance problem. The term \textit{memory wall} was coined~\cite{memorywall} to refer to the growing disparity of performance between logic such as CPUs and off-chip memories. While microprocessor performance has been improving at a rate of 60 percent per year, the access time to DRAM has been improving at less than 10 percent per year~\cite{memvscpu}.
 
 Memory performance is measured with two metrics:
@@ -154,7 +155,7 @@ Thus, most of today's SDRAM controllers do a lot to optimize bandwidth but have 
 \item configuring the SDRAM at high CAS latencies in order to increase its maximum allowable clock frequency. This trend is best illustrated by the advent of DDR2 and DDR3 memories whose key innovation is to run their internal DRAM core at a submultiple of the I/O frequency with a wide data bus which is then serialized on the I/O pins. Since the internal DRAM core has a latency comparable to that of the earlier SDR and DDR technologies, the number of CAS latency cycles relative to the I/O clock is also multiplied.
 \end{itemize}
 
-An extreme example of these memory controller bandwidth optimizations is the MemMax\textregistered ~DRAM scheduler~\cite{memmax}. This unit sits on top of an already existing memory controller (which already has its own latency), adding seven stages of complex and high-latency pipelining that produces an efficient - but compute-intensive - DRAM schedule. The actual efficiency of this system has been questioned~\cite{dramqos} because of that significant increase in latency.
+An extreme example of these memory controller bandwidth optimizations is the MemMax\textregistered ~DRAM scheduler~\cite{memmax}. This unit sits on top of an already existing memory controller (which already has its own latency), adding seven stages of complex and high-latency pipelining that produces a good - but compute-intensive - DRAM schedule. The actual efficiency of this system has been questioned~\cite{dramqos} because of that significant increase in latency.
 
 \section{An alternative approach}
 The out-of-order execution and hardware multithreading processor optimizations discussed above that cope with high memory latency are complex and impractical in the context of small and cheap embedded systems, especially those targetted at FPGA implementations. For example, FPGA implementations of the OpenSPARC~\cite{opensparc} processor, which employs such optimizations, typically require an expensive high-end Xilinx XUPV5 board whose Virtex-5 FPGA alone costs roughly 13000 SEK.
@@ -177,6 +178,7 @@ Page hit probability is also improved by the ability of the Milkymist memory con
 This optimization positively affects both latency and bandwidth.
 
 \subsection{Burst accesses}
+\label{subsec:fmlburst}
 All memory accesses are made using bursts, i.e. when an access for a word is made, the following words are also read or written. Burst mode is a feature of the SDRAM chips: only one read of write command is sent to them, and several words are transferred on subsequent clock cycles.
 
 Using bursts frees the bus and DRAM control signals while other words are transferred, allowing the issue of new commands overlapping the data phase of the previous transaction.
@@ -189,6 +191,7 @@ Burst access is a form of prefetching that improves latency. It is only efficien
 \end{itemize}
 
 \subsection{Burst reordering}
+\label{subsec:fmlborder}
 This feature enables the use of the critical-word-first scheme in caches, reducing the overall memory latency.
 
 When a request is issued at an address which is not a multiple of the burst length, the order of the words in the burst is changed so that the first word that comes out is the very word that is at the requested memory address. The prefetch address is then incremented and wraps to stay within the same burst.
@@ -200,6 +203,7 @@ For example, assuming a burst length of 4:
 \end{itemize}
 
 \subsection{Pipelining}
+\label{subsec:fmlpipe}
 The memory bus of Milkymist~\cite{fml} is pipelined. During the transfer of the prefetched (burst) data, a new request can be issued. This is illustrated for a read request by the table below:
 
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
@@ -264,7 +268,11 @@ Finally, the bus interface is a piece of glue logic that connects the SoC pipeli
 
 HPDMC has been implemented in Verilog HDL, tested and debugged in RTL simulation using a DDR SDRAM Verilog model from Micron, integrated into the SoC, synthesized into FPGA technology, and eventually calibrated and tested by software routines running on the actual hardware.
 
-This design of memory controller, specifically crafted for the Milkymist project and released under the GNU GPL license on websites such as OpenCores.org, has been picked up by the NASA for a software defined radio project and may be put up on board the international space station in 2011.
+This design of memory controller, specifically crafted for the Milkymist project and released under the GNU GPL license on the internet, has been picked up by the NASA for a software defined radio project and may be put up onboard the international space station in 2011. Gregory Taylor, Electronics Engineer at the NASA Jet Propulsion Laboratory, writes:
+
+\textit{While searching for a suitable SDRAM controller for the Jet Propulsion Laboratory's Software-Defined Radio onboard NASA's CoNNeCT experiment, I found S\'ebastien's HPDMC SDRAM controller on OpenCores.org. We needed a controller that was both high performance and well documented. Though the original HPDMC controller was designed for DDR SDRAM with a 32-bit bus, S\'ebastien clearly explained the modifications necessary to adapt the controller to our Single Data Rate, 40-bit wide SDRAM chip. I found the code to be well documented and easy to follow. The performance has met our requirements and the FPGA size requirement is small.}
+
+\textit{The Communication Navigation and Networking Reconfigurable Testbed (CoNNeCT) experiment to be installed onboard the ISS is designed for the next generation of SDRs conforming to the Space Telecommunications Radio Systems (STRS) open architecture standard. The HPDMC controller will likely find its way into one or more loadable waveform payloads in the JPL SDR, and perhaps be used in other NASA projects as well. It may eventually find its way into deep space.}
 
 \section{Performance measurement}
 To measure how well HPDMC performs in the real Milkymist system, a logic core has been added to the SoC that snoops on the memory bus activity in order to report the average latency and bandwidth. Results are summarized in Table xxx.
@@ -285,7 +293,7 @@ More specifically, the following components are not developed yet:
 \item DMX512 controller
 \end{itemize}
 
-This chapter explains how the different interconnect buses work, what their features are, why they are there, and how they are communicate with each other.
+This chapter explains how the different interconnect busses work, what their features are, why they are there, and how they are communicate with each other.
 
 \begin{figure}
 \centering
@@ -295,9 +303,76 @@ This chapter explains how the different interconnect buses work, what their feat
 \end{figure}
 
 \section{General SoC interconnect: the Wishbone bus}
-\section{Configuration and Status Register: the CSR bus}
+Wishbone~\cite{wishbone} is a general purpose royalty-free SoC bus with open specifications, advocated by the maintainers of the OpenCores.org website.
+
+Wishbone is a synchronous sequential bus with support for variable latency (wait states) through the use of an acknowledgement signal that marks the end of the transaction. Burst modes (automatic transfer of consecutive words) are supported and are configurable on a per-transaction basis (i.e. bursts of arbitrary lengths and single-word transactions can be freely mixed on the same bus). However, there is no pipelining.
+
+Wishbone is used around the SoC's LatticeMico32 CPU core and for simple DMA masters which have modest requirements of bandwidth and of volume of transferred data. As will be explained in Section~\ref{sec:fmlbrg}, connecting DMA masters that transfer small amounts of data (which can fit in the L2 cache) to the same bus as the CPU simplifies dealing with cache coherency issues.
+
+The data width used for the Wishbone bus is 32, yielding a peak bandwidth of 3.2Gbps when the system is running at 100MHz.
+
+\section{Configuration and Status Registers: the CSR bus}
+Milkymist uses memory-mapped I/O through configuration and status registers.
+
+If these registers were directly accessed by the Wishbone CPU bus, two problems would arise:
+\begin{itemize}
+\item Connecting all peripherals on the same Wishbone bus involves large multiplexers and high fanout signals, posing routing and timing problems.
+\item Wishbone requires the generation of an acknowledgement signal by each slave core. This signal is useful in many cases, as it supports peripherals with a variable latency. However, configuration and status register files are usually implemented with actual registers (flip flops) or SRAM, which can always be accessed in one clock cycle. Thus, there is no need for variable latency and the acknowledgement signal. Keeping this signal for the configuration and status registers wastes hardware resources and development time.
+\end{itemize}
+
+To alleviate these problems, the CSR bus has been developed~\cite{csr} and used in the system through a bus bridge.
+
+The CSR bus is a simpler bus than Wishbone, where all transfers are done in one cycle. It has an interface similar to that of synchronous SRAM, consisting only of address, data in, data out and write enable pins and clocked by the system clock.
+
+A bridge connects the CSR bus to the CPU Wishbone bus, to allow transparent memory-mapped access to the configuration and status registers by the software. This bridge includes registers for all the signals crossing the two busses, relaxing the timing constraints.
+
 \section{High-throughput memory access bus: the FML bus}
+FastMemoryLink (FML)~\cite{fml} was co-designed with HPDMC (the memory controller) as a on-chip bus tailored to access SDRAM memories at high speed while keeping the memory controller simple. Its key features are listed below.
+
+\subsection{Variable latency}
+SDRAM latency varies a lot depending on the state of the SDRAM at the time the request is issued on the bus. It depends on whether the SDRAM was in the middle of a refresh cycle, whether the bank needs to be precharged, and whether a new row needs to be activated. Therefore, FML provides support for a variable number of wait states, defined by the memory controller, through the use of an acknowledgement signal similar to that of Wishbone.
+
+\subsection{Burst only}
+SDRAM is best accessed in burst mode (see Subsection~\ref{subsec:fmlburst}).
+
+However, enabling or configuring burst mode is a relatively lengthy and complex operation, requiring a reload of the SDRAM mode register which takes several cycles. Furthermode, supporting multiple burst lengths makes the scheduling of the transfers more complex to avoid ``overlapping'' transfers that would create conflicts at the data pins.
+
+Therefore, in order to greatly simplify the memory controller, all transfers on FML are made using a fixed and pre-defined burst length.
+
+\subsection{Burst reordering}
+This was discussed in Subsection~\ref{subsec:fmlborder}.
+
+\subsection{Pipelining}
+The benefits of this feature have already been discussed in Subsection~\ref{subsec:fmlpipe}.
+
+Pipelined requests may come from the same core that issued the initial transfer, or from another core. The FML arbiter would then pipeline the request coming from the other core.
+
+\subsection{Usage}
+The data width used for the FML bus is 64, yielding a peak bandwidth of 6.4Gbps when the system is running at 100MHz. This is twice the peak bandwidth of the Wishbone bus. Furthermore, this bus provides a short path to the memory controller, reducing latency and therefore potentially further increasing effective bandwidth, as discussed in Section~\ref{sec:memorywall}.
+
+Peripherals directly connected to FML are typically those which transfer large amounts of data (that would exceed the capacity of the L2 cache presented in Section~\ref{sec:fmlbrg}) and which have high bandwidth requirements (and therefore can take advantage of the bandwidth and latency improvement compared to Wishbone).
+
+In the Milkymist SoC, they are comprised of:
+\begin{itemize}
+\item the VGA output controller, which needs to continously scan a framebuffer up to several megabytes in size to generate the video signal.
+\item the (planned) video input, which writes, every second, dozens of digitized video frames weighting hundreds of kilobytes each.
+\item the texture mapping unit (Chapter~\ref{ch:tmu}), which needs to deal with large textures at high speed.
+\end{itemize}
+
 \section{Bridging Wishbone to FML}
+\label{sec:fmlbrg}
+For Wishbone masters (like the CPU) to access SDRAM transparently, it is necessary to bridge the FML bus to the Wishbone bus.
+
+FML is a burst-only bus with a fixed burst length, while with Wishbone, bursts are optional and configured on a per-transaction basis. To be efficient, the bridge must therefore be able to store data and slice it to meet the transfer size requirements of the Wishbone and FML transactions.
+
+A traditional write-back cache with a line length equal to the FML burst length provides an elegant solution to this problem. This cache is referred to as the ``L2 cache'', because, from the CPU point of view, it provides a second level of cache relative to its integrated instruction and data caches.
+
+The bridge provides very limited support for cache coherency. Cache coherency issues arise because of the masters directly connected to the FML bus:
+\begin{itemize}
+\item The CPU may read a cached copy of a data that has been modified by a FML master.
+\item A FML master may read a value that has been modified by the CPU in the cache (dirty line) but not flushed to the SDRAM.
+\item A FML master may update a value in SDRAM but not in the cache. The line may then go dirty, and, when flushed, will erase the value written by the FML master.
+\end{itemize}
 
 \chapter{Software execution environment}
 \section{LatticeMico32}

@@ -14,7 +14,7 @@
 
 \title{Milkymist system reference manual}
 \author{S\'ebastien Bourdeauducq}
-\date{December 2009}
+\date{March 2010}
 \begin{document}
 \maketitle{}
 \section{What is Milkymist}
@@ -46,17 +46,6 @@ This board is equipped with a Virtex-4 FPGA (XC4VLX25). Milkymist can use the on
 \item DDRAM (two Infineon HYB25D256160BT-7 chips)
 \end{itemize}
 
-\subsection{Avnet Spartan-3A evaluation kit}
-This board is equipped with a Spartan-3A XC3S400A chip. Because of the limited FPGA capacity and the small number of on-board peripherals, support for this board is only for educational and evaluation purposes.
-
-The following peripherals are supported:
-\begin{itemize}
-\item RS232 port
-\item LEDs
-\item Buttons
-\item Parallel flash
-\end{itemize}
-
 \section{Components and bus architecture}
 
 \begin{figure}[H]
@@ -82,7 +71,7 @@ The choice has been made to include this on-chip RAM so that advanced debug prog
 \subsubsection{SDRAM}
 For large volatile data storage, Milkymist is designed to use affordable and industry-standard DDR SDRAM chips. A custom memory controller (HPDMC) has been designed as part of the project, as all other free cores were either non-functional or slow.
 
-The memory controller implements the proprietary high-performance FML bus to deliver low-latency and high-bandwidth memory access while using few FPGA resources. FML has been designed as part of the Milkymist project.
+The memory controller implements the custom high-performance FML bus to deliver low-latency and high-bandwidth memory access while using few FPGA resources. FML has been designed as part of the Milkymist project.
 
 \subsection{UART}
 A simple UART is included, intended to implement a debug console. The UART parameters are fixed: 115200 bps, 8 bits per character, no parity, 1 stop bit.
@@ -93,26 +82,25 @@ The design uses a ``system controller'' core which includes the interrupt contro
 See the ``GPIO maps'' and ``IRQ maps'' sections for GPIO and IRQ assignments.
 
 \subsection{Memory card}
-On the ML401, the CF card is accessed through the Xilinx SystemACE chip. The registers of this chip are mapped in the softcore CPU address space using the WISHBONE bus.
+On the ML401, the CF card is accessed through the Xilinx SystemACE chip. The registers of this chip are mapped in the softcore CPU address space.
 
 \subsection{VGA controller}
-Milkymist uses a VGA signal generator which reads from a RGB565 framebuffer, and implements an FML master to fetch data from the memory. The VGA generator is controlled using a CSR interface.
+Milkymist uses a VGA signal generator which reads from a RGB565 framebuffer, and implements an FML master to fetch data from the memory.
 
 \subsection{Audio}
-Milkymist can record and play audio through an AC'97 codec. The core that drives the codec is controlled via a CSR interface and supports DMA reads and writes of the PCM data over Wishbone.
+Milkymist can record and play audio through an AC'97 codec, thanks to its built-in AC'97 controller.
 
 \subsection{Programmable Floating Point Unit (PFPU)}
 The PFPU is a simple and high-speed floating point microprocessor, designed to do the bulk vertex data generation for each frame in little time.
 
-It has a WISHBONE master for writing the output buffer, and a CSR interface for control.
-
 \subsection{Texture Mapping Unit (TMU)}
-The engine performs texture mapping on a triangle strip. It is a central component of MilkDrop acceleration.
-
-It has two FML master interfaces for fetching pixel data, a WISHBONE master to fetch the vertex data, and a CSR slave for control.
+The engine performs 2D texture mapping on rectangular surfaces. It is a central component of MilkDrop acceleration.
 
 \subsection{PS/2 controller}
 Milkymist supports two standard PS/2 keyboard/mouse port. This is only implemented on the ML401 board.
+
+\subsection{Ethernet}
+A minimal Ethernet 10/100 MAC is provided, which connects to MII PHYs.
 
 \section{GPIO map}
 
@@ -222,9 +210,9 @@ Milkymist supports two standard PS/2 keyboard/mouse port. This is only implement
 \hline
 \hspace{5mm} 0x80008000 & No & \hspace{5mm} PS/2 mouse (ML401 only) \\
 \hline
-0xa0000000 & No & SystemACE (ML401 only) \\
+\hspace{5mm} 0x80009000 & No & \hspace{5mm} Ethernet \\
 \hline
-0xc0000000 & No & Ethernet \\
+0xa0000000 & No & SystemACE (ML401 only) \\
 \hline
 \end{tabularx}
 
@@ -259,7 +247,9 @@ Milkymist supports two standard PS/2 keyboard/mouse port. This is only implement
 \hline
 12 & PS/2 mouse (ML401 only)\\
 \hline
-13 & Ethernet\\
+13 & Ethernet RX \\
+\hline
+14 & Ethernet TX \\
 \hline
 \end{tabularx}
 
@@ -268,7 +258,7 @@ Using an ``execute-in-place'' schema, the system boots from the NOR flash, mappe
 
 The Milkymist BIOS is based on FreeMAC (\url{http://lekernel.net/prism54/freemac.html}), originally written for running on the ARM embedded processors of Prism54 Wi-Fi cards. It has undergone major modifications since then.
 
-The BIOS loads firmware from an external source (CF card or UART). The BIOS supports direct booting of Linux kernels. If no suitable boot medium is found, it starts a debug shell on the UART, which allows to do basic system operations such as writing to registers. The \verb!help! command lists the commands available with the BIOS release you are currently using.
+The BIOS loads firmware from an external source (memory card, Ethernet network and UART). The BIOS supports direct booting of Linux kernels. If no suitable boot medium is found, it starts a debug shell on the UART, which allows to do basic system operations such as writing to registers. The \verb!help! command lists the commands available with the BIOS release you are currently using.
 
 All transmissions over the UART are made at 115200 bps or 230400 bps, with 8 bits per character, without parity, and with 1 stop bit. The second DIP switch on the board enables the 230400 bps rate when it is set, which is convenient when transferring large firmware images such as Linux kernels.
 
@@ -339,6 +329,9 @@ The following commands are implemented:\\
 0x05 & Set Linux kernel initrd end address. The payload is the 32-bit address. This address is written to the CPU register r3. \\
 \hline
 \end{tabularx}
+
+\subsection{Network boot}
+To debug large pieces of software, such as Linux, it is possible to boot from the network using TFTP. The board has the fixed IP address 192.168.0.42 and tries to connect to the TFTP server at 192.168.0.14. It attempts to download the files \verb!boot.bin!, \verb!cmdline.txt! and \verb!initrd.bin!, which are handled in the same way as when doing a CF card boot.
 
 \subsection{Boot from the CF card}
 If the device has not received an acknowledgement for UART boot after a certain period of time, it then attempts to boot from the CF card.
