@@ -46,10 +46,11 @@ main.o: ../../software/include/console.h ../../software/include/string.h
 main.o: ../../software/include/uart.h ../../software/include/cffat.h
 main.o: ../../software/include/crc.h ../../software/include/system.h
 main.o: ../../software/include/board.h ../../software/include/version.h
-main.o: ../../software/include/hw/hpdmc.h ../../software/include/hw/common.h
-main.o: ../../software/include/hw/vga.h ../../software/include/hw/fmlbrg.h
-main.o: ../../software/include/hw/sysctl.h ../../software/include/hw/gpio.h
-main.o: ../../software/include/hw/uart.h boot.h splash.h
+main.o: ../../software/include/net/mdio.h ../../software/include/hw/hpdmc.h
+main.o: ../../software/include/hw/common.h ../../software/include/hw/vga.h
+main.o: ../../software/include/hw/fmlbrg.h ../../software/include/hw/sysctl.h
+main.o: ../../software/include/hw/gpio.h ../../software/include/hw/uart.h
+main.o: boot.h splash.h
 splash.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 splash.o: ../../software/include/hw/vga.h ../../software/include/hw/common.h
 splash.o: splash.h

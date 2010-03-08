@@ -24,6 +24,7 @@
 #include <system.h>
 #include <board.h>
 #include <version.h>
+#include <net/mdio.h>
 #include <hw/hpdmc.h>
 #include <hw/vga.h>
 #include <hw/fmlbrg.h>
@@ -404,6 +405,48 @@ static void load(char *filename, char *addr)
 	cffat_done();
 }
 
+static void mdior(char *reg)
+{
+	char *c;
+	int reg2;
+
+	if(*reg == 0) {
+		printf("mdior <register>\n");
+		return;
+	}
+	reg2 = strtoul(reg, &c, 0);
+	if(*c != 0) {
+		printf("incorrect register\n");
+		return;
+	}
+
+	printf("%04x\n", mdio_read(brd_desc->ethernet_phyadr, reg2));
+}
+
+static void mdiow(char *reg, char *value)
+{
+	char *c;
+	int reg2;
+	int value2;
+
+	if((*reg == 0) || (*value == 0)) {
+		printf("mdiow <register> <value>\n");
+		return;
+	}
+	reg2 = strtoul(reg, &c, 0);
+	if(*c != 0) {
+		printf("incorrect address\n");
+		return;
+	}
+	value2 = strtoul(value, &c, 0);
+	if(*c != 0) {
+		printf("incorrect value\n");
+		return;
+	}
+
+	mdio_write(brd_desc->ethernet_phyadr, reg2, value2);
+}
+
 /* Init + command line */
 
 static void help()
@@ -425,6 +468,8 @@ static void help()
 	puts("serialboot - attempt SFL boot");
 	puts("netboot    - boot via TFTP");
 	puts("cardboot   - attempt booting from memory card");
+	puts("mdior      - read MDIO register");
+	puts("mdiow      - write MDIO register");
 	puts("reboot     - system reset");
 }
 
@@ -466,6 +511,9 @@ static void do_command(char *c)
 	else if(strcmp(token, "serialboot") == 0) serialboot();
 	else if(strcmp(token, "netboot") == 0) netboot();
 	else if(strcmp(token, "cardboot") == 0) cardboot(0);
+
+	else if(strcmp(token, "mdior") == 0) mdior(get_token(&c));
+	else if(strcmp(token, "mdiow") == 0) mdiow(get_token(&c), get_token(&c));
 
 	else if(strcmp(token, "reboot") == 0) reboot();
 	

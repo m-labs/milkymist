@@ -1176,18 +1176,18 @@ minimac #(
 );
 `else
 assign csr_dr_ethernet = 32'd0;
-
 assign ethernetrxbus_adr = 32'bx;
 assign ethernetrxbus_cti = 3'bx;
-assign ethernetrxbus_we = 1'bx;
 assign ethernetrxbus_cyc = 1'b0;
 assign ethernetrxbus_stb = 1'b0;
-assign ethernetrxbus_sel = 3'bx;
 assign ethernetrxbus_dat_w = 32'bx;
-
+assign ethernettxbus_adr = 32'bx;
+assign ethernettxbus_cti = 3'bx;
+assign ethernettxbus_cyc = 1'b0;
+assign ethernettxbus_stb = 1'b0;
+assign ethernettxbus_dat_r = 32'bx;
 assign ethernetrx_irq = 1'b0;
 assign ethernettx_irq = 1'b0;
-
 assign phy_tx_data = 4'b0;
 assign phy_tx_en = 1'b0;
 assign phy_tx_er = 1'b0;

@@ -38,8 +38,6 @@
 #include <hal/time.h>
 #include <hal/brd.h>
 
-#include <net/mdio.h>
-
 #include "line.h"
 #include "wave.h"
 #include "rpipe.h"
@@ -208,52 +206,7 @@ static void help()
 	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
 	puts("reboot     - system reset");
-	puts("mdior      - read MDIO register");
-	puts("mdiow      - write MDIO register");
 }
-
-static void mdior(char *reg)
-{
-	char *c;
-	int reg2;
-
-	if(*reg == 0) {
-		printf("mdior <register>\n");
-		return;
-	}
-	reg2 = strtoul(reg, &c, 0);
-	if(*c != 0) {
-		printf("incorrect register\n");
-		return;
-	}
-
-	printf("%04x\n", mdio_read(brd_desc->ethernet_phyadr, reg2));
-}
-
-static void mdiow(char *reg, char *value)
-{
-	char *c;
-	int reg2;
-	int value2;
-
-	if((*reg == 0) || (*value == 0)) {
-		printf("mdiow <register> <value>\n");
-		return;
-	}
-	reg2 = strtoul(reg, &c, 0);
-	if(*c != 0) {
-		printf("incorrect address\n");
-		return;
-	}
-	value2 = strtoul(value, &c, 0);
-	if(*c != 0) {
-		printf("incorrect value\n");
-		return;
-	}
-
-	mdio_write(brd_desc->ethernet_phyadr, reg2, value2);
-}
-
 
 static void loadpic(const char *filename)
 {
@@ -646,10 +599,6 @@ static void do_command(char *c)
 	else if(strcmp(command, "stats") == 0) stats();
 	else if(strcmp(command, "reboot") == 0) reboot();
 	else if(strcmp(command, "help") == 0) help();
-
-	/* Networking */
-	else if(strcmp(command, "mdior") == 0) mdior(param1);
-	else if(strcmp(command, "mdiow") == 0) mdiow(param1, param2);
 
 	/* Test functions and hacks */
 	else if(strcmp(command, "loadpic") == 0) loadpic(param1);
