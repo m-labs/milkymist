@@ -28,7 +28,8 @@
 `define ENABLE_TMU
 `define ENABLE_PS2_KEYBOARD
 `define ENABLE_PS2_MOUSE
-`define ENABLE_ETHERNET
+//`define ENABLE_ETHERNET
+`define ENABLE_FMLMETER
 
 /*
  * System clock frequency in Hz.

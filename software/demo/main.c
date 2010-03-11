@@ -38,6 +38,7 @@
 #include "renderer.h"
 #include "ui.h"
 #include "cpustats.h"
+#include "memstats.h"
 #include "shell.h"
 
 static void banner()
@@ -57,6 +58,7 @@ int main()
 	banner();
 	brd_init();
 	cpustats_init();
+	memstats_init();
 	time_init();
 	mem_init();
 	vga_init();

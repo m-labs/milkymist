@@ -436,7 +436,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_tmu,
 		csr_dr_ps2,
 		csr_dr_mouse,
-		csr_dr_ethernet;
+		csr_dr_ethernet,
+		csr_dr_fmlmeter;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -563,6 +564,7 @@ csrbrg csrbrg(
 		|csr_dr_ps2
 		|csr_dr_mouse
 		|csr_dr_ethernet
+		|csr_dr_fmlmeter
 	)
 );
 
@@ -1132,6 +1134,9 @@ assign csr_dr_mouse = 32'd0;
 assign mouse_irq = 1'd0;
 `endif
 
+//---------------------------------------------------------------------------
+// Ethernet
+//---------------------------------------------------------------------------
 `ifdef ENABLE_ETHERNET
 minimac #(
 	.csr_addr(4'h9)
@@ -1193,6 +1198,28 @@ assign phy_tx_en = 1'b0;
 assign phy_tx_er = 1'b0;
 assign phy_mii_clk = 1'b0;
 assign phy_mii_data = 1'bz;
+`endif
+
+//---------------------------------------------------------------------------
+// FastMemoryLink usage and performance meter
+//---------------------------------------------------------------------------
+`ifdef ENABLE_FMLMETER
+fmlmeter #(
+	.csr_addr(4'ha)
+) fmlmeter (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_fmlmeter),
+
+	.fml_stb(fml_stb),
+	.fml_ack(fml_ack)
+);
+`else
+assign csr_dr_fmlmeter = 32'd0;
 `endif
 
 endmodule

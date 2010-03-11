@@ -15,18 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <hal/time.h>
+#ifndef __MEMSTATS_H
+#define __MEMSTATS_H
 
-#include "rpipe.h"
-#include "cpustats.h"
-#include "memstats.h"
-#include "ui.h"
+void memstats_init();
+void memstats_tick();
+unsigned int memstat_occupancy();	/* < Memory bus occupancy in % */
+unsigned int memstat_net_bandwidth();	/* < Net bandwidth computed on data actually transferred, Mb/s */
+unsigned int memstat_amat(); 		/* < Average Memory Access Time, in 1/100 cycles */
 
-void time_tick()
-{
-	rpipe_tick();
-	cpustats_tick();
-	memstats_tick();
-	ui_tick();
-}
-
+#endif /* __MEMSTATS_H */

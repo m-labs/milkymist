@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o shell.o ui.o main.o
+OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o ui.o main.o
 SEGMENTS=-j .text -j .data -j .rodata
 
 all: boot.bin
@@ -83,7 +83,10 @@ main.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
 main.o: ../../software/include/hw/pfpu.h ../../software/include/hal/tmu.h
 main.o: ../../software/include/hw/tmu.h ../../software/include/hal/slowout.h
 main.o: ../../software/include/hal/hdlcd.h apipe.h rpipe.h renderer.h ui.h
-main.o: cpustats.h shell.h
+main.o: cpustats.h memstats.h shell.h
+memstats.o: ../../software/include/board.h ../../software/include/hal/brd.h
+memstats.o: ../../software/include/hw/fmlmeter.h
+memstats.o: ../../software/include/hw/common.h
 parser.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 parser.o: ../../software/include/assert.h ../../software/include/string.h
 parser.o: ../../software/include/malloc.h ../../software/include/math.h ast.h
@@ -123,10 +126,10 @@ shell.o: ../../software/include/hw/minimac.h ../../software/include/hal/vga.h
 shell.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
 shell.o: ../../software/include/hal/tmu.h ../../software/include/hal/time.h
 shell.o: ../../software/include/hal/brd.h line.h wave.h rpipe.h cpustats.h
-shell.o: shell.h ui.h
+shell.o: memstats.h shell.h ui.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
-tick.o: ../../software/include/hw/common.h cpustats.h ui.h
+tick.o: ../../software/include/hw/common.h cpustats.h memstats.h ui.h
 ui.o: ../../software/include/stdio.h ../../software/include/stdlib.h
 ui.o: ../../software/include/string.h ../../software/include/cffat.h
 ui.o: ../../software/include/irq.h ../../software/include/version.h

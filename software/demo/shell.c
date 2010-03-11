@@ -42,6 +42,7 @@
 #include "wave.h"
 #include "rpipe.h"
 #include "cpustats.h"
+#include "memstats.h"
 #include "shell.h"
 #include "ui.h"
 
@@ -181,6 +182,9 @@ static void stats()
 {
 	int hours, mins, secs;
 	struct timestamp ts;
+	unsigned int amat;
+	unsigned int netbw;
+	unsigned int occupancy;
 
 	time_get(&ts);
 	secs = ts.sec;
@@ -191,6 +195,16 @@ static void stats()
 	printf("Uptime: %02d:%02d:%02d  FPS: %d  CPU:%3d%%\n", hours, mins, secs,
 		rpipe_fps(),
 		cpustats_load());
+
+	amat = memstat_amat();
+	netbw = memstat_net_bandwidth();
+	occupancy = memstat_occupancy();
+	if(occupancy != 0) {
+		printf("Net memory bandwidth      : %d Mbps\n", netbw);
+		printf("Memory bus occupancy      : %d%%\n", occupancy);
+		printf("Extrapolated max bandwidth: %d Mbps\n", (100*netbw)/occupancy);
+		printf("Avg. mem. access time     : %d.%d cycles\n", amat/100, amat%100);
+	}
 }
 
 static void help()

@@ -15,18 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <hal/time.h>
+#ifndef __HW_FMLMETER_H
+#define __HW_FMLMETER_H
 
-#include "rpipe.h"
-#include "cpustats.h"
-#include "memstats.h"
-#include "ui.h"
+#include <hw/common.h>
 
-void time_tick()
-{
-	rpipe_tick();
-	cpustats_tick();
-	memstats_tick();
-	ui_tick();
-}
+#define CSR_FMLMETER_ENABLE	MMPTR(0x8000a000)
 
+#define FMLMETER_ENABLE		(0x01)
+
+#define CSR_FMLMETER_STBCOUNT	MMPTR(0x8000a004)
+#define CSR_FMLMETER_ACKCOUNT	MMPTR(0x8000a008)
+
+#endif /* __HW_FMLMETER_H */
