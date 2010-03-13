@@ -20,10 +20,70 @@
 \setlength{\parskip}{5pt}
 \maketitle{}
 \section{Introduction}
+This cores provides a means to extract some statistical parameters about the performance of a memory system based on FastMemoryLink (FML):
+\begin{itemize}
+\item the \textbf{net bandwidth} carried by the link (based on the amount of data that the link has actually transferred)
+\item the \textbf{average memory access time}, which is the time, in cycles, between the request being made to the memory controller and the first word of data being transferred.
+\item the \textbf{bus occupancy} which is the percentage of time during which the link was busy and therefore unavailable for a new request.
+\end{itemize}
+
+The design of this core is extremely small and simple. It only requires monitoring two signals of the FML bus: \verb!stb! and \verb!ack!. All the core does is count the number of cycles during which these signals were active during a given time period. Software can then derive the parameters using the equations described below.
+
+The core is controlled via a CSR interface.
 
 \section{Register map}
 
+\begin{tabularx}{450pt}{|l|X|}
+\hline
+\textbf{Register} & \textbf{Description} \\
+\hline
+0x00 & When this register has value 1, the two counters are enabled and are incremented at each cycle the FML strobe and acknowledgement signals are respectively active. Writing 1 atomically resets the two counters and allows them to count. Writing 0 atomically freezes the counters' values. \\
+\hline
+0x04 & Number of cycles during which the strobe signal was active (S). This register is read only. \\
+\hline
+0x08 & Number of cycles during which the acknowledgement signal was active (A). This register is read only. \\
+\hline
+\end{tabularx}
+
 \section{Interpreting the data}
+\subsection{Notations}
+In the equations that follow, the following symbols are used:
+\begin{itemize}
+\item $f$ is the system clock frequency in Hz
+\item $T$ is the time during which the counters have been enabled
+\item $w$ is the width of a FML word in bits
+\item $n$ is the FML burst length
+\item $S$ is the number of cycles during which the strobe signal was active
+\item $A$ is the number of cycles during which the acknowledgement signal was active (number of completed transfers)
+\end{itemize}
+
+\subsection{Net bandwidth}
+The net bandwidth is given by:
+\[
+\frac{w \cdot n \cdot A}{T}
+\]
+
+\subsection{Average memory access time}
+In FML, a master is waiting when the strobe signal is asserted but the acknowledgement signal is not. Therefore, the total number of wait cycles is given by $S-A$.
+
+The average memory access time can thus be computed as:
+\[
+\frac{S-A}{A}
+\]
+
+\subsection{Bus occupancy}
+In FML, the bus is busy when the strobe signal is asserted. The bus occupancy is therefore given by:
+\[
+\frac{S}{T \cdot f}
+\]
+
+\subsection{Avoiding overflows}
+The counters for S and A use 32-bit unsigned values and therefore may overflow and wrap if they are left running for too long. This condition must be avoided as it will lead to incorrect reports.
+
+The worst case for causing overflows is a bus which is always busy (the strobe signal is active at all cycles). Therefore, overflows will be avoided if the following condition is met:
+\[
+T \cdot f < 2^{32}
+\]
 
 \section*{Copyright notice}
 Copyright \copyright 2007-2010 S\'ebastien Bourdeauducq. \\

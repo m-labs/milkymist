@@ -157,7 +157,7 @@ Thus, most of today's SDRAM controllers do a lot to optimize bandwidth but have 
 
 An extreme example of these memory controller bandwidth optimizations is the MemMax\textregistered ~DRAM scheduler~\cite{memmax}. This unit sits on top of an already existing memory controller (which already has its own latency), adding seven stages of complex and high-latency pipelining that produces a good - but compute-intensive - DRAM schedule. The actual efficiency of this system has been questioned~\cite{dramqos} because of that significant increase in latency.
 
-\section{An alternative approach}
+\section{Another approach}
 The out-of-order execution and hardware multithreading processor optimizations discussed above that cope with high memory latency are complex and impractical in the context of small and cheap embedded systems, especially those targetted at FPGA implementations. For example, FPGA implementations of the OpenSPARC~\cite{opensparc} processor, which employs such optimizations, typically require an expensive high-end Xilinx XUPV5 board whose Virtex-5 FPGA alone costs roughly 13000 SEK.
 
 Milkymist therefore uses simple in-order execution schemes in its CPU and in its accelerators, and strives to improve performance by focusing on reducing the memory latency.
@@ -276,32 +276,42 @@ This design of memory controller, specifically crafted for the Milkymist project
 
 \section{Performance measurement}
 \subsection{Introduction}
+We wanted to validate and characterize the memory system performance (actual latency and bandwidth) and get an upper bound of of its ability to sustain loads, by extrapolating the maximum bandwidth one could get assuming the memory access time remains constant.
+
+Since the memory performance depends on the particular access pattern that the system makes (because of the controller taking the page mode gamble, we wanted to take the measurements on the real system while it is rendering video effects in order to get an accurate result.
 
 \subsection{Method}
 A logic core has been added to the SoC that snoops on the memory bus activity in order to report the average latency and bandwidth.
 
+That logic core exploits properties of the FastMemoryLink signaling in order to reduce its complexity to two counters that measure, for a given time period, the number of cycles during which the strobe and acknowledgement signals are active. Several parameters can then be computed:
+\begin{itemize}
+\item the \textbf{net bandwidth} carried by the link (based on the amount of data that the link has actually transferred)
+\item the \textbf{average memory access time}, which is the time, in cycles, between the request being made to the memory controller and the first word of data being transferred.
+\item the \textbf{bus occupancy} which is the percentage of time during which the link was busy and therefore unavailable for a new request.
+\end{itemize}
+
 \subsection{Results}
-Results are summarized in table~\ref{tab:memperformance}. The first line
+Results are summarized in table~\ref{tab:memperformance}. The first line corresponds to a system running the demonstration firmware with the video output enabled at the standard VGA mode of 640x480 at 60Hz (therefore continuously scanning the screen with data from system memory), but not rendering a preset. The other lines represent the results while the demonstration firmware is rendering different MilkDrop presets, still at the same video resolution.
 
 \begin{table}
 \centering
 \begin{tabular}{|l|l|l|l|l|}
 \hline
-\textbf{Preset} & \textbf{Bandwidth} & \textbf{Occupancy} & \textbf{AMAT} & \textbf{Max bandwidth}  \\
+\textbf{Preset} & \textbf{Bandwidth} & \textbf{Occupancy} & \textbf{AMAT} & \textbf{Bandwidth bound}  \\
 \hline
-Idle & 293 Mbps & 7 \% & 5.52 & 4185 Mbps \\
+Idle & 293 Mbps & 7 \% & 5.52 &  Mbps \\
 \hline
-Geiss - Bright Fiber Matrix 1 & 1067 Mbps & 31 \% & 6.58 & 3441 Mbps \\
+Geiss - Bright Fiber Matrix 1 & 1067 Mbps & 31 \% & 6.58 &  Mbps \\
 \hline
-Geiss - Swirlie 3 & 1160 Mbps & 34 \% & 6.71 & 3411 Mbps \\
+Geiss - Swirlie 3 & 1160 Mbps & 34 \% & 6.71 &  Mbps \\
 \hline
-StudioMusic - Twisted Galaxy & 942 Mbps & 25 \% & 5.94 & 3768 Mbps \\
+StudioMusic - Twisted Galaxy & 942 Mbps & 25 \% & 5.94 & Mbps \\
 \hline
-Geiss - Spacedust & 1024 Mbps & 30 \% & 6.67 & 3413 Mbps \\
+Geiss - Spacedust & 1024 Mbps & 30 \% & 6.67 &  Mbps \\
 \hline
-Geiss - Anomaly 2 & 1127 Mbps & 33 \% & 6.58 & 3415 Mbps \\
+Geiss - Anomaly 2 & 1127 Mbps & 33 \% & 6.58 &  Mbps \\
 \hline
-Aderrasi - Candy Avian & 923 Mbps & 27 \% & 6.52 & 3418 Mbps \\
+Aderrasi - Candy Avian & 923 Mbps & 27 \% & 6.52 &  Mbps \\
 \hline
 \end{tabular}
 \caption{Memory performance in different conditions (Milkymist 0.5).} \label{tab:memperformance}
@@ -412,7 +422,6 @@ The heart of the software execution capabilities of the SoC is the LatticeMico32
 \caption{LatticeMico32 architecture (Lattice Semiconductor).}
 \label{fig:lm32arch}
 \end{figure}
-
 
 The Milkymist system-on-chip uses LatticeMico32 with 2-way caches of 16KB each, and all the optional features enabled.
 
