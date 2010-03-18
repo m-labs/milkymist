@@ -290,6 +290,29 @@ That logic core exploits properties of the FastMemoryLink signaling in order to 
 \item the \textbf{bus occupancy} which is the percentage of time during which the link was busy and therefore unavailable for a new request.
 \end{itemize}
 
+Every FastMemoryLink transaction begins with the assertion of the strobe signal. Then, after one or more wait cycles, the memory controller asserts the acknowledgement signal together with the first word of data being transferred. The next cycle, the strobe signal is deasserted (unless a new transaction begins) while the next word in the burst is being transferred. A new transaction can start with the assertion of the strobe signal even if a burst is already going on (pipelining). See figure~\ref{fig:fmltransactions} for an example.
+
+\begin{figure}
+\centering
+\includegraphics[height=40mm]{fmltransactions.eps}
+\caption{FML transactions} \label{fig:fmltransactions}
+\end{figure}
+
+In the equations that follow, these symbols are used:
+\begin{itemize}
+\item $f$ is the system clock frequency in Hz
+\item $T$ is the time during which the counters have been enabled
+\item $w$ is the width of a FML word in bits
+\item $n$ is the FML burst length
+\item $S$ is the number of cycles during which the strobe signal was active
+\item $A$ is the number of cycles during which the acknowledgement signal was active
+\end{itemize}
+
+By counting the number of cycles for which the acknowledgement signal was active, one gets the number of transactions. Since each transaction carries exactly a burst of data, which is $w \cdot n$ bits in size, the volume of data transferred is given by $w \cdot n \cdot A $. Thus, one can derive the net bandwidth as:
+\[
+\frac{w \cdot n \cdot A}{T}
+\]
+
 \subsection{Results}
 Results are summarized in table~\ref{tab:memperformance}. The first line corresponds to a system running the demonstration firmware with the video output enabled at the standard VGA mode of 640x480 at 60Hz (therefore continuously scanning the screen with data from system memory), but not rendering a preset. The other lines represent the results while the demonstration firmware is rendering different MilkDrop presets, still at the same video resolution.
 
