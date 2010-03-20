@@ -29,6 +29,7 @@
 #include <hw/vga.h>
 #include <hw/fmlbrg.h>
 #include <hw/sysctl.h>
+#include <hw/capabilities.h>
 #include <hw/gpio.h>
 #include <hw/uart.h>
 
@@ -575,6 +576,23 @@ static void display_board()
 	printf("I: Running on %s\n", brd_desc->name);
 }
 
+#define display_capability(cap, val) if(val) printf("I: "cap": Yes\n"); else printf("I: "cap": No\n")
+
+static void display_capabilities()
+{
+	unsigned int cap;
+
+	cap = CSR_CAPABILITIES;
+	display_capability("SystemACE ", cap & CAP_SYSTEMACE);
+	display_capability("AC'97     ", cap & CAP_AC97);
+	display_capability("PFPU      ", cap & CAP_PFPU);
+	display_capability("TMU       ", cap & CAP_TMU);
+	display_capability("PS/2 Kbd  ", cap & CAP_PS2_KEYBOARD);
+	display_capability("PS/2 Mouse", cap & CAP_PS2_MOUSE);
+	display_capability("Ethernet  ", cap & CAP_ETHERNET);
+	display_capability("FML Meter ", cap & CAP_FMLMETER);
+}
+
 static const char banner[] =
 	"\nMILKYMIST(tm) v"VERSION" BIOS\thttp://www.milkymist.org\n"
 	"(c) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq\n\n"
@@ -615,6 +633,7 @@ int main(int i, char **c)
 	
 	crcbios();
 	display_board();
+	display_capabilities();
 	
 	if(plltest()) {
 		ddrinit();

@@ -730,6 +730,7 @@ assign led[1] = rxled;
 // System Controller
 //---------------------------------------------------------------------------
 wire [13:0] gpio_outputs;
+wire [31:0] capabilities;
 
 sysctl #(
 	.csr_addr(4'h1),
@@ -752,11 +753,17 @@ sysctl #(
 	.gpio_inputs(dipsw),
 	.gpio_outputs(led[3:2]), /* LED0 and LED1 are used as TX/RX indicators. */
 
+	.capabilities(capabilities),
 	.hard_reset(hard_reset)
 );
 
+gen_capabilities gen_capabilities(
+	.capabilities(capabilities)
+);
+
+
 //---------------------------------------------------------------------------
-// ISP1362 USB interface
+// USB interface
 //---------------------------------------------------------------------------
 `ifdef ENABLE_ISP1362
 isp1362 isp1362(

@@ -39,6 +39,8 @@ module sysctl #(
 	input [ninputs-1:0] gpio_inputs,
 	output reg [noutputs-1:0] gpio_outputs,
 
+	input [31:0] capabilities,
+
 	output reg hard_reset
 );
 
@@ -166,7 +168,8 @@ always @(posedge sys_clk) begin
 				4'b1000: csr_do <= {ar1, en1};
 				4'b1001: csr_do <= compare1;
 				4'b1010: csr_do <= counter1;
-				
+
+				4'b1110: csr_do <= capabilities;
 				4'b1111: csr_do <= systemid;
 			endcase
 		end

@@ -1,4 +1,4 @@
-BOARD_SRC=$(wildcard $(BOARD_DIR)/*.v)
+BOARD_SRC=$(wildcard $(BOARD_DIR)/*.v) $(BOARD_DIR)/../../gen_capabilities.v
 
 CONBUS_SRC=$(wildcard $(CORES_DIR)/conbus/rtl/*.v)
 LM32_SRC=						\
