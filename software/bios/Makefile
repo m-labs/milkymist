@@ -34,24 +34,32 @@ clean:
 
 # DO NOT DELETE
 
-boot.o: ../../software/include/stdio.h ../../software/include/stdlib.h
-boot.o: ../../software/include/console.h ../../software/include/uart.h
-boot.o: ../../software/include/system.h ../../software/include/board.h
-boot.o: ../../software/include/cffat.h ../../software/include/crc.h
+boot.o: ../../software/include/base/stdio.h
+boot.o: ../../software/include/base/stdlib.h
+boot.o: ../../software/include/base/console.h
+boot.o: ../../software/include/base/uart.h
+boot.o: ../../software/include/base/system.h
+boot.o: ../../software/include/base/board.h
+boot.o: ../../software/include/base/cffat.h ../../software/include/base/crc.h
 boot.o: ../../tools/sfl.h ../../software/include/net/microudp.h
 boot.o: ../../software/include/net/tftp.h ../../software/include/hw/hpdmc.h
 boot.o: ../../software/include/hw/common.h boot.h
-main.o: ../../software/include/stdio.h ../../software/include/stdlib.h
-main.o: ../../software/include/console.h ../../software/include/string.h
-main.o: ../../software/include/uart.h ../../software/include/cffat.h
-main.o: ../../software/include/crc.h ../../software/include/system.h
-main.o: ../../software/include/board.h ../../software/include/version.h
+main.o: ../../software/include/base/stdio.h
+main.o: ../../software/include/base/stdlib.h
+main.o: ../../software/include/base/console.h
+main.o: ../../software/include/base/string.h
+main.o: ../../software/include/base/uart.h
+main.o: ../../software/include/base/cffat.h ../../software/include/base/crc.h
+main.o: ../../software/include/base/system.h
+main.o: ../../software/include/base/board.h
+main.o: ../../software/include/base/version.h
 main.o: ../../software/include/net/mdio.h ../../software/include/hw/hpdmc.h
 main.o: ../../software/include/hw/common.h ../../software/include/hw/vga.h
 main.o: ../../software/include/hw/fmlbrg.h ../../software/include/hw/sysctl.h
 main.o: ../../software/include/hw/capabilities.h
 main.o: ../../software/include/hw/gpio.h ../../software/include/hw/uart.h
 main.o: boot.h splash.h
-splash.o: ../../software/include/stdio.h ../../software/include/stdlib.h
+splash.o: ../../software/include/base/stdio.h
+splash.o: ../../software/include/base/stdlib.h
 splash.o: ../../software/include/hw/vga.h ../../software/include/hw/common.h
 splash.o: splash.h
