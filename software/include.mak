@@ -10,7 +10,7 @@ RANLIB=lm32-elf-ranlib
 
 # Toolchain options
 #
-INCLUDES=-I$(MMDIR)/software/include -I$(MMDIR)/tools
+INCLUDES=-I$(MMDIR)/software/include -I$(MMDIR)/software/include/base -I$(MMDIR)/tools
 ASFLAGS=$(INCLUDES)
 CFLAGS=-O3 -Wall -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled -msign-extend-enabled -fno-builtin -fsigned-char -fsingle-precision-constant $(INCLUDES)
 LDFLAGS=-nostdlib -nodefaultlibs

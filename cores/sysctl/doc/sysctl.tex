@@ -69,7 +69,7 @@ This register holds the current value of the timer counter. It can be read or wr
 Writing it does not clear the trigger bit (bit 0 of the timer control register). The trigger bit should always be manually reset.
 
 \section{Capabilities}
-The system controller provides a 32-bit value intended to be used as user-defined bit mask that defines the presence of certain peripherals or features in the bitstream. It is readable from register 0x2c. It is defined  using the \verb!capabilities! input.
+The system controller provides a 32-bit value intended to be used as user-defined bit mask that defines the presence of certain peripherals or features in the bitstream. It is readable from register 0x38. It is defined  using the \verb!capabilities! input.
 
 \section{System identification}
 The system controller provides a 32-bit value defined at synthesis time that can be used to identify bitstreams or boards. The value is set by the \verb!systemid! Verilog parameter and read using the register 0x3c.
