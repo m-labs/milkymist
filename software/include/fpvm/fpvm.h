@@ -63,6 +63,8 @@ struct fpvm_fragment {
 	struct fpvm_instruction code[FPVM_MAXCODELEN];
 };
 
+const char *fpvm_version();
+
 void fpvm_init(struct fpvm_fragment *fragment);
 
 int fpvm_bind(struct fpvm_fragment *fragment, const char *sym);
@@ -73,7 +75,7 @@ void fpvm_set_yout(struct fpvm_fragment *fragment, const char *sym);
 
 int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *expr);
 
-int fpvm_done(struct fpvm_fragment *fragment);
+int fpvm_finalize(struct fpvm_fragment *fragment);
 
 void fpvm_dump(struct fpvm_fragment *fragment);
 

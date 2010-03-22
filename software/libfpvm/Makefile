@@ -25,7 +25,7 @@ depend: parser.c scanner.c
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out libfpvm.a  boot.bin .*~ *~ Makefile.bak
+	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out libfpvm.a .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 

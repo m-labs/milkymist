@@ -17,12 +17,18 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <base/version.h>
 
 #include <fpvm/is.h>
 #include <fpvm/fpvm.h>
 
 #include "ast.h"
 #include "parser_helper.h"
+
+const char *fpvm_version()
+{
+	return VERSION;
+}
 
 void fpvm_init(struct fpvm_fragment *fragment)
 {
@@ -251,7 +257,7 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 	return 1;
 }
 
-int fpvm_done(struct fpvm_fragment *fragment)
+int fpvm_finalize(struct fpvm_fragment *fragment)
 {
 	return add_isn(fragment, FPVM_OPCODE_VECTOUT, -1, -2, 0);
 }
@@ -304,7 +310,7 @@ void fpvm_dump(struct fpvm_fragment *fragment)
 	
 	printf("== Permanent bindings:\n");
 	for(i=0;i<fragment->nbindings;i++) {
-		printf("R%03d ", i);
+		printf("R%04d ", i);
 		if(fragment->bindings[i].isvar)
 			printf("%s\n", fragment->bindings[i].b.v);
 		else
@@ -316,7 +322,7 @@ void fpvm_dump(struct fpvm_fragment *fragment)
 	}
 	printf("== Transient bindings:\n");
 	for(i=0;i<fragment->ntbindings;i++) {
-		printf("R%03d ", fragment->tbindings[i].reg);
+		printf("R%04d ", fragment->tbindings[i].reg);
 		printf("%s\n", fragment->tbindings[i].sym);
 	}
 	printf("== Code:\n");
@@ -334,7 +340,8 @@ void fpvm_dump(struct fpvm_fragment *fragment)
 				printf("            ");
 				break;
 		}
-		printf("-> R%04d", fragment->code[i].dest);
+		if(fragment->code[i].dest != 0)
+			printf("-> R%04d", fragment->code[i].dest);
 		printf("\n");
 	}
 }

@@ -49,6 +49,8 @@ node(N) ::= TOK_IDENT(I). {
 	strncpy(N->label, I, sizeof(N->label));
 	N->label[sizeof(N->label)-1] = 0;
 	N->contents.branches.a = NULL;
+	N->contents.branches.b = NULL;
+	N->contents.branches.c = NULL;
 }
 
 %left TOK_PLUS.
@@ -64,6 +66,7 @@ node(N) ::= node(A) TOK_PLUS node(B). {
 	N->label[1] = 0;
 	N->contents.branches.a = A;
 	N->contents.branches.b = B;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= node(A) TOK_MINUS node(B). {
@@ -72,6 +75,7 @@ node(N) ::= node(A) TOK_MINUS node(B). {
 	N->label[1] = 0;
 	N->contents.branches.a = A;
 	N->contents.branches.b = B;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= node(A) TOK_MULTIPLY node(B). {
@@ -80,6 +84,7 @@ node(N) ::= node(A) TOK_MULTIPLY node(B). {
 	N->label[1] = 0;
 	N->contents.branches.a = A;
 	N->contents.branches.b = B;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= node(A) TOK_DIVIDE node(B). {
@@ -88,6 +93,7 @@ node(N) ::= node(A) TOK_DIVIDE node(B). {
 	N->label[1] = 0;
 	N->contents.branches.a = A;
 	N->contents.branches.b = B;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= node(A) TOK_PERCENT node(B). {
@@ -96,6 +102,7 @@ node(N) ::= node(A) TOK_PERCENT node(B). {
 	N->label[1] = 0;
 	N->contents.branches.a = A;
 	N->contents.branches.b = B;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= TOK_MINUS node(A). [TOK_NOT] {
@@ -103,6 +110,8 @@ node(N) ::= TOK_MINUS node(A). [TOK_NOT] {
 	N->label[0] = '!';
 	N->label[1] = 0;
 	N->contents.branches.a = A;
+	N->contents.branches.b = NULL;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_RPAREN. {
@@ -110,6 +119,8 @@ node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_RPAREN. {
 	strncpy(N->label, I, sizeof(N->label));
 	N->label[sizeof(N->label)-1] = 0;
 	N->contents.branches.a = A;
+	N->contents.branches.b = NULL;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_RPAREN. {
@@ -118,6 +129,7 @@ node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_RPAREN. {
 	N->label[sizeof(N->label)-1] = 0;
 	N->contents.branches.a = A;
 	N->contents.branches.b = B;
+	N->contents.branches.c = NULL;
 }
 
 node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_COMMA node(C) TOK_RPAREN. {
