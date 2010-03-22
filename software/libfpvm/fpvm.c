@@ -262,7 +262,7 @@ int fpvm_finalize(struct fpvm_fragment *fragment)
 	return add_isn(fragment, FPVM_OPCODE_VECTOUT, -1, -2, 0);
 }
 
-static void print_opcode(int opcode)
+void fpvm_print_opcode(int opcode)
 {
 	switch(opcode) {
 		case FPVM_OPCODE_NOP:     printf("NOP     "); break;
@@ -282,7 +282,7 @@ static void print_opcode(int opcode)
 	}
 }
 
-static int get_arity(int opcode)
+int fpvm_get_arity(int opcode)
 {
 	switch(opcode) {
 		case FPVM_OPCODE_FADD:
@@ -314,11 +314,11 @@ void fpvm_dump(struct fpvm_fragment *fragment)
 		if(fragment->bindings[i].isvar)
 			printf("%s\n", fragment->bindings[i].b.v);
 		else
-#ifdef PRINTF_FLOAT
+			#ifdef PRINTF_FLOAT
 			printf("%f\n", fragment->bindings[i].b.c);
-#else
+			#else
 			printf("%f\n", &fragment->bindings[i].b.c);
-#endif
+			#endif
 	}
 	printf("== Transient bindings:\n");
 	for(i=0;i<fragment->ntbindings;i++) {
@@ -328,8 +328,8 @@ void fpvm_dump(struct fpvm_fragment *fragment)
 	printf("== Code:\n");
 	for(i=0;i<fragment->ninstructions;i++) {
 		printf("%04d: ", i);
-		print_opcode(fragment->code[i].opcode);
-		switch(get_arity(fragment->code[i].opcode)) {
+		fpvm_print_opcode(fragment->code[i].opcode);
+		switch(fpvm_get_arity(fragment->code[i].opcode)) {
 			case 2:
 				printf("R%04d,R%04d ", fragment->code[i].opa, fragment->code[i].opb);
 				break;

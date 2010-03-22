@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=fpvm.o parser_helper.o scanner.o parser.o
+OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o pfpu.o
 
 all: libfpvm.a
 

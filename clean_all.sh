@@ -9,6 +9,10 @@ cd $BASEDIR/tools && make clean
 cd $BASEDIR/software/libbase && make clean
 cd $BASEDIR/software/libmath && make clean
 cd $BASEDIR/software/libhal && make clean
+cd $BASEDIR/software/libfpvm && make clean
+cd $BASEDIR/software/libfpvm/x86-linux && make clean
+cd $BASEDIR/software/libfpvm/lm32-linux && make clean
+cd $BASEDIR/software/libfpvm/lm32-rtems && make clean
 cd $BASEDIR/software/libnet && make clean
 cd $BASEDIR/software/bios && make clean
 cd $BASEDIR/software/demo && make clean

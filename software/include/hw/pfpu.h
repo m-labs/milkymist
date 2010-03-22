@@ -70,6 +70,7 @@
 #define PFPU_PAGESIZE		(512)
 
 #define PFPU_REG_COUNT		(128)
+#define PFPU_SPREG_COUNT	(3)
 #define PFPU_REG_X		(0)
 #define PFPU_REG_Y		(1)
 #define PFPU_REG_FLAGS		(2)

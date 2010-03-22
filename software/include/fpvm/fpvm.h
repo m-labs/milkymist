@@ -15,6 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Floating Point Virtual Machine compiler.
+ * This library takes a series of equations and turn them into
+ * FPVM code that evaluates them.
+ */
+
 #ifndef __FPVM_FPVM_H
 #define __FPVM_FPVM_H
 
@@ -78,5 +84,8 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 int fpvm_finalize(struct fpvm_fragment *fragment);
 
 void fpvm_dump(struct fpvm_fragment *fragment);
+
+void fpvm_print_opcode(int opcode);
+int fpvm_get_arity(int opcode);
 
 #endif /* __FPVM_FPVM_H */
