@@ -73,7 +73,7 @@ void fpvm_set_yout(struct fpvm_fragment *fragment, const char *sym);
 
 int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *expr);
 
-void fpvm_done(struct fpvm_fragment *fragment);
+int fpvm_done(struct fpvm_fragment *fragment);
 
 void fpvm_dump(struct fpvm_fragment *fragment);
 

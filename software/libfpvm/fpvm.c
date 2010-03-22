@@ -16,6 +16,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include <fpvm/is.h>
 #include <fpvm/fpvm.h>
@@ -250,10 +251,90 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 	return 1;
 }
 
-void fpvm_done(struct fpvm_fragment *fragment)
+int fpvm_done(struct fpvm_fragment *fragment)
 {
+	return add_isn(fragment, FPVM_OPCODE_VECTOUT, -1, -2, 0);
+}
+
+static void print_opcode(int opcode)
+{
+	switch(opcode) {
+		case FPVM_OPCODE_NOP:     printf("NOP     "); break;
+		case FPVM_OPCODE_FADD:    printf("FADD    "); break;
+		case FPVM_OPCODE_FSUB:    printf("FSUB    "); break;
+		case FPVM_OPCODE_FMUL:    printf("FMUL    "); break;
+		case FPVM_OPCODE_FDIV:    printf("FDIV    "); break;
+		case FPVM_OPCODE_F2I:     printf("F2I     "); break;
+		case FPVM_OPCODE_I2F:     printf("I2F     "); break;
+		case FPVM_OPCODE_VECTOUT: printf("VECTOUT "); break;
+		case FPVM_OPCODE_SIN:     printf("SIN     "); break;
+		case FPVM_OPCODE_COS:     printf("COS     "); break;
+		case FPVM_OPCODE_ABOVE:   printf("ABOVE   "); break;
+		case FPVM_OPCODE_EQUAL:   printf("EQUAL   "); break;
+		case FPVM_OPCODE_COPY:    printf("COPY    "); break;
+		default:                  printf("XXX     "); break;
+	}
+}
+
+static int get_arity(int opcode)
+{
+	switch(opcode) {
+		case FPVM_OPCODE_FADD:
+		case FPVM_OPCODE_FSUB:
+		case FPVM_OPCODE_FMUL:
+		case FPVM_OPCODE_FDIV:
+		case FPVM_OPCODE_VECTOUT:
+		case FPVM_OPCODE_EQUAL:
+		case FPVM_OPCODE_ABOVE:
+			return 2;
+		case FPVM_OPCODE_F2I:
+		case FPVM_OPCODE_I2F:
+		case FPVM_OPCODE_SIN:
+		case FPVM_OPCODE_COS:
+		case FPVM_OPCODE_COPY:
+			return 1;
+		default:
+			return 0;
+	}
 }
 
 void fpvm_dump(struct fpvm_fragment *fragment)
 {
+	int i;
+	
+	printf("== Permanent bindings:\n");
+	for(i=0;i<fragment->nbindings;i++) {
+		printf("R%03d ", i);
+		if(fragment->bindings[i].isvar)
+			printf("%s\n", fragment->bindings[i].b.v);
+		else
+#ifdef PRINTF_FLOAT
+			printf("%f\n", fragment->bindings[i].b.c);
+#else
+			printf("%f\n", &fragment->bindings[i].b.c);
+#endif
+	}
+	printf("== Transient bindings:\n");
+	for(i=0;i<fragment->ntbindings;i++) {
+		printf("R%03d ", fragment->tbindings[i].reg);
+		printf("%s\n", fragment->tbindings[i].sym);
+	}
+	printf("== Code:\n");
+	for(i=0;i<fragment->ninstructions;i++) {
+		printf("%04d: ", i);
+		print_opcode(fragment->code[i].opcode);
+		switch(get_arity(fragment->code[i].opcode)) {
+			case 2:
+				printf("R%04d,R%04d ", fragment->code[i].opa, fragment->code[i].opb);
+				break;
+			case 1:
+				printf("R%04d       ", fragment->code[i].opa);
+				break;
+			case 0:
+				printf("            ");
+				break;
+		}
+		printf("-> R%04d", fragment->code[i].dest);
+		printf("\n");
+	}
 }
