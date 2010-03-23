@@ -67,7 +67,7 @@ void pfpu_dump(unsigned int *code, unsigned int n)
 
 		latency = pfpu_get_latency(prog[i].i.opcode);
 		if(prog[i].i.opcode != PFPU_OPCODE_NOP)
-			printf("[L=%d E=%04d] ", latency, i+latency);
+			printf("<L=%d E=%04d> ", latency, i+latency);
 		else
 			printf("             ");
 

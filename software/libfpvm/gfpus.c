@@ -15,12 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+
 #include <fpvm/is.h>
 #include <fpvm/fpvm.h>
 #include <fpvm/pfpu.h>
 #include <fpvm/gfpus.h>
 
 #include <hw/pfpu.h>
+
+//#define GFPUS_DEBUG
 
 static void get_registers(struct fpvm_fragment *fragment, unsigned int *registers)
 {
@@ -60,10 +64,10 @@ static void init_scheduler_state(struct scheduler_state *sc, struct fpvm_fragmen
 	
 	for(i=0;i<PFPU_SPREG_COUNT;i++)
 		sc->dont_touch[i] = 1;
-	for(i=0;i<PFPU_REG_COUNT;i++)
+	for(;i<PFPU_REG_COUNT;i++)
 		sc->dont_touch[i] = 0;
 	for(i=0;i<PFPU_REG_COUNT;i++)
-		sc->register_allocation[i] = -1;
+		sc->register_allocation[i] = FPVM_INVALID_REG;
 	for(i=0;i<FPVM_MAXCODELEN;i++)
 		sc->exits[i] = -1;
 	for(i=0;i<PFPU_PROGSIZE;i++)
@@ -151,7 +155,7 @@ static int allocate_pfpu_register(struct scheduler_state *sc, int reg)
 	if(reg >= 0) return reg;
 	for(i=0;i<PFPU_REG_COUNT;i++) {
 		if(sc->dont_touch[i]) continue;
-		if(sc->register_allocation[i] < 0) {
+		if(sc->register_allocation[i] == FPVM_INVALID_REG) {
 			sc->register_allocation[i] = reg;
 			return i;
 		}
@@ -169,37 +173,39 @@ static int find_pfpu_register(struct scheduler_state *sc, int reg)
 	return -1;
 }
 
-static void try_free_register(struct scheduler_state *sc, int firstisn, int lastisn, int reg)
+static void try_free_register(struct scheduler_state *sc, int reg)
 {
 	int i;
 
 	if(reg >= 0) return;
 
-	for(i=firstisn;i<=lastisn;i++) {
-		switch(fpvm_get_arity(sc->fragment->code[i].opcode)) {
-			case 2:
-				if(sc->fragment->code[i].opb == reg) return;
-				/* fall through */
-			case 1:
-				if(sc->fragment->code[i].opa == reg) return;
-				/* fall through */
-			case 0:
-				break;
-			default:
-				/* should not get here */
-				return;
+	for(i=0;i<sc->fragment->ninstructions;i++) {
+		if(sc->exits[i] < 0) {
+			switch(fpvm_get_arity(sc->fragment->code[i].opcode)) {
+				case 2:
+					if(sc->fragment->code[i].opb == reg) return;
+					/* fall through */
+				case 1:
+					if(sc->fragment->code[i].opa == reg) return;
+					/* fall through */
+				case 0:
+					break;
+				default:
+					/* should not get here */
+					return;
+			}
 		}
 	}
 
 	#ifdef GFPUS_DEBUG
-	printf("freeing virtual register %d (physical:", reg);
+	printf("freeing FPVM register %d (PFPU:", reg);
 	#endif
 	for(i=0;i<PFPU_REG_COUNT;i++)
 		if(sc->register_allocation[i] == reg) {
 			#ifdef GFPUS_DEBUG
 			printf(" %d", i);
 			#endif
-			sc->register_allocation[i] = -1;
+			sc->register_allocation[i] = FPVM_INVALID_REG;
 		}
 	#ifdef GFPUS_DEBUG
 	printf(")\n");
@@ -277,18 +283,25 @@ static int schedule_one(struct scheduler_state *sc, int cycle, int instruction)
 	}
 	if((opa < 0)||(opb < 0)) {
 		#ifdef GFPUS_DEBUG
+		int i;
+		
 		printf("schedule_one: operands not found\n");
+		printf("looking for %d / %d, got %d / %d\n", sc->fragment->code[instruction].opa, sc->fragment->code[instruction].opb, opa, opb);
+		printf("register allocation:\n");
+		for(i=0;i<PFPU_REG_COUNT;i++)
+			printf("%d: %d\n", i, sc->register_allocation[i]);
 		#endif
 		return -1;
 	}
 
-	/* If operands are not used by further instructions, free their registers */
+	sc->exits[instruction] = exit; /* write exit now (needed for try_free_register) */
+	/* If operands are not used by other pending instructions, free their registers */
 	switch(fpvm_get_arity(sc->fragment->code[instruction].opcode)) {
 		case 2:
-			try_free_register(sc, instruction+1, sc->fragment->ninstructions-1, sc->fragment->code[instruction].opb);
+			try_free_register(sc, sc->fragment->code[instruction].opb);
 			/* fall through */
 		case 1:
-			try_free_register(sc, instruction+1, sc->fragment->ninstructions-1, sc->fragment->code[instruction].opa);
+			try_free_register(sc, sc->fragment->code[instruction].opa);
 			/* fall through */
 		case 0:
 			break;
@@ -300,21 +313,26 @@ static int schedule_one(struct scheduler_state *sc, int cycle, int instruction)
 	}
 
 	/* Find destination */
-	dest = allocate_pfpu_register(sc, sc->fragment->code[instruction].dest);
-	if(dest == -1) {
+	if(sc->fragment->code[instruction].dest != 0) {
+		dest = allocate_pfpu_register(sc, sc->fragment->code[instruction].dest);
 		#ifdef GFPUS_DEBUG
-		printf("schedule_one: destination not found\n");
+		printf("allocated PFPU register: %d (for %d)\n", dest, sc->fragment->code[instruction].dest);
 		#endif
-		return -1;
-	}
-	sc->register_allocation[dest] = sc->fragment->code[instruction].dest;
+		if(dest == -1) {
+			#ifdef GFPUS_DEBUG
+			printf("schedule_one: destination not found\n");
+			#endif
+			return -1;
+		}
+		sc->register_allocation[dest] = sc->fragment->code[instruction].dest;
+	} else
+		dest = 0;
 
 	/* Write instruction */
 	sc->prog[cycle].i.opa = opa;
 	sc->prog[cycle].i.opb = opb;
 	sc->prog[cycle].i.opcode = fpvm_to_pfpu(sc->fragment->code[instruction].opcode);
 	sc->prog[exit].i.dest = dest;
-	sc->exits[instruction] = exit;
 	if(exit > sc->last_exit) sc->last_exit = exit;
 
 	return 1;
@@ -333,7 +351,7 @@ static int schedule(struct scheduler_state *sc)
 			r = schedule_one(sc, i, j);
 			if(r == -1) {
 				#ifdef GFPUS_DEBUG
-				printf("scheduler_schedule: returned error, cycle=%d visn=%d\n", i, j);
+				printf("scheduler_schedule: returned error, cycle=%d isn=%d\n", i, j);
 				#endif
 				return 0;
 			}
@@ -359,7 +377,7 @@ int gfpus_schedule(struct fpvm_fragment *fragment, unsigned int *code, unsigned 
 	get_registers(fragment, registers);
 
 	init_scheduler_state(&sc, fragment, code);
-	schedule(&sc);
+	if(!schedule(&sc)) return -1;
 
 	return sc.last_exit + 1;
 }

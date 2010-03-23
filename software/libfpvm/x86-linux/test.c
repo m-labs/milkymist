@@ -18,10 +18,16 @@
 #include <stdio.h>
 
 #include <fpvm/fpvm.h>
+#include <fpvm/gfpus.h>
+#include <fpvm/pfpu.h>
+#include <hw/pfpu.h>
 
 int main(int argc, char *argv)
 {
 	struct fpvm_fragment frag;
+	unsigned int registers[PFPU_REG_COUNT];
+	unsigned int code[PFPU_PROGSIZE];
+	int len;
 
 	printf("libFPVM version: %s\n\n", fpvm_version());
 
@@ -31,6 +37,10 @@ int main(int argc, char *argv)
 	fpvm_assign(&frag, "Yo", "(Yi+3)*1.4");
 	fpvm_finalize(&frag);
 	fpvm_dump(&frag);
+	printf("== PFPU:\n");
+	len = gfpus_schedule(&frag, code, registers);
+	if(len > 0)
+		pfpu_dump(code, len);
 
 	printf("\n******* TEST 2 *******\n");
 	fpvm_init(&frag);
@@ -40,11 +50,15 @@ int main(int argc, char *argv)
 	fpvm_set_xout(&frag, "dx");
 	fpvm_set_yout(&frag, "dy");
 	fpvm_assign(&frag, "bar", "foo+65+x");
-	fpvm_assign(&frag, "dx", "(y-6)*cos((45+x)*sin(4*bar))");
+	fpvm_assign(&frag, "troll", "(y-6)*cos((45+x)*sin(4*bar))");
 	fpvm_assign(&frag, "dx", "troll*bar");
 	fpvm_assign(&frag, "dy", "(troll+x)*above(bar, 6)");
 	fpvm_finalize(&frag);
 	fpvm_dump(&frag);
+	printf("== PFPU:\n");
+	len = gfpus_schedule(&frag, code, registers);
+	if(len > 0)
+		pfpu_dump(code, len);
 	
 	return 0;
 }
