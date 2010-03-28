@@ -32,6 +32,8 @@ const char *fpvm_version()
 
 void fpvm_init(struct fpvm_fragment *fragment)
 {
+	fragment->last_error[0] = 0;
+
 	fragment->nbindings = 3;
 	fragment->bindings[0].isvar = 1;
 	fragment->bindings[0].b.v[0] = 'X';
@@ -60,7 +62,10 @@ void fpvm_init(struct fpvm_fragment *fragment)
 
 int fpvm_bind(struct fpvm_fragment *fragment, const char *sym)
 {
-	if(fragment->nbindings == FPVM_MAXBINDINGS) return -1;
+	if(fragment->nbindings == FPVM_MAXBINDINGS) {
+		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Failed to allocate register for variable: %s", sym);
+		return FPVM_INVALID_REG;
+	}
 	fragment->bindings[fragment->nbindings].isvar = 1;
 	strcpy(fragment->bindings[fragment->nbindings].b.v, sym);
 	return fragment->nbindings++;
@@ -128,8 +133,10 @@ static int const_to_reg(struct fpvm_fragment *fragment, float c)
 			return i;
 	}
 	/* not already bound */
-	if(fragment->nbindings == FPVM_MAXBINDINGS)
+	if(fragment->nbindings == FPVM_MAXBINDINGS) {
+		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Failed to allocate register for constant");
 		return FPVM_INVALID_REG;
+	}
 	fragment->bindings[fragment->nbindings].isvar = 0;
 	fragment->bindings[fragment->nbindings].b.c = c;
 	return fragment->nbindings++;
@@ -140,7 +147,10 @@ static int add_isn(struct fpvm_fragment *fragment, int opcode, int opa, int opb,
 	int len;
 
 	len = fragment->ninstructions;
-	if(len >= FPVM_MAXCODELEN) return 0;
+	if(len >= FPVM_MAXCODELEN) {
+		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Ran out of program space");
+		return 0;
+	}
 
 	fragment->code[len].opa = opa;
 	fragment->code[len].opb = opb;
@@ -188,8 +198,11 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 	}
 	if(node->contents.branches.a == NULL) {
 		/* AST node is a variable */
-		opa = sym_to_reg(fragment, node->label);
-		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		opa = lookup(fragment, node->label);
+		if(opa == FPVM_INVALID_REG) {
+			snprintf(fragment->last_error, FPVM_MAXERRLEN, "Reading unbound variable: %s", node->label);
+			return FPVM_INVALID_REG;
+		}
 		if(reg != FPVM_INVALID_REG) {
 			if(!add_isn(fragment, FPVM_OPCODE_COPY, opa, 0, reg)) return FPVM_INVALID_REG;
 		} else
@@ -207,7 +220,10 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 
 	if(reg == FPVM_INVALID_REG) reg = fragment->next_sur--;
 	opcode = operator2opcode(node->label);
-	if(opcode < 0) return -1;
+	if(opcode < 0) {
+		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Operation not supported: %s", node->label);
+		return FPVM_INVALID_REG;
+	}
 	if((opcode == FPVM_OPCODE_SIN)||(opcode == FPVM_OPCODE_COS)) {
 		/*
 		 * Trigo functions are implemented with several instructions
@@ -234,22 +250,51 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 	return reg;
 }
 
+struct fpvm_backup {
+	int ntbindings;
+	int next_sur;
+	int ninstructions;
+};
+
+static void fragment_backup(struct fpvm_fragment *fragment, struct fpvm_backup *backup)
+{
+	backup->ntbindings = fragment->ntbindings;
+	backup->next_sur = fragment->next_sur;
+	backup->ninstructions = fragment->ninstructions;
+}
+
+static void fragment_restore(struct fpvm_fragment *fragment, struct fpvm_backup *backup)
+{
+	fragment->ntbindings = backup->ntbindings;
+	fragment->next_sur = backup->next_sur;
+	fragment->ninstructions = backup->ninstructions;
+}
+
 int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *expr)
 {
 	struct ast_node *n;
 	int dest_reg;
+	struct fpvm_backup backup;
 
 	n = fpvm_parse(expr);
-	if(n == NULL) return 0;
+	if(n == NULL) {
+		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Parse error");
+		return 0;
+	}
+
+	fragment_backup(fragment, &backup);
 
 	dest_reg = sym_to_reg(fragment, dest);
 	if(dest_reg == FPVM_INVALID_REG) {
+		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Failed to allocate register for destination");
 		fpvm_parse_free(n);
+		fragment_restore(fragment, &backup);
 		return 0;
 	}
 
 	if(compile(fragment, dest_reg, n) == FPVM_INVALID_REG) {
 		fpvm_parse_free(n);
+		fragment_restore(fragment, &backup);
 		return 0;
 	}
 

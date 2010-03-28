@@ -35,6 +35,8 @@ int main(int argc, char *argv)
 	fpvm_init(&frag);
 	fpvm_assign(&frag, "Xo", "(Xi+1)*5.8");
 	fpvm_assign(&frag, "Yo", "(Yi+3)*1.4");
+	if(frag.last_error[0] != 0)
+		printf("Reported error: %s\n", frag.last_error);
 	fpvm_finalize(&frag);
 	fpvm_dump(&frag);
 	printf("== PFPU:\n");
@@ -53,6 +55,8 @@ int main(int argc, char *argv)
 	fpvm_assign(&frag, "troll", "(y-6)*cos((45+x)*sin(4*bar))");
 	fpvm_assign(&frag, "dx", "troll*bar");
 	fpvm_assign(&frag, "dy", "(troll+x)*above(bar, 6)");
+	if(frag.last_error[0] != 0)
+		printf("Reported error: %s\n", frag.last_error);
 	fpvm_finalize(&frag);
 	fpvm_dump(&frag);
 	printf("== PFPU:\n");

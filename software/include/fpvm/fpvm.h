@@ -33,6 +33,8 @@
 
 #define FPVM_INVALID_REG	FPVM_MAXBINDINGS
 
+#define FPVM_MAXERRLEN		64
+
 struct fpvm_binding {
 	int isvar;
 	union {
@@ -47,6 +49,7 @@ struct fpvm_tbinding {
 };
 
 struct fpvm_fragment {
+	char last_error[FPVM_MAXERRLEN];
 	/* A binding is a link between the FPVM and the user,
 	 * made by permanently allocating a given register for the user.
 	 * Constants fall in this category because they need to be initialized
