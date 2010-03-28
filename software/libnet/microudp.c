@@ -111,6 +111,7 @@ typedef union {
 
 static int rxlen;
 static ethernet_buffer *rxbuffer;
+static ethernet_buffer *rxbuffer_back;
 static int txlen;
 static ethernet_buffer *txbuffer;
 
@@ -362,7 +363,8 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 	char *_buffers = (char *)buffers;
 
 	rxbuffer = (ethernet_buffer *)_buffers;
-	txbuffer = (ethernet_buffer *)(_buffers + sizeof(ethernet_buffer));
+	rxbuffer_back = (ethernet_buffer *)(_buffers + sizeof(ethernet_buffer));;
+	txbuffer = (ethernet_buffer *)(_buffers + 2*sizeof(ethernet_buffer));
 
 	for(i=0;i<6;i++)
 		my_mac[i] = macaddr[i];
@@ -374,21 +376,31 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 
 	rx_callback = (udp_callback)0;
 	
-	CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer;
+	CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer_back;
 	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
 	CSR_MINIMAC_SETUP = 0;
 }
 
 void microudp_service()
 {
+	ethernet_buffer *buf;
+	
 	if(CSR_MINIMAC_STATE0 == MINIMAC_STATE_PENDING) {
 		asm volatile( /* Invalidate Level-1 data cache */
 			"wcsr DCC, r0\n"
 			"nop\n"
 		);
 		rxlen = CSR_MINIMAC_COUNT0;
-		process_frame();
+		/* Switch RX buffers */
+		buf = rxbuffer;
+		rxbuffer = rxbuffer_back;
+		rxbuffer_back = buf;
+		/* Re-arm DMA engine ASAP */
+		CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer_back;
 		CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
+		/* Now we have time to do the processing */
+		process_frame();
+		
 	}
 	CSR_MINIMAC_SETUP = 0;
 }
