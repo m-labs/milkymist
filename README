@@ -1,9 +1,8 @@
-[> Milkymist(tm) Visual Synthesizer
---------------------------------------
+[> Milkymist(tm) system-on-chip
+-------------------------------
 
-This is the complete core source code and documentation for Milkymist(tm),
-an opensource VJing system-on-chip for FPGA boards,
-compatible with MilkDrop presets.
+This is the complete core source code and documentation for the opensource
+system-on-chip used in the Milkymist(tm) interactive VJ station.
 
 For the latest releases, binary distributions and more:
   http://www.milkymist.org

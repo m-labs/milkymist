@@ -1,16 +1,16 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -18,12 +18,17 @@
 #ifndef __EVAL_H
 #define __EVAL_H
 
+#include <hw/tmu.h> /* for tmu_vertex */
 #include <hw/pfpu.h>
-#include <hw/tmu.h>
 
 #include <hal/pfpu.h>
 
-#include "ast.h"
+/****************************************************************/
+/* GENERAL                                                      */
+/****************************************************************/
+
+void eval_init();
+int eval_schedule();
 
 /****************************************************************/
 /* PER-FRAME VARIABLES                                          */
@@ -84,38 +89,43 @@ enum {
 	EVAL_PFV_COUNT /* must be last */
 };
 
-struct eval_state;
+/* convert a variable name to its pfv_xxx number, -1 in case of failure */
+int eval_pfv_from_name(const char *name);
 
-/* fills in a task descriptor to evaluate per-frame equations */
-void eval_pfv_fill_td(struct eval_state *sc, struct pfpu_td *td, pfpu_callback callback, void *user);
+void eval_set_initial(int pfv, float x);
 
 /* restores preset's initial conditions (and reset user variables) */
-void eval_reset_pfv(struct eval_state *sc);
+void eval_reset_pfv();
 
 /* restore a variable's initial condition */
-int eval_reinit_pfv(struct eval_state *sc, int pfv);
+int eval_reinit_pfv(int pfv);
 
 /* restore all variable's initial conditions (and keep user variables) */
-void eval_reinit_all_pfv(struct eval_state *sc);
+void eval_reinit_all_pfv();
 
 /* reads the value of a per-frame variable
  * (from perframe_regs_current or initial conditions)
  * always returns a correct value; if the variable is not
  * in the preset, a default value is returned.
  */
-float eval_read_pfv(struct eval_state *sc, int pfv);
+float eval_read_pfv(int pfv);
 
 /* writes the value of a per-frame variable (to perframe_regs_current)
  * does nothing if the variable is not handled by the PFPU.
  * typically used for preset inputs (treb, bass, etc.)
  */
-void eval_write_pfv(struct eval_state *sc, int pfv, float x);
+void eval_write_pfv(int pfv, float x);
+
+/* add a per frame equation in textual form */
+int eval_add_per_frame(char *dest, char *val);
+
+/* fills in a task descriptor to evaluate per-frame equations */
+void eval_pfv_fill_td(struct pfpu_td *td, pfpu_callback callback, void *user);
+
 
 /****************************************************************/
 /* PER-VERTEX VARIABLES                                         */
 /****************************************************************/
-
-/* TODO: use texsize */
 
 enum {
 	/* System */
@@ -136,36 +146,12 @@ enum {
 };
 
 /* transfer relevant per-frame variables to the per-vertex variable pool */
-void eval_pfv_to_pvv(struct eval_state *sc);
+void eval_pfv_to_pvv();
+
+/* add a per vertex equation in textual form */
+int eval_add_per_vertex(char *dest, char *val);
 
 /* fills in a task descriptor to evaluate per-vertex equations */
-void eval_pvv_fill_td(struct eval_state *sc, struct pfpu_td *td, struct tmu_vertex *vertices, pfpu_callback callback, void *user);
-
-/****************************************************************/
-/* GENERAL                                                      */
-/****************************************************************/
-
-struct eval_state {
-	float pfv_initial[EVAL_PFV_COUNT];		/* < preset initial conditions */
-	int pfv_allocation[EVAL_PFV_COUNT];		/* < where per-frame variables are mapped in PFPU regf, -1 if unmapped */
-	int perframe_prog_length;			/* < how many instructions in perframe_prog */
-	pfpu_instruction perframe_prog[PFPU_PROGSIZE];	/* < PFPU per-frame microcode */
-	float perframe_regs_init[PFPU_REG_COUNT];	/* < PFPU regf according to initial conditions and constants */
-	float perframe_regs_current[PFPU_REG_COUNT];	/* < PFPU regf local copy (keeps data when PFPU is reloaded) */
-
-	int pvv_allocation[EVAL_PVV_COUNT];		/* < where per-vertex variables are mapped in PFPU regf, -1 if unmapped */
-	int pervertex_prog_length;			/* < how many instructions in pervertex_prog */
-	pfpu_instruction pervertex_prog[PFPU_PROGSIZE];	/* < PFPU per-vertex microcode */
-	float pervertex_regs[PFPU_REG_COUNT];		/* < PFPU regf according to per-frame variables, initial conditions and constants */
-	int hmeshlast;					/* < index of last mesh point, X direction */
-	int vmeshlast;					/* < index of last mesh point, Y direction */
-	int hres;					/* < horizontal screen resolution */
-	int vres;					/* < vertical screen resolution */
-};
-
-void eval_init(struct eval_state *sc,
-	unsigned int hmeshlast, unsigned int vmeshlast,
-	unsigned int hres, unsigned int vres);
-int eval_load_preset(struct eval_state *sc, struct preset *ast);
+void eval_pvv_fill_td(struct pfpu_td *td, struct tmu_vertex *vertices, pfpu_callback callback, void *user);
 
 #endif /* __EVAL_H */

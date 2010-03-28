@@ -202,8 +202,7 @@ static void stats()
 	if(occupancy != 0) {
 		printf("Net memory bandwidth      : %d Mbps\n", netbw);
 		printf("Memory bus occupancy      : %d%%\n", occupancy);
-		printf("Extrapolated max bandwidth: %d Mbps\n", (100*netbw)/occupancy);
-		printf("Avg. mem. access time     : %d.%d cycles\n", amat/100, amat%100);
+		printf("Avg. mem. access time     : %d.%02d cycles\n", amat/100, amat%100);
 	}
 }
 

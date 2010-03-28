@@ -1,20 +1,10 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o scanner.o parser.o parser_helper.o compiler.o scheduler.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o ui.o main.o
+OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o ui.o main.o
 SEGMENTS=-j .text -j .data -j .rodata
 
 all: boot.bin
-
-%.c: %.re
-	re2c -o $@ $<
-
-scanner.c: parser.h
-
-parser.h: parser.c
-
-%.c: %.y
-	lemon $<
 
 bandfilters.h: bandfilters.sce
 	scilab -nw -nwni -nogui -nb -f bandfilters.sce
@@ -30,17 +20,17 @@ spam.h: spam.raw
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@
 
-boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase.a $(MMDIR)/software/libmath/libmath.a $(MMDIR)/software/libhal/libhal.a
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libhal --start-group $(OBJECTS) -lbase -lmath -lhal --end-group
+boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase.a $(MMDIR)/software/libmath/libmath.a $(MMDIR)/software/libhal/libhal.a $(MMDIR)/software/libfpvm/libfpvm.a
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libfpvm --start-group $(OBJECTS) -lbase -lmath -lhal -lfpvm --end-group
 	chmod -x $@
 
 .PHONY: clean depend
 
-depend: parser.c scanner.c bandfilters.h spam.h
+depend: bandfilters.h spam.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out bandfilters.h spam.raw spam.h boot.elf boot.bin .*~ *~ Makefile.bak
+	rm -f $(OBJECTS) bandfilters.h spam.raw spam.h boot.elf boot.bin .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 
@@ -52,13 +42,8 @@ apipe.o: ../../software/include/base/board.h ../../software/include/hal/brd.h
 apipe.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
 apipe.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
 apipe.o: ../../software/include/hw/pfpu.h ../../software/include/hal/time.h
-apipe.o: analyzer.h eval.h ../../software/include/hw/tmu.h ast.h cpustats.h
-apipe.o: rpipe.h ../../software/include/hal/tmu.h apipe.h
-compiler.o: ../../software/include/base/stdio.h
-compiler.o: ../../software/include/base/stdlib.h
-compiler.o: ../../software/include/base/string.h
-compiler.o: ../../software/include/hw/pfpu.h
-compiler.o: ../../software/include/hw/common.h compiler.h ast.h
+apipe.o: analyzer.h eval.h ../../software/include/hw/tmu.h cpustats.h rpipe.h
+apipe.o: ../../software/include/hal/tmu.h apipe.h
 cpustats.o: ../../software/include/base/stdio.h
 cpustats.o: ../../software/include/base/stdlib.h
 cpustats.o: ../../software/include/base/irq.h
@@ -67,7 +52,7 @@ eval.o: ../../software/include/base/stdio.h
 eval.o: ../../software/include/base/stdlib.h
 eval.o: ../../software/include/base/string.h ../../software/include/hw/pfpu.h
 eval.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
-eval.o: ../../software/include/hal/pfpu.h ast.h compiler.h scheduler.h eval.h
+eval.o: ../../software/include/hal/pfpu.h eval.h
 isr.o: ../../software/include/hw/interrupts.h
 isr.o: ../../software/include/base/irq.h ../../software/include/base/uart.h
 isr.o: ../../software/include/hal/time.h ../../software/include/hal/slowout.h
@@ -96,16 +81,6 @@ memstats.o: ../../software/include/base/board.h
 memstats.o: ../../software/include/hal/brd.h
 memstats.o: ../../software/include/hw/fmlmeter.h
 memstats.o: ../../software/include/hw/common.h
-parser.o: ../../software/include/base/stdio.h
-parser.o: ../../software/include/base/stdlib.h
-parser.o: ../../software/include/base/assert.h
-parser.o: ../../software/include/base/string.h
-parser.o: ../../software/include/base/malloc.h
-parser.o: ../../software/include/base/math.h ast.h
-parser_helper.o: ../../software/include/base/stdio.h
-parser_helper.o: ../../software/include/base/stdlib.h
-parser_helper.o: ../../software/include/base/malloc.h scanner.h parser.h
-parser_helper.o: ast.h parser_helper.h
 renderer.o: ../../software/include/base/stdio.h
 renderer.o: ../../software/include/base/stdlib.h
 renderer.o: ../../software/include/base/math.h
@@ -113,7 +88,7 @@ renderer.o: ../../software/include/base/system.h
 renderer.o: ../../software/include/hal/pfpu.h
 renderer.o: ../../software/include/hw/pfpu.h
 renderer.o: ../../software/include/hw/common.h
-renderer.o: ../../software/include/hal/vga.h parser_helper.h ast.h eval.h
+renderer.o: ../../software/include/hal/vga.h eval.h
 renderer.o: ../../software/include/hw/tmu.h apipe.h renderer.h
 rpipe.o: ../../software/include/base/stdio.h
 rpipe.o: ../../software/include/base/stdlib.h
@@ -124,14 +99,6 @@ rpipe.o: ../../software/include/hw/interrupts.h
 rpipe.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
 rpipe.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
 rpipe.o: renderer.h wave.h cpustats.h color.h line.h rpipe.h spam.h
-scanner.o: ../../software/include/base/stdio.h
-scanner.o: ../../software/include/base/stdlib.h
-scanner.o: ../../software/include/base/string.h
-scanner.o: ../../software/include/base/malloc.h scanner.h parser.h
-scheduler.o: ../../software/include/base/stdio.h
-scheduler.o: ../../software/include/base/stdlib.h
-scheduler.o: ../../software/include/hw/pfpu.h
-scheduler.o: ../../software/include/hw/common.h scheduler.h compiler.h ast.h
 shell.o: ../../software/include/base/stdio.h
 shell.o: ../../software/include/base/stdlib.h
 shell.o: ../../software/include/base/string.h

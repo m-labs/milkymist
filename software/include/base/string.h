@@ -1,7 +1,7 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
- * Copyright (C) Linux kernel developers
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) Linus Torvalds and Linux kernel developers
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,5 +34,6 @@ int memcmp(const void *cs, const void *ct, size_t count);
 void *memset(void *s, int c, size_t count);
 void *memcpy(void *dest, const void *src, size_t n);
 void *memmove(void *dest, const void *src, size_t count);
+char *strstr(const char *s1, const char *s2);
 
 #endif /* __STRING_H */

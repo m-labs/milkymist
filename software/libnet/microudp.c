@@ -400,7 +400,6 @@ void microudp_service()
 		CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
 		/* Now we have time to do the processing */
 		process_frame();
-		
 	}
 	CSR_MINIMAC_SETUP = 0;
 }

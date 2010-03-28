@@ -41,7 +41,6 @@ static short *analyzer_buffer;
 static int peak_bass, peak_mid, peak_treb;
 static float bass_att, mid_att, treb_att;
 
-static struct eval_state *eval;
 static int eval_ready;
 
 static struct rpipe_frame frame1 __attribute__((aligned(8)));
@@ -98,13 +97,12 @@ static void apipe_snd_callback(short *buffer, void *user)
 	run_analyzer_bottom_half = 1;
 }
 
-void apipe_start(struct eval_state *e)
+void apipe_start()
 {
 	snd_record_empty();
 	snd_record_refill(audiobuffer1);
 	snd_record_refill(audiobuffer2);
 	snd_record_refill(audiobuffer3);
-	eval = e;
 	snd_record_start(apipe_snd_callback, NSAMPLES, NULL);
 }
 
@@ -147,7 +145,7 @@ static void pfv_callback(struct pfpu_td *td)
 
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
-	decay = eval_read_pfv(eval, pfv_decay);
+	decay = eval_read_pfv(pfv_decay);
 	brightness256 = 255.0*decay+3.5;
 	brightness64 = (brightness256 >> 2)-1;
 	brightness256 &= 3;
@@ -162,46 +160,46 @@ static void pfv_callback(struct pfpu_td *td)
 	if(brightness64 > 63) brightness64 = 63;
 	rpipe_frame->brightness = brightness64;
 
-	rpipe_frame->wave_mode = eval_read_pfv(eval, pfv_wave_mode);
-	rpipe_frame->wave_scale = eval_read_pfv(eval, pfv_wave_scale);
-	rpipe_frame->wave_additive = eval_read_pfv(eval, pfv_wave_additive) != 0.0;
-	rpipe_frame->wave_usedots = eval_read_pfv(eval, pfv_wave_usedots) != 0.0;
-	rpipe_frame->wave_maximize_color = eval_read_pfv(eval, pfv_wave_maximize_color) != 0.0;
-	rpipe_frame->wave_thick = eval_read_pfv(eval, pfv_wave_thick) != 0.0;
+	rpipe_frame->wave_mode = eval_read_pfv(pfv_wave_mode);
+	rpipe_frame->wave_scale = eval_read_pfv(pfv_wave_scale);
+	rpipe_frame->wave_additive = eval_read_pfv(pfv_wave_additive) != 0.0;
+	rpipe_frame->wave_usedots = eval_read_pfv(pfv_wave_usedots) != 0.0;
+	rpipe_frame->wave_maximize_color = eval_read_pfv(pfv_wave_maximize_color) != 0.0;
+	rpipe_frame->wave_thick = eval_read_pfv(pfv_wave_thick) != 0.0;
 	
-	rpipe_frame->wave_x = eval_read_pfv(eval, pfv_wave_x);
-	rpipe_frame->wave_y = eval_read_pfv(eval, pfv_wave_y);
-	rpipe_frame->wave_r = eval_read_pfv(eval, pfv_wave_r);
-	rpipe_frame->wave_g = eval_read_pfv(eval, pfv_wave_g);
-	rpipe_frame->wave_b = eval_read_pfv(eval, pfv_wave_b);
-	rpipe_frame->wave_a = eval_read_pfv(eval, pfv_wave_a);
+	rpipe_frame->wave_x = eval_read_pfv(pfv_wave_x);
+	rpipe_frame->wave_y = eval_read_pfv(pfv_wave_y);
+	rpipe_frame->wave_r = eval_read_pfv(pfv_wave_r);
+	rpipe_frame->wave_g = eval_read_pfv(pfv_wave_g);
+	rpipe_frame->wave_b = eval_read_pfv(pfv_wave_b);
+	rpipe_frame->wave_a = eval_read_pfv(pfv_wave_a);
 
-	rpipe_frame->ob_size = eval_read_pfv(eval, pfv_ob_size);
-	rpipe_frame->ob_r = eval_read_pfv(eval, pfv_ob_r);
-	rpipe_frame->ob_g = eval_read_pfv(eval, pfv_ob_g);
-	rpipe_frame->ob_b = eval_read_pfv(eval, pfv_ob_b);
-	rpipe_frame->ob_a = eval_read_pfv(eval, pfv_ob_a);
+	rpipe_frame->ob_size = eval_read_pfv(pfv_ob_size);
+	rpipe_frame->ob_r = eval_read_pfv(pfv_ob_r);
+	rpipe_frame->ob_g = eval_read_pfv(pfv_ob_g);
+	rpipe_frame->ob_b = eval_read_pfv(pfv_ob_b);
+	rpipe_frame->ob_a = eval_read_pfv(pfv_ob_a);
 
-	rpipe_frame->ib_size = eval_read_pfv(eval, pfv_ib_size);
-	rpipe_frame->ib_r = eval_read_pfv(eval, pfv_ib_r);
-	rpipe_frame->ib_g = eval_read_pfv(eval, pfv_ib_g);
-	rpipe_frame->ib_b = eval_read_pfv(eval, pfv_ib_b);
-	rpipe_frame->ib_a = eval_read_pfv(eval, pfv_ib_a);
+	rpipe_frame->ib_size = eval_read_pfv(pfv_ib_size);
+	rpipe_frame->ib_r = eval_read_pfv(pfv_ib_r);
+	rpipe_frame->ib_g = eval_read_pfv(pfv_ib_g);
+	rpipe_frame->ib_b = eval_read_pfv(pfv_ib_b);
+	rpipe_frame->ib_a = eval_read_pfv(pfv_ib_a);
 
-	rpipe_frame->mv_x = eval_read_pfv(eval, pfv_mv_x);
-	rpipe_frame->mv_y = eval_read_pfv(eval, pfv_mv_y);
-	rpipe_frame->mv_dx = eval_read_pfv(eval, pfv_mv_dx);
-	rpipe_frame->mv_dy = eval_read_pfv(eval, pfv_mv_dy);
-	rpipe_frame->mv_l = eval_read_pfv(eval, pfv_mv_l);
-	rpipe_frame->mv_r = eval_read_pfv(eval, pfv_mv_r);
-	rpipe_frame->mv_g = eval_read_pfv(eval, pfv_mv_g);
-	rpipe_frame->mv_b = eval_read_pfv(eval, pfv_mv_b);
-	rpipe_frame->mv_a = eval_read_pfv(eval, pfv_mv_a);
+	rpipe_frame->mv_x = eval_read_pfv(pfv_mv_x);
+	rpipe_frame->mv_y = eval_read_pfv(pfv_mv_y);
+	rpipe_frame->mv_dx = eval_read_pfv(pfv_mv_dx);
+	rpipe_frame->mv_dy = eval_read_pfv(pfv_mv_dy);
+	rpipe_frame->mv_l = eval_read_pfv(pfv_mv_l);
+	rpipe_frame->mv_r = eval_read_pfv(pfv_mv_r);
+	rpipe_frame->mv_g = eval_read_pfv(pfv_mv_g);
+	rpipe_frame->mv_b = eval_read_pfv(pfv_mv_b);
+	rpipe_frame->mv_a = eval_read_pfv(pfv_mv_a);
 
-	rpipe_frame->tex_wrap = eval_read_pfv(eval, pfv_tex_wrap) != 0.0;
+	rpipe_frame->tex_wrap = eval_read_pfv(pfv_tex_wrap) != 0.0;
 
-	eval_pfv_to_pvv(eval);
-	eval_pvv_fill_td(eval, &pfpu_td, &rpipe_frame->vertices[0][0], pvv_callback, rpipe_frame);
+	eval_pfv_to_pvv();
+	eval_pvv_fill_td(&pfpu_td, &rpipe_frame->vertices[0][0], pvv_callback, rpipe_frame);
 	pfpu_submit_task(&pfpu_td);
 }
 
@@ -247,21 +245,21 @@ static void analyzer_bottom_half()
 	time_get(&ts);
 	time = (float)ts.sec + (float)ts.usec/1000000.0f;
 
-	eval_reinit_all_pfv(eval);
+	eval_reinit_all_pfv();
 	
-	eval_write_pfv(eval, pfv_time, time);
-	eval_write_pfv(eval, pfv_bass, fbass);
-	eval_write_pfv(eval, pfv_mid, fmid);
-	eval_write_pfv(eval, pfv_treb, ftreb);
-	eval_write_pfv(eval, pfv_bass_att, bass_att);
-	eval_write_pfv(eval, pfv_mid_att, mid_att);
-	eval_write_pfv(eval, pfv_treb_att, treb_att);
+	eval_write_pfv(pfv_time, time);
+	eval_write_pfv(pfv_bass, fbass);
+	eval_write_pfv(pfv_mid, fmid);
+	eval_write_pfv(pfv_treb, ftreb);
+	eval_write_pfv(pfv_bass_att, bass_att);
+	eval_write_pfv(pfv_mid_att, mid_att);
+	eval_write_pfv(pfv_treb_att, treb_att);
 
 	rpipe_frame->time = time;
 	rpipe_frame->treb = ftreb;
 	rpipe_frame->framenr = all_frames++;
 
-	eval_pfv_fill_td(eval, &pfpu_td, pfv_callback, rpipe_frame);
+	eval_pfv_fill_td(&pfpu_td, pfv_callback, rpipe_frame);
 	pfpu_submit_task(&pfpu_td);
 }
 
