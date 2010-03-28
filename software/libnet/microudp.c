@@ -317,9 +317,11 @@ static void process_ip()
 	if(rxlen < (sizeof(struct ethernet_header)+sizeof(struct udp_frame))) return;
 	/* We don't verify UDP and IP checksums and rely on the Ethernet checksum solely */
 	if(rxbuffer->frame.contents.udp.ip.version != IP_IPV4) return;
-	if(rxbuffer->frame.contents.udp.ip.diff_services != 0) return;
+	// check disabled for QEMU compatibility
+	//if(rxbuffer->frame.contents.udp.ip.diff_services != 0) return;
 	if(rxbuffer->frame.contents.udp.ip.total_length < sizeof(struct udp_frame)) return;
-	if(rxbuffer->frame.contents.udp.ip.fragment_offset != IP_DONT_FRAGMENT) return;
+	// check disabled for QEMU compatibility
+	//if(rxbuffer->frame.contents.udp.ip.fragment_offset != IP_DONT_FRAGMENT) return;
 	if(rxbuffer->frame.contents.udp.ip.proto != IP_PROTO_UDP) return;
 	if(rxbuffer->frame.contents.udp.ip.dst_ip != my_ip) return;
 	if(rxbuffer->frame.contents.udp.udp.length < sizeof(struct udp_header)) return;
