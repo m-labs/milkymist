@@ -28,7 +28,7 @@
 #include "eval.h"
 #include "renderer.h"
 
-#define EVAL_DEBUG
+//#define EVAL_DEBUG
 
 /****************************************************************/
 /* GENERAL                                                      */
@@ -58,7 +58,7 @@ int eval_schedule()
 	if(!finalize_pvv()) return 0;
 	if(!schedule_pvv()) return 0;
 	
-	return 0;
+	return 1;
 }
 
 /****************************************************************/
@@ -311,7 +311,7 @@ static const char pvv_names[EVAL_PVV_COUNT][FPVM_MAXSYMLEN] = {
 
 void eval_transfer_pvv_regs()
 {
-	pervertex_regs[pvv_allocation[pvv_texsize]] = renderer_texsize;
+	pervertex_regs[pvv_allocation[pvv_texsize]] = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
 	pervertex_regs[pvv_allocation[pvv_hmeshsize]] = 1.0/(float)renderer_hmeshlast;
 	pervertex_regs[pvv_allocation[pvv_vmeshsize]] = 1.0/(float)renderer_vmeshlast;
 	
@@ -371,8 +371,8 @@ static int finalize_pvv()
 	A("_yd", "_yr-dy");
 
 	/* Convert to framebuffer coordinates */
-	A("_Xo", "f2i(_xr*_texsize)");
-	A("_Yo", "f2i(_yr*_texsize)");
+	A("_Xo", "f2i(_xd*_texsize)");
+	A("_Yo", "f2i(_yd*_texsize)");
 
 	#undef A
 	
@@ -418,7 +418,7 @@ void eval_pvv_fill_td(struct pfpu_td *td, struct tmu_vertex *vertices, pfpu_call
 {
 	td->output = (unsigned int *)vertices;
 	td->hmeshlast = renderer_hmeshlast;
-	td->vmeshlast = renderer_hmeshlast;
+	td->vmeshlast = renderer_vmeshlast;
 	td->program = (pfpu_instruction *)pervertex_prog;
 	td->progsize = pervertex_prog_length;
 	td->registers = pervertex_regs;

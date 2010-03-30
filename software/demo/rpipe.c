@@ -130,7 +130,7 @@ static void rpipe_start(struct rpipe_frame *frame)
 		mask = get_tmu_wrap_mask(renderer_texsize);
 	else
 		mask = TMU_MASK_FULL;
-	
+
 	tmu_task1.flags = 0;
 	tmu_task1.hmeshlast = renderer_hmeshlast;
 	tmu_task1.vmeshlast = renderer_vmeshlast;
