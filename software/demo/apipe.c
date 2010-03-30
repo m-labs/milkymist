@@ -198,7 +198,7 @@ static void pfv_callback(struct pfpu_td *td)
 
 	rpipe_frame->tex_wrap = eval_read_pfv(pfv_tex_wrap) != 0.0;
 
-	eval_pfv_to_pvv();
+	eval_transfer_pvv_regs();
 	eval_pvv_fill_td(&pfpu_td, &rpipe_frame->vertices[0][0], pvv_callback, rpipe_frame);
 	pfpu_submit_task(&pfpu_td);
 }

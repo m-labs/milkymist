@@ -52,7 +52,9 @@ eval.o: ../../software/include/base/stdio.h
 eval.o: ../../software/include/base/stdlib.h
 eval.o: ../../software/include/base/string.h ../../software/include/hw/pfpu.h
 eval.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
-eval.o: ../../software/include/hal/pfpu.h eval.h
+eval.o: ../../software/include/hal/pfpu.h ../../software/include/fpvm/fpvm.h
+eval.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/gfpus.h
+eval.o: eval.h renderer.h
 isr.o: ../../software/include/hw/interrupts.h
 isr.o: ../../software/include/base/irq.h ../../software/include/base/uart.h
 isr.o: ../../software/include/hal/time.h ../../software/include/hal/slowout.h
@@ -83,6 +85,7 @@ memstats.o: ../../software/include/hw/fmlmeter.h
 memstats.o: ../../software/include/hw/common.h
 renderer.o: ../../software/include/base/stdio.h
 renderer.o: ../../software/include/base/stdlib.h
+renderer.o: ../../software/include/base/string.h
 renderer.o: ../../software/include/base/math.h
 renderer.o: ../../software/include/base/system.h
 renderer.o: ../../software/include/hal/pfpu.h

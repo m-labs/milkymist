@@ -39,7 +39,7 @@ void renderer_init()
 	printf("RDR: renderer ready (mesh:%dx%d, texsize:%d)\n", renderer_hmeshlast, renderer_vmeshlast, renderer_texsize);
 }
 
-static unsigned int linenr;
+static int linenr;
 
 static int process_equation(char *equation, int per_vertex)
 {
@@ -47,31 +47,34 @@ static int process_equation(char *equation, int per_vertex)
 
 	c = strchr(equation, '=');
 	if(!c) {
-		printf("RDR: error l.%d: malformed equation\n");
+		printf("RDR: error l.%d: malformed equation (%s)\n", linenr, equation);
 		return 0;
 	}
 	*c = 0;
-	
-	c2 = c;
-	while((c2 > equation) && (*c2 == ' ')) c2--;
-	*c2 = 0;
+
+	if(*equation == 0) {
+		printf("RDR: error l.%d: missing lvalue\n", linenr);
+		return 0;
+	}
+	c2 = c - 1;
+	while((c2 > equation) && (*c2 == ' ')) *c2-- = 0;
 	
 	c++;
 	while(*c == ' ') c++;
 
 	if(*equation == 0) {
-		printf("RDR: error l.%d: missing lvalue\n");
+		printf("RDR: error l.%d: missing lvalue\n", linenr);
 		return 0;
 	}
 	if(*c == 0) {
-		printf("RDR: error l.%d: missing rvalue\n");
+		printf("RDR: error l.%d: missing rvalue\n", linenr);
 		return 0;
 	}
 
 	if(per_vertex)
-		return eval_add_per_vertex(equation, c);
+		return eval_add_per_vertex(linenr, equation, c);
 	else
-		return eval_add_per_frame(equation, c);
+		return eval_add_per_frame(linenr, equation, c);
 }
 
 static int process_equations(char *equations, int per_vertex)
@@ -128,8 +131,7 @@ static int process_line(char *line)
 	if(c) *c = 0;
 	
 	c = line + strlen(line);
-	while((c > line) && (*c == ' ')) c--;
-	*c = 0;
+	while((c > line) && (*c == ' ')) *c-- = 0;
 	if(*line == 0) return 1;
 
 	c = strchr(line, '=');
@@ -167,7 +169,7 @@ int renderer_start(char *preset_code)
 {
 	eval_init();
 	if(!load_preset(preset_code)) return 0;
-	eval_schedule();
+	if(!eval_schedule()) return 0;
 	apipe_start();
 	return 1;
 }

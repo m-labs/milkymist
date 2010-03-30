@@ -32,9 +32,9 @@ int main(int argc, char *argv)
 	printf("libFPVM version: %s\n\n", fpvm_version());
 
 	printf("******* SIMPLE TEST *******\n");
-	fpvm_init(&frag);
-	fpvm_assign(&frag, "Xo", "(Xi+1)*5.8");
-	fpvm_assign(&frag, "Yo", "(Yi+3)*1.4");
+	fpvm_init(&frag, 1);
+	fpvm_assign(&frag, "_Xo", "(_Xi+1)*5.8");
+	fpvm_assign(&frag, "_Yo", "(_Yi+3)*1.4");
 	if(frag.last_error[0] != 0)
 		printf("Reported error: %s\n", frag.last_error);
 	fpvm_finalize(&frag);
@@ -45,7 +45,7 @@ int main(int argc, char *argv)
 		pfpu_dump(code, len);
 
 	printf("\n******* TEST 2 *******\n");
-	fpvm_init(&frag);
+	fpvm_init(&frag, 0);
 	printf("Variable foo bound to R%04d\n", fpvm_bind(&frag, "foo"));
 	fpvm_set_xin(&frag, "x");
 	fpvm_set_yin(&frag, "y");

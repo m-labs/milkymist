@@ -30,8 +30,17 @@ clean:
 # DO NOT DELETE
 
 fpvm.o: ../../software/include/base/string.h
-fpvm.o: ../../software/include/base/stdlib.h ../../software/include/fpvm/is.h
-fpvm.o: ../../software/include/fpvm/fpvm.h ast.h parser_helper.h
+fpvm.o: ../../software/include/base/stdlib.h
+fpvm.o: ../../software/include/base/stdio.h
+fpvm.o: ../../software/include/base/version.h
+fpvm.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
+fpvm.o: ast.h parser_helper.h
+gfpus.o: ../../software/include/base/stdio.h
+gfpus.o: ../../software/include/base/stdlib.h
+gfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
+gfpus.o: ../../software/include/fpvm/pfpu.h
+gfpus.o: ../../software/include/fpvm/gfpus.h ../../software/include/hw/pfpu.h
+gfpus.o: ../../software/include/hw/common.h
 parser.o: ../../software/include/base/stdio.h
 parser.o: ../../software/include/base/stdlib.h
 parser.o: ../../software/include/base/assert.h
@@ -42,6 +51,10 @@ parser_helper.o: ../../software/include/base/stdio.h
 parser_helper.o: ../../software/include/base/stdlib.h
 parser_helper.o: ../../software/include/base/malloc.h scanner.h parser.h
 parser_helper.o: ast.h parser_helper.h
+pfpu.o: ../../software/include/base/stdio.h
+pfpu.o: ../../software/include/base/stdlib.h ../../software/include/hw/pfpu.h
+pfpu.o: ../../software/include/hw/common.h ../../software/include/fpvm/fpvm.h
+pfpu.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/pfpu.h
 scanner.o: ../../software/include/base/stdio.h
 scanner.o: ../../software/include/base/stdlib.h
 scanner.o: ../../software/include/base/string.h

@@ -70,11 +70,20 @@ struct fpvm_fragment {
 	
 	int ninstructions;
 	struct fpvm_instruction code[FPVM_MAXCODELEN];
+
+	int bind_mode;
+
+	/* internal use, to return an error with equations
+	 * such as foo = ... foo ...
+	 * when bind_mode = 0 and foo is unbound.
+	 */
+	int final_dest;
+	int vector_mode;
 };
 
 const char *fpvm_version();
 
-void fpvm_init(struct fpvm_fragment *fragment);
+void fpvm_init(struct fpvm_fragment *fragment, int vector_mode);
 
 int fpvm_bind(struct fpvm_fragment *fragment, const char *sym);
 void fpvm_set_xin(struct fpvm_fragment *fragment, const char *sym);
@@ -83,6 +92,8 @@ void fpvm_set_xout(struct fpvm_fragment *fragment, const char *sym);
 void fpvm_set_yout(struct fpvm_fragment *fragment, const char *sym);
 
 int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *expr);
+
+void fpvm_get_references(struct fpvm_fragment *fragment, int *references);
 
 int fpvm_finalize(struct fpvm_fragment *fragment);
 

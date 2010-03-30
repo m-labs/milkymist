@@ -357,13 +357,26 @@ static int schedule(struct scheduler_state *sc)
 			}
 			if(r == 1) {
 				remaining--;
-				if(remaining == 0) return 1;
+				if(remaining == 0) {
+					if(!sc->fragment->vector_mode) {
+						/* add a VECTOUT at the end */
+						sc->last_exit++;
+						if(sc->last_exit >= PFPU_PROGSIZE)
+							goto outofspace;
+						sc->prog[sc->last_exit].i.opa = 0;
+						sc->prog[sc->last_exit].i.opb = 0;
+						sc->prog[sc->last_exit].i.opcode = FPVM_OPCODE_VECTOUT;
+						sc->prog[sc->last_exit].i.dest = 0;
+					}
+					return 1;
+				}
 				break;
 			}
 			/* r == 0 */
 		}
 	}
 
+outofspace:
 	#ifdef GFPUS_DEBUG
 	printf("scheduler_schedule: out of program space\n");
 	#endif

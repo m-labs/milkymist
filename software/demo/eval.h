@@ -27,7 +27,9 @@
 /* GENERAL                                                      */
 /****************************************************************/
 
-void eval_init();
+int eval_init();
+
+/* generate all PFPU microcodes, must be called once before *_fill_td */
 int eval_schedule();
 
 /****************************************************************/
@@ -92,15 +94,13 @@ enum {
 /* convert a variable name to its pfv_xxx number, -1 in case of failure */
 int eval_pfv_from_name(const char *name);
 
+/* set an initial value for a per frame variable or parameter */
 void eval_set_initial(int pfv, float x);
-
-/* restores preset's initial conditions (and reset user variables) */
-void eval_reset_pfv();
 
 /* restore a variable's initial condition */
 int eval_reinit_pfv(int pfv);
 
-/* restore all variable's initial conditions (and keep user variables) */
+/* restore all variable's initial conditions */
 void eval_reinit_all_pfv();
 
 /* reads the value of a per-frame variable
@@ -117,7 +117,7 @@ float eval_read_pfv(int pfv);
 void eval_write_pfv(int pfv, float x);
 
 /* add a per frame equation in textual form */
-int eval_add_per_frame(char *dest, char *val);
+int eval_add_per_frame(int linenr, char *dest, char *val);
 
 /* fills in a task descriptor to evaluate per-frame equations */
 void eval_pfv_fill_td(struct pfpu_td *td, pfpu_callback callback, void *user);
@@ -129,11 +129,10 @@ void eval_pfv_fill_td(struct pfpu_td *td, pfpu_callback callback, void *user);
 
 enum {
 	/* System */
-	pvv_hmeshsize = 0,
+	pvv_texsize,
+	pvv_hmeshsize,
 	pvv_vmeshsize,
-	pvv_hres,
-	pvv_vres,
-
+	
 	/* MilkDrop */
 	pvv_cx,
 	pvv_cy,
@@ -145,11 +144,11 @@ enum {
 	EVAL_PVV_COUNT /* must be last */
 };
 
-/* transfer relevant per-frame variables to the per-vertex variable pool */
-void eval_pfv_to_pvv();
+/* initialize per-vertex registers (some from the previously computed per-frame values) */
+void eval_transfer_pvv_regs();
 
 /* add a per vertex equation in textual form */
-int eval_add_per_vertex(char *dest, char *val);
+int eval_add_per_vertex(int linenr, char *dest, char *val);
 
 /* fills in a task descriptor to evaluate per-vertex equations */
 void eval_pvv_fill_td(struct pfpu_td *td, struct tmu_vertex *vertices, pfpu_callback callback, void *user);
