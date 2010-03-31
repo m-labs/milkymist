@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,12 @@ int main(int argc, char *argv[])
 	unsigned char w[4];
 	
 	if(argc != 4) {
-		fprintf(stderr, "Usage: bin2hex <infile> <outfile> <size>");
+		fprintf(stderr, "Usage: bin2hex <infile> <outfile> <size>\n");
 		return 1;
 	}
 	pad = atoi(argv[3]);
 	if(pad <= 0) {
-		fprintf(stderr, "Incorrect size");
+		fprintf(stderr, "Incorrect size\n");
 		return 1;
 	}
 	fdi = fopen(argv[1], "rb");
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	}
 	fclose(fdi);
 	if(pad<0)
-		fprintf(stderr, "Warning: Input binary is larger than specified size");
+		fprintf(stderr, "Warning: Input binary is larger than specified size\n");
 	for(i=0;i<pad;i++)
 		fprintf(fdo, "00000000\n");
 	if(fclose(fdo) != 0) {

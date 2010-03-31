@@ -1,4 +1,4 @@
-CC=gcc
+CC=clang
 CFLAGS=-O2 -DPRINTF_FLOAT -I$(MMDIR)/software/include
 AR=ar
 RANLIB=ranlib

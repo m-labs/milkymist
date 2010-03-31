@@ -22,7 +22,7 @@
 #include <fpvm/pfpu.h>
 #include <hw/pfpu.h>
 
-int main(int argc, char *argv)
+int main(int argc, char *argv[])
 {
 	struct fpvm_fragment frag;
 	unsigned int registers[PFPU_REG_COUNT];
