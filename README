@@ -26,7 +26,7 @@ You will need:
  - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
 For the host-side tools:
- - native GCC toolchain,
+ - native Clang/LLVM toolchain,
  - libGD,
 For the demonstration firmware:
  - RE2C,
