@@ -366,6 +366,12 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		if(!add_inv_sqrt(fragment, reg_b2, reg_invsqrt)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg)) return FPVM_INVALID_REG;
+	} else if(strcmp(node->label, "min") == 0) {
+		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_IF, opb, opa, reg)) return FPVM_INVALID_REG;
+	} else if(strcmp(node->label, "max") == 0) {
+		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_IF, opa, opb, reg)) return FPVM_INVALID_REG;
 	} else {
 		/* Normal case */
 		opcode = operator2opcode(node->label);
