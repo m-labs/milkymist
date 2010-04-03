@@ -338,9 +338,10 @@ static int init_pvv()
 	}
 
 	#define A(dest, val) if(!fpvm_assign(&pvv_fragment, dest, val)) goto fail_assign
-	A("_x", "i2f(_Xi)*_hmeshsize");
-	A("_y", "i2f(_Yi)*_vmeshsize");
-	/* TODO: generate ang and rad */
+	A("x", "i2f(_Xi)*_hmeshsize");
+	A("y", "i2f(_Yi)*_vmeshsize");
+	A("rad", "sqrt(sqr(x-0.5)+sqr(y-0.5))");
+	/* TODO: generate ang */
 	#undef A
 	
 	return 1;
@@ -355,8 +356,8 @@ static int finalize_pvv()
 	#define A(dest, val) if(!fpvm_assign(&pvv_fragment, dest, val)) goto fail_assign
 
 	/* Zoom */
-	A("_xz", "zoom*(_x-cx)+cx");
-	A("_yz", "zoom*(_y-cy)+cy");
+	A("_xz", "zoom*(x-cx)+cx");
+	A("_yz", "zoom*(y-cy)+cy");
 
 	/* Rotation */
 	A("_cosr", "cos(0-rot)");
