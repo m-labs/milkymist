@@ -37,7 +37,9 @@ int eval_schedule();
 /****************************************************************/
 
 enum {
-	pfv_cx = 0,
+	pfv_sx = 0,
+	pfv_sy,
+	pfv_cx,
 	pfv_cy,
 	pfv_rot,
 	pfv_dx,
@@ -87,6 +89,10 @@ enum {
 	pfv_bass_att,
 	pfv_mid_att,
 	pfv_treb_att,
+
+	pfv_warp,
+	pfv_warp_anim_speed,
+	pfv_warp_scale,
 	
 	EVAL_PFV_COUNT /* must be last */
 };
@@ -134,12 +140,26 @@ enum {
 	pvv_vmeshsize,
 	
 	/* MilkDrop */
+	pvv_sx,
+	pvv_sy,
 	pvv_cx,
 	pvv_cy,
 	pvv_rot,
 	pvv_dx,
 	pvv_dy,
 	pvv_zoom,
+
+	pvv_time,
+	pvv_bass,
+	pvv_mid,
+	pvv_treb,
+	pvv_bass_att,
+	pvv_mid_att,
+	pvv_treb_att,
+
+	pvv_warp,
+	pvv_warp_anim_speed,
+	pvv_warp_scale,
 	
 	EVAL_PVV_COUNT /* must be last */
 };

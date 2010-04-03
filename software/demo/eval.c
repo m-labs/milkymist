@@ -74,6 +74,8 @@ static unsigned int perframe_prog[PFPU_PROGSIZE];	/* < PFPU per-frame microcode 
 static float perframe_regs[PFPU_REG_COUNT];		/* < PFPU regf local copy */
 
 static const char pfv_names[EVAL_PFV_COUNT][FPVM_MAXSYMLEN] = {
+	"sx",
+	"sy",
 	"cx",
 	"cy",
 	"rot",
@@ -123,7 +125,11 @@ static const char pfv_names[EVAL_PFV_COUNT][FPVM_MAXSYMLEN] = {
 	"treb",
 	"bass_att",
 	"mid_att",
-	"treb_att"
+	"treb_att",
+
+	"warp",
+	"fWarpAnimSpeed",
+	"fWarpScale"
 };
 
 int eval_pfv_from_name(const char *name)
@@ -147,6 +153,10 @@ static void load_defaults()
 
 	for(i=0;i<EVAL_PFV_COUNT;i++)
 		pfv_initial[i] = 0.0;
+	pfv_initial[pfv_sx] = 1.0;
+	pfv_initial[pfv_sy] = 1.0;
+	pfv_initial[pfv_cx] = 0.5;
+	pfv_initial[pfv_cy] = 0.5;
 	pfv_initial[pfv_zoom] = 1.0;
 	pfv_initial[pfv_decay] = 1.0;
 	pfv_initial[pfv_wave_mode] = 1.0;
@@ -161,6 +171,8 @@ static void load_defaults()
 	pfv_initial[pfv_mv_dx] = 0.02;
 	pfv_initial[pfv_mv_dy] = 0.02;
 	pfv_initial[pfv_mv_l] = 1.0;
+
+	pfv_initial[pfv_warp_scale] = 1.0;
 }
 
 void eval_set_initial(int pfv, float x)
@@ -301,12 +313,26 @@ static const char pvv_names[EVAL_PVV_COUNT][FPVM_MAXSYMLEN] = {
 	"_vmeshsize",
 
 	/* MilkDrop */
+	"sx",
+	"sy",
 	"cx",
 	"cy",
 	"rot",
 	"dx",
 	"dy",
-	"zoom"
+	"zoom",
+
+	"time",
+	"bass",
+	"mid",
+	"treb",
+	"bass_att",
+	"mid_att",
+	"treb_att",
+
+	"warp",
+	"fWarpAnimSpeed",
+	"fWarpScale"
 };
 
 void eval_transfer_pvv_regs()
@@ -314,13 +340,27 @@ void eval_transfer_pvv_regs()
 	pervertex_regs[pvv_allocation[pvv_texsize]] = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
 	pervertex_regs[pvv_allocation[pvv_hmeshsize]] = 1.0/(float)renderer_hmeshlast;
 	pervertex_regs[pvv_allocation[pvv_vmeshsize]] = 1.0/(float)renderer_vmeshlast;
-	
+
+	pervertex_regs[pvv_allocation[pvv_sx]] = eval_read_pfv(pfv_sx);
+	pervertex_regs[pvv_allocation[pvv_sy]] = eval_read_pfv(pfv_sy);
 	pervertex_regs[pvv_allocation[pvv_cx]] = eval_read_pfv(pfv_cx);
 	pervertex_regs[pvv_allocation[pvv_cy]] = eval_read_pfv(pfv_cy);
 	pervertex_regs[pvv_allocation[pvv_rot]] = eval_read_pfv(pfv_rot);
 	pervertex_regs[pvv_allocation[pvv_dx]] = eval_read_pfv(pfv_dx);
 	pervertex_regs[pvv_allocation[pvv_dy]] = eval_read_pfv(pfv_dy);
-	pervertex_regs[pvv_allocation[pvv_zoom]] = 1.0/eval_read_pfv(pfv_zoom); /* HACK */
+	pervertex_regs[pvv_allocation[pvv_zoom]] = eval_read_pfv(pfv_zoom);
+	
+	pervertex_regs[pvv_allocation[pvv_time]] = eval_read_pfv(pfv_time);
+	pervertex_regs[pvv_allocation[pvv_bass]] = eval_read_pfv(pfv_bass);
+	pervertex_regs[pvv_allocation[pvv_mid]] = eval_read_pfv(pfv_mid);
+	pervertex_regs[pvv_allocation[pvv_treb]] = eval_read_pfv(pfv_treb);
+	pervertex_regs[pvv_allocation[pvv_bass_att]] = eval_read_pfv(pfv_bass_att);
+	pervertex_regs[pvv_allocation[pvv_mid_att]] = eval_read_pfv(pfv_mid_att);
+	pervertex_regs[pvv_allocation[pvv_treb_att]] = eval_read_pfv(pfv_treb_att);
+
+	pervertex_regs[pvv_allocation[pvv_warp]] = eval_read_pfv(pfv_warp);
+	pervertex_regs[pvv_allocation[pvv_warp_anim_speed]] = eval_read_pfv(pfv_warp_anim_speed);
+	pervertex_regs[pvv_allocation[pvv_warp_scale]] = eval_read_pfv(pfv_warp_scale);
 }
 
 static int init_pvv()
@@ -356,18 +396,39 @@ static int finalize_pvv()
 	#define A(dest, val) if(!fpvm_assign(&pvv_fragment, dest, val)) goto fail_assign
 
 	/* Zoom */
-	A("_xz", "zoom*(x-cx)+cx");
-	A("_yz", "zoom*(y-cy)+cy");
+	A("_invzoom", "1/zoom");
+	A("_xz", "_invzoom*(x-0.5)+0.5");
+	A("_yz", "_invzoom*(y-0.5)+0.5");
 
-	/* Rotation */
-	A("_cosr", "cos(0-rot)");
+	/* Scale */
+	A("_xs", "(_xz-cx)/sx+cx");
+	A("_ys", "(_yz-cy)/sy+cy");
+
+	/* Warp */
+	A("_warptime", "time*fWarpAnimSpeed");
+	A("_invwarpscale", "1/fWarpScale");
+	A("_f0", "11.68 + 4.0*cos(_warptime*1.413 + 10)");
+	A("_f1", "8.77 + 3.0*cos(_warptime*1.113 + 7)");
+	A("_f2", "10.54 + 3.0*cos(_warptime*1.233 + 3)");
+	A("_f3", "11.49 + 4.0*cos(_warptime*0.933 + 5)");
+	A("_ox2", "2*x-1");
+	A("_oy2", "2*y-1");
+	A("_xw", "_xs+warp*0.0035*("
+		"sin(_warptime*0.333+_invwarpscale*(_ox2*_f0-_oy2*_f3))"
+		"+cos(_warptime*0.753-_invwarpscale*(_ox2*_f1-_oy2*_f2)))");
+	A("_yw", "_ys+warp*0.0035*("
+		"cos(_warptime*0.375-_invwarpscale*(_ox2*_f2+_oy2*_f1))"
+		"+sin(_warptime*0.825+_invwarpscale*(_ox2*_f0+_oy2*_f3)))");
+
+	/* Rotate */
+	A("_cosr", "cos(rot)");
 	A("_sinr", "sin(0-rot)");
-	A("_u", "_xz-cx");
-	A("_v", "_yz-cy");
+	A("_u", "_xw-cx");
+	A("_v", "_yw-cy");
 	A("_xr", "_u*_cosr-_v*_sinr+cx");
 	A("_yr", "_u*_sinr+_v*_cosr+cy");
 
-	/* Displacement */
+	/* Translate */
 	A("_xd", "_xr-dx");
 	A("_yd", "_yr-dy");
 
