@@ -243,6 +243,10 @@ static int schedule_one(struct scheduler_state *sc, int cycle, int instruction)
 
 	/* Check for RAW hazards */
 	switch(fpvm_get_arity(sc->fragment->code[instruction].opcode)) {
+		case 3:
+			/* 3rd operand is always R2 (REG_IFB) */
+			if(!check_hazard_write(sc, FPVM_REG_IFB, cycle, instruction)) return 0;
+			/* fall through */
 		case 2:
 			if(!check_hazard_write(sc, sc->fragment->code[instruction].opb, cycle, instruction)) return 0;
 			/* fall through */
@@ -262,11 +266,14 @@ static int schedule_one(struct scheduler_state *sc, int cycle, int instruction)
 	/* Check for WAW hazards */
 	if(!check_hazard_write(sc, sc->fragment->code[instruction].dest, cycle, instruction)) return 0;
 
-	/* OK - Instruction can be scheduled */
+	/* Instruction can be scheduled */
 
 	/* Find operands */
 	opa = opb = 0;
 	switch(fpvm_get_arity(sc->fragment->code[instruction].opcode)) {
+		case 3:
+			/* 3rd operand is always R2 (REG_IFB) */
+			/* fall through */
 		case 2:
 			opb = find_pfpu_register(sc, sc->fragment->code[instruction].opb);
 			/* fall through */
@@ -297,6 +304,9 @@ static int schedule_one(struct scheduler_state *sc, int cycle, int instruction)
 	sc->exits[instruction] = exit; /* write exit now (needed for try_free_register) */
 	/* If operands are not used by other pending instructions, free their registers */
 	switch(fpvm_get_arity(sc->fragment->code[instruction].opcode)) {
+		case 3:
+			try_free_register(sc, FPVM_REG_IFB);
+			/* fall through */
 		case 2:
 			try_free_register(sc, sc->fragment->code[instruction].opb);
 			/* fall through */

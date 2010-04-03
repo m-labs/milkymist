@@ -36,6 +36,9 @@ int pfpu_get_latency(int opcode)
 		case PFPU_OPCODE_ABOVE: return PFPU_LATENCY_ABOVE;
 		case PFPU_OPCODE_EQUAL: return PFPU_LATENCY_EQUAL;
 		case PFPU_OPCODE_COPY: return PFPU_LATENCY_COPY;
+		case PFPU_OPCODE_IF: return PFPU_LATENCY_IF;
+		case PFPU_OPCODE_TSIGN: return PFPU_LATENCY_TSIGN;
+		case PFPU_OPCODE_QUAKE: return PFPU_LATENCY_QUAKE;
 		default: return -1;
 	}
 }
@@ -55,6 +58,7 @@ void pfpu_dump(unsigned int *code, unsigned int n)
 		fpvm_print_opcode(pfpu_to_fpvm(prog[i].i.opcode));
 
 		switch(fpvm_get_arity(pfpu_to_fpvm(prog[i].i.opcode))) {
+			case 3:
 			case 2:
 				printf("R%03d,R%03d ", prog[i].i.opa, prog[i].i.opb);
 				break;

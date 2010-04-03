@@ -76,9 +76,10 @@
 #define PFPU_PAGESIZE		(512)
 
 #define PFPU_REG_COUNT		(128)
-#define PFPU_SPREG_COUNT	(3)
+#define PFPU_SPREG_COUNT	(2)
 #define PFPU_REG_X		(0)
 #define PFPU_REG_Y		(1)
+
 #define PFPU_REG_IFB		(2)
 
 #define PFPU_TRIG_CONV		(8192.0/(2.0*3.14159265358))

@@ -63,6 +63,19 @@ int main(int argc, char *argv[])
 	len = gfpus_schedule(&frag, code, registers);
 	if(len > 0)
 		pfpu_dump(code, len);
+
+	printf("\n******* TEST 3 *******\n");
+	fpvm_init(&frag, 1);
+	fpvm_assign(&frag, "_Xo", "_Xi/_Yi");
+	fpvm_assign(&frag, "_Yo", "if(above(_Yi, 1.5),3,7)");
+	if(frag.last_error[0] != 0)
+		printf("Reported error: %s\n", frag.last_error);
+	fpvm_finalize(&frag);
+	fpvm_dump(&frag);
+	printf("== PFPU:\n");
+	len = gfpus_schedule(&frag, code, registers);
+	if(len > 0)
+		pfpu_dump(code, len);
 	
 	return 0;
 }

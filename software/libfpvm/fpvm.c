@@ -45,7 +45,8 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 	fragment->bindings[1].b.v[1] = 'Y';
 	fragment->bindings[1].b.v[2] = 'i';
 	fragment->bindings[1].b.v[3] = 0;
-	fragment->bindings[2].isvar = 1; /* flags */
+	/* Prevent binding of R2 (we need it for "if") */
+	fragment->bindings[2].isvar = 1;
 	fragment->bindings[2].b.v[0] = 0;
 
 	fragment->ntbindings = 2;
@@ -183,13 +184,58 @@ static int operator2opcode(const char *operator)
 	if(strcmp(operator, "-") == 0) return FPVM_OPCODE_FSUB;
 	if(strcmp(operator, "*") == 0) return FPVM_OPCODE_FMUL;
 	if(strcmp(operator, "abs") == 0) return FPVM_OPCODE_FABS;
-	if(strcmp(operator, "sin") == 0) return FPVM_OPCODE_SIN;
-	if(strcmp(operator, "cos") == 0) return FPVM_OPCODE_COS;
+	if(strcmp(operator, "isin") == 0) return FPVM_OPCODE_SIN;
+	if(strcmp(operator, "icos") == 0) return FPVM_OPCODE_COS;
 	if(strcmp(operator, "above") == 0) return FPVM_OPCODE_ABOVE;
 	if(strcmp(operator, "equal") == 0) return FPVM_OPCODE_EQUAL;
 	if(strcmp(operator, "i2f") == 0) return FPVM_OPCODE_I2F;
 	if(strcmp(operator, "f2i") == 0) return FPVM_OPCODE_F2I;
+	if(strcmp(operator, "if") == 0) return FPVM_OPCODE_IF;
+	if(strcmp(operator, "tsign") == 0) return FPVM_OPCODE_TSIGN;
+	if(strcmp(operator, "quake") == 0) return FPVM_OPCODE_QUAKE;
 	else return -1;
+}
+
+static int add_inv_sqrt_step(struct fpvm_fragment *fragment, int reg_y, int reg_x, int reg_out)
+{
+	int reg_onehalf;
+	int reg_twohalf;
+	int reg_yy;
+	int reg_hx;
+	int reg_hxyy;
+	int reg_sub;
+
+	reg_yy = fragment->next_sur--;
+	reg_hx = fragment->next_sur--;
+	reg_hxyy = fragment->next_sur--;
+	reg_sub = fragment->next_sur--;
+
+	reg_onehalf = const_to_reg(fragment, 0.5f);
+	if(reg_onehalf == FPVM_INVALID_REG) return 0;
+	reg_twohalf = const_to_reg(fragment, 1.5f);
+	if(reg_twohalf == FPVM_INVALID_REG) return 0;
+
+	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_y, reg_y, reg_yy)) return 0;
+	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_onehalf, reg_x, reg_hx)) return 0;
+	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_hx, reg_yy, reg_hxyy)) return 0;
+	if(!add_isn(fragment, FPVM_OPCODE_FSUB, reg_twohalf, reg_hxyy, reg_sub)) return 0;
+	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_sub, reg_y, reg_out)) return 0;
+
+	return 1;
+}
+
+static int add_inv_sqrt(struct fpvm_fragment *fragment, int reg_in, int reg_out)
+{
+	int reg_y, reg_y2;
+
+	reg_y = fragment->next_sur--;
+	reg_y2 = fragment->next_sur--;
+	
+	if(!add_isn(fragment, FPVM_OPCODE_QUAKE, reg_in, 0, reg_y)) return 0;
+	if(!add_inv_sqrt_step(fragment, reg_y, reg_in, reg_y2)) return 0;
+	if(!add_inv_sqrt_step(fragment, reg_y2, reg_in, reg_out)) return 0;
+	
+	return 1;
 }
 
 /*
@@ -233,40 +279,100 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		return reg;
 	}
 	/* AST node is an operator or function */
-	opa = compile(fragment, FPVM_INVALID_REG, node->contents.branches.a);
-	if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
-	opb = 0;
-	if(node->contents.branches.b != NULL) {
-		opb = compile(fragment, FPVM_INVALID_REG, node->contents.branches.b);
+	if(strcmp(node->label, "if") == 0) {
+		/*
+		 * "if" must receive a special treatment.
+		 * It is implemented as a ternary function,
+		 * but its first parameter is hardwired to R2 (FPVM_REG_IFB) and implicit.
+		 * We must compute the other parameters first, as they may clobber R2.
+		 */
+		opa = compile(fragment, FPVM_INVALID_REG, node->contents.branches.b);
+		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		opb = compile(fragment, FPVM_INVALID_REG, node->contents.branches.c);
 		if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		if(compile(fragment, FPVM_REG_IFB, node->contents.branches.a) == FPVM_INVALID_REG)
+			return FPVM_INVALID_REG;
+	} else {
+		opa = compile(fragment, FPVM_INVALID_REG, node->contents.branches.a);
+		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		opb = 0;
+		if(node->contents.branches.b != NULL) {
+			opb = compile(fragment, FPVM_INVALID_REG, node->contents.branches.b);
+			if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		}
 	}
 
 	if(reg == FPVM_INVALID_REG) reg = fragment->next_sur--;
-	opcode = operator2opcode(node->label);
-	if(opcode < 0) {
-		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Operation not supported: %s", node->label);
-		return FPVM_INVALID_REG;
-	}
-	if((opcode == FPVM_OPCODE_SIN)||(opcode == FPVM_OPCODE_COS)) {
+	if(strcmp(node->label, "below") == 0) {
+		/*
+		 * "below" is like "above", but with reversed operands.
+		 */
+		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opb, opa, reg)) return FPVM_INVALID_REG;
+	} else if((strcmp(node->label, "sin") == 0)||(strcmp(node->label, "cos") == 0)) {
 		/*
 		 * Trigo functions are implemented with several instructions
 		 * because we must convert the floating point argument in radians
 		 * from MilkDrop presets to an integer expressed in 1/8192 turns
 		 * for FPVM hardware.
 		 */
-		int const_reg;
-		int mul_reg;
-		int f2i_reg;
+		int reg_const;
+		int reg_mul;
+		int reg_f2i;
 
-		const_reg = const_to_reg(fragment, FPVM_TRIG_CONV);
-		if(const_reg == FPVM_INVALID_REG) return FPVM_INVALID_REG;
-		mul_reg = fragment->next_sur--;
-		f2i_reg = fragment->next_sur--;
+		if(strcmp(node->label, "sin") == 0)
+			opcode = FPVM_OPCODE_SIN;
+		else
+			opcode = FPVM_OPCODE_COS;
 
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, const_reg, opa, mul_reg)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_F2I, mul_reg, 0, f2i_reg)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, opcode, f2i_reg, 0, reg)) return FPVM_INVALID_REG;
+		reg_const = const_to_reg(fragment, FPVM_TRIG_CONV);
+		if(reg_const == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		reg_mul = fragment->next_sur--;
+		reg_f2i = fragment->next_sur--;
+
+		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_const, opa, reg_mul)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_F2I, reg_mul, 0, reg_f2i)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, opcode, reg_f2i, 0, reg)) return FPVM_INVALID_REG;
+	} else if(strcmp(node->label, "sqrt") == 0) {
+		/*
+		 * Square root is implemented with a variant of the Quake III algorithm.
+		 * See http://en.wikipedia.org/wiki/Fast_inverse_square_root
+		 * sqrt(x) = x*(1/sqrt(x))
+		 */
+		int reg_invsqrt;
+		reg_invsqrt = fragment->next_sur--;
+		if(!add_inv_sqrt(fragment, opa, reg_invsqrt)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FMUL, opa, reg_invsqrt, reg)) return FPVM_INVALID_REG;
+	} else if(strcmp(node->label, "invsqrt") == 0) {
+		if(!add_inv_sqrt(fragment, opa, reg)) return FPVM_INVALID_REG;
+	} else if(strcmp(node->label, "/") == 0) {
+		/*
+		 * Floating point division is implemented as
+		 * a/b = a*(1/sqrt(b))*(1/sqrt(b))
+		 */
+		int reg_a2;
+		int reg_b2;
+		int reg_invsqrt;
+		int reg_invsqrt2;
+		
+		reg_a2 = fragment->next_sur--;
+		reg_b2 = fragment->next_sur--;
+		reg_invsqrt = fragment->next_sur--;
+		reg_invsqrt2 = fragment->next_sur--;
+
+		/* Transfer the sign of the result to a and make b positive */
+		if(!add_isn(fragment, FPVM_OPCODE_TSIGN, opa, opb, reg_a2)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FABS, opb, 0, reg_b2)) return FPVM_INVALID_REG;
+		
+		if(!add_inv_sqrt(fragment, reg_b2, reg_invsqrt)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg)) return FPVM_INVALID_REG;
 	} else {
+		/* Normal case */
+		opcode = operator2opcode(node->label);
+		if(opcode < 0) {
+			snprintf(fragment->last_error, FPVM_MAXERRLEN, "Operation not supported: %s", node->label);
+			return FPVM_INVALID_REG;
+		}
 		if(!add_isn(fragment, opcode, opa, opb, reg)) return FPVM_INVALID_REG;
 	}
 
@@ -337,6 +443,8 @@ void fpvm_get_references(struct fpvm_fragment *fragment, int *references)
 	for(i=0;i<FPVM_MAXBINDINGS;i++)
 		references[i] = 0;
 	for(i=0;i<fragment->ninstructions;i++) {
+		if(fragment->code[i].opcode == FPVM_OPCODE_IF)
+			references[2] = 1;
 		if(fragment->code[i].opa > 0)
 			references[fragment->code[i].opa] = 1;
 		if(fragment->code[i].opb > 0)
@@ -370,6 +478,9 @@ void fpvm_print_opcode(int opcode)
 		case FPVM_OPCODE_ABOVE:   printf("ABOVE   "); break;
 		case FPVM_OPCODE_EQUAL:   printf("EQUAL   "); break;
 		case FPVM_OPCODE_COPY:    printf("COPY    "); break;
+		case FPVM_OPCODE_IF:      printf("IF<R2>  "); break;
+		case FPVM_OPCODE_TSIGN:   printf("TSIGN   "); break;
+		case FPVM_OPCODE_QUAKE:   printf("QUAKE   "); break;
 		default:                  printf("XXX     "); break;
 	}
 }
@@ -377,12 +488,15 @@ void fpvm_print_opcode(int opcode)
 int fpvm_get_arity(int opcode)
 {
 	switch(opcode) {
+		case FPVM_OPCODE_IF:
+			return 3;
 		case FPVM_OPCODE_FADD:
 		case FPVM_OPCODE_FSUB:
 		case FPVM_OPCODE_FMUL:
 		case FPVM_OPCODE_VECTOUT:
 		case FPVM_OPCODE_EQUAL:
 		case FPVM_OPCODE_ABOVE:
+		case FPVM_OPCODE_TSIGN:
 			return 2;
 		case FPVM_OPCODE_FABS:
 		case FPVM_OPCODE_F2I:
@@ -390,6 +504,7 @@ int fpvm_get_arity(int opcode)
 		case FPVM_OPCODE_SIN:
 		case FPVM_OPCODE_COS:
 		case FPVM_OPCODE_COPY:
+		case FPVM_OPCODE_QUAKE:
 			return 1;
 		default:
 			return 0;
@@ -422,6 +537,7 @@ void fpvm_dump(struct fpvm_fragment *fragment)
 		printf("%04d: ", i);
 		fpvm_print_opcode(fragment->code[i].opcode);
 		switch(fpvm_get_arity(fragment->code[i].opcode)) {
+			case 3:
 			case 2:
 				printf("R%04d,R%04d ", fragment->code[i].opa, fragment->code[i].opb);
 				break;
