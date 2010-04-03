@@ -21,7 +21,7 @@ module pfpu_alu(
 	
 	input [31:0] a,
 	input [31:0] b,
-	input [1:0] flags,
+	input ifb,
 	
 	input [3:0] opcode,
 	
@@ -54,7 +54,7 @@ end
 /* Computation units */
 wire faddsub_valid;
 wire [31:0] r_faddsub;
-pfpu_faddsub faddsub(
+pfpu_faddsub u_faddsub(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 	
@@ -69,7 +69,7 @@ pfpu_faddsub faddsub(
 
 wire fmul_valid;
 wire [31:0] r_fmul;
-pfpu_fmul fmul(
+pfpu_fmul u_fmul(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 	
@@ -81,23 +81,24 @@ pfpu_fmul fmul(
 	.valid_o(fmul_valid)
 );
 
-wire fdiv_valid;
-wire [31:0] r_fdiv;
-pfpu_fdiv fdiv(
+wire tsign_valid;
+wire [31:0] r_tsign;
+pfpu_tsign u_tsign(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 	
 	.a(a),
 	.b(b),
-	.valid_i(opcode_r == 4'h4),
+	.tsign(opcode_r[3]),
+	.valid_i((opcode_r == 4'h4) | (opcode_r == 4'he)),
 	
-	.r(r_fdiv),
-	.valid_o(fdiv_valid)
+	.r(r_tsign),
+	.valid_o(tsign_valid)
 );
 
 wire f2i_valid;
 wire [31:0] r_f2i;
-pfpu_f2i f2i(
+pfpu_f2i u_f2i(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 	
@@ -110,7 +111,7 @@ pfpu_f2i f2i(
 
 wire i2f_valid;
 wire [31:0] r_i2f;
-pfpu_i2f i2f(
+pfpu_i2f u_i2f(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 	
@@ -123,7 +124,7 @@ pfpu_i2f i2f(
 
 wire sincos_valid;
 wire [31:0] r_sincos;
-pfpu_sincos sincos(
+pfpu_sincos u_sincos(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 	
@@ -137,7 +138,7 @@ pfpu_sincos sincos(
 
 wire above_valid;
 wire [31:0] r_above;
-pfpu_above above(
+pfpu_above u_above(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 
@@ -151,7 +152,7 @@ pfpu_above above(
 
 wire equal_valid;
 wire [31:0] r_equal;
-pfpu_equal equal(
+pfpu_equal u_equal(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 
@@ -165,7 +166,7 @@ pfpu_equal equal(
 
 wire copy_valid;
 wire [31:0] r_copy;
-pfpu_copy copy(
+pfpu_copy u_copy(
 	.sys_clk(sys_clk),
 	.alu_rst(alu_rst),
 
@@ -176,37 +177,71 @@ pfpu_copy copy(
 	.valid_o(copy_valid)
 );
 
+wire if_valid;
+wire [31:0] r_if;
+pfpu_if u_if(
+	.sys_clk(sys_clk),
+	.alu_rst(alu_rst),
+
+	.a(a),
+	.b(b),
+	.ifb(ifb),
+	.valid_i(opcode_r == 4'hd),
+
+	.r(r_if),
+	.valid_o(if_valid)
+);
+
+wire quake_valid;
+wire [31:0] r_quake;
+pfpu_quake u_quake(
+	.sys_clk(sys_clk),
+	.alu_rst(alu_rst),
+
+	.a(a),
+	.valid_i(opcode_r == 4'hf),
+
+	.r(r_quake),
+	.valid_o(quake_valid)
+);
+
 /* Generate output */
 assign r =
 	 ({32{faddsub_valid}}	& r_faddsub)
 	|({32{fmul_valid}}	& r_fmul)
-	|({32{fdiv_valid}}	& r_fdiv)
+	|({32{tsign_valid}}	& r_tsign)
 	|({32{f2i_valid}}	& r_f2i)
 	|({32{i2f_valid}}	& r_i2f)
 	|({32{sincos_valid}}	& r_sincos)
 	|({32{above_valid}}	& r_above)
 	|({32{equal_valid}}	& r_equal)
-	|({32{copy_valid}}	& r_copy);
+	|({32{copy_valid}}	& r_copy)
+	|({32{if_valid}}	& r_if)
+	|({32{quake_valid}}	& r_quake);
 
 assign r_valid =
 	 faddsub_valid
 	|fmul_valid
-	|fdiv_valid
+	|tsign_valid
 	|f2i_valid
 	|i2f_valid
 	|sincos_valid
 	|above_valid
 	|equal_valid
-	|copy_valid;
+	|copy_valid
+	|if_valid
+	|quake_valid;
 
 assign err_collision =
-	 (faddsub_valid & (fmul_valid|fdiv_valid|f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(fmul_valid    & (fdiv_valid|f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(fdiv_valid    & (f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(f2i_valid     & (i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid))
-	|(i2f_valid     & (sincos_valid|above_valid|equal_valid|copy_valid))
-	|(sincos_valid  & (above_valid|equal_valid|copy_valid))
-	|(above_valid   & (equal_valid|copy_valid))
-	|(equal_valid   & (copy_valid));
+	 (faddsub_valid & (fmul_valid|tsign_valid|f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid|if_valid|quake_valid))
+	|(fmul_valid    & (tsign_valid|f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid|if_valid|quake_valid))
+	|(tsign_valid   & (f2i_valid|i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid|if_valid|quake_valid))
+	|(f2i_valid     & (i2f_valid|sincos_valid|above_valid|equal_valid|copy_valid|if_valid|quake_valid))
+	|(i2f_valid     & (sincos_valid|above_valid|equal_valid|copy_valid|if_valid|quake_valid))
+	|(sincos_valid  & (above_valid|equal_valid|copy_valid|if_valid|quake_valid))
+	|(above_valid   & (equal_valid|copy_valid|if_valid|quake_valid))
+	|(equal_valid   & (copy_valid|if_valid|quake_valid))
+	|(copy_valid    & (if_valid|quake_valid))
+	|(if_valid      & (quake_valid));
 
 endmodule

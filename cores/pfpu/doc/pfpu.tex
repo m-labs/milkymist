@@ -15,13 +15,13 @@
 
 \title{Programmable Floating Point Unit}
 \author{S\'ebastien Bourdeauducq}
-\date{February 2010}
+\date{April 2010}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
 \maketitle{}
 \section{Overview}
-The Programmable Floating Point Unit (PFPU) is a floating point VLIW microprocessor optimized for fast computation of triangle strip vertices (mesh) used by the Milkymist texture mapping unit.
+The Programmable Floating Point Unit (PFPU) is a floating point VLIW microprocessor optimized for fast computation of vertices coordinates used by the Milkymist texture mapping unit.
 
 It is designed for repetitive evaluation of the same mathematical function on a large number of points, using 32-bit floating point numbers. Furthermore, it contains specifically crafted DMA engine and address generator which enable the output DMA buffer to be ready to be used immediately by the texture mapping unit.
 
@@ -46,7 +46,7 @@ R0 & R & W & -- & Mesh X coordinate of the currently computed point, stored as i
 \hline
 R1 & R & W & -- & Mesh Y coordinate of the currently computed point (same remark). \\
 \hline
-R2 & RW & -- & RW & ALU flags (typically comparison result). \\
+R2 & RW & -- & RW & Selects the branch to return when executing an IF instruction. \\
 \hline
 R3--R127 & RW & -- & RW & General purpose 32-bit registers. \\
 \hline
@@ -89,7 +89,7 @@ The ALU contains several computation units that perform arithmetic, binary and l
 
 At every cycle, a computation unit is selected using the ``opcode'' part of the instuction, according to the table below. The computation unit finishes its computation a number of cycles later, and the result is written to the register given in the instruction which is active at this time. It is the responsibility of the compiler to avoid output conflicts; that is to say, that only one unit may finish its computation at a given cycle.
 
-A computation unit can be parallel or sequential. A parallel unit can accept a new operation at each cycle (it's typically a pipeline). A sequential unit can only accept a new operation when it is not already busy processing one (it's typically a FSM with a datapath); and trying to push a new operation into a busy sequential unit results in undefined behaviour.
+Units can accept a new operation at each cycle (they are pipelines).
 
 Each computation unit can have one, two or three arguments. If the unit has one argument, operand A is used, and operand B and flags are ignored. If the unit has two arguments, operands A and B are used. If the unit has three arguments, all operands and flags are used.
 
@@ -97,33 +97,39 @@ Each computation unit can have one, two or three arguments. If the unit has one 
 
 \begin{tabularx}{\textwidth}{|l|l|l|l|X|}
 \hline
-\bf Mnemonic & \bf Opcode & \bf Type & \bf Latency & \bf Description \\
+\bf Mnemonic & \bf Opcode & \bf Latency & \bf Description \\
 \hline
-NOP & 0 & -- & -- & No operation (use as filler). \\
+NOP & 0 & -- & No operation (use as filler). \\
 \hline
-FADD & 1 & Parallel & 4 & Floating point addition. \\
+FADD & 1 & 4 & Floating point addition. \\
 \hline
-FSUB & 2 & Parallel & 4 & Floating point subtraction (A-B). \\
+FSUB & 2 & 4 & Floating point subtraction (A-B). \\
 \hline
-FMUL & 3 & Parallel & 5 & Floating point multiplication. \\
+FMUL & 3 & 5 & Floating point multiplication. \\
 \hline
-FDIV & 4 & Sequential & TBD & Floating point division (A/B). \\
+FABS & 2 & 2 & Floating point absolute value. \\
 \hline
-F2I & 5 & Parallel & 2 & Convert float to integer. \\
+F2I & 5 & 2 & Convert float to integer. \\
 \hline
-I2F & 6 & Parallel & 3 & Convert integer to float. \\
+I2F & 6 & 3 & Convert integer to float. \\
 \hline
-VECTOUT & 7 & Parallel & -- & Write 2x32-bit vector to memory and terminate program. \\
+VECTOUT & 7 & -- & Write 2x32-bit vector to memory and terminate program. \\
 \hline
-SIN & 8 & Parallel & 4 & Sine table look-up. \\
+SIN & 8 & 4 & Sine table look-up. \\
 \hline
-COS & 9 & Parallel & 4 & Cosine table look-up. \\
+COS & 9 & 4 & Cosine table look-up. \\
 \hline
-ABOVE & a & Parallel & 2 & Result is 1.0 is A>B, 0.0 otherwise. \\
+ABOVE & a & 2 & Result is 1.0 is A>B, 0.0 otherwise. \\
 \hline
-EQUAL & b & Parallel & 2 & Result is 1.0 is A=B, 0.0 otherwise. \\
+EQUAL & b & 2 & Result is 1.0 is A=B, 0.0 otherwise. \\
 \hline
-COPY & c & Parallel & 2 & Result is A. \\
+COPY & c & 2 & Result is A. \\
+\hline
+IF & d & 2 & Result is A if R2 != 0, B otherwise. \\
+\hline
+TSIGN & e & 2 & Inverts the sign of A if B is negative. \\
+\hline
+QUAKE & f & 2 & Returns an inverse square root approximation. \\
 \hline
 \end{tabularx}\\
 
@@ -141,12 +147,6 @@ These operations are implemented using the same pipeline.
 
 The operation is performed using one guard digit and truncation of the result.
 
-\subsubsection{Floating point multiplication}
-The operation is performed by multiplying the mantissas at full precision and then truncating the result.
-
-\subsubsection{Floating point division}
-The floating point division is not implemented in this release.
-
 \subsubsection{Integer conversions}
 The PFPU supports conversion to and from 32-bit signed integers, using two's complement. When doing a float to integer conversion, the decimal part is truncated.
 
@@ -161,8 +161,8 @@ This computes $sin(\frac{2 \cdot \pi \cdot A}{8192})$ or $cos(\frac{2 \cdot \pi 
 \subsubsection{Comparison}
 The \verb!ABOVE! and \verb!EQUAL! operations return a floating point number which is 0.0 (false) or 1.0 (true), depending on the result of the comparison.
 
-\subsubsection{Copy}
-The PFPU can copy a register to another, to help the compiler resolve register placement constraints.
+\subsubsection{QUAKE instruction}
+This instruction returns \verb!0x5f3759df - ((A & 0x7fffffff) >> 1)!. It is used to compute an approximation of the inverse square root, according to the algorithm made famous by Quake III.
 
 \section{Interface}
 The PFPU is equipped with a CSR slave bus used for control, and a Wishbone master for storing the computation results into system memory.

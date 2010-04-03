@@ -182,7 +182,7 @@ static int operator2opcode(const char *operator)
 	if(strcmp(operator, "+") == 0) return FPVM_OPCODE_FADD;
 	if(strcmp(operator, "-") == 0) return FPVM_OPCODE_FSUB;
 	if(strcmp(operator, "*") == 0) return FPVM_OPCODE_FMUL;
-	if(strcmp(operator, "/") == 0) return FPVM_OPCODE_FDIV;
+	if(strcmp(operator, "abs") == 0) return FPVM_OPCODE_FABS;
 	if(strcmp(operator, "sin") == 0) return FPVM_OPCODE_SIN;
 	if(strcmp(operator, "cos") == 0) return FPVM_OPCODE_COS;
 	if(strcmp(operator, "above") == 0) return FPVM_OPCODE_ABOVE;
@@ -361,7 +361,7 @@ void fpvm_print_opcode(int opcode)
 		case FPVM_OPCODE_FADD:    printf("FADD    "); break;
 		case FPVM_OPCODE_FSUB:    printf("FSUB    "); break;
 		case FPVM_OPCODE_FMUL:    printf("FMUL    "); break;
-		case FPVM_OPCODE_FDIV:    printf("FDIV    "); break;
+		case FPVM_OPCODE_FABS:    printf("FABS    "); break;
 		case FPVM_OPCODE_F2I:     printf("F2I     "); break;
 		case FPVM_OPCODE_I2F:     printf("I2F     "); break;
 		case FPVM_OPCODE_VECTOUT: printf("VECTOUT "); break;
@@ -380,11 +380,11 @@ int fpvm_get_arity(int opcode)
 		case FPVM_OPCODE_FADD:
 		case FPVM_OPCODE_FSUB:
 		case FPVM_OPCODE_FMUL:
-		case FPVM_OPCODE_FDIV:
 		case FPVM_OPCODE_VECTOUT:
 		case FPVM_OPCODE_EQUAL:
 		case FPVM_OPCODE_ABOVE:
 			return 2;
+		case FPVM_OPCODE_FABS:
 		case FPVM_OPCODE_F2I:
 		case FPVM_OPCODE_I2F:
 		case FPVM_OPCODE_SIN:

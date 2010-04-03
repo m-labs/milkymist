@@ -22,7 +22,7 @@
 #define FPVM_OPCODE_FADD	(0x1)
 #define FPVM_OPCODE_FSUB	(0x2)
 #define FPVM_OPCODE_FMUL	(0x3)
-#define FPVM_OPCODE_FDIV	(0x4)
+#define FPVM_OPCODE_FABS	(0x4)
 #define FPVM_OPCODE_F2I		(0x5)
 #define FPVM_OPCODE_I2F		(0x6)
 #define FPVM_OPCODE_VECTOUT	(0x7)
@@ -31,12 +31,15 @@
 #define FPVM_OPCODE_ABOVE	(0xa)
 #define FPVM_OPCODE_EQUAL	(0xb)
 #define FPVM_OPCODE_COPY	(0xc)
+#define FPVM_OPCODE_IF		(0xd)
+#define FPVM_OPCODE_TSIGN	(0xe)
+#define FPVM_OPCODE_QUAKE	(0xf)
 
 #define FPVM_TRIG_CONV		(8192.0/(2.0*3.14159265358))
 
 #define FPVM_REG_X		(0)
 #define FPVM_REG_Y		(1)
-#define FPVM_REG_FLAGS		(2)
+#define FPVM_REG_IFB		(2)
 
 struct fpvm_instruction {
 	int opa;

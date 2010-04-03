@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,10 +72,8 @@ static void load_registers(float *registers)
 	volatile float *pfpu_regs = (float *)CSR_PFPU_DREGBASE;
 	int i;
 
-	for(i=0;i<PFPU_REG_COUNT;i++) {
-		if(pfpu_is_reserved(i)) continue;
+	for(i=PFPU_SPREG_COUNT;i<PFPU_REG_COUNT;i++)
 		pfpu_regs[i] = registers[i];
-	}
 }
 
 static void update_registers(float *registers)
@@ -83,10 +81,8 @@ static void update_registers(float *registers)
 	volatile float *pfpu_regs = (float *)CSR_PFPU_DREGBASE;
 	int i;
 
-	for(i=0;i<PFPU_REG_COUNT;i++) {
-		if(pfpu_is_reserved(i)) continue;
+	for(i=PFPU_SPREG_COUNT;i<PFPU_REG_COUNT;i++)
 		registers[i] = pfpu_regs[i];
-	}
 }
 
 static void pfpu_start(struct pfpu_td *td)

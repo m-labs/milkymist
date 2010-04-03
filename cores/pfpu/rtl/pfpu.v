@@ -40,7 +40,7 @@ module pfpu #(
 wire alu_rst;
 wire [31:0] a;
 wire [31:0] b;
-wire [1:0] flags;
+wire ifb;
 wire [3:0] opcode;
 wire [31:0] r;
 wire r_valid;
@@ -53,7 +53,7 @@ pfpu_alu alu(
 	
 	.a(a),				/* < from register file */
 	.b(b),				/* < from register file */
-	.flags(flags),			/* < from register file */
+	.ifb(ifb),			/* < from register file */
 	
 	.opcode(opcode),		/* < from program memory */
 	
@@ -80,7 +80,7 @@ pfpu_regf regf(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
-	.flags(flags),		/* < to ALU */
+	.ifb(ifb),		/* < to ALU */
 	.a(a),			/* < to ALU */
 	.b(b),			/* < to ALU */
 	.r(r),			/* < to ALU */

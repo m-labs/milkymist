@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ module pfpu_regf(
 	input sys_rst,
 	
 	/* ALU interface */
-	output reg [1:0] flags,
+	output reg ifb,
 	output [31:0] a,
 	output [31:0] b,
 	input [31:0] r,
@@ -46,7 +46,7 @@ module pfpu_regf(
 );
 
 /* Triple-port RAM for most of the registers.
- * R0, R1 and R2 are overlaid on top of it.
+ * R0 and R1 are overlaid on top of it.
  */
 wire [6:0] p1_a;
 wire [31:0] p1_d;
@@ -66,10 +66,6 @@ pfpu_tpram tpram(
 	.p3_d(p3_d)
 );
 
-reg [1:0] rflags;
-always @(posedge sys_clk)
-	flags <= rflags; /* pipeline compensation */
-
 /* Port 1 (RO) - Shared between ALU and CSR interface */
 assign p1_a = c_en ? c_addr : a_addr;
 reg p1_bram_en;
@@ -81,7 +77,6 @@ always @(posedge sys_clk) begin
 
 	     if(p1_a == 7'd0) p1_overlay <= r0;
 	else if(p1_a == 7'd1) p1_overlay <= r1;
-	else if(p1_a == 7'd2) p1_overlay <= rflags;
 	else begin
 		p1_bram_en <= 1'b1;
 		p1_overlay_en <= 1'b0;
@@ -102,7 +97,6 @@ always @(posedge sys_clk) begin
 
 	     if(p2_a == 7'd0) p2_overlay <= r0;
 	else if(p2_a == 7'd1) p2_overlay <= r1;
-	else if(p2_a == 7'd2) p2_overlay <= rflags;
 	else begin
 		p2_bram_en <= 1'b1;
 		p2_overlay_en <= 1'b0;
@@ -116,11 +110,11 @@ assign p3_en = c_en ? c_w_en : w_en;
 assign p3_a = c_en ? c_addr : w_addr;
 assign p3_d = c_en ? c_di : r;
 
-/* Catch writes to Flags Register (R2) */
+/* Catch writes to R2 and update the IF Branch */
 always @(posedge sys_clk) begin
 	if(p3_en) begin
 		if(p3_a == 7'd2)
-			rflags <= p3_d[1:0];
+			ifb <= p3_d != 32'd0;
 	end
 end
 
