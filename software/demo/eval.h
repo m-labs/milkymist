@@ -93,6 +93,15 @@ enum {
 	pfv_warp,
 	pfv_warp_anim_speed,
 	pfv_warp_scale,
+
+	pfv_q1,
+	pfv_q2,
+	pfv_q3,
+	pfv_q4,
+	pfv_q5,
+	pfv_q6,
+	pfv_q7,
+	pfv_q8,
 	
 	EVAL_PFV_COUNT /* must be last */
 };
@@ -160,6 +169,15 @@ enum {
 	pvv_warp,
 	pvv_warp_anim_speed,
 	pvv_warp_scale,
+
+	pvv_q1,
+	pvv_q2,
+	pvv_q3,
+	pvv_q4,
+	pvv_q5,
+	pvv_q6,
+	pvv_q7,
+	pvv_q8,
 	
 	EVAL_PVV_COUNT /* must be last */
 };

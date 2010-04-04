@@ -129,7 +129,16 @@ static const char pfv_names[EVAL_PFV_COUNT][FPVM_MAXSYMLEN] = {
 
 	"warp",
 	"fWarpAnimSpeed",
-	"fWarpScale"
+	"fWarpScale",
+
+	"q1",
+	"q2",
+	"q3",
+	"q4",
+	"q5",
+	"q6",
+	"q7",
+	"q8"
 };
 
 int eval_pfv_from_name(const char *name)
@@ -301,6 +310,7 @@ void eval_pfv_fill_td(struct pfpu_td *td, pfpu_callback callback, void *user)
 /****************************************************************/
 
 static struct fpvm_fragment pvv_fragment;
+static int pvv_preallocation[EVAL_PVV_COUNT];		/* < where per-vertex variables can be mapped in PFPU regf */
 static int pvv_allocation[EVAL_PVV_COUNT];		/* < where per-vertex variables are mapped in PFPU regf, -1 if unmapped */
 static int pervertex_prog_length;			/* < how many instructions in pervertex_prog */
 static unsigned int pervertex_prog[PFPU_PROGSIZE];	/* < PFPU per-vertex microcode */
@@ -332,35 +342,51 @@ static const char pvv_names[EVAL_PVV_COUNT][FPVM_MAXSYMLEN] = {
 
 	"warp",
 	"fWarpAnimSpeed",
-	"fWarpScale"
+	"fWarpScale",
+
+	"q1",
+	"q2",
+	"q3",
+	"q4",
+	"q5",
+	"q6",
+	"q7",
+	"q8"
 };
+
+static void write_pvv(int pvv, float x)
+{
+	if(pvv_allocation[pvv] >= 0)
+		pervertex_regs[pvv_allocation[pvv]] = x;
+}
+
 
 void eval_transfer_pvv_regs()
 {
-	pervertex_regs[pvv_allocation[pvv_texsize]] = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
-	pervertex_regs[pvv_allocation[pvv_hmeshsize]] = 1.0/(float)renderer_hmeshlast;
-	pervertex_regs[pvv_allocation[pvv_vmeshsize]] = 1.0/(float)renderer_vmeshlast;
+	write_pvv(pvv_texsize, renderer_texsize << TMU_FIXEDPOINT_SHIFT);
+	write_pvv(pvv_hmeshsize, 1.0/(float)renderer_hmeshlast);
+	write_pvv(pvv_vmeshsize, 1.0/(float)renderer_vmeshlast);
 
-	pervertex_regs[pvv_allocation[pvv_sx]] = eval_read_pfv(pfv_sx);
-	pervertex_regs[pvv_allocation[pvv_sy]] = eval_read_pfv(pfv_sy);
-	pervertex_regs[pvv_allocation[pvv_cx]] = eval_read_pfv(pfv_cx);
-	pervertex_regs[pvv_allocation[pvv_cy]] = eval_read_pfv(pfv_cy);
-	pervertex_regs[pvv_allocation[pvv_rot]] = eval_read_pfv(pfv_rot);
-	pervertex_regs[pvv_allocation[pvv_dx]] = eval_read_pfv(pfv_dx);
-	pervertex_regs[pvv_allocation[pvv_dy]] = eval_read_pfv(pfv_dy);
-	pervertex_regs[pvv_allocation[pvv_zoom]] = eval_read_pfv(pfv_zoom);
+	write_pvv(pvv_sx, eval_read_pfv(pfv_sx));
+	write_pvv(pvv_sy, eval_read_pfv(pfv_sy));
+	write_pvv(pvv_cx, eval_read_pfv(pfv_cx));
+	write_pvv(pvv_cy, eval_read_pfv(pfv_cy));
+	write_pvv(pvv_rot, eval_read_pfv(pfv_rot));
+	write_pvv(pvv_dx, eval_read_pfv(pfv_dx));
+	write_pvv(pvv_dy, eval_read_pfv(pfv_dy));
+	write_pvv(pvv_zoom, eval_read_pfv(pfv_zoom));
 	
-	pervertex_regs[pvv_allocation[pvv_time]] = eval_read_pfv(pfv_time);
-	pervertex_regs[pvv_allocation[pvv_bass]] = eval_read_pfv(pfv_bass);
-	pervertex_regs[pvv_allocation[pvv_mid]] = eval_read_pfv(pfv_mid);
-	pervertex_regs[pvv_allocation[pvv_treb]] = eval_read_pfv(pfv_treb);
-	pervertex_regs[pvv_allocation[pvv_bass_att]] = eval_read_pfv(pfv_bass_att);
-	pervertex_regs[pvv_allocation[pvv_mid_att]] = eval_read_pfv(pfv_mid_att);
-	pervertex_regs[pvv_allocation[pvv_treb_att]] = eval_read_pfv(pfv_treb_att);
+	write_pvv(pvv_time, eval_read_pfv(pfv_time));
+	write_pvv(pvv_bass, eval_read_pfv(pfv_bass));
+	write_pvv(pvv_mid, eval_read_pfv(pfv_mid));
+	write_pvv(pvv_treb, eval_read_pfv(pfv_treb));
+	write_pvv(pvv_bass_att, eval_read_pfv(pfv_bass_att));
+	write_pvv(pvv_mid_att, eval_read_pfv(pfv_mid_att));
+	write_pvv(pvv_treb_att, eval_read_pfv(pfv_treb_att));
 
-	pervertex_regs[pvv_allocation[pvv_warp]] = eval_read_pfv(pfv_warp);
-	pervertex_regs[pvv_allocation[pvv_warp_anim_speed]] = eval_read_pfv(pfv_warp_anim_speed);
-	pervertex_regs[pvv_allocation[pvv_warp_scale]] = eval_read_pfv(pfv_warp_scale);
+	write_pvv(pvv_warp, eval_read_pfv(pfv_warp));
+	write_pvv(pvv_warp_anim_speed, eval_read_pfv(pfv_warp_anim_speed));
+	write_pvv(pvv_warp_scale, eval_read_pfv(pfv_warp_scale));
 }
 
 static int init_pvv()
@@ -370,8 +396,8 @@ static int init_pvv()
 	fpvm_init(&pvv_fragment, 1);
 	
 	for(i=0;i<EVAL_PVV_COUNT;i++) {
-		pvv_allocation[i] = fpvm_bind(&pvv_fragment, pvv_names[i]);
-		if(pvv_allocation[i] == FPVM_INVALID_REG) {
+		pvv_preallocation[i] = fpvm_bind(&pvv_fragment, pvv_names[i]);
+		if(pvv_preallocation[i] == FPVM_INVALID_REG) {
 			printf("EVL: failed to bind per-vertex variable %s: %s\n", pvv_names[i], pvv_fragment.last_error);
 			return 0;
 		}
@@ -393,6 +419,9 @@ fail_assign:
 
 static int finalize_pvv()
 {
+	int i;
+	int references[FPVM_MAXBINDINGS];
+
 	#define A(dest, val) if(!fpvm_assign(&pvv_fragment, dest, val)) goto fail_assign
 
 	/* Zoom */
@@ -443,6 +472,16 @@ static int finalize_pvv()
 	printf("EVL: per-vertex FPVM fragment:\n");
 	fpvm_dump(&pvv_fragment);
 	#endif
+
+	/* Build variable allocation table */
+	fpvm_get_references(&pvv_fragment, references);
+	for(i=0;i<EVAL_PVV_COUNT;i++)
+		if(references[pvv_preallocation[i]])
+			pvv_allocation[i] = pvv_preallocation[i];
+		else
+			pvv_allocation[i] = -1;
+
+	
 	return 1;
 fail_assign:
 	printf("EVL: failed to add equation to per-vertex footer: %s\n", pvv_fragment.last_error);
