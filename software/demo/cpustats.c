@@ -27,12 +27,15 @@ static struct timestamp acc;
 static struct timestamp first_enter;
 static int load;
 
+static int cpustats_ready = 0;
+
 void cpustats_init()
 {
 	enter_count = 0;
 	acc.sec = 0;
 	acc.usec = 0;
 	load = 0;
+	cpustats_ready = 1;
 }
 
 /*
@@ -45,6 +48,8 @@ void cpustats_tick()
 	struct timestamp diff;
 	int usec;
 
+	if(!cpustats_ready) return;
+	
 	if(enter_count == 0) {
 		printf("cpustats_tick() called with enter_count == 0!\n");
 		return;
@@ -67,6 +72,8 @@ void cpustats_enter()
 {
 	unsigned int oldmask = 0;
 
+	if(!cpustats_ready) return;
+
 	oldmask = irq_getmask();
 	irq_setmask(0);
 
@@ -80,6 +87,8 @@ void cpustats_enter()
 void cpustats_leave()
 {
 	unsigned int oldmask = 0;
+
+	if(!cpustats_ready) return;
 
 	oldmask = irq_getmask();
 	irq_setmask(0);
