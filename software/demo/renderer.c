@@ -174,6 +174,13 @@ int renderer_start(char *preset_code)
 	return 1;
 }
 
+int renderer_istart()
+{
+	eval_init();
+	apipe_start();
+	return 1;
+}
+
 void renderer_stop()
 {
 	apipe_stop();

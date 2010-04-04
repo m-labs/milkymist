@@ -38,7 +38,7 @@ _reset_handler:
 	nop
 
 _breakpoint_handler:
-	nop
+	bi _breakpoint_handler
 	nop
 	nop
 	nop
@@ -48,7 +48,7 @@ _breakpoint_handler:
 	nop
 
 _instruction_bus_error_handler:
-	nop
+	bi _instruction_bus_error_handler
 	nop
 	nop
 	nop
@@ -58,7 +58,7 @@ _instruction_bus_error_handler:
 	nop
 
 _watchpoint_handler:
-	nop
+	bi _watchpoint_handler
 	nop
 	nop
 	nop
@@ -68,7 +68,7 @@ _watchpoint_handler:
 	nop
 
 _data_bus_error_handler:
-	nop
+	bi _data_bus_error_handler
 	nop
 	nop
 	nop
@@ -78,7 +78,7 @@ _data_bus_error_handler:
 	nop
 
 _divide_by_zero_handler:
-	nop
+	bi _divide_by_zero_handler
 	nop
 	nop
 	nop
