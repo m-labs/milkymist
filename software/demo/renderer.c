@@ -130,8 +130,8 @@ static int process_line(char *line)
 	c = strstr(line, "//");
 	if(c) *c = 0;
 	
-	c = line + strlen(line);
-	while((c > line) && (*c == ' ')) *c-- = 0;
+	c = line + strlen(line) - 1;
+	while((c >= line) && (*c == ' ')) *c-- = 0;
 	if(*line == 0) return 1;
 
 	c = strchr(line, '=');

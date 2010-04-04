@@ -17,6 +17,7 @@
 
 /* Original code from projectM 1.2.0 */
 
+#include <stdio.h>
 #include <math.h>
 
 #include "line.h"
@@ -80,12 +81,13 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 	}
 
 	ctx.color = float_to_rgb565(wave_r, wave_g, wave_b);
+	//printf("fc: %f %f %f / %d %d %d\n", &wave_r, &wave_g, &wave_b, GETR(ctx.color), GETG(ctx.color), GETB(ctx.color));
 
 	/*
-	 * HACK: Boost wave opacity (80 instead of 64).
+	 * HACK: Boost wave opacity (100 instead of 64).
 	 * Line drawing code treats >= 64 as 64, no need to clamp
 	 */
-	ctx.alpha = 80.0*wave_o;
+	ctx.alpha = 100.0*wave_o;
 
 	// Original code:
 	// glLineStipple(2, 0xAAAA);

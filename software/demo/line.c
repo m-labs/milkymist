@@ -31,21 +31,20 @@ static void setpixel(struct line_context *ctx, unsigned int x, unsigned int y)
 
 			cd = ctx->framebuffer[y*ctx->hres+x];
 			cs = ctx->color;
-			/* Do not shift components to go faster */
 			if(ctx->alpha >= 64) {
-				r = (cs & RMASK) + (cd & RMASK);
-				g = (cs & GMASK) + (cd & GMASK);
-				b = (cs & BMASK) + (cd & BMASK);
+				r = GETR(cs) + GETR(cd);
+				g = GETG(cs) + GETG(cd);
+				b = GETB(cs) + GETB(cd);
 			} else {
-				r = ((((cs & RMASK)*ctx->alpha) >> 6) & RMASK) + (cd & RMASK);
-				g = ((((cs & GMASK)*ctx->alpha) >> 6) & GMASK) + (cd & GMASK);
-				b = ((((cs & BMASK)*ctx->alpha) >> 6) & BMASK) + (cd & BMASK);
+				r = (GETR(cs)*ctx->alpha >> 6) + GETR(cd);
+				g = (GETG(cs)*ctx->alpha >> 6) + GETG(cd);
+				b = (GETB(cs)*ctx->alpha >> 6) + GETB(cd);
 			}
 			/* Saturate in case of overflow */
-			if(r > RMASK) r = RMASK;
-			if(g > GMASK) g = GMASK;
-			if(b > BMASK) b = BMASK;
-			ctx->framebuffer[y*ctx->hres+x] = r|g|b;
+			if(r > 31) r = 31;
+			if(g > 63) g = 63;
+			if(b > 31) b = 31;
+			ctx->framebuffer[y*ctx->hres+x] = MAKERGB565(r, g, b);
 		} else {
 			if(ctx->alpha >= 64)
 				ctx->framebuffer[y*ctx->hres+x] = ctx->color;
@@ -55,11 +54,10 @@ static void setpixel(struct line_context *ctx, unsigned int x, unsigned int y)
 
 				cd = ctx->framebuffer[y*ctx->hres+x];
 				cs = ctx->color;
-				/* Do not shift components to go faster */
-				r = ((((cs & RMASK)*ctx->alpha) >> 6) & RMASK) + (((cd & RMASK)*(64-ctx->alpha)) >> 6);
-				g = ((((cs & GMASK)*ctx->alpha) >> 6) & GMASK) + (((cd & GMASK)*(64-ctx->alpha)) >> 6);
-				b = ((((cs & BMASK)*ctx->alpha) >> 6) & BMASK) + (((cd & BMASK)*(64-ctx->alpha)) >> 6);
-				ctx->framebuffer[y*ctx->hres+x] = r|g|b;
+				r = (GETR(cs)*ctx->alpha >> 6) + (GETR(cd)*(64-ctx->alpha) >> 6);
+				g = (GETG(cs)*ctx->alpha >> 6) + (GETG(cd)*(64-ctx->alpha) >> 6);
+				b = (GETB(cs)*ctx->alpha >> 6) + (GETB(cd)*(64-ctx->alpha) >> 6);
+				ctx->framebuffer[y*ctx->hres+x] = MAKERGB565(r, g, b);
 			}
 		}
 	}
