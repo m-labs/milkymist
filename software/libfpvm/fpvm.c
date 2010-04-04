@@ -238,6 +238,16 @@ static int add_inv_sqrt(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 	return 1;
 }
 
+static int add_int(struct fpvm_fragment *fragment, int reg_in, int reg_out)
+{
+	int reg_i;
+	
+	reg_i = fragment->next_sur--;
+	if(!add_isn(fragment, FPVM_OPCODE_F2I, reg_in, 0, reg_i)) return FPVM_INVALID_REG;
+	if(!add_isn(fragment, FPVM_OPCODE_I2F, reg_i, 0, reg_out)) return FPVM_INVALID_REG;
+	return 1;
+}
+
 /*
  * Compiles a node.
  * Returns the register the result of the node gets written to,
@@ -366,6 +376,25 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		if(!add_inv_sqrt(fragment, reg_b2, reg_invsqrt)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg)) return FPVM_INVALID_REG;
+	} else if(strcmp(node->label, "%") == 0) {
+		int reg_invsqrt;
+		int reg_invsqrt2;
+		int reg_div;
+		int reg_idiv;
+		int reg_bidiv;
+
+		reg_invsqrt = fragment->next_sur--;
+		reg_invsqrt2 = fragment->next_sur--;
+		reg_div = fragment->next_sur--;
+		reg_idiv = fragment->next_sur--;
+		reg_bidiv = fragment->next_sur--;
+
+		if(!add_inv_sqrt(fragment, opb, reg_invsqrt)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt2, opa, reg_div)) return FPVM_INVALID_REG;
+		if(!add_int(fragment, reg_div, reg_idiv)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FMUL, opb, reg_idiv, reg_bidiv)) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_FSUB, opa, reg_bidiv, reg)) return FPVM_INVALID_REG;
 	} else if(strcmp(node->label, "min") == 0) {
 		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_IF, opb, opa, reg)) return FPVM_INVALID_REG;
@@ -375,10 +404,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 	} else if(strcmp(node->label, "sqr") == 0) {
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, opa, opa, reg)) return FPVM_INVALID_REG;
 	} else if(strcmp(node->label, "int") == 0) {
-		int reg_i;
-		reg_i = fragment->next_sur--;
-		if(!add_isn(fragment, FPVM_OPCODE_F2I, opa, 0, reg_i)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_I2F, reg_i, 0, reg)) return FPVM_INVALID_REG;
+		if(!add_int(fragment, opa, reg)) return FPVM_INVALID_REG;
 	} else {
 		/* Normal case */
 		opcode = operator2opcode(node->label);
