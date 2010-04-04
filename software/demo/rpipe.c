@@ -540,15 +540,15 @@ void rpipe_service()
 {
 	if(run_wave_bottom_half) {
 		cpustats_enter();
-		rpipe_wave_bottom_half();
 		run_wave_bottom_half = 0;
+		rpipe_wave_bottom_half();
 		cpustats_leave();
 	}
 
 	if(run_swap_bottom_half) {
 		cpustats_enter();
-		rpipe_swap_bottom_half();
 		run_swap_bottom_half = 0;
+		rpipe_swap_bottom_half();
 		cpustats_leave();
 	}
 }

@@ -41,12 +41,12 @@ static short *analyzer_buffer;
 static int peak_bass, peak_mid, peak_treb;
 static float bass_att, mid_att, treb_att;
 
-static int eval_ready;
+static volatile int eval_ready;
 
 static struct rpipe_frame frame1 __attribute__((aligned(8)));
 static struct rpipe_frame frame2 __attribute__((aligned(8)));
-static int frame1_free;
-static int frame2_free;
+static volatile int frame1_free;
+static volatile int frame2_free;
 
 static unsigned int all_frames;
 
@@ -88,7 +88,7 @@ void apipe_init()
 
 static void apipe_snd_callback(short *buffer, void *user)
 {
-	if(run_analyzer_bottom_half) {
+	if(!eval_ready) {
 		/* Skip this buffer */
 		snd_record_refill(buffer);
 		return;
@@ -109,6 +109,8 @@ void apipe_start()
 void apipe_stop()
 {
 	snd_record_stop();
+	run_analyzer_bottom_half = 0;
+	while(!(eval_ready && frame1_free && frame2_free));
 }
 
 static struct pfpu_td pfpu_td;
@@ -265,11 +267,11 @@ static void analyzer_bottom_half()
 
 void apipe_service()
 {
-	if(run_analyzer_bottom_half && eval_ready) {
+	if(run_analyzer_bottom_half) {
 		cpustats_enter();
-		analyzer_bottom_half();
 		eval_ready = 0;
 		run_analyzer_bottom_half = 0;
+		analyzer_bottom_half();
 		cpustats_leave();
 	}
 }

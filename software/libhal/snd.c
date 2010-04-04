@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -206,6 +206,7 @@ void snd_play_stop()
 	oldmask = irq_getmask();
 	irq_setmask(oldmask & (~IRQ_AC97DMAR));
 	CSR_AC97_DCTL = 0;
+	play_underrun = 0;
 	irq_ack(IRQ_AC97DMAR);
 	irq_setmask(oldmask);
 }
@@ -325,6 +326,7 @@ void snd_record_stop()
 	oldmask = irq_getmask();
 	irq_setmask(oldmask & (~IRQ_AC97DMAW));
 	CSR_AC97_UCTL = 0;
+	record_overrun = 0;
 	irq_ack(IRQ_AC97DMAW);
 	irq_setmask(oldmask);
 }
