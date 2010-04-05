@@ -110,7 +110,7 @@ void apipe_stop()
 {
 	snd_record_stop();
 	run_analyzer_bottom_half = 0;
-	while(!(eval_ready && frame1_free && frame2_free));
+	while(!(eval_ready && frame1_free && frame2_free)) rpipe_service();
 }
 
 static struct pfpu_td pfpu_td;
@@ -170,7 +170,7 @@ static void pfv_callback(struct pfpu_td *td)
 	rpipe_frame->wave_thick = eval_read_pfv(pfv_wave_thick) != 0.0;
 	
 	rpipe_frame->wave_x = eval_read_pfv(pfv_wave_x);
-	rpipe_frame->wave_y = eval_read_pfv(pfv_wave_y);
+	rpipe_frame->wave_y = 1.0 - eval_read_pfv(pfv_wave_y);
 	rpipe_frame->wave_r = eval_read_pfv(pfv_wave_r);
 	rpipe_frame->wave_g = eval_read_pfv(pfv_wave_g);
 	rpipe_frame->wave_b = eval_read_pfv(pfv_wave_b);

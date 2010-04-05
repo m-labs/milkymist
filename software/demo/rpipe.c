@@ -200,7 +200,7 @@ static void rpipe_draw_motion_vectors()
 	
 	line_init_context(&ctx, tex_backbuffer, renderer_texsize, renderer_texsize);
 	ctx.color = float_to_rgb565(bh_frame->mv_r, bh_frame->mv_g, bh_frame->mv_b);
-	ctx.alpha = bh_frame->mv_a+0.5;
+	ctx.alpha = 64.0*bh_frame->mv_a;
 	ctx.thickness = l;
 
 	offsetx = bh_frame->mv_dx*(float)renderer_texsize;
@@ -211,7 +211,7 @@ static void rpipe_draw_motion_vectors()
 	nx = bh_frame->mv_x+0.5;
 	ny = bh_frame->mv_y+0.5;
 	for(y=0;y<ny;y++)
-		for (x=0;x<ny;x++)
+		for (x=0;x<nx;x++)
 			draw_dot(&ctx, offsetx+x*intervalx, offsety+y*intervaly, l);
 }
 

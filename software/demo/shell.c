@@ -45,6 +45,7 @@
 #include "memstats.h"
 #include "shell.h"
 #include "ui.h"
+#include "renderer.h"
 
 #define NUMBER_OF_BYTES_ON_A_LINE 16
 static void dump_bytes(unsigned int *ptr, int count, unsigned addr)
@@ -215,6 +216,7 @@ static void help()
 	puts("flush      - flush FML bridge cache");
 	puts("ls         - list files on the memory card");
 	puts("render     - start rendering a preset");
+	puts("irender    - input preset equations interactively");
 	puts("stop       - stop renderer");
 	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
@@ -543,40 +545,6 @@ static void echo()
 	}
 }
 
-static char ethbuffer[2000];
-
-static void rxtest()
-{
-	CSR_MINIMAC_ADDR0 = (unsigned int)&ethbuffer[0];
-	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
-	CSR_MINIMAC_SETUP = MINIMAC_SETUP_TXRST;
-	while((CSR_MINIMAC_STATE0 != MINIMAC_STATE_PENDING) && (!readchar_nonblock()));
-	printf("Length: %d\n", CSR_MINIMAC_COUNT0);
-	asm volatile( /* Invalidate Level-1 data cache */
-		"wcsr DCC, r0\n"
-		"nop\n"
-	);
-	dump_bytes((unsigned int *)ethbuffer, CSR_MINIMAC_COUNT0, 0);
-}
-
-static char txbuffer[] = {
-0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0xd5, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x1e,
-0x37, 0xd6, 0x7d, 0x64, 0x08, 0x00, 0x45, 0x00, 0x00, 0x54, 0x00, 0x00, 0x40, 0x00, 0x40, 0x01,
-0xb8, 0x4f, 0xc0, 0xa8, 0x00, 0x0a, 0xc0, 0xa8, 0x00, 0xff, 0x08, 0x00, 0x0c, 0x09, 0x68, 0x1d,
-0x00, 0x01, 0xb9, 0x73, 0x8d, 0x4b, 0x47, 0x16, 0x0b, 0x00, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
-0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
-0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d,
-0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0xbb, 0x06, 0x15, 0xa5
-};
-
-static void txtest()
-{
-	CSR_MINIMAC_SETUP = MINIMAC_SETUP_RXRST;
-	CSR_MINIMAC_TXADR = (unsigned int)&txbuffer[0];
-	CSR_MINIMAC_TXREMAINING = 110;
-	while((CSR_MINIMAC_TXREMAINING != 0) && (!readchar_nonblock()));
-}
-
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -593,51 +561,66 @@ static char *get_token(char **str)
 	return d;
 }
 
+static int irender;
+
 static void do_command(char *c)
 {
-	char *command, *param1, *param2, *param3;
+	if(irender) {
+		if(*c == 0) {
+			irender = 0;
+			renderer_idone();
+		} else
+			renderer_iinput(c);
+	} else {
+		char *command, *param1, *param2, *param3;
 
-	command = get_token(&c);
-	param1 = get_token(&c);
-	param2 = get_token(&c);
-	param3 = get_token(&c);
+		command = get_token(&c);
+		param1 = get_token(&c);
+		param2 = get_token(&c);
+		param3 = get_token(&c);
 
-	if(strcmp(command, "mr") == 0) mr(param1, param2);
-	else if(strcmp(command, "mw") == 0) mw(param1, param2, param3);
-	else if(strcmp(command, "ls") == 0) ls();
-	else if(strcmp(command, "flush") == 0) flush_bridge_cache();
-	else if(strcmp(command, "render") == 0) render(param1);
-	else if(strcmp(command, "stop") == 0) ui_render_stop();
-	else if(strcmp(command, "spam") == 0) spam();
-	else if(strcmp(command, "stats") == 0) stats();
-	else if(strcmp(command, "reboot") == 0) reboot();
-	else if(strcmp(command, "help") == 0) help();
+		if(strcmp(command, "mr") == 0) mr(param1, param2);
+		else if(strcmp(command, "mw") == 0) mw(param1, param2, param3);
+		else if(strcmp(command, "ls") == 0) ls();
+		else if(strcmp(command, "flush") == 0) flush_bridge_cache();
+		else if(strcmp(command, "render") == 0) render(param1);
+		else if(strcmp(command, "irender") == 0) {
+			renderer_istart();
+			irender = 1;
+		} else if(strcmp(command, "stop") == 0) ui_render_stop();
+		else if(strcmp(command, "spam") == 0) spam();
+		else if(strcmp(command, "stats") == 0) stats();
+		else if(strcmp(command, "reboot") == 0) reboot();
+		else if(strcmp(command, "help") == 0) help();
 
-	/* Test functions and hacks */
-	else if(strcmp(command, "loadpic") == 0) loadpic(param1);
-	else if(strcmp(command, "checker") == 0) checker();
-	else if(strcmp(command, "pfputest") == 0) pfputest();
-	else if(strcmp(command, "tmutest") == 0) tmutest();
-	else if(strcmp(command, "tmudemo") == 0) tmudemo();
-	else if(strcmp(command, "echo") == 0) echo();
-	else if(strcmp(command, "rxtest") == 0) rxtest();
-	else if(strcmp(command, "txtest") == 0) txtest();
+		/* Test functions and hacks */
+		else if(strcmp(command, "loadpic") == 0) loadpic(param1);
+		else if(strcmp(command, "checker") == 0) checker();
+		else if(strcmp(command, "pfputest") == 0) pfputest();
+		else if(strcmp(command, "tmutest") == 0) tmutest();
+		else if(strcmp(command, "tmudemo") == 0) tmudemo();
+		else if(strcmp(command, "echo") == 0) echo();
 
-	else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
+		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
+	}
 }
 
-static char command_buffer[64];
+static char command_buffer[512];
 static unsigned int command_index;
 
 static void prompt()
 {
-	putsnonl("\e[1m% \e[0m");
+	if(irender)
+		putsnonl("\e[1mpreset% \e[0m");
+	else
+		putsnonl("\e[1m% \e[0m");
 }
 
 void shell_init()
 {
 	prompt();
 	command_index = 0;
+	irender = 0;
 }
 
 void shell_input(char c)

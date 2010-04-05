@@ -27,12 +27,15 @@
 #include "apipe.h"
 #include "renderer.h"
 
+int renderer_on;
+
 int renderer_hmeshlast;
 int renderer_vmeshlast;
 int renderer_texsize;
 
 void renderer_init()
 {
+	renderer_on = 0;
 	renderer_hmeshlast = 32;
 	renderer_vmeshlast = 32;
 	renderer_texsize = 512;
@@ -167,21 +170,41 @@ static int load_preset(char *preset_code)
 
 int renderer_start(char *preset_code)
 {
+	if(renderer_on) renderer_stop();
 	eval_init();
 	if(!load_preset(preset_code)) return 0;
 	if(!eval_schedule()) return 0;
 	apipe_start();
+	renderer_on = 1;
+	printf("RDR: started\n");
 	return 1;
 }
 
-int renderer_istart()
+void renderer_istart()
 {
+	if(renderer_on) renderer_stop();
 	eval_init();
+	linenr = 0;
+}
+
+int renderer_iinput(char *line)
+{
+	linenr++;
+	return process_line(line);
+}
+
+int renderer_idone()
+{
+	if(!eval_schedule()) return 0;
 	apipe_start();
+	renderer_on = 1;
+	printf("RDR: started\n");
 	return 1;
 }
 
 void renderer_stop()
 {
+	printf("RDR: stopped\n");
+	renderer_on = 0;
 	apipe_stop();
 }
