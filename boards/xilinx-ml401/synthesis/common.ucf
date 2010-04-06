@@ -2,7 +2,8 @@
 NET "clkin" LOC = AE14 | IOSTANDARD = LVCMOS33;
 
 NET "clkin" TNM_NET = "clkin";
-TIMESPEC "TSclkin" = PERIOD "clkin" 10 ns HIGH 50% INPUT_JITTER 100 ps;
+# < 10ns to work around Xilinx's broken timing models
+TIMESPEC "TSclkin" = PERIOD "clkin" 9.9 ns HIGH 50% INPUT_JITTER 100 ps;
 
 # ==== Reset button ====
 NET "resetin" LOC = D6 | IOSTANDARD = LVCMOS25;

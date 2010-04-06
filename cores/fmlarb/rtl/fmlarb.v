@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@ assign m0_do = s_di;
 assign m1_do = s_di;
 assign m2_do = s_di;
 assign m3_do = s_di;
+assign m4_do = s_di;
 
 reg [2:0] master;
 reg [2:0] next_master;
@@ -128,11 +129,11 @@ always @(*) begin
 end
 
 /* Mux the masters */
-assign m0_ack = (master == 2'd0) & s_ack;
-assign m1_ack = (master == 2'd1) & s_ack;
-assign m2_ack = (master == 2'd2) & s_ack;
-assign m3_ack = (master == 2'd3) & s_ack;
-assign m4_ack = (master == 2'd4) & s_ack;
+assign m0_ack = (master == 3'd0) & s_ack;
+assign m1_ack = (master == 3'd1) & s_ack;
+assign m2_ack = (master == 3'd2) & s_ack;
+assign m3_ack = (master == 3'd3) & s_ack;
+assign m4_ack = (master == 3'd4) & s_ack;
 
 always @(*) begin
 	case(master)
