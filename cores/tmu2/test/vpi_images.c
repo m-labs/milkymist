@@ -54,10 +54,11 @@ static int open_calltf(char *user_data)
 }
 
 /*
- * Get a RGB565 pixel from the source image.
+ * Get a RGB565 pixel.
  *
  * Use from Verilog:
- * $image_get(x, y, color);
+ * $image_get(img, x, y, color);
+ * img = 0/1 (source/dest)
  * color will be modified to reflect the
  * pixel's color ; x and y are unmodified.
  */
@@ -68,13 +69,19 @@ static int get_calltf(char *user_data)
 	vpiHandle item;
 	s_vpi_value value;
 	s_vpi_vecval vec;
-	unsigned int x, y;
+	unsigned int img, x, y;
 	unsigned int c;
 	unsigned int red, green, blue;
 	unsigned int r;
 	
 	sys = vpi_handle(vpiSysTfCall, 0);
 	argv = vpi_iterate(vpiArgument, sys);
+
+	/* get img */
+	item = vpi_scan(argv);
+	value.format = vpiIntVal;
+	vpi_get_value(item, &value);
+	img = value.value.integer;
 	
 	/* get x */
 	item = vpi_scan(argv);
@@ -89,7 +96,7 @@ static int get_calltf(char *user_data)
 	y = value.value.integer;
 
 	/* do the job */
-	c = gdImageGetTrueColorPixel(src, x, y);
+	c = gdImageGetTrueColorPixel(img ? dst : src, x, y);
 	red = gdTrueColorGetRed(c);
 	green = gdTrueColorGetGreen(c);
 	blue = gdTrueColorGetBlue(c);
@@ -108,10 +115,11 @@ static int get_calltf(char *user_data)
 }
 
 /*
- * Set a RGB565 pixel in the destination image.
+ * Set a RGB565 pixel.
  *
  * Use from Verilog:
- * $image_get(x, y, color);
+ * $image_get(img, x, y, color);
+ * img = 0/1 (source/dest)
  * Parameters are not modified.
  */
 static int set_calltf(char *user_data)
@@ -120,12 +128,18 @@ static int set_calltf(char *user_data)
 	vpiHandle argv;
 	vpiHandle item;
 	s_vpi_value value;
-	unsigned int x, y;
+	unsigned int img, x, y;
 	unsigned int c;
 	unsigned int red, green, blue;
 	
 	sys = vpi_handle(vpiSysTfCall, 0);
 	argv = vpi_iterate(vpiArgument, sys);
+
+	/* get img */
+	item = vpi_scan(argv);
+	value.format = vpiIntVal;
+	vpi_get_value(item, &value);
+	img = value.value.integer;
 	
 	/* get x */
 	item = vpi_scan(argv);
@@ -160,8 +174,8 @@ static int set_calltf(char *user_data)
 	
 	//printf("Set Pixel (%d,%d), %02x%02x%02x\n", x, y, red, green, blue);
 	
-	gdImageSetPixel(dst, x, y,
-		gdImageColorAllocate(dst, red, green, blue));
+	gdImageSetPixel(img ? dst : src, x, y,
+		gdImageColorAllocate(img ? dst : src, red, green, blue));
 	
 	return 0;
 }

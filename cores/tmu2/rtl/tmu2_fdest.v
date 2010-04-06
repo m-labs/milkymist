@@ -50,12 +50,17 @@ reg [fml_depth-1-1-4:0] tag;
 reg [fml_depth-1-1:0] dadr_r;
 
 reg hit;
+
+reg tag_we;
+
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		valid <= 1'b0;
 		hit <= 1'b0;
 		dadr_r <= {fml_depth-1{1'b0}};
 	end else begin
+		if(tag_we)
+			valid <= 1'b1;
 		if(flush)
 			valid <= 1'b0;
 		if(pipe_stb_i & pipe_ack_o) begin
@@ -65,9 +70,10 @@ always @(posedge sys_clk) begin
 	end
 end
 
-reg tag_we;
 always @(posedge sys_clk) begin
-	if(tag_we)
+	if(sys_rst)
+		tag <= {fml_depth-1-4{1'b0}};
+	else if(tag_we)
 		tag <= dadr_r[fml_depth-1-1:4];
 end
 
@@ -187,6 +193,7 @@ always @(*) begin
 		end
 		OUT: begin
 			stb_after_fetch = 1'b1;
+			pipe_ack_o = 1'b1;
 			if(pipe_ack_i)
 				next_state = IDLE;
 		end

@@ -42,6 +42,11 @@ wire fmlr_stb;
 reg fmlr_ack;
 reg [63:0] fmlr_di;
 
+wire [fml_depth-1:0] fmldr_adr;
+wire fmldr_stb;
+reg fmldr_ack;
+reg [63:0] fmldr_di;
+
 wire [fml_depth-1:0] fmlw_adr;
 wire fmlw_stb;
 reg fmlw_ack;
@@ -77,6 +82,11 @@ tmu2 #(
 	.fmlr_stb(fmlr_stb),
 	.fmlr_ack(fmlr_ack),
 	.fmlr_di(fmlr_di),
+
+	.fmldr_adr(fmldr_adr),
+	.fmldr_stb(fmldr_stb),
+	.fmldr_ack(fmldr_ack),
+	.fmldr_di(fmldr_di),
 	
 	.fmlw_adr(fmlw_adr),
 	.fmlw_stb(fmlw_stb),
@@ -133,10 +143,9 @@ always @(posedge sys_clk) begin
 end
 
 /* Handle FML master for pixel reads */
-integer read_burstcount;
-integer read_addr;
-
 task handle_read;
+input img;
+input [fml_depth-1:0] addr;
 integer read_addr2;
 integer x;
 integer y;
@@ -145,18 +154,21 @@ reg [15:0] p2; /* directly to fmlr_di[xx:xx] in $image_get... */
 reg [15:0] p3;
 reg [15:0] p4;
 begin
-	read_addr2 = read_addr[20:0]/2;
+	read_addr2 = addr[20:0]/2;
 	x = read_addr2 % 640;
 	y = read_addr2 / 640;
 
-	$image_get(x + 0, y, p1);
-	$image_get(x + 1, y, p2);
-	$image_get(x + 2, y, p3);
-	$image_get(x + 3, y, p4);
+	$image_get(img, x + 0, y, p1);
+	$image_get(img, x + 1, y, p2);
+	$image_get(img, x + 2, y, p3);
+	$image_get(img, x + 3, y, p4);
 	fmlr_di = {p1, p2, p3, p4};
 end
 endtask
 
+/* Texture */
+integer read_burstcount;
+integer read_addr;
 initial read_burstcount = 0;
 always @(posedge sys_clk) begin
 	fmlr_ack = 1'b0;
@@ -165,7 +177,7 @@ always @(posedge sys_clk) begin
 			read_burstcount = 1;
 			read_addr = fmlr_adr;
 			
-			handle_read;
+			handle_read(0, read_addr);
 
 			//$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 			
@@ -175,12 +187,42 @@ always @(posedge sys_clk) begin
 		read_addr = read_addr + 8;
 		read_burstcount = read_burstcount + 1;
 		
-		handle_read;
+		handle_read(0, read_addr);
 
 		//$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 		
 		if(read_burstcount == 4)
 			read_burstcount = 0;
+	end
+end
+
+/* Destination */
+integer dread_burstcount;
+integer dread_addr;
+initial dread_burstcount = 0;
+always @(posedge sys_clk) begin
+	fmldr_ack = 1'b0;
+	if(dread_burstcount == 0) begin
+		if(fmldr_stb & (($random % 5) == 0)) begin
+			dread_burstcount = 1;
+			dread_addr = fmldr_adr;
+
+			handle_read(0, dread_addr);
+
+			//$display("Starting   FML burst read at address %x, data=%x [dest]", dread_addr, fmlr_di);
+
+			fmldr_ack = 1'b1;
+		end
+	end else begin
+		dread_addr = dread_addr + 8;
+		dread_burstcount = dread_burstcount + 1;
+
+		handle_read(0, dread_addr);
+
+		//$display("Continuing FML burst read at address %x, data=%x [dest]", dread_addr, fmlr_di);
+
+		if(dread_burstcount == 4)
+			dread_burstcount = 0;
 	end
 end
 
@@ -197,13 +239,13 @@ begin
 	x = write_addr2 % 640;
 	y = write_addr2 / 640;
 	if(fmlw_sel[7])
-		$image_set(x + 0, y, fmlw_do[63:48]);
+		$image_set(1, x + 0, y, fmlw_do[63:48]);
 	if(fmlw_sel[5])
-		$image_set(x + 1, y, fmlw_do[47:32]);
+		$image_set(1, x + 1, y, fmlw_do[47:32]);
 	if(fmlw_sel[3])
-		$image_set(x + 2, y, fmlw_do[31:16]);
+		$image_set(1, x + 2, y, fmlw_do[31:16]);
 	if(fmlw_sel[1])
-		$image_set(x + 3, y, fmlw_do[15:0]);
+		$image_set(1, x + 3, y, fmlw_do[15:0]);
 end
 endtask
 
@@ -244,6 +286,9 @@ always begin
 	
 	fmlr_di = 64'd0;
 	fmlr_ack = 1'b0;
+
+	fmldr_di = 64'd0;
+	fmldr_ack = 1'b0;
 	
 	fmlw_ack = 1'b0;
 	
@@ -262,6 +307,8 @@ always begin
 	csrwrite(32'h20, 480); /* texhres */
 	csrwrite(32'h40, 50); /* squarew */
 	csrwrite(32'h44, 50); /* squareh */
+
+	csrwrite(32'h48, 20); /* alpha */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);
