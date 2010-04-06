@@ -58,7 +58,9 @@ TMU_SRC=						\
 	$(CORES_DIR)/tmu2/rtl/tmu2_texcache.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_vinterp.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_blend.v		\
-	$(CORES_DIR)/tmu2/rtl/tmu2_mult2_virtex4.v
+	$(CORES_DIR)/tmu2/rtl/tmu2_mult2_virtex4.v	\
+	$(CORES_DIR)/tmu2/rtl/tmu2_fdest.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_alpha.v
 PS2_SRC=$(wildcard $(CORES_DIR)/ps2/rtl/*.v)
 ETHERNET_SRC=$(wildcard $(CORES_DIR)/minimac/rtl/*.v)
 FMLMETER_SRC=$(wildcard $(CORES_DIR)/fmlmeter/rtl/*.v)

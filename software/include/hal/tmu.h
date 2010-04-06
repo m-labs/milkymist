@@ -43,6 +43,7 @@ struct tmu_td {
 	int dstvoffset;
 	unsigned int dstsquarew;
 	unsigned int dstsquareh;
+	unsigned int alpha;
 
 	tmu_callback callback;
 	void *user; /* < for application use */

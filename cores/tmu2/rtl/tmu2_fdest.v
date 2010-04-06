@@ -193,7 +193,7 @@ always @(*) begin
 		end
 		OUT: begin
 			stb_after_fetch = 1'b1;
-			pipe_ack_o = 1'b1;
+			pipe_ack_o = pipe_ack_i;
 			if(pipe_ack_i)
 				next_state = IDLE;
 		end

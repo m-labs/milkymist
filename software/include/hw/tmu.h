@@ -52,6 +52,8 @@
 
 #define CSR_TMU_ALPHA		MMPTR(0x80006048)
 
+#define TMU_ALPHA_MAX		(63)
+
 struct tmu_vertex {
 	int x;
 	int y;

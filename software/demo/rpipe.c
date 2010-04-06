@@ -149,6 +149,7 @@ static void rpipe_start(struct rpipe_frame *frame)
 	tmu_task1.dstvoffset = 0;
 	tmu_task1.dstsquarew = renderer_texsize/renderer_hmeshlast;
 	tmu_task1.dstsquareh = renderer_texsize/renderer_vmeshlast;
+	tmu_task1.alpha = TMU_ALPHA_MAX;
 
 	tmu_task1.callback = rpipe_tmu_warpdone;
 	tmu_task1.user = frame;
@@ -474,6 +475,7 @@ static void rpipe_wave_bottom_half()
 	tmu_task2.dstvoffset = 0;
 	tmu_task2.dstsquarew = vga_hres;
 	tmu_task2.dstsquareh = vga_vres;
+	tmu_task2.alpha = TMU_ALPHA_MAX;
 	if(spam_enabled)
 		tmu_task2.callback = NULL;
 	else
@@ -501,6 +503,7 @@ static void rpipe_wave_bottom_half()
 		tmu_task1.dstvoffset = SPAM_Y;
 		tmu_task1.dstsquarew = SPAM_W;
 		tmu_task1.dstsquareh = SPAM_H;
+		tmu_task1.alpha = 30;
 		tmu_task1.callback = rpipe_tmu_copydone;
 		tmu_task1.user = NULL;
 		tmu_submit_task(&tmu_task1);

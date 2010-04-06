@@ -202,6 +202,29 @@ static void calibrate()
 	printf("\n");
 }
 
+static void scandqs(char *endp)
+{
+	int end;
+	char *c;
+
+	if(*endp == 0)
+		end = 255;
+	else {
+		end = (unsigned *)strtoul(endp, &c, 0);
+		if(*c != 0) {
+			printf("incorrect end phase\n");
+			return;
+		}
+	}
+	while(dqs_ps < end) {
+		dqs_ps++;
+		printf("DQS phase: %d\n", dqs_ps);
+		CSR_HPDMC_IODELAY = HPDMC_DQSDELAY_CE|HPDMC_DQSDELAY_INC;
+		while(!(CSR_HPDMC_IODELAY & HPDMC_DQSDELAY_RDY));
+		memtest(1);
+	}
+}
+
 /* General address space functions */
 
 #define NUMBER_OF_BYTES_ON_A_LINE 16
@@ -499,6 +522,7 @@ static void do_command(char *c)
 	if(strcmp(token, "plltest") == 0) plltest();
 	else if(strcmp(token, "memtest") == 0) memtest(1);
 	else if(strcmp(token, "calibrate") == 0) calibrate();
+	else if(strcmp(token, "scandqs") == 0) scandqs(get_token(&c));
 	else if(strcmp(token, "flush") == 0) flush_bridge_cache();
 
 	else if(strcmp(token, "mr") == 0) mr(get_token(&c), get_token(&c));

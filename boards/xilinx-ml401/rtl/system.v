@@ -445,11 +445,13 @@ wire [31:0]	csr_dr_uart,
 wire [`SDRAM_DEPTH-1:0]	fml_brg_adr,
 			fml_vga_adr,
 			fml_tmur_adr,
+			fml_tmudr_adr,
 			fml_tmuw_adr;
 
 wire			fml_brg_stb,
 			fml_vga_stb,
 			fml_tmur_stb,
+			fml_tmudr_stb,
 			fml_tmuw_stb;
 
 wire			fml_brg_we;
@@ -457,6 +459,7 @@ wire			fml_brg_we;
 wire			fml_brg_ack,
 			fml_vga_ack,
 			fml_tmur_ack,
+			fml_tmudr_ack,
 			fml_tmuw_ack;
 
 wire [7:0]		fml_brg_sel,
@@ -467,7 +470,8 @@ wire [63:0]		fml_brg_dw,
 
 wire [63:0]		fml_brg_dr,
 			fml_vga_dr,
-			fml_tmur_dr;
+			fml_tmur_dr,
+			fml_tmudr_dr;
 
 //------------------------------------------------------------------
 // FML slave wires, to memory controller
@@ -507,7 +511,7 @@ fmlarb #(
 	.m1_di(fml_brg_dw),
 	.m1_do(fml_brg_dr),
 	
-	/* TMU, pixel read DMA */
+	/* TMU, pixel read DMA (texture) */
 	.m2_adr(fml_tmur_adr),
 	.m2_stb(fml_tmur_stb),
 	.m2_we(1'b0),
@@ -515,15 +519,24 @@ fmlarb #(
 	.m2_sel(8'bx),
 	.m2_di(64'bx),
 	.m2_do(fml_tmur_dr),
+
+	/* TMU, pixel read DMA (destination) */
+	.m3_adr(fml_tmudr_adr),
+	.m3_stb(fml_tmudr_stb),
+	.m3_we(1'b0),
+	.m3_ack(fml_tmudr_ack),
+	.m3_sel(8'bx),
+	.m3_di(64'bx),
+	.m3_do(fml_tmudr_dr),
 	
 	/* TMU, pixel write DMA */
-	.m3_adr(fml_tmuw_adr),
-	.m3_stb(fml_tmuw_stb),
-	.m3_we(1'b1),
-	.m3_ack(fml_tmuw_ack),
-	.m3_sel(fml_tmuw_sel),
-	.m3_di(fml_tmuw_dw),
-	.m3_do(),
+	.m4_adr(fml_tmuw_adr),
+	.m4_stb(fml_tmuw_stb),
+	.m4_we(1'b1),
+	.m4_ack(fml_tmuw_ack),
+	.m4_sel(fml_tmuw_sel),
+	.m4_di(fml_tmuw_dw),
+	.m4_do(),
 	
 	.s_adr(fml_adr),
 	.s_stb(fml_stb),
@@ -1063,6 +1076,11 @@ tmu2 #(
 	.fmlr_stb(fml_tmur_stb),
 	.fmlr_ack(fml_tmur_ack),
 	.fmlr_di(fml_tmur_dr),
+
+	.fmldr_adr(fml_tmudr_adr),
+	.fmldr_stb(fml_tmudr_stb),
+	.fmldr_ack(fml_tmudr_ack),
+	.fmldr_di(fml_tmudr_dr),
 	
 	.fmlw_adr(fml_tmuw_adr),
 	.fmlw_stb(fml_tmuw_stb),
@@ -1083,6 +1101,9 @@ assign tmumbus_stb = 1'b0;
 
 assign fml_tmur_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmur_stb = 1'b0;
+
+assign fml_tmudr_adr = {`SDRAM_DEPTH{1'bx}};
+assign fml_tmudr_stb = 1'b0;
 
 assign fml_tmuw_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmuw_stb = 1'b0;

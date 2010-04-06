@@ -74,6 +74,8 @@ static void tmu_start(struct tmu_td *td)
 	CSR_TMU_DSTSQUAREW = td->dstsquarew;
 	CSR_TMU_DSTSQUAREH = td->dstsquareh;
 
+	CSR_TMU_ALPHA = td->alpha;
+
 	CSR_TMU_CTL = td->flags|TMU_CTL_START;
 }
 

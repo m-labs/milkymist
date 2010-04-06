@@ -376,6 +376,7 @@ static void tmutest()
 	td.dstvoffset = 0;
 	td.dstsquarew = vga_hres/32;
 	td.dstsquareh = vga_vres/32;
+	td.alpha = TMU_ALPHA_MAX;
 	
 	td.callback = tmutest_callback;
 	td.user = (void *)&complete;
@@ -474,6 +475,7 @@ static void tmudemo()
 		td.dstvoffset = 0;
 		td.dstsquarew = vga_hres;
 		td.dstsquareh = vga_vres;
+		td.alpha = TMU_ALPHA_MAX;
 
 		td.callback = tmutest_callback;
 		td.user = (void *)&complete;
