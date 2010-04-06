@@ -40,13 +40,19 @@ module tmu2 #(
 	input wbm_ack_i,
 	input [31:0] wbm_dat_i,
 	
-	/* FML master - Pixel read. fml_we=0 is assumed. */
+	/* FML master - Texture pixel read. fml_we=0 is assumed. */
 	output [fml_depth-1:0] fmlr_adr,
 	output fmlr_stb,
 	input fmlr_ack,
 	input [63:0] fmlr_di,
+
+	/* FML master - Destination pixel read. fml_we=0 is assumed. */
+	output [fml_depth-1:0] fmldr_adr,
+	output fmldr_stb,
+	input fmldr_ack,
+	input [63:0] fmldr_di,
 	
-	/* FML master - Pixel write. fml_we=1 is assumed. */
+	/* FML master - Destination pixel write. fml_we=1 is assumed. */
 	output [fml_depth-1:0] fmlw_adr,
 	output fmlw_stb,
 	input fmlw_ack,
@@ -84,6 +90,8 @@ wire signed [11:0] dst_hoffset;		/* < 38 X offset added to each pixel (signed in
 wire signed [11:0] dst_voffset;		/* < 3C Y offset added to each pixel (signed int) */
 wire [10:0] dst_squarew;		/* < 40 width of each destination rectangle (positive int)*/
 wire [10:0] dst_squareh;		/* < 44 height of each destination rectangle (positive int)*/
+wire alpha_en;
+wire [5:0] alpha;			/* < 48 opacity of the output 0-63 */
 
 tmu2_ctlif #(
 	.csr_addr(csr_addr),
@@ -119,7 +127,9 @@ tmu2_ctlif #(
 	.dst_hoffset(dst_hoffset),
 	.dst_voffset(dst_voffset),
 	.dst_squarew(dst_squarew),
-	.dst_squareh(dst_squareh)
+	.dst_squareh(dst_squareh),
+	.alpha_en(alpha_en),
+	.alpha(alpha)
 );
 
 /* Stage 1 - Fetch vertices */
@@ -694,7 +704,72 @@ tmu2_decay #(
 	.dadr_f(dadr_f3)
 );
 
-/* Stage 12 - Burst assembler */
+/* Stage 12 - Fetch destination pixel for alpha blending */
+wire fdest_busy;
+wire fdest_pipe_stb;
+wire fdest_pipe_ack;
+wire [15:0] color_d_f;
+wire [fml_depth-1-1:0] dadr_f4;
+wire [15:0] dcolor;
+
+tmu2_fdest #(
+	.fml_depth(fml_depth)
+) fdest (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.fml_adr(fmldr_adr),
+	.fml_stb(fmldr_stb),
+	.fml_ack(fmldr_ack),
+	.fml_di(fmldr_di),
+
+	.flush(start),
+	.busy(fdest_busy),
+
+	.fetch_en(alpha_en),
+
+	.pipe_stb_i(decay_pipe_stb),
+	.pipe_ack_o(decay_pipe_ack),
+	.color(color_d),
+	.dadr(dadr_f3),
+
+	.pipe_stb_o(fdest_pipe_stb),
+	.pipe_ack_i(fdest_pipe_ack),
+	.color_f(color_d_f),
+	.dadr_f(dadr_f4),
+	.dcolor(dcolor)
+);
+
+/* Stage 13 - Alpha blending */
+wire alpha_busy;
+wire alpha_pipe_stb;
+wire alpha_pipe_ack;
+wire [fml_depth-1-1:0] dadr_f5;
+wire [15:0] acolor;
+
+tmu2_alpha #(
+	.fml_depth(fml_depth)
+) u_alpha (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(alpha_busy),
+
+	.alpha(alpha),
+
+	.pipe_stb_i(fdest_pipe_stb),
+	.pipe_ack_o(fdest_pipe_ack),
+	.color(color_d_f),
+	.dadr(dadr_f4),
+	.dcolor(dcolor),
+
+	.pipe_stb_o(alpha_pipe_stb),
+	.pipe_ack_i(alpha_pipe_ack),
+	.dadr_f(dadr_f5),
+	.acolor(acolor)
+);
+
+/* Stage 14 - Burst assembler */
 reg burst_flush;
 wire burst_busy;
 wire burst_pipe_stb;
@@ -712,10 +787,10 @@ tmu2_burst #(
 	.flush(burst_flush),
 	.busy(burst_busy),
 
-	.pipe_stb_i(decay_pipe_stb),
-	.pipe_ack_o(decay_pipe_ack),
-	.color(color_d),
-	.dadr(dadr_f3),
+	.pipe_stb_i(alpha_pipe_stb),
+	.pipe_ack_o(alpha_pipe_ack),
+	.color(acolor),
+	.dadr(dadr_f5),
 
 	.pipe_stb_o(burst_pipe_stb),
 	.pipe_ack_i(burst_pipe_ack),
@@ -724,7 +799,7 @@ tmu2_burst #(
 	.burst_do(burst_do)
 );
 
-/* Stage 12 - Pixel output */
+/* Stage 15 - Pixel output */
 wire pixout_busy;
 
 tmu2_pixout #(
@@ -756,6 +831,7 @@ wire pipeline_busy = fetchvertex_busy
 	|mask_busy|clamp_busy
 	|texcache_busy
 	|blend_busy|decay_busy
+	|fdest_busy|alpha_busy
 	|burst_busy|pixout_busy;
 
 parameter IDLE		= 2'd0;

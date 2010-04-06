@@ -22,7 +22,9 @@ SOURCES=tb_tmu2.v \
 ../rtl/tmu2_divider17.v \
 ../rtl/tmu2_hdivops.v \
 ../rtl/tmu2_texcache.v \
-../rtl/tmu2_vinterp.v
+../rtl/tmu2_vinterp.v \
+../rtl/tmu2_fdest.v \
+../rtl/tmu2_alpha.v
 
 SOURCES_VIRTEX4=tb_tmu2.v \
 DSP48.v \
@@ -49,7 +51,9 @@ DSP48.v \
 ../rtl/tmu2_texcache.v \
 ../rtl/tmu2_vinterp.v \
 ../rtl/tmu2_blend.v \
-../rtl/tmu2_mult2_virtex4.v
+../rtl/tmu2_mult2_virtex4.v \
+../rtl/tmu2_fdest.v \
+../rtl/tmu2_alpha.v
 
 all: sim
 

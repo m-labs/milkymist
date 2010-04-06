@@ -49,7 +49,9 @@ module tmu2_ctlif #(
 	output reg signed [11:0] dst_hoffset,
 	output reg signed [11:0] dst_voffset,
 	output reg [10:0] dst_squarew,
-	output reg [10:0] dst_squareh
+	output reg [10:0] dst_squareh,
+	output reg alpha_en,
+	output reg [5:0] alpha
 );
 
 reg old_busy;
@@ -90,6 +92,9 @@ always @(posedge sys_clk) begin
 		dst_voffset <= 12'd0;
 		dst_squarew <= 11'd16;
 		dst_squareh <= 11'd16;
+
+		alpha_en <= 1'b0;
+		alpha <= 6'd63;
 	end else begin
 		irq <= old_busy & ~busy;
 		
@@ -124,6 +129,11 @@ always @(posedge sys_clk) begin
 					5'b01111: dst_voffset <= csr_di[11:0];
 					5'b10000: dst_squarew <= csr_di[10:0];
 					5'b10001: dst_squareh <= csr_di[10:0];
+
+					5'b10010: begin
+						alpha_en <= csr_di[5:0] != 6'd63;
+						alpha <= csr_di[5:0];
+					end
 					default:;
 				endcase
 			end
@@ -151,6 +161,8 @@ always @(posedge sys_clk) begin
 				5'b01111: csr_do <= dst_voffset;
 				5'b10000: csr_do <= dst_squarew;
 				5'b10001: csr_do <= dst_squareh;
+
+				5'b10010: csr_do <= alpha;
 				default: csr_do <= 32'bx;
 			endcase
 		end
