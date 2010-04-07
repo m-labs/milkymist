@@ -1,4 +1,4 @@
-SOURCES=tb_tmu2.v \
+SOURCES= \
 ../rtl/tmu2_adrgen.v \
 ../rtl/tmu2_clamp.v \
 ../rtl/tmu2_dpram.v \
@@ -24,9 +24,10 @@ SOURCES=tb_tmu2.v \
 ../rtl/tmu2_texcache.v \
 ../rtl/tmu2_vinterp.v \
 ../rtl/tmu2_fdest.v \
-../rtl/tmu2_alpha.v
+../rtl/tmu2_alpha.v \
+../../fmlarb/rtl/fmlarb.v
 
-SOURCES_VIRTEX4=tb_tmu2.v \
+SOURCES_VIRTEX4= \
 DSP48.v \
 ../rtl/tmu2_adrgen.v \
 ../rtl/tmu2_clamp.v \
@@ -53,15 +54,16 @@ DSP48.v \
 ../rtl/tmu2_blend.v \
 ../rtl/tmu2_mult2_virtex4.v \
 ../rtl/tmu2_fdest.v \
-../rtl/tmu2_alpha.v
+../rtl/tmu2_alpha.v \
+../../fmlarb/rtl/fmlarb.v
 
 all: sim
 
 sim: vpi_images.so
-	cver +loadvpi=./vpi_images.so:vpi_register $(SOURCES)
+	cver +loadvpi=./vpi_images.so:vpi_register $(TB) $(SOURCES)
 
 sim_virtex4: vpi_images.so
-	cver +loadvpi=./vpi_images.so:vpi_register $(SOURCES_VIRTEX4)
+	cver +loadvpi=./vpi_images.so:vpi_register $(TB) $(SOURCES_VIRTEX4)
 
 vpi_images.so: vpi_images.o
 	$(LD) -G -shared -export-dynamic -o vpi_images.so vpi_images.o -lgd -lpng -lz -ljpeg -lfreetype -lm

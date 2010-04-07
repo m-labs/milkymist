@@ -704,6 +704,7 @@ tmu2_decay #(
 	.dadr_f(dadr_f3)
 );
 
+`ifdef TMU_HAS_ALPHA
 /* Stage 12 - Fetch destination pixel for alpha blending */
 wire fdest_busy;
 wire fdest_pipe_stb;
@@ -768,6 +769,10 @@ tmu2_alpha #(
 	.dadr_f(dadr_f5),
 	.acolor(acolor)
 );
+`else
+assign fmldr_adr = {fml_depth{1'bx}};
+assign fmldr_stb = 1'b0;
+`endif
 
 /* Stage 14 - Burst assembler */
 reg burst_flush;
@@ -787,10 +792,17 @@ tmu2_burst #(
 	.flush(burst_flush),
 	.busy(burst_busy),
 
+`ifdef TMU_HAS_ALPHA
 	.pipe_stb_i(alpha_pipe_stb),
 	.pipe_ack_o(alpha_pipe_ack),
 	.color(acolor),
 	.dadr(dadr_f5),
+`else
+	.pipe_stb_i(decay_pipe_stb),
+	.pipe_ack_o(decay_pipe_ack),
+	.color(color_d),
+	.dadr(dadr_f3),
+`endif
 
 	.pipe_stb_o(burst_pipe_stb),
 	.pipe_ack_i(burst_pipe_ack),
@@ -831,7 +843,9 @@ wire pipeline_busy = fetchvertex_busy
 	|mask_busy|clamp_busy
 	|texcache_busy
 	|blend_busy|decay_busy
+`ifdef TMU_HAS_ALPHA
 	|fdest_busy|alpha_busy
+`endif
 	|burst_busy|pixout_busy;
 
 parameter IDLE		= 2'd0;

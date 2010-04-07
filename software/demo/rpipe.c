@@ -503,7 +503,7 @@ static void rpipe_wave_bottom_half()
 		tmu_task1.dstvoffset = SPAM_Y;
 		tmu_task1.dstsquarew = SPAM_W;
 		tmu_task1.dstsquareh = SPAM_H;
-		tmu_task1.alpha = 30;
+		tmu_task1.alpha = 20;
 		tmu_task1.callback = rpipe_tmu_copydone;
 		tmu_task1.user = NULL;
 		tmu_submit_task(&tmu_task1);

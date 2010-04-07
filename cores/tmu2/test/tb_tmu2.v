@@ -162,7 +162,10 @@ begin
 	$image_get(img, x + 1, y, p2);
 	$image_get(img, x + 2, y, p3);
 	$image_get(img, x + 3, y, p4);
-	fmlr_di = {p1, p2, p3, p4};
+	if(img != 0)
+		fmldr_di = {p1, p2, p3, p4};
+	else
+		fmlr_di = {p1, p2, p3, p4};
 end
 endtask
 
@@ -209,7 +212,7 @@ always @(posedge sys_clk) begin
 
 			handle_read(0, dread_addr);
 
-			//$display("Starting   FML burst read at address %x, data=%x [dest]", dread_addr, fmlr_di);
+			$display("Starting   FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
 
 			fmldr_ack = 1'b1;
 		end
@@ -219,7 +222,7 @@ always @(posedge sys_clk) begin
 
 		handle_read(0, dread_addr);
 
-		//$display("Continuing FML burst read at address %x, data=%x [dest]", dread_addr, fmlr_di);
+		$display("Continuing FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
 
 		if(dread_burstcount == 4)
 			dread_burstcount = 0;
@@ -308,7 +311,7 @@ always begin
 	csrwrite(32'h40, 50); /* squarew */
 	csrwrite(32'h44, 50); /* squareh */
 
-	csrwrite(32'h48, 20); /* alpha */
+	csrwrite(32'h48, 38); /* alpha */
 
 	/* Start */
 	csrwrite(32'h00, 32'd1);
