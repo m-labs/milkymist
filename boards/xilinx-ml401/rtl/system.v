@@ -519,24 +519,24 @@ fmlarb #(
 	.m2_sel(8'bx),
 	.m2_di(64'bx),
 	.m2_do(fml_tmur_dr),
-
-	/* TMU, pixel read DMA (destination) */
-	.m3_adr(fml_tmudr_adr),
-	.m3_stb(fml_tmudr_stb),
-	.m3_we(1'b0),
-	.m3_ack(fml_tmudr_ack),
-	.m3_sel(8'bx),
-	.m3_di(64'bx),
-	.m3_do(fml_tmudr_dr),
 	
 	/* TMU, pixel write DMA */
-	.m4_adr(fml_tmuw_adr),
-	.m4_stb(fml_tmuw_stb),
-	.m4_we(1'b1),
-	.m4_ack(fml_tmuw_ack),
-	.m4_sel(fml_tmuw_sel),
-	.m4_di(fml_tmuw_dw),
-	.m4_do(),
+	.m3_adr(fml_tmuw_adr),
+	.m3_stb(fml_tmuw_stb),
+	.m3_we(1'b1),
+	.m3_ack(fml_tmuw_ack),
+	.m3_sel(fml_tmuw_sel),
+	.m3_di(fml_tmuw_dw),
+	.m3_do(),
+
+	/* TMU, pixel read DMA (destination) */
+	.m4_adr(fml_tmudr_adr),
+	.m4_stb(fml_tmudr_stb),
+	.m4_we(1'b0),
+	.m4_ack(fml_tmudr_ack),
+	.m4_sel(8'bx),
+	.m4_di(64'bx),
+	.m4_do(fml_tmudr_dr),
 	
 	.s_adr(fml_adr),
 	.s_stb(fml_stb),

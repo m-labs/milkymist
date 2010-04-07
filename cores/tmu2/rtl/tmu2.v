@@ -60,6 +60,8 @@ module tmu2 #(
 	output [63:0] fmlw_do
 );
 
+`define TMU_HAS_ALPHA
+
 /*
  * Fixed Point (FP) coordinate format:
  * 1 sign bit

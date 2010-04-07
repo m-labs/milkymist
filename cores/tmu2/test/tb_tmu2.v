@@ -210,7 +210,7 @@ always @(posedge sys_clk) begin
 			dread_burstcount = 1;
 			dread_addr = fmldr_adr;
 
-			handle_read(0, dread_addr);
+			handle_read(1, dread_addr);
 
 			$display("Starting   FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
 
@@ -220,7 +220,7 @@ always @(posedge sys_clk) begin
 		dread_addr = dread_addr + 8;
 		dread_burstcount = dread_burstcount + 1;
 
-		handle_read(0, dread_addr);
+		handle_read(1, dread_addr);
 
 		$display("Continuing FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
 

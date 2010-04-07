@@ -87,39 +87,37 @@ always @(posedge sys_clk) begin
 		master <= next_master;
 end
 
-reg write_lock; /* see below */
-
 /* Decide the next master */
 always @(*) begin
 	/* By default keep our current master */
 	next_master = master;
 	
 	case(master)
-		3'd0: if(~m0_stb & ~write_lock) begin
+		3'd0: if(~m0_stb | s_ack) begin
 			if(m1_stb) next_master = 3'd1;
 			else if(m2_stb) next_master = 3'd2;
 			else if(m3_stb) next_master = 3'd3;
 			else if(m4_stb) next_master = 3'd4;
 		end
-		3'd1: if(~m1_stb & ~write_lock) begin
+		3'd1: if(~m1_stb | s_ack) begin
 			if(m0_stb) next_master = 3'd0;
 			else if(m3_stb) next_master = 3'd3;
 			else if(m4_stb) next_master = 3'd4;
 			else if(m2_stb) next_master = 3'd2;
 		end
-		3'd2: if(~m2_stb & ~write_lock) begin
+		3'd2: if(~m2_stb | s_ack) begin
 			if(m0_stb) next_master = 3'd0;
 			else if(m3_stb) next_master = 3'd3;
 			else if(m4_stb) next_master = 3'd4;
 			else if(m1_stb) next_master = 3'd1;
 		end
-		3'd3: if(~m3_stb & ~write_lock) begin
+		3'd3: if(~m3_stb | s_ack) begin
 			if(m0_stb) next_master = 3'd0;
 			else if(m4_stb) next_master = 3'd4;
 			else if(m1_stb) next_master = 3'd1;
 			else if(m2_stb) next_master = 3'd2;
 		end
-		3'd4: if(~m4_stb & ~write_lock) begin
+		default: if(~m4_stb | s_ack) begin // 3'd4
 			if(m0_stb) next_master = 3'd0;
 			else if(m1_stb) next_master = 3'd1;
 			else if(m2_stb) next_master = 3'd2;
@@ -128,84 +126,88 @@ always @(*) begin
 	endcase
 end
 
-/* Mux the masters */
+/* Generate ack signals */
 assign m0_ack = (master == 3'd0) & s_ack;
 assign m1_ack = (master == 3'd1) & s_ack;
 assign m2_ack = (master == 3'd2) & s_ack;
 assign m3_ack = (master == 3'd3) & s_ack;
 assign m4_ack = (master == 3'd4) & s_ack;
 
+/* Mux control signals */
 always @(*) begin
 	case(master)
 		3'd0: begin
 			s_adr = m0_adr;
 			s_stb = m0_stb;
 			s_we = m0_we;
-			s_sel = m0_sel;
-			s_do = m0_di;
 		end
 		3'd1: begin
 			s_adr = m1_adr;
 			s_stb = m1_stb;
 			s_we = m1_we;
-			s_sel = m1_sel;
-			s_do = m1_di;
 		end
 		3'd2: begin
 			s_adr = m2_adr;
 			s_stb = m2_stb;
 			s_we = m2_we;
-			s_sel = m2_sel;
-			s_do = m2_di;
 		end
 		3'd3: begin
 			s_adr = m3_adr;
 			s_stb = m3_stb;
 			s_we = m3_we;
-			s_sel = m3_sel;
-			s_do = m3_di;
 		end
-		3'd4: begin
+		default: begin // 3'd4
 			s_adr = m4_adr;
 			s_stb = m4_stb;
 			s_we = m4_we;
-			s_sel = m4_sel;
-			s_do = m4_di;
 		end
 	endcase
 end
 
-/* Generate the write lock signal:
- * when writing, the bus ownership must remain
- * to the same master until the end of the burst.
- * So the write lock signal gets asserted on the cycle
- * after the ack (when the master releases its strobe)
- * and remains asserted for 2 cycles, taking into account
- * the latency cycle of the arbiter.
- * Thus, if another master requests the bus, it will only
- * be granted access right after the last burst word
- * has been transferred.
- */
+/* Mux data write signals */
+
 wire write_burst_start = s_we & s_ack;
-reg write_lock_release;
+
+reg [2:0] wmaster;
+reg [1:0] burst_counter;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
-		write_lock <= 1'b0;
-		write_lock_release <= 1'b0;
+		wmaster <= 3'd0;
+		burst_counter <= 2'd0;
 	end else begin
-		if(write_burst_start) begin
-			write_lock <= 1'b1;
-			write_lock_release <= 1'b0;
-		end else begin
-			if(write_lock) begin
-				if(write_lock_release)
-					write_lock <= 1'b0;
-				else
-					write_lock_release <= 1'b1;
-			end
-		end
+		if(|burst_counter)
+			burst_counter <= burst_counter - 2'd1;
+		if(write_burst_start)
+			burst_counter <= 2'd2;
+		if(~write_burst_start & ~(|burst_counter))
+			wmaster <= next_master;
 	end
+end
+
+always @(*) begin
+	case(wmaster)
+		3'd0: begin
+			s_do = m0_di;
+			s_sel = m0_sel;
+		end
+		3'd1: begin
+			s_do = m1_di;
+			s_sel = m1_sel;
+		end
+		3'd2: begin
+			s_do = m2_di;
+			s_sel = m2_sel;
+		end
+		3'd3: begin
+			s_do = m3_di;
+			s_sel = m3_sel;
+		end
+		default: begin // 3'd4
+			s_do = m4_di;
+			s_sel = m4_sel;
+		end
+	endcase
 end
 
 endmodule

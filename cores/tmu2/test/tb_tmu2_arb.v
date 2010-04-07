@@ -272,7 +272,7 @@ always @(posedge sys_clk) begin
 	fml_ack = 1'b0;
 	/* Start transactions */
 	if((read_burstcount == 0) && (dread_burstcount == 0) && (write_burstcount == 0)) begin
-		if(fml_stb & ~fml_we & ~fml_adr[23] & (($random % 5) == 0)) begin
+		if(fml_stb & ~fml_we & ~fml_adr[24] & (($random % 5) == 0)) begin
 			read_burstcount = 1;
 			read_addr = fml_adr;
 			
@@ -282,11 +282,11 @@ always @(posedge sys_clk) begin
 			
 			fml_ack = 1'b1;
 		end
-		if(fml_stb & ~fml_we & fml_adr[23] & (($random % 5) == 0)) begin
+		if(fml_stb & ~fml_we & fml_adr[24] & (($random % 5) == 0)) begin
 			dread_burstcount = 1;
 			dread_addr = fml_adr;
 
-			handle_read(0, dread_addr);
+			handle_read(1, dread_addr);
 
 			$display("Starting   FML burst read at address %x, data=%x [dest]", dread_addr, fml_dr);
 
@@ -318,7 +318,7 @@ always @(posedge sys_clk) begin
 		dread_addr = dread_addr + 8;
 		dread_burstcount = dread_burstcount + 1;
 
-		handle_read(0, dread_addr);
+		handle_read(1, dread_addr);
 
 		$display("Continuing FML burst read at address %x, data=%x [dest]", dread_addr, fml_dr);
 
