@@ -62,7 +62,7 @@ void wave_draw(unsigned short *framebuffer, unsigned int hres, unsigned int vres
 		wave_o *= params->treb*params->treb;
 	}
 
-	if(params->wave_maximize_color) {
+	if(params->wave_brighten) {
 		// WARNING: softfloat ">=" operator is broken (says 0.5 >= 0.8)
 		// ">" works fine
 		if((wave_r > wave_g) && (wave_r > wave_b)) {

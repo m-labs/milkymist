@@ -87,7 +87,7 @@ static const char pfv_names[EVAL_PFV_COUNT][FPVM_MAXSYMLEN] = {
 	"wave_scale",
 	"wave_additive",
 	"wave_usedots",
-	"bMaximizeWaveColor",
+	"wave_brighten",
 	"wave_thick",
 	"wave_x",
 	"wave_y",
@@ -151,6 +151,7 @@ int eval_pfv_from_name(const char *name)
 	if(strcmp(name, "fWaveScale") == 0) return pfv_wave_scale;
 	if(strcmp(name, "bAdditiveWaves") == 0) return pfv_wave_additive;
 	if(strcmp(name, "bWaveDots") == 0) return pfv_wave_usedots;
+	if(strcmp(name, "bMaximizeWaveColor") == 0) return pfv_wave_brighten;
 	if(strcmp(name, "bWaveThick") == 0) return pfv_wave_thick;
 	if(strcmp(name, "fWaveAlpha") == 0) return pfv_wave_a;
 	return -1;

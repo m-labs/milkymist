@@ -32,7 +32,7 @@ struct rpipe_frame {
 	float wave_scale;
 	int wave_additive;
 	int wave_usedots;
-	int wave_maximize_color;
+	int wave_brighten;
 	int wave_thick;
 	float wave_x, wave_y;
 	float wave_r, wave_g, wave_b, wave_a;

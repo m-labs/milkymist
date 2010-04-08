@@ -166,7 +166,7 @@ static void pfv_callback(struct pfpu_td *td)
 	rpipe_frame->wave_scale = eval_read_pfv(pfv_wave_scale);
 	rpipe_frame->wave_additive = eval_read_pfv(pfv_wave_additive) != 0.0;
 	rpipe_frame->wave_usedots = eval_read_pfv(pfv_wave_usedots) != 0.0;
-	rpipe_frame->wave_maximize_color = eval_read_pfv(pfv_wave_maximize_color) != 0.0;
+	rpipe_frame->wave_brighten = eval_read_pfv(pfv_wave_brighten) != 0.0;
 	rpipe_frame->wave_thick = eval_read_pfv(pfv_wave_thick) != 0.0;
 	
 	rpipe_frame->wave_x = eval_read_pfv(pfv_wave_x);

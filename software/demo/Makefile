@@ -54,7 +54,7 @@ eval.o: ../../software/include/base/string.h ../../software/include/hw/pfpu.h
 eval.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
 eval.o: ../../software/include/hal/pfpu.h ../../software/include/fpvm/fpvm.h
 eval.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/gfpus.h
-eval.o: eval.h renderer.h
+eval.o: ../../software/include/fpvm/pfpu.h eval.h renderer.h
 isr.o: ../../software/include/hw/interrupts.h
 isr.o: ../../software/include/base/irq.h ../../software/include/base/uart.h
 isr.o: ../../software/include/hal/time.h ../../software/include/hal/slowout.h
@@ -118,7 +118,7 @@ shell.o: ../../software/include/hw/minimac.h ../../software/include/hal/vga.h
 shell.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
 shell.o: ../../software/include/hal/tmu.h ../../software/include/hal/time.h
 shell.o: ../../software/include/hal/brd.h line.h wave.h rpipe.h cpustats.h
-shell.o: memstats.h shell.h ui.h
+shell.o: memstats.h shell.h ui.h renderer.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h memstats.h ui.h
@@ -133,4 +133,6 @@ ui.o: ../../software/include/hw/gpio.h ../../software/include/hal/hdlcd.h
 ui.o: ../../software/include/hal/time.h renderer.h rpipe.h
 ui.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 ui.o: cpustats.h ui.h
+wave.o: ../../software/include/base/stdio.h
+wave.o: ../../software/include/base/stdlib.h
 wave.o: ../../software/include/base/math.h line.h color.h wave.h renderer.h

@@ -27,7 +27,7 @@ struct wave_params {
 	unsigned int wave_mode;
 	int wave_additive;
 	int wave_dots;
-	int wave_maximize_color;
+	int wave_brighten;
 	int wave_thick;
 	float wave_r;
 	float wave_g;

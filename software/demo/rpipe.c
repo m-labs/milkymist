@@ -401,7 +401,7 @@ static void rpipe_draw_waves()
 	params.wave_mode = bh_frame->wave_mode;
 	params.wave_additive = bh_frame->wave_additive;
 	params.wave_dots = bh_frame->wave_usedots;
-	params.wave_maximize_color = bh_frame->wave_maximize_color;
+	params.wave_brighten = bh_frame->wave_brighten;
 	params.wave_thick = bh_frame->wave_thick;
 	
 	params.wave_r = bh_frame->wave_r;
