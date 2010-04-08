@@ -1,3 +1,7 @@
+# Usage: make TB=test_bench_file.v [ARBSRC=/path_to/fmlarb.v]
+#
+
+ARBSRC?=../../fmlarb/rtl/fmlarb.v
 SOURCES= \
 ../rtl/tmu2_adrgen.v \
 ../rtl/tmu2_clamp.v \
@@ -25,7 +29,7 @@ SOURCES= \
 ../rtl/tmu2_vinterp.v \
 ../rtl/tmu2_fdest.v \
 ../rtl/tmu2_alpha.v \
-../../fmlarb/rtl/fmlarb.v
+$(ARBSRC)
 
 SOURCES_VIRTEX4= \
 DSP48.v \
@@ -55,7 +59,7 @@ DSP48.v \
 ../rtl/tmu2_mult2_virtex4.v \
 ../rtl/tmu2_fdest.v \
 ../rtl/tmu2_alpha.v \
-../../fmlarb/rtl/fmlarb.v
+$(ARBSRC)
 
 all: sim
 
