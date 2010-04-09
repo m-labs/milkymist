@@ -107,6 +107,7 @@ void rpipe_init()
 
 static struct tmu_td tmu_task1;
 static struct tmu_td tmu_task2;
+static struct tmu_td tmu_task3;
 
 static void rpipe_tmu_warpdone(struct tmu_td *td)
 {
@@ -459,40 +460,105 @@ static void rpipe_tmu_copydone(struct tmu_td *td)
 	run_swap_bottom_half = 1;
 }
 
-static void rpipe_wave_bottom_half()
+static struct tmu_vertex vecho_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
+
+static void rpipe_compute_vecho_vertices()
 {
-	rpipe_draw_motion_vectors();
-	rpipe_draw_borders();
-	rpipe_draw_waves();
-	flush_bridge_cache();
-
-	tmu_task2.flags = 0;
-	tmu_task2.hmeshlast = 1;
-	tmu_task2.vmeshlast = 1;
-	tmu_task2.brightness = TMU_BRIGHTNESS_MAX;
-	tmu_task2.chromakey = 0;
-	tmu_task2.vertices = &scale_tex_vertices[0][0];
-	tmu_task2.texfbuf = tex_backbuffer;
-	tmu_task2.texhres = renderer_texsize;
-	tmu_task2.texvres = renderer_texsize;
-	tmu_task2.texhmask = TMU_MASK_FULL;
-	tmu_task2.texvmask = TMU_MASK_FULL;
-	tmu_task2.dstfbuf = vga_backbuffer;
-	tmu_task2.dsthres = vga_hres;
-	tmu_task2.dstvres = vga_vres;
-	tmu_task2.dsthoffset = 0;
-	tmu_task2.dstvoffset = 0;
-	tmu_task2.dstsquarew = vga_hres;
-	tmu_task2.dstsquareh = vga_vres;
-	tmu_task2.alpha = TMU_ALPHA_MAX;
-	if(spam_enabled)
-		tmu_task2.callback = NULL;
-	else
-		tmu_task2.callback = rpipe_tmu_copydone;
-	tmu_task2.user = NULL;
+	int a, b;
 	
-	tmu_submit_task(&tmu_task2);
+	a = (bh_frame->vecho_zoom-1.0)*(float)renderer_texsize*32.0;
+	b = (float)renderer_texsize*64.0 - a;
+	
+	if((bh_frame->vecho_orientation == 1) || (bh_frame->vecho_orientation == 3)) {
+		vecho_vertices[0][0].x = b;
+		vecho_vertices[0][1].x = a;
+		vecho_vertices[1][0].x = b;
+		vecho_vertices[1][1].x = a;
+	} else {
+		vecho_vertices[0][0].x = a;
+		vecho_vertices[0][1].x = b;
+		vecho_vertices[1][0].x = a;
+		vecho_vertices[1][1].x = b;
+	}
+	if((bh_frame->vecho_orientation == 2) || (bh_frame->vecho_orientation == 3)) {
+		vecho_vertices[0][0].y = b;
+		vecho_vertices[0][1].y = b;
+		vecho_vertices[1][0].y = a;
+		vecho_vertices[1][1].y = a;
+	} else {
+		vecho_vertices[0][0].y = a;
+		vecho_vertices[0][1].y = a;
+		vecho_vertices[1][0].y = b;
+		vecho_vertices[1][1].y = b;
+	}
+}
 
+static void rpipe_compose_screen()
+{
+	int vecho_alpha;
+	int vecho_enabled;
+
+	vecho_alpha = 64.0*bh_frame->vecho_alpha;
+	vecho_enabled = vecho_alpha != 0;
+
+	/* 1. Draw texture */
+	tmu_task3.flags = 0;
+	tmu_task3.hmeshlast = 1;
+	tmu_task3.vmeshlast = 1;
+	tmu_task3.brightness = TMU_BRIGHTNESS_MAX;
+	tmu_task3.chromakey = 0;
+	tmu_task3.vertices = &scale_tex_vertices[0][0];
+	tmu_task3.texfbuf = tex_backbuffer;
+	tmu_task3.texhres = renderer_texsize;
+	tmu_task3.texvres = renderer_texsize;
+	tmu_task3.texhmask = TMU_MASK_FULL;
+	tmu_task3.texvmask = TMU_MASK_FULL;
+	tmu_task3.dstfbuf = vga_backbuffer;
+	tmu_task3.dsthres = vga_hres;
+	tmu_task3.dstvres = vga_vres;
+	tmu_task3.dsthoffset = 0;
+	tmu_task3.dstvoffset = 0;
+	tmu_task3.dstsquarew = vga_hres;
+	tmu_task3.dstsquareh = vga_vres;
+	tmu_task3.alpha = TMU_ALPHA_MAX;
+	if(spam_enabled || vecho_enabled)
+		tmu_task3.callback = NULL;
+	else
+		tmu_task3.callback = rpipe_tmu_copydone;
+	tmu_task3.user = NULL;
+	tmu_submit_task(&tmu_task3);
+
+	/* 2. Draw video echo */
+	if(vecho_enabled) {
+		rpipe_compute_vecho_vertices();
+		tmu_task2.flags = 0;
+		tmu_task2.hmeshlast = 1;
+		tmu_task2.vmeshlast = 1;
+		tmu_task2.brightness = TMU_BRIGHTNESS_MAX;
+		tmu_task2.chromakey = 0;
+		tmu_task2.vertices = &vecho_vertices[0][0];
+		tmu_task2.texfbuf = tex_backbuffer;
+		tmu_task2.texhres = renderer_texsize;
+		tmu_task2.texvres = renderer_texsize;
+		tmu_task2.texhmask = TMU_MASK_FULL;
+		tmu_task2.texvmask = TMU_MASK_FULL;
+		tmu_task2.dstfbuf = vga_backbuffer;
+		tmu_task2.dsthres = vga_hres;
+		tmu_task2.dstvres = vga_vres;
+		tmu_task2.dsthoffset = 0;
+		tmu_task2.dstvoffset = 0;
+		tmu_task2.dstsquarew = vga_hres;
+		tmu_task2.dstsquareh = vga_vres;
+		tmu_task2.alpha = vecho_alpha;
+		if(spam_enabled)
+			tmu_task2.callback = NULL;
+		else
+			tmu_task2.callback = rpipe_tmu_copydone;
+		tmu_task2.user = NULL;
+		tmu_submit_task(&tmu_task2);
+	}
+
+	/* 3. Draw spam */
 	if(spam_enabled) {
 		tmu_task1.flags = TMU_CTL_CHROMAKEY;
 		tmu_task1.hmeshlast = 1;
@@ -517,6 +583,15 @@ static void rpipe_wave_bottom_half()
 		tmu_task1.user = NULL;
 		tmu_submit_task(&tmu_task1);
 	}
+}
+
+static void rpipe_wave_bottom_half()
+{
+	rpipe_draw_motion_vectors();
+	rpipe_draw_borders();
+	rpipe_draw_waves();
+	flush_bridge_cache();
+	rpipe_compose_screen();
 }
 
 void rpipe_swap_bottom_half()

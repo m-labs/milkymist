@@ -201,9 +201,9 @@ static void stats()
 	netbw = memstat_net_bandwidth();
 	occupancy = memstat_occupancy();
 	if(occupancy != 0) {
-		printf("Net memory bandwidth      : %d Mbps\n", netbw);
-		printf("Memory bus occupancy      : %d%%\n", occupancy);
-		printf("Avg. mem. access time     : %d.%02d cycles\n", amat/100, amat%100);
+		printf("Net memory bandwidth : %d Mbps\n", netbw);
+		printf("Memory bus occupancy : %d%%\n", occupancy);
+		printf("Avg. mem. access time: %d.%02d cycles\n", amat/100, amat%100);
 	}
 }
 

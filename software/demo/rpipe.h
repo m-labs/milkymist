@@ -45,6 +45,9 @@ struct rpipe_frame {
 	float mv_l;
 	float mv_r, mv_g, mv_b, mv_a;
 	int tex_wrap;
+	float vecho_alpha;
+	float vecho_zoom;
+	int vecho_orientation;
 	float treb;
 	float time;
 	unsigned int framenr;
