@@ -102,6 +102,10 @@ enum {
 	pfv_q6,
 	pfv_q7,
 	pfv_q8,
+
+	pfv_video_echo_alpha,
+	pfv_video_echo_zoom,
+	pfv_video_echo_orientation,
 	
 	EVAL_PFV_COUNT /* must be last */
 };

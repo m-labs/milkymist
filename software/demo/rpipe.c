@@ -191,6 +191,7 @@ static void rpipe_draw_motion_vectors()
 	float intervaly;
 	int nx, ny;
 	int l;
+	int px, py;
 
 	if(bh_frame->mv_a == 0.0) return;
 	if(bh_frame->mv_x == 0.0) return;
@@ -209,11 +210,18 @@ static void rpipe_draw_motion_vectors()
 	offsety = bh_frame->mv_dy*renderer_texsize;
 	intervaly = (float)renderer_texsize/bh_frame->mv_y;
 
-	nx = bh_frame->mv_x+0.5;
-	ny = bh_frame->mv_y+0.5;
+	nx = bh_frame->mv_x+1.5;
+	ny = bh_frame->mv_y+1.5;
 	for(y=0;y<ny;y++)
-		for (x=0;x<nx;x++)
-			draw_dot(&ctx, offsetx+x*intervalx, offsety+y*intervaly, l);
+		for (x=0;x<nx;x++) {
+			px = offsetx+x*intervalx;
+			if(px < 0) px = 0;
+			if(px >= renderer_texsize) px = renderer_texsize-1;
+			py = offsety+y*intervaly;
+			if(py < 0) py = 0;
+			if(py >= renderer_texsize) py = renderer_texsize-1;
+			draw_dot(&ctx, px, py, l);
+		}
 }
 
 static void border_rect(int x0, int y0, int x1, int y1, short int color, unsigned int alpha)
@@ -246,9 +254,10 @@ static void rpipe_draw_borders()
 	texof = renderer_texsize-of;
 	cmax = renderer_texsize-1;
 
-	if((of != 0) && (bh_frame->ob_a != 0.0)) {
+	ob_alpha = 80.0*bh_frame->ob_a;
+	if((of != 0) && (ob_alpha != 0)) {
 		ob_color = float_to_rgb565(bh_frame->ob_r, bh_frame->ob_g, bh_frame->ob_b);
-		ob_alpha = 80.0*bh_frame->ob_a;
+		
 
 		border_rect(0, 0, of, cmax, ob_color, ob_alpha);
 		border_rect(of, 0, texof, of, ob_color, ob_alpha);
@@ -256,9 +265,9 @@ static void rpipe_draw_borders()
 		border_rect(of, texof, texof, cmax, ob_color, ob_alpha);
 	}
 
-	if((iff != 0) && (bh_frame->ib_a != 0.0)) {
+	ib_alpha = 80.0*bh_frame->ib_a;
+	if((iff != 0) && (ib_alpha != 0)) {
 		ib_color = float_to_rgb565(bh_frame->ib_r, bh_frame->ib_g, bh_frame->ib_b);
-		ib_alpha = 80.0*bh_frame->ib_a;
 
 		border_rect(of, of, of+iff-1, texof-1, ib_color, ib_alpha);
 		border_rect(of+iff, of, texof-iff-1, of+iff-1, ib_color, ib_alpha);
