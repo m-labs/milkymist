@@ -199,6 +199,7 @@ static void rpipe_draw_motion_vectors()
 	if(bh_frame->mv_y == 0.0) return;
 	
 	l = bh_frame->mv_l;
+	if(l < 1) l = 1;
 	if(l > 10) l = 10;
 	
 	line_init_context(&ctx, tex_backbuffer, renderer_texsize, renderer_texsize);
@@ -468,7 +469,6 @@ static void rpipe_compute_vecho_vertices()
 	
 	a = (32.0-32.0/bh_frame->vecho_zoom)*(float)renderer_texsize;
 	b = renderer_texsize*64 - a;
-	//printf("%d:%d\n", a, b);
 	
 	if((bh_frame->vecho_orientation == 1) || (bh_frame->vecho_orientation == 3)) {
 		vecho_vertices[0][0].x = b;

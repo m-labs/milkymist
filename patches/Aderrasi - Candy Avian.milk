@@ -69,8 +69,6 @@ per_frame_5=ib_g = 0;
 per_frame_6=ib_b = 0;
 per_frame_7=wave_x = wave_x + if(above(wave_y,0.75),0.40*sin(time), 0.15*sin(time));
 per_frame_9=wave_y = wave_y + 0.30*cos(0.9*time);
-per_frame_10=cx = cx + if(above(wave_x,0.5), 0.001*sin(7*treb_att), -0.001*sin(7*mid_att));
-per_frame_12=cy = cy + if(above(wave_x,0.5), 0.001*cos(7*bass_att), -0.001*cos(7*mid_att));
 per_frame_14=ob_r = 0.5*sin(treb)*time;
 per_frame_15=ob_b = 0.5*sin(mid)*0.9*time;
 per_frame_16=ob_g = 0.5*sin(bass)*0.8*time;
