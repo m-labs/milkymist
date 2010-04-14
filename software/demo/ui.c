@@ -208,6 +208,18 @@ enum {
 
 static struct timestamp last_press[KEY_COUNT];
 
+enum {
+	CMD_NONE,
+	CMD_KEY,
+	CMD_TICK
+};
+
+/* this may lose some events if two happen at the same time,
+ * but this is a rare condition without much consequences.
+ */
+static int ui_cmd;
+static int ui_key;
+
 #define UI_GPIO (GPIO_PBN|GPIO_PBS|GPIO_PBC)
 
 void ui_init()
@@ -216,6 +228,7 @@ void ui_init()
 	int i;
 
 	state = STATE_MAIN;
+	ui_cmd = CMD_NONE;
 
 	time_get(&last_press[0]);
 	for(i=1;i<KEY_COUNT;i++)
@@ -243,28 +256,9 @@ static void handle_key(unsigned int n)
 	if(msec < 100) return;
 	last_press[n] = now;
 
-	switch(state) {
-		case STATE_MAIN:
-			if(n == KEY_N) list_patches();
-			else if(n == KEY_S) random_mode();
-			break;
-		case STATE_PATCHLIST:
-			switch(n) {
-				case KEY_N:
-					select_patch(1);
-					break;
-				case KEY_S:
-					select_patch(0);
-					break;
-				case KEY_C:
-					start_patch();
-					break;
-			}
-			break;
-		case STATE_RENDERING:
-			if(n == KEY_C) ui_render_stop();
-			break;
-	}
+	if(ui_cmd != CMD_NONE) return;
+	ui_key = n;
+	ui_cmd = CMD_KEY;
 }
 
 void ui_isr_key()
@@ -283,20 +277,56 @@ void ui_isr_key()
 
 void ui_tick()
 {
-	if(state == STATE_RENDERING) {
-		if(patch_lifetime != -1) {
-			patch_lifetime--;
-			if(patch_lifetime == 0) {
-				renderer_stop();
-				ui_render_from_file(patch_list[rand() % patch_list_count], 1);
-				return;
-			}
+	if(ui_cmd == CMD_NONE)
+		ui_cmd = CMD_TICK;
+}
+
+void ui_service()
+{
+	if(ui_cmd == CMD_NONE) return;
+	cpustats_enter();
+	if(ui_cmd == CMD_KEY) {
+		switch(state) {
+			case STATE_MAIN:
+				if(ui_key == KEY_N) list_patches();
+				else if(ui_key == KEY_S) random_mode();
+				break;
+			case STATE_PATCHLIST:
+				switch(ui_key) {
+					case KEY_N:
+						select_patch(1);
+						break;
+					case KEY_S:
+						select_patch(0);
+						break;
+					case KEY_C:
+						start_patch();
+						break;
+				}
+				break;
+			case STATE_RENDERING:
+				if(ui_key == KEY_C) ui_render_stop();
+				break;
 		}
-		switch_count++;
-		if(switch_count > 2) {
-			display_title = !display_title;
-			switch_count = 0;
-		}
-		refresh_screen();
 	}
+	if(ui_cmd == CMD_TICK) {
+		if(state == STATE_RENDERING) {
+			if(patch_lifetime != -1) {
+				patch_lifetime--;
+				if(patch_lifetime == 0) {
+					ui_render_from_file(patch_list[rand() % patch_list_count], 1);
+					goto end_service;
+				}
+			}
+			switch_count++;
+			if(switch_count > 2) {
+				display_title = !display_title;
+				switch_count = 0;
+			}
+			refresh_screen();
+		}
+	}
+end_service:
+	ui_cmd = CMD_NONE;
+	cpustats_leave();
 }

@@ -24,5 +24,6 @@ void ui_render_stop();
 void ui_init();
 void ui_isr_key();
 void ui_tick();
+void ui_service();
 
 #endif /* __UI_H */

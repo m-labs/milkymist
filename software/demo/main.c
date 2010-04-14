@@ -78,6 +78,7 @@ int main()
 			shell_input(readchar());
 		apipe_service();
 		rpipe_service();
+		ui_service();
 	}
 	
 	return 0;
