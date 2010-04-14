@@ -466,8 +466,9 @@ static void rpipe_compute_vecho_vertices()
 {
 	int a, b;
 	
-	a = (bh_frame->vecho_zoom-1.0)*(float)renderer_texsize*32.0;
-	b = (float)renderer_texsize*64.0 - a;
+	a = (32.0-32.0/bh_frame->vecho_zoom)*(float)renderer_texsize;
+	b = renderer_texsize*64 - a;
+	//printf("%d:%d\n", a, b);
 	
 	if((bh_frame->vecho_orientation == 1) || (bh_frame->vecho_orientation == 3)) {
 		vecho_vertices[0][0].x = b;
@@ -499,7 +500,10 @@ static void rpipe_compose_screen()
 	int vecho_enabled;
 
 	vecho_alpha = 64.0*bh_frame->vecho_alpha;
-	vecho_enabled = vecho_alpha != 0;
+	vecho_enabled = vecho_alpha > 0;
+	vecho_alpha--;
+	if(vecho_alpha > TMU_ALPHA_MAX)
+		vecho_alpha = TMU_ALPHA_MAX;
 
 	/* 1. Draw texture */
 	tmu_task3.flags = 0;
