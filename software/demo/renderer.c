@@ -104,7 +104,7 @@ static int process_top_assign(char *left, char *right)
 
 	pfv = eval_pfv_from_name(left);
 	if(pfv >= 0) {
-		/* preset initial condition or global parameter */
+		/* patch initial condition or global parameter */
 		eval_set_initial(pfv, atof(right));
 		return 1;
 	}
@@ -146,33 +146,33 @@ static int process_line(char *line)
 	return process_top_assign(line, c+1);
 }
 
-static int load_preset(char *preset_code)
+static int load_patch(char *patch_code)
 {
 	char *eol;
 	
 	linenr = 0;
-	while(*preset_code) {
+	while(*patch_code) {
 		linenr++;
-		eol = strchr(preset_code, '\n');
+		eol = strchr(patch_code, '\n');
 		if(!eol)
-			return process_line(preset_code);
+			return process_line(patch_code);
 		*eol = 0;
-		if(*preset_code == 0) {
-			preset_code = eol + 1;
+		if(*patch_code == 0) {
+			patch_code = eol + 1;
 			continue;
 		}
 		if(*(eol - 1) == '\r') *(eol - 1) = 0;
-		if(!process_line(preset_code)) return 0;
-		preset_code = eol + 1;
+		if(!process_line(patch_code)) return 0;
+		patch_code = eol + 1;
 	}
 	return 1;
 }
 
-int renderer_start(char *preset_code)
+int renderer_start(char *patch_code)
 {
 	if(renderer_on) renderer_stop();
 	eval_init();
-	if(!load_preset(preset_code)) return 0;
+	if(!load_patch(patch_code)) return 0;
 	if(!eval_schedule()) return 0;
 	apipe_start();
 	renderer_on = 1;

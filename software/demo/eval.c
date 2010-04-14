@@ -66,7 +66,7 @@ int eval_schedule()
 /****************************************************************/
 
 static struct fpvm_fragment pfv_fragment;
-static float pfv_initial[EVAL_PFV_COUNT];		/* < preset initial conditions */
+static float pfv_initial[EVAL_PFV_COUNT];		/* < patch initial conditions */
 static int pfv_preallocation[EVAL_PFV_COUNT];		/* < where per-frame variables can be mapped in PFPU regf */
 static int pfv_allocation[EVAL_PFV_COUNT];		/* < where per-frame variables are mapped in PFPU regf, -1 if unmapped */
 static int perframe_prog_length;			/* < how many instructions in perframe_prog */

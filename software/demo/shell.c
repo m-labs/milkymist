@@ -215,8 +215,8 @@ static void help()
 	puts("mw         - write address space");
 	puts("flush      - flush FML bridge cache");
 	puts("ls         - list files on the memory card");
-	puts("render     - start rendering a preset");
-	puts("irender    - input preset equations interactively");
+	puts("render     - start rendering a patch");
+	puts("irender    - input patch equations interactively");
 	puts("stop       - stop renderer");
 	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
@@ -613,7 +613,7 @@ static unsigned int command_index;
 static void prompt()
 {
 	if(irender)
-		putsnonl("\e[1mpreset% \e[0m");
+		putsnonl("\e[1mpatch% \e[0m");
 	else
 		putsnonl("\e[1m% \e[0m");
 }

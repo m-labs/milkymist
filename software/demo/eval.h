@@ -125,13 +125,13 @@ void eval_reinit_all_pfv();
 /* reads the value of a per-frame variable
  * (from perframe_regs_current or initial conditions)
  * always returns a correct value; if the variable is not
- * in the preset, a default value is returned.
+ * in the patch, a default value is returned.
  */
 float eval_read_pfv(int pfv);
 
 /* writes the value of a per-frame variable (to perframe_regs_current)
  * does nothing if the variable is not handled by the PFPU.
- * typically used for preset inputs (treb, bass, etc.)
+ * typically used for patch inputs (treb, bass, etc.)
  */
 void eval_write_pfv(int pfv, float x);
 

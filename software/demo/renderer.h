@@ -25,7 +25,7 @@ extern int renderer_vmeshlast;
 extern int renderer_texsize;
 
 void renderer_init();
-int renderer_start(char *preset_code);
+int renderer_start(char *patch_code);
 void renderer_istart();
 int renderer_iinput(char *line);
 int renderer_idone();

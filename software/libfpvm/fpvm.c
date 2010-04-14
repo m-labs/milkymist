@@ -320,10 +320,9 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opb, opa, reg)) return FPVM_INVALID_REG;
 	} else if((strcmp(node->label, "sin") == 0)||(strcmp(node->label, "cos") == 0)) {
 		/*
-		 * Trigo functions are implemented with several instructions
-		 * because we must convert the floating point argument in radians
-		 * from MilkDrop presets to an integer expressed in 1/8192 turns
-		 * for FPVM hardware.
+		 * Trigo functions are implemented with several instructions.
+		 * We must convert the floating point argument in radians
+		 * to an integer expressed in 1/8192 turns for FPVM.
 		 */
 		int reg_const;
 		int reg_mul;

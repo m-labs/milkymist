@@ -16,7 +16,7 @@ For the latest releases, binary distributions and more:
  /std/        Definitions for Milkymist protocols and formats.
  /doc/        System documentation.
  /tools/      Small tools for developers.
- /presets/    Example presets.
+ /patches/    Example patches.
 
 
 [> Building tools
