@@ -15,7 +15,7 @@
 
 \title{Texture Mapping Unit, Revision 2}
 \author{S\'ebastien Bourdeauducq}
-\date{February 2010}
+\date{April 2010}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -86,9 +86,11 @@ Addresses are in bytes to match the addresses seen by the CPU when the CSR bus i
 \hline
 0x3C & RW & 0 & Y offset added to each destination pixel. \\
 \hline
-0x40 & RW & 0 & Width of each destination rectangle. \\
+0x40 & RW & 16 & Width of each destination rectangle. \\
 \hline
-0x44 & RW & 0 & Height of each destination rectangle. \\
+0x44 & RW & 16 & Height of each destination rectangle. \\
+\hline
+0x48 & RW & 63 & Opacity (alpha) used when drawing in the destination framebuffer. 0 = high transparency, 63 = totally opaque. A value of 63 saves memory bandwidth by removing the need to read-modify-write the destination framebuffer. \\
 \hline
 \end{tabularx}
 
