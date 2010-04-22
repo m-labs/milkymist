@@ -3,8 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[normalem]{ulem}
 \usepackage[english]{babel}
-\usepackage{listings,babel}
-\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{boxedminipage}
 \usepackage{graphicx}
 \usepackage{moreverb}
 \usepackage{float}
@@ -43,21 +42,27 @@ The open source model means that any individual, if he or she has the required l
 \label{fig:ikos}
 \end{figure}
 
-But today, the cost of fast high-density FPGAs is falling and these devices are becoming available to the general public. For an example of this trend, I would mention the Ikos Pegasus application specific integrated circuit (ASIC) emulator, whose insides are depicted in figure~\ref{fig:ikos}. The LatticeMico32 CPU core used in the system-on-chip described in this thesis occupies alone 60\% of the resources of one of the XC4036XL FPGAs of this device, and runs at 30MHz. The Ikos Pegasus was a state-of-the-art device a decade ago. It consumes up to 3 kilowatts of power, weights dozens of kilos and costed the equivalent of several millions of SEK. The same CPU core now occupies about 15\% of a modern FPGA costing less than 500 SEK, where it runs in excess of 100MHz.
+But today, the cost of fast high-density FPGAs is falling and these devices are becoming available to the general public. For an example of this trend, I would mention the Ikos Pegasus application specific integrated circuit (ASIC) emulator, whose insides are depicted in figure~\ref{fig:ikos}. The LatticeMico32 CPU core used in the system-on-chip described in this thesis occupies alone 60\% of the resources of one of the XC4036XL FPGAs of this device, and runs at 30MHz. The Ikos Pegasus was a state-of-the-art device a decade ago. It consumes up to 3 kilowatts of power, weights dozens of kilos and probably costed the equivalent of several millions of SEK. The same CPU core now occupies about 15\% of a modern FPGA costing less than 500 SEK, where it runs in excess of 100MHz.
 
 This evolution makes it possible to implement complex high-performance system-on-chips (SoC) that can be modified and improved by anyone, thanks to the flexibility of the FPGA platform.
 
-This master thesis introduces Milkymist\texttrademark \cite{Milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}.
+This master thesis introduces Milkymist\texttrademark \cite{Milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}. However, this approach has some drawbacks and an embedded device would be interesting:
+\begin{itemize}
+\item A device of very small size and weight is possible, which is convenient in mobile or temporary setups.
+\item Boot and set-up time (launching the software) can be greatly reduced (to a few seconds).
+\item Many interfaces for interactive performances (MIDI, DMX, video input, low-level digital I/O for user sensors) can be integrated. By comparison, the equivalent PC-based solution would be expensive and bulky.
+\end{itemize}
 
-Besides the fact that this is an interesting, creative and popular application, it is also demanding in terms of computational power and memory performance. It would make Milkymist a proof that high performance open source system-on-chip design is possible in practice; with a view to help, foster and catalyze similar ``open hardware'' initiatives. As the Milkymist system-on-chip is entirely made of synthesizable Verilog and, for the most part, released under the GNU GPL, its code can be re-used by other open hardware projects.
+Besides the fact that this is an interesting, creative and popular application, it is also demanding in terms of computational power and memory performance. Such a project would also be a proof that high performance open source system-on-chip design is possible in practice; with a view to help, foster and catalyze similar ``open hardware'' initiatives. As the Milkymist system-on-chip is entirely made of synthesizable Verilog and, for the most part, released under the GNU GPL, its code can be re-used by other open hardware projects.
 
 Meeting the performance constraints while still using cheap and relatively small FPGAs is perhaps the most interesting and challenging technical point of this project, and it could not be done without substantial work in the field of computer architecture. This is what this master thesis covers.
 
-\section{Background}
-\subsection{Video synthesis}
-MilkDrop~\cite{milkdrop} is a popular open source video synthesis framework that was originally made to develop visualization plugins for the Winamp audio player. People have since then ported MilkDrop to many different platforms and made it react to live events, such as captured audio or movements of a WiiMote remote control.
+\chapter{Background}
+\section{Video synthesis}
+\subsection{Overview}
+MilkDrop~\cite{milkdrop} (figure~\ref{fig:milkdrop}) is a popular open source video synthesis framework that was originally made to develop visualization plugins for the Winamp audio player. People have since then ported MilkDrop to many different platforms~\cite{wpmilkdrop} and made it react to live events, such as captured audio and video~\cite{visikord} (figure~\ref{fig:visikord}) or movements of a Wiimote remote control~\cite{wiimodemd}.
 
-The idea behind the Milkymist project is to implement an embedded video synthesis platform on a custom open source system-on-chip that is based on the same rendering principle of MilkDrop, but with more control interfaces and features.
+The idea behind the Milkymist project is to implement an embedded video synthesis platform on a custom open source system-on-chip that is based on the same rendering principle of MilkDrop, but with more control interfaces and features. The device built around the system-on-chip should be stand-alone, which means that a graphical user interface for configuring the visual effects should be implemented (figure~\ref{fig:flickernoise}).
 
 \begin{figure}[htp]
 \centering
@@ -66,7 +71,115 @@ The idea behind the Milkymist project is to implement an embedded video synthesi
 \label{fig:milkdrop}
 \end{figure}
 
-\subsection{Open source SoC platforms}
+\begin{figure}[htp]
+\centering
+\includegraphics[height=60mm]{visikord.eps}
+\caption{Sample video frame from Visikord, a program mixing live video into MilkDrop.}
+\label{fig:visikord}
+\end{figure}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=85mm]{flickernoise.eps}
+\caption{The embedded user interface (based on Genode FX~\cite{genodefx}) of Flickernoise, the Milkymist VJ application. The patch editor is shown, with per-frame and per-vertex equations.}
+\label{fig:flickernoise}
+\end{figure}
+
+\subsection{Principle}
+\subsubsection{General mode of operation}
+The MilkDrop-like renderer is the most compute and memory intensive process, from which stem most of the technical challenges. We will now get into more details about how the renderer works.
+
+Rendering is based on a framebuffer on which the steps below are continuously repeated. This repetition is at the origin of many feedback or ``fractal'' effects.
+\begin{itemize}
+\item The current frame is distorted (zoomed, translated, warped, scaled, rotated...) by texture mapping. This step will be described with more detail in section~\ref{sec:tm}.
+\item The frame is darkened (the colors are shifted to black).
+\item A waveform of the currently played music is drawn. The wave can be drawn linearly (like an oscilloscope), in a circle, etc.
+\item Borders around the screen are drawn. If the distortion zooms out, the borders will be pulled into the picture (some effects are based on this).
+\item \textit{Motion vectors} are drawn. Motion vectors are simply a grid of dots, which can be used to generate effects by playing with the distortion.
+\item The process repeats from the beginning.
+\end{itemize}
+
+These are the basic features of MilkDrop. There are more (custom waves, shapes,...) which are listed on the MilkDrop website~\cite{milkdrop}. Some other features (such as adding live video) will be added to the Milkymist renderer in the future.
+
+This process is done on an internal framebuffer whose horizontal and vertical dimensions are a power of 2. This framebuffer is then scaled to the size of the screen in order to be displayed. This brings two features:
+\begin{itemize}
+\item The sizes being a power of 2 allows out-of-bounds texture coordinates to be wrapped (in order to repeat the texture) by simply performing a bitwise AND of the coordinate, instead of the full computation of a division remainder which is a much more expensive operation (even on the traditional GPUs MilkDrop was designed for).
+\item It enables the implementation of the \textit{video echo} effect: after the internal framebuffer has been drawn to the screen at its nominal dimensions, a zoomed and semi-transparent copy of it can be overprinted.
+\end{itemize}
+It must be noted that this two-step process increases the computation time and the consumption of memory bandwidth.
+
+All the steps of the rendering are heavily parametrizable by the user, using a coded format called a \textit{patch} or \textit{preset} which defines the aspect and the interaction forms of a particular visual effect. The listing of a sample patch is given by figure~\ref{fig:samplepatch} and the meaning of the language is explained below.
+
+\begin{figure}
+\centering
+\begin{boxedminipage}{14cm}
+\begin{verbatim}
+fDecay=0.980000
+nWaveMode=2
+bTexWrap=1
+bMotionVectorsOn=0
+zoom=1.046000
+rot=0.020000
+cx=0.500000
+cy=0.500000
+warp=0.969000
+sx=1.000000
+sy=1.000000
+wave_r=0.600000
+wave_g=0.600000
+wave_b=0.600000
+wave_x=0.500000
+wave_y=0.470000
+per_frame_1=wave_r = wave_r + 0.400*( 0.60*sin(0.933*time)
+  + 0.40*sin(1.045*time) );
+per_frame_2=wave_g = wave_g + 0.400*( 0.60*sin(0.900*time)
+  + 0.40*sin(0.956*time) );
+per_frame_3=wave_b = wave_b + 0.400*( 0.60*sin(0.910*time)
+  + 0.40*sin(0.920*time) );
+per_frame_4=zoom = zoom + 0.010*( 0.60*sin(0.339*time)
+  + 0.40*sin(0.276*time) );
+per_frame_5=rot = rot + 0.050*( 0.60*sin(0.381*time)
+  + 0.40*sin(0.579*time) );
+per_frame_6=cx = cx + 0.030*( 0.60*sin(0.374*time)
+  + 0.40*sin(0.294*time) );
+per_frame_7=cy = cy + 0.030*( 0.60*sin(0.393*time)
+  + 0.40*sin(0.223*time) );
+per_vertex_1=sx=sx-0.04*sin((y*2-1)*6+(x*2-1)*7+time*1.59);
+per_vertex_2=sy=sy-0.04*sin((x*2-1)*8-(y*2-1)*5+time*1.43);
+\end{verbatim}
+\end{boxedminipage}
+\caption{Excerpt from the MilkDrop preset ``Geiss -- Warp of Dali 1'' (with some simplifications).}
+\label{fig:samplepatch}
+\end{figure}
+
+\subsubsection{Initial conditions}
+The patch begins with a series of parameters which are used to initialize the renderer, and many of them are kept constant during the execution of the patch. For example:
+\begin{itemize}
+\item \verb!bMotionVectorsOn=0! turns off the drawing of the motion vectors.
+\item \verb!nWaveMode=2! selects one of the many ways of drawing the audio waveform.
+\item \verb!sx=1.000000! and \verb!sy=1.000000! set the X and Y scaling factors of the distortion to 1 (i.e. the frame is initially not scaled).
+\item \verb!wave_r=0.600000!, \verb!wave_g=0.600000! and \verb!wave_b=0.600000! set the initial RGB color with which the wave is drawn (it is initially grey).
+\end{itemize}
+
+\subsubsection{Per-frame equations}
+Using initial conditions only limits the interaction and evolution possibilities of the patch.
+
+It is therefore possible to make the parameters evolve over time, thanks to the per-frame equations. As their name suggests, the per-frame equations are mathematical expressions that are evaluated at each frame.
+
+The example patch (figure~\ref{fig:samplepatch}) shows some of them (the lines beginning with \verb!per_frame!). In this example, they change the wave color over time by modifying the \verb!wave_r!, \verb!wave_g! and \verb!wave_b! values in sinusoidal patterns, as well as the zoom, rotation (\verb!rot!) and center of rotation (\verb!cx! and \verb!cy!).
+
+Per-frame equations can make the patch react to sound, for example through the \verb!bass!, \verb!mid! and \verb!treb! variables that indicate the intensity of the sound in three frequency bands. One of the ideas in Milkymist is to add other variables that can be controlled by the DMX512 and MIDI protocols, enabling the use of a whole range of devices commonly found among musicians (electronic instruments, faders, stage light consoles, joysticks,...) to control the visual effects.
+
+\subsubsection{Per-vertex equations}
+Per-vertex equations are used to fine-tune the distortion applied to the picture.
+
+Indeed, as explained further in section~\ref{sec:tm}, the distortion works by using a mesh of control points (vertices) that can be moved to transform the image in many different ways (effects such as zooming, scaling and rotating are implemented by moving the vertices).
+
+Per-vertex equations are thus evaluated at each vertex (whose position can be retrieved through the \verb!x! and \verb!y! variables), and alter the position of that vertex. In the example patch (figure~\ref{fig:samplepatch}), the image is locally scaled horizontally and vertically by factors depending on the position of the vertex and on the time, resulting in a twisted visual effect.
+
+As discussed in chapter~\ref{ch:tmu}, the floating point computations for each vertex are intensive and required the use of a dedicated coprocessor.
+
+\section{Open source SoC platforms}
 There is an existing effort to build open source system-on-chips. It is interesting to review these projects in order to look forward to building upon them -- possibly adding hardware accelerators or performing other modifications in order to improve performance.
 
 There are many SoC designs available on the Internet, which are more or less mature. The system-on-chip projects listed here meet the following criteria:
@@ -93,7 +206,7 @@ However, its drawbacks are:
 \begin{itemize}
 \item Code complexity. GRLIB is written in VHDL and makes intensive use of custom types, packages, generate statements, etc.
 \item Cores are not self-contained. GRLIB defines many ``building blocks'' that are used everywhere else in the code, making it difficult to re-use code in another project which is not based on GRLIB.
-\item Significant FPGA resource usage. Synthesized with Xilinx ISE 11.3, a system comprising the LEON3 SPARC processor with a 2-way set-associative 16kB cache and no memory management unit (MMU), the DDR SDRAM controller, a RS232 serial port, and a Ethernet 10/100 MAC uses 13264 FPGA look-up tables (LUT). They map to 79\% of the Virtex-4 XC4VLX25 FPGA. This undermines the possibility of adding hardware acceleration cores.
+\item Significant FPGA resource usage. A system comprising the LEON3 SPARC processor with a 2-way set-associative 16kB cache and no memory management unit (MMU), the DDR SDRAM controller, a RS232 serial port, and an Ethernet 10/100 MAC uses 13264 FPGA look-up tables (LUT). They map to 79\% of the Virtex-4 XC4VLX25 FPGA. We have carried out the test with the Xst synthesizer, Xilinx ISE 11.3, and GRLIB 1.0.21-b3957 (GPL release) using the default provided synthesis scripts. This undermines the possibility of adding hardware acceleration cores.
 \item Relatively low clock frequency. With the same parameters as above, the maximum clock frequency is 84MHz.
 \end{itemize}
 
@@ -104,9 +217,9 @@ ORPSoC is based on the OpenRISC~\cite{openrisc} processor core, which is the fla
 
 ORPSoC notably features the OpenRISC OR1200 processor core, the Wishbone~\cite{wishbone} bus, comprehensive debugging facilities, a 16550-compatible RS232 UART, a 10/100Mbps Ethernet MAC and a SDRAM controller.
 
-Unfortunately, ORPSoC is resource-inefficient and extremely slow, mainly because of the OpenRISC implementation which is not optimized for synthesis and the poorly designed SDRAM controller. Using ORSoC AB's reference design, a C program takes more than a dozen of seconds to copy a 16MB SDRAM buffer from one memory location to another.
+Unfortunately, ORPSoC is resource-inefficient and buggy. The OpenRISC implementation is not well optimized for synthesis. We carried out tests on the August 17, 2009 OpenRISC release. Still using the XC4VLX25 FPGA as target, synthesis with Xst and Xilinx ISE 11.4 yields a use of 5077 LUTs for the CPU core only (using the default FPGA configuration: no caches, no MMU, multiplier, and with the implementation of the RAMs using the RAMB16 elements of the FPGA selected), running at approximately 100MHz. The synthesis report shows asynchronous control signals where there should not be (such as on the output of the program counter), which can be an indication of poor quality of the design. Other IP cores comprising ORPSoC have similar issues (we tested the 16550 UART and the Ethernet MAC). Finally, the provided SDRAM controller only supports the low-bandwidth 16-bit single data rate option, has a high latency due to the extensive use of clock domain transfer FIFOs, does not support pipelined transfers and has a poorly written code.
 
-OpenRISC and ORPSoC therefore do not seem to be a good platform for the performance-demanding video synthesis application.
+OpenRISC and ORPSoC therefore do not seem to be a good platform for the performance-demanding and resource-constrained video synthesis application.
 
 \subsubsection{LatticeMico32 System}
 This product~\cite{mico32} from the FPGA vendor Lattice Semiconductor is comparable to Microblaze~\cite{microblaze} and Nios II~\cite{nios} from its competitors, respectively Xilinx and Altera.
@@ -119,19 +232,58 @@ While it is perhaps technically possible to build Milkymist on top of the Lattic
 
 However, the LatticeMico32 microprocessor core is interesting. Synthesized for the XC4VLX25 with the 2-way set-associative caches enabled, it occupies only about 2400 LUTs and runs at more than 100MHz.
 
-\section{Problem statement}
-According to this background, for the video synthesis application it seems relevant to:
+This microprocessor core has been retained for use in Milkymist, as described in chapter~\ref{ch:sw}.
+
+\subsubsection{Microblaze and Nios II}
+Even though we are not interested in proprietary designs, we still give a brief overview of the resource usage of Microblaze and Nios II systems as a comparison.
+TODO
+
+\section{DRAM technology}
+
+\section{Texture mapping}
+\label{sec:tm}
+
+\section{Organization}
+According to this background, we can derive the following project guidelines:
 
 \begin{itemize}
 \item develop a fast, resource-efficient and FPGA-optimized system-on-chip
 \item develop an efficient memory subsystem
-\item use a light-weight softcore CPU
+\item reuse a light-weight softcore CPU
+\item partition carefully the tasks between hardware and software
 \item develop custom hardware accelerators
 \end{itemize}
 
-This thesis focuses on the computer architecture problems and concepts behind these points.
+The proposed solution is outlined in figure~\ref{fig:block}. Not all the blocks are ready at the time of this writing, nor all of them are within the scope of this Master's thesis, which focuses on computer architecture.
+
+More specifically, the following components are not developed yet:
+\begin{itemize}
+\item microSD controller (the current prototype use a CF card through Xilinx SystemACE)
+\item USB controller
+\item Video input
+\item IR receiver
+\item MIDI controller
+\item DMX512 controller
+\end{itemize}
+
+Hardware accelerators have been developed for the computation of vertices positions (PFPU) and for texture mapping (TMU), which have been found to be the most compute-intensive parts of the process. They are discussed in detail in chapters \ref{ch:pfpu} and \ref{ch:tmu}, respectively.
+
+Graphics processing also requires a significant amount of memory bandwidth, which is discussed in chapter~\ref{ch:memory}.
+
+Chapter~\ref{ch:intercon} describes the on-chip interconnect used to make the various blocks communicate with one another.
+
+Finally, chapter~\ref{ch:sw} deals with the software execution environment and how the software is architected to obtain a good performances from the hardware.
+
+\begin{figure}
+\centering
+\includegraphics[height=170mm]{soc_architecture.eps}
+\caption{SoC block diagram.}
+\label{fig:block}
+\end{figure}
+
 
 \chapter{Memory subsystem}
+\label{ch:memory}
 \section{Attacking the memory wall}
 \label{sec:memorywall}
 A recurrent point in many modern computer systems is the memory performance problem. The term \textit{memory wall} was coined~\cite{memorywall} to refer to the growing disparity of performance between logic such as CPUs and off-chip memories. While microprocessor performance has been improving at a rate of 60 percent per year, the access time to DRAM has been improving at less than 10 percent per year~\cite{memvscpu}.
@@ -170,11 +322,11 @@ The memory system features that improve latency (but also bandwidth) are discuss
 The typical operating frequency of early SDR and DDR SDRAM (technologies that are prior to DDR2 and do not have a clock divider for the internal DRAM core) is close to the 100MHz frequency at which the FPGA is able to meet timing for the complete SoC. Thus, it was decided to run the DRAM and the system synchronously in order to remove the need for any clock domain transfer logic and reduce latency. The SDRAM I/O registers are clocked by the system clock, and timing of the SDRAM interface is met through the use of calibrated on-chip delay elements and delay-locked-loops (DLLs) to generate the off-chip SDRAM clock and the data strobes.
 
 \subsection{Page mode control algorithm}
-The Milkymist memory controller takes the so-called ``page mode gamble'': after an access, the DRAM row is left open in the hope that the next transaction to the memory bank will occur within the same row. If the memory controller is right, the read of write command can be immediately registered into the SDRAM, and only the CAS or write latency is incurred. If the memory controller is wrong, it must first precharge the DRAM bank and open the correct row, causing extra delays.
+The Milkymist memory controller takes the so-called ``page mode gamble'': after an access, the DRAM row is left open in the hope that the next transaction to the memory bank will occur within the same row. If the memory controller is right, the read or write command can be immediately registered into the SDRAM, and only the CAS or write latency is incurred. If the memory controller is wrong, it must first precharge the DRAM bank and open the correct row, causing extra delays.
 
 Thus, if the memory controller is often wrong, taking the page mode gamble will actually impact performance negatively. However, a study has shown~\cite{pagemode} that, with typical memory timings, the point at which the gamble pays off is for a page hit probability of 0.375 only, attainable with many practical memory access patterns.
 
-Page hit probability is also improved by the ability of the Milkymist memory controller to track open rows independently in each of the four memory banks that commercial SDRAM chips are equipped with.
+Page hit probability is improved by the ability of the Milkymist memory controller to track open rows independently in each of the four memory banks that commercial SDRAM chips are equipped with.
 
 This optimization positively affects both latency and bandwidth.
 
@@ -186,7 +338,7 @@ Using bursts frees the bus and DRAM control signals while other words are transf
 
 Burst access is a form of prefetching that improves latency. It is only efficient when the prefetched data can be used by the requesting bus master. In the Milkymist system-on-chip, this is often the case:
 \begin{itemize}
-\item The CPU core has a cache which accesses memory by complete cache lines. Thus, if the cache line length is a multiple of the burst length, the bursts can be easily fully memorized.
+\item The CPU core has caches which access memory by complete cache lines. Thus, if the cache line length is a multiple of the burst length, the bursts can be easily fully memorized.
 \item The video framebuffer repeatedly reads the same block of data in a sequential manner, and can easily make full use of the prefetched data assuming that is has sufficient on-chip buffer space.
 \item The texture mapping unit also has a cache and a write buffer which work well with burst accesses. This will be discussed in Chapter~\ref{ch:tmu}.
 \end{itemize}
@@ -384,27 +536,10 @@ However, two conclusions can be drawn:
 \end{itemize}
 
 \chapter{SoC interconnect}
-The general SoC block diagram and its interconnect is outlined in~\ref{fig:block}. Not all the blocks are ready at the time of this writing, nor all of them are within the scope of this Master's thesis!
-
-More specifically, the following components are not developed yet:
-\begin{itemize}
-\item Ethernet controller
-\item microSD controller (the current prototype use a CF card through Xilinx SystemACE)
-\item USB controller
-\item Video input
-\item IR receiver
-\item MIDI controller
-\item DMX512 controller
-\end{itemize}
+\label{ch:intercon}
+The general SoC block diagram and its interconnect is outlined in~\ref{fig:block}.
 
 This chapter explains how the different interconnect busses work, what their features are, why they are there, and how they are communicate with each other.
-
-\begin{figure}
-\centering
-\includegraphics[height=170mm]{soc_architecture.eps}
-\caption{SoC block diagram.}
-\label{fig:block}
-\end{figure}
 
 \section{General SoC interconnect: the Wishbone bus}
 Wishbone~\cite{wishbone} is a general purpose royalty-free SoC bus with open specifications, advocated by the maintainers of the OpenCores.org website.
@@ -486,7 +621,14 @@ However, it is very common that software modifies only a few pixels on the scree
 
 Since those solutions are difficult to implement as they require a significant support from both the operating system and applications, it was chosen to make framebuffer read transactions by the VGA signal generator coherent with respect to the bridge cache. Every time the VGA signal generator fetches a burst of pixel, it first searches the bridge cache. If the data is in the cache, it is used. If not, the VGA signal generator fetches it from SDRAM (but does not replace any cache line).
 
+\chapter{Texture mapping unit}
+\label{ch:tmu}
+
+\chapter{Floating point coprocessor}
+\label{ch:pfpu}
+
 \chapter{Software}
+\label{ch:sw}
 \section{LatticeMico32}
 The heart of the software execution capabilities of the SoC is the LatticeMico32 microprocessor core~\cite{mico32}. It is a classic 6-stage in-order pipelined RISC processor (figure~\ref{fig:lm32arch}) with a custom instruction set supported by the GNU (GCC-based) compiler toolchain. It supports separate instruction and data caches with up to two ways. There are an optional barrel shifter, pipelined multiplier and multi-cycle divider.
 
@@ -551,7 +693,7 @@ For Microblaze, the configuration is as follows:
 
 The comparison seems clearly in favor of Milkymist, with a rough 15\%-35\% (depending on the benchmark) reduction in execution time. Details are shown in figure~\ref{fig:mmvsmb} and in tables \ref{tab:milkymistspeed} and \ref{tab:microblazespeed}. Deviation is computed as:
 \begin{equation}
-\frac{|t_{1}-t_{2}|}{min(t_{1}, t_{2})}
+\frac{|t_{1}-t_{2}|}{\textrm{min}(t_{1}, t_{2})}
 \end{equation}
 It is meant to check that the results are deterministic and reproducible.
 
@@ -613,12 +755,9 @@ The root causes of this performance improvement were not investigated; but since
 The main point of this comparison is to confirm the viability of Milkymist as a powerful SoC platform, that can withstand the competition with proprietary solutions.
 
 \section{Design of a MilkDrop-compatible renderer}
-HW/SW partitioning
+TODO HW/SW partitioning
 
-\chapter{Texture mapping unit}
-\label{ch:tmu}
-
-\chapter{Floating point coprocessor}
+\section{Conclusion}
 
 \bibliography{thesis}{}
 \bibliographystyle{plain}
