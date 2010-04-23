@@ -34,7 +34,7 @@ TODO
 \mainmatter
 
 \chapter{Introduction}
-The open source model means that any individual, if he or she has the required level of technical knowledge, can realistically use, share and modify the design of a technical system. During the nineties, this development model gained popularity in the software world with, most notably, the GNU/Linux operating system. But it was not viable for complex SoCs until a few years ago, because the cost of prototyping semiconductor chips is prohibitive  and field programmable gate arrays (FPGA) used to be too slow, too small, and too expensive. System-on-chip design and hands-on computer architecture therefore remained a field reserved to well-funded academia and research and development laboratories of companies of a significant size and wealth, who had access to large FPGA clusters or even semiconductor foundries.
+The open source model supports the idea that any individual, if he or she has the required level of technical knowledge, can realistically use, share and modify the design of a technical system. During the nineties, this development model gained popularity in the software world with, most notably, the Linux operating system. But it was not viable for complex SoCs until a few years ago, because the cost of prototyping semiconductor chips is prohibitive and field programmable gate arrays (FPGAs) used to be too slow, too small, and too expensive. System-on-chip design and hands-on computer architecture therefore remained a field reserved to well-funded academia and research and development laboratories of companies of a significant size and wealth, who had access to large FPGA clusters or even semiconductor foundries.
 
 \begin{figure}[htp]
 \centering
@@ -47,14 +47,14 @@ But today, the cost of fast high-density FPGAs is falling and these devices are 
 
 This evolution makes it possible to implement complex high-performance system-on-chips (SoC) that can be modified and improved by anyone, thanks to the flexibility of the FPGA platform.
 
-This master thesis introduces Milkymist\texttrademark \cite{milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}. However, this approach has some drawbacks and an embedded device would be interesting:
+This master thesis introduces Milkymist\texttrademark \cite{milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}. However, this approach has some drawbacks and using an embedded device instead would be interesting:
 \begin{itemize}
 \item A device of very small size and weight is possible, which is convenient in mobile or temporary setups.
 \item Boot and set-up time (launching the software) can be greatly reduced (to a few seconds).
 \item Many interfaces for interactive performances (MIDI, DMX, video input, low-level digital I/O for user sensors) can be integrated. By comparison, the equivalent PC-based solution would be expensive and bulky.
 \end{itemize}
 
-Besides the fact that this is an interesting, creative and popular application, it is also demanding in terms of computational power and memory performance. Such a project would also be a proof that high performance open source system-on-chip design is possible in practice; with a view to help, foster and catalyze similar ``open hardware'' initiatives. As the Milkymist system-on-chip is entirely made of synthesizable Verilog and, for the most part, released under the GNU GPL, its code can be re-used by other open hardware projects.
+Besides the fact that this is an interesting, creative and popular application, it is also demanding in terms of computational power and memory performance. Such a project would also be a proof that high performance open source system-on-chip design is possible in practice; with a view to help, foster and catalyze similar ``open hardware'' initiatives. As the Milkymist system-on-chip is entirely made of synthesizable Verilog and, for the most part, released under the GNU General Public License (GPL), its code can be re-used by other open hardware projects.
 
 Meeting the performance constraints while still using cheap and relatively small FPGAs is perhaps the most interesting and challenging technical point of this project, and it could not be done without substantial work in the field of computer architecture. This is what this master thesis covers.
 
@@ -63,7 +63,7 @@ Meeting the performance constraints while still using cheap and relatively small
 \subsection{Overview}
 MilkDrop~\cite{milkdrop} (figure~\ref{fig:milkdrop}) is a popular open source video synthesis framework that was originally made to develop visualization plugins for the Winamp audio player. People have since then ported MilkDrop to many different platforms~\cite{wpmilkdrop} and made it react to live events, such as captured audio and video~\cite{visikord} (figure~\ref{fig:visikord}) or movements of a Wiimote remote control~\cite{wiimodemd}.
 
-The idea behind the Milkymist project is to implement an embedded video synthesis platform on a custom open source system-on-chip that is based on the same rendering principle of MilkDrop, but with more control interfaces and features. The device built around the system-on-chip should be stand-alone, which means that a graphical user interface for configuring the visual effects should be implemented (figure~\ref{fig:flickernoise}).
+The idea behind the Milkymist project is to implement an embedded video synthesis platform on a custom open source system-on-chip, that is based on the same rendering principle of MilkDrop but with more control interfaces and features. The device built around the system-on-chip should be stand-alone, which means that a graphical user interface for configuring the visual effects should be implemented (figure~\ref{fig:flickernoise}).
 
 \begin{figure}[htp]
 \centering
@@ -289,6 +289,47 @@ With the memory chips used in the project, a refresh must be made every $7.8\uni
 
 \section{Texture mapping}
 \label{sec:tm}
+Texture mapping is a common computer graphics operation found in accelerated 3D APIs like OpenGL and DirectX. It is typically used to draw textured 3D polygons on the screen. It can also distort an image (see figure~\ref{fig:distorted} for an example), and MilkDrop uses it for this purpose.
+
+\begin{figure}
+\centering
+\includegraphics[height=70mm]{tesselsanofi.eps}
+\caption{Example of distorted picture.}
+\label{fig:distorted}
+\end{figure}
+
+With common GPUs, texture mapping is performed on triangles (and more complex polygons are broke down into a series of triangles). The inputs to the algorithm are the 2D (possibly projected from the original 3D coordinates) positions of the three vertices of the triangle to be filled, and the 2D texture coordinates for these three vertices.
+
+The algorithm will then draw a textured triangle pixel by pixel, by interpolating linearly the texture coordinates of the vertices for each pixel and then copying the texture pixel (\textit{texel}) at these coordinates.
+
+Image processing operations like zooming, rotating or scaling can be implemented with texture mapping, by simply changing the vertices' positions or the textures coordinates at each vertex.
+
+More often than not, the results of the linear interpolation will not be integer, which means that the texture should be sampled between four adjacent pixels (figure~\ref{fig:bilinear}). In this case, for a better rendering, the four pixels should be read and their colors should be averaged (with different weights depending on the fractional parts). This process is called \textit{bilinear filtering} and is required to obtain a good rendering of MilkDrop presets (see figures \ref{fig:mdbilin} and \ref{fig:mdnearest}).
+
+\begin{figure}
+\centering
+\includegraphics[height=30mm]{bilinear.eps}
+\caption{Principle of bilinear texture filtering.}
+\label{fig:bilinear}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[height=70mm]{mdbilin.eps}
+\caption{Rendering with bilinear filtering enabled.}
+\label{fig:mdbilin}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[height=70mm]{mdnearest.eps}
+\caption{Rendering with bilinear filtering disabled (the nearest texel is used).}
+\label{fig:mdnearest}
+\end{figure}
+
+In MilkDrop (and Milkymist), a special case of the texture mapping is used, as the only purpose is to distort a 2D image. The target surface is always a rectangle that covers the destination picture, on which the vertices are distributed evenly as a mesh which is always kept the same regardless of the applied distortion. The distortion is defined by altering the texture coordinates at each vertex.
+
+Texture mapping, especially when bilinear filtering is desired, is a very compute intensive process, as explained in chapter \ref{ch:tmu}. A custom hardware accelerator has been developed, whose details are also covered in this chapter.
 
 \section{Organization}
 According to this background, we can derive the following project guidelines:
@@ -801,7 +842,7 @@ The root causes of this performance improvement were not investigated; but since
 
 The main point of this comparison is to confirm the viability of Milkymist as a powerful SoC platform, that can withstand the competition with proprietary solutions.
 
-\section{Design of a MilkDrop-compatible renderer}
+\section{Design of a MilkDrop-compatible rendering program}
 TODO HW/SW partitioning
 
 \chapter{Conclusion}
