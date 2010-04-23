@@ -9,6 +9,7 @@
 \usepackage{float}
 \usepackage{cite}
 \usepackage{tabularx}
+\usepackage{units}
 
 \title{A performance-driven SoC architecture for video synthesis}
 \date{June 2010}
@@ -46,7 +47,7 @@ But today, the cost of fast high-density FPGAs is falling and these devices are 
 
 This evolution makes it possible to implement complex high-performance system-on-chips (SoC) that can be modified and improved by anyone, thanks to the flexibility of the FPGA platform.
 
-This master thesis introduces Milkymist\texttrademark \cite{Milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}. However, this approach has some drawbacks and an embedded device would be interesting:
+This master thesis introduces Milkymist\texttrademark \cite{milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}. However, this approach has some drawbacks and an embedded device would be interesting:
 \begin{itemize}
 \item A device of very small size and weight is possible, which is convenient in mobile or temporary setups.
 \item Boot and set-up time (launching the software) can be greatly reduced (to a few seconds).
@@ -217,7 +218,7 @@ ORPSoC is based on the OpenRISC~\cite{openrisc} processor core, which is the fla
 
 ORPSoC notably features the OpenRISC OR1200 processor core, the Wishbone~\cite{wishbone} bus, comprehensive debugging facilities, a 16550-compatible RS232 UART, a 10/100Mbps Ethernet MAC and a SDRAM controller.
 
-Unfortunately, ORPSoC is resource-inefficient and buggy. The OpenRISC implementation is not well optimized for synthesis. We carried out tests on the August 17, 2009 OpenRISC release. Still using the XC4VLX25 FPGA as target, synthesis with Xst and Xilinx ISE 11.4 yields a use of 5077 LUTs for the CPU core only (using the default FPGA configuration: no caches, no MMU, multiplier, and with the implementation of the RAMs using the RAMB16 elements of the FPGA selected), running at approximately 100MHz. The synthesis report shows asynchronous control signals where there should not be (such as on the output of the program counter), which can be an indication of poor quality of the design. Other IP cores comprising ORPSoC have similar issues (we tested the 16550 UART and the Ethernet MAC). Finally, the provided SDRAM controller only supports the low-bandwidth 16-bit single data rate option, has a high latency due to the extensive use of clock domain transfer FIFOs, does not support pipelined transfers and has a poorly written code.
+Unfortunately, ORPSoC is resource-inefficient and buggy. The OpenRISC implementation is not well optimized for synthesis. We carried out tests on the August 17, 2009 OpenRISC release. Still using the XC4VLX25 FPGA as target, synthesis with Xst and Xilinx ISE 11.4 yields an utilization of 5077 LUTs for the CPU core only (using the default FPGA configuration: no caches, no MMU, multiplier, and with the implementation of the RAMs using the RAMB16 elements of the FPGA selected), running at approximately 100MHz. The synthesis report shows asynchronous control signals where there should not be (such as on the output of the program counter), which can be an indication of poor quality of the design. Other IP cores comprising ORPSoC have similar issues (we tested the 16550 UART and the Ethernet MAC). Finally, the provided SDRAM controller only supports the low-bandwidth 16-bit single data rate option, has a high latency due to the extensive use of clock domain transfer FIFOs, does not support pipelined transfers and has a poorly written code.
 
 OpenRISC and ORPSoC therefore do not seem to be a good platform for the performance-demanding and resource-constrained video synthesis application.
 
@@ -239,6 +240,52 @@ Even though we are not interested in proprietary designs, we still give a brief 
 TODO
 
 \section{DRAM technology}
+DRAM is by far today's dominant memory technology, often being the only affordable solution when relatively large densities (typically more than a few megabytes) are required. Unfortunately, DRAMs are not straightforward devices and we need preliminary knowledge specific to this technology in order to understand the choices discussed in chapter~\ref{ch:memory}. Indeed, in order to reduce system costs, the intelligence has been moved away from the memory chips and into the memory controller~\cite{dramlowcost}, leaving the controller designer with the task of dealing with the low-level details of the DRAM technology.
+
+We will therefore explain how the SDRAM (synchronous DRAM) technology works. These principles are the same for the original single data rate (SDR) SDRAM, and for the subsequent double data rate DDR, DDR2 and DDR3 memories. In all that follows, we suppose that the logic level 0 is represented by a voltage of 0 volts, and a logic level 1 is represented by a positive voltage H.
+
+A DRAM memory bank (figure~\ref{fig:drambank}) is organized as a two dimensional array of cells. Each cell is comprised of a transistor connected to a capacitor. A cell stores one bit of information, indicated by the presence or not of a charge in the capacitor. The transistor acts as a switch that connects the capacitor to the \textit{bit line} (vertical lines) when the \textit{word line} (horizontal lines) its gate is connected to carries a high logic level.
+
+A decoder translates the row address presented to the DRAM device and activates one of the word lines, according to the address.
+
+Each bit line is connected to a \textit{sense amplifier}, which is a positive feedback device that, when switched on, turns any voltage X on the bit line between 0 and H into 0 (if $X < \frac{H}{2}$) or H (if $X > \frac{H}{2}$). The set of sense amplifiers is called the \textit{page buffer}.
+
+\begin{figure}
+\centering
+\includegraphics[height=100mm]{drambank.eps}
+\caption{Block diagram of a DRAM memory bank.}
+\label{fig:drambank}
+\end{figure}
+
+Accesses to a SDRAM bank are made as follows:
+\begin{enumerate}
+\item We assume the SDRAM is in the \textit{precharged} (idle) state. In this state, no word line is active, the sense amplifiers are turned off and all the bit lines are held at a voltage of $\frac{H}{2}$.
+\item The SDRAM controller presents the row address and issues an ACTIVATE command. In response to this command, the SDRAM device enables the row decoder and one of the word lines is asserted. This has the effect of connecting all the capacitors of the DRAM cells in the row to their respective bit lines. A transfer of electric charge occurs between the ``parasitic'' capacitors of the word lines (which were charged at a voltage of $\frac{H}{2}$) and the DRAM cell capacitors, which were either discharged (at 0 volts) or charged at a voltage of H. This causes a small change $\epsilon$ in the potential of the bit line, which becomes $\frac{H}{2}-\epsilon$ or $\frac{H}{2}+\epsilon$ (depending on the charge initially stored in the DRAM cell capacitor). Then, the SDRAM device turns on all the sense amplifiers of the bank. On each bit line, the positive feedback takes over and amplifies the voltage difference $\epsilon$ until the level of the bit line reaches 0 or H. The ACTIVATE command is now completed and the row is said to be \textit{opened}. The DDR SDRAM chips used in the project (on the Xilinx ML401 board) take $20\unit{ns}$ to complete these operations.
+\item Once a row has been opened, the controller can present the column address and issue READ and WRITE commands to transfer data. Reading is done by simply measuring the voltages on the bit lines, and writing can be achieved by forcing the bit lines to a particular level. There is a delay, called the CAS\footnote{CAS stands for Column Address Strobe, which is the name of the DRAM chip pin that the controller asserts at this stage.} latency, between a READ command being sent and the data being returned by the device. This delay is of $20\unit{ns}$ with the chips used in the project. However, read operations are pipelined, which means that a new READ command can be sent while the previous one is still transferring data. With proper scheduling, a full utilization of the available I/O bandwidth can be achieved.
+\item Before accessing another row, the memory controller must disconnect the opened row from the bit lines and go back into the precharged state. It does so by issuing a PRECHARGE command to the device. The device takes some time to process the command (during which the bank cannot be accessed), which is $20\unit{ns}$ with the chips used in the project.
+\end{enumerate}
+
+From this principle of operation, it becomes apparent that a performance-oriented controller should try to make several transfers in the same row before opening another one, in order to reduce the time wasted to switching rows.
+
+\subsection{Multiple banks}
+SDRAM memory chips contain multiple DRAM banks internally, which share the I/O, command and address pins. Additional bank address pins select the bank to send commands to.
+
+Having multiple banks brings two advantages:
+\begin{itemize}
+\item Being able to execute several commands simultaneously (assuming there is no resource conflict for the pins). For example, one bank can be activating one row while another bank is transferring data.
+\item Having several rows open (one per bank), which can reduce the number of required row switches and thus improve performance.
+\end{itemize}
+
+The controller is responsible for managing the banks, and mapping absolute memory addresses to particular banks. Appropriate bank mapping can improve performance~\cite{pagemode}.
+
+Standard DDR SDRAM chips come with four internal banks.
+
+\subsection{Refreshing}
+Because the DRAM capacitors are not perfect, they gradually lose their charge over time, which results in data corruption.
+
+The solution is to periodically recharge the capacitors, which is done by opening the rows one by one. SDRAM chips provide an AUTO REFRESH command which opens and closes one row in all banks (and increments an internal counter so that the next AUTO REFRESH command will target another row), but it is the responsibility of the controller to issue it. Furthermore, the controller must precharge all banks before a refresh.
+
+With the memory chips used in the project, a refresh must be made every $7.8\unit{\mu s}$ and takes in the worst case $20+80+4 \cdot 20=180\unit{ns}$ (precharge time\footnote{All banks can be precharged at the same time with a single command.} + refresh time + activation time for each bank), so it has a small impact on the memory bandwidth (about 2\%).
 
 \section{Texture mapping}
 \label{sec:tm}
@@ -322,7 +369,7 @@ The memory system features that improve latency (but also bandwidth) are discuss
 The typical operating frequency of early SDR and DDR SDRAM (technologies that are prior to DDR2 and do not have a clock divider for the internal DRAM core) is close to the 100MHz frequency at which the FPGA is able to meet timing for the complete SoC. Thus, it was decided to run the DRAM and the system synchronously in order to remove the need for any clock domain transfer logic and reduce latency. The SDRAM I/O registers are clocked by the system clock, and timing of the SDRAM interface is met through the use of calibrated on-chip delay elements and delay-locked-loops (DLLs) to generate the off-chip SDRAM clock and the data strobes.
 
 \subsection{Page mode control algorithm}
-The Milkymist memory controller takes the so-called ``page mode gamble'': after an access, the DRAM row is left open in the hope that the next transaction to the memory bank will occur within the same row. If the memory controller is right, the read or write command can be immediately registered into the SDRAM, and only the CAS or write latency is incurred. If the memory controller is wrong, it must first precharge the DRAM bank and open the correct row, causing extra delays.
+The Milkymist memory controller takes the so-called \textit{page mode gamble}: after an access, the DRAM row is left open in the hope that the next transaction to the memory bank will occur within the same row. If the memory controller is right, the read or write command can be immediately registered into the SDRAM, and only the CAS or write latency is incurred. If the memory controller is wrong, it must first precharge the DRAM bank and open the correct row, causing extra delays.
 
 Thus, if the memory controller is often wrong, taking the page mode gamble will actually impact performance negatively. However, a study has shown~\cite{pagemode} that, with typical memory timings, the point at which the gamble pays off is for a page hit probability of 0.375 only, attainable with many practical memory access patterns.
 
@@ -572,17 +619,17 @@ FastMemoryLink (FML)~\cite{fml} was co-designed with HPDMC (the memory controlle
 SDRAM latency varies a lot depending on the state of the SDRAM at the time the request is issued on the bus. It depends on whether the SDRAM was in the middle of a refresh cycle, whether the bank needs to be precharged, and whether a new row needs to be activated. Therefore, FML provides support for a variable number of wait states, defined by the memory controller, through the use of an acknowledgement signal similar to that of Wishbone.
 
 \subsection{Burst only}
-SDRAM is best accessed in burst mode (see Subsection~\ref{subsec:fmlburst}).
+SDRAM is best accessed in burst mode (see subsection~\ref{subsec:fmlburst}).
 
 However, enabling or configuring burst mode is a relatively lengthy and complex operation, requiring a reload of the SDRAM mode register which takes several cycles. Furthermode, supporting multiple burst lengths makes the scheduling of the transfers more complex to avoid ``overlapping'' transfers that would create conflicts at the data pins.
 
 Therefore, in order to greatly simplify the memory controller, all transfers on FML are made using a fixed and pre-defined burst length.
 
 \subsection{Burst reordering}
-This was discussed in Subsection~\ref{subsec:fmlborder}.
+This was discussed in subsection~\ref{subsec:fmlborder}.
 
 \subsection{Pipelining}
-The benefits of this feature have already been discussed in Subsection~\ref{subsec:fmlpipe}.
+The benefits of this feature have already been discussed in subsection~\ref{subsec:fmlpipe}.
 
 Pipelined requests may come from the same core that issued the initial transfer, or from another core. The FML arbiter would then pipeline the request coming from the other core.
 
@@ -757,7 +804,7 @@ The main point of this comparison is to confirm the viability of Milkymist as a 
 \section{Design of a MilkDrop-compatible renderer}
 TODO HW/SW partitioning
 
-\section{Conclusion}
+\chapter{Conclusion}
 
 \bibliography{thesis}{}
 \bibliographystyle{plain}
