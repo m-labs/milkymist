@@ -10,6 +10,7 @@
 \usepackage{cite}
 \usepackage{tabularx}
 \usepackage{units}
+\usepackage{wasysym}
 
 \title{A performance-driven SoC architecture for video synthesis}
 \date{June 2010}
@@ -119,7 +120,7 @@ All the steps of the rendering are heavily parametrizable by the user, using a c
 
 \begin{figure}
 \centering
-\begin{boxedminipage}{14cm}
+\begin{boxedminipage}{13cm}
 \begin{verbatim}
 fDecay=0.980000
 nWaveMode=2
@@ -631,9 +632,9 @@ However, two conclusions can be drawn:
 
 \chapter{SoC interconnect}
 \label{ch:intercon}
-The general SoC block diagram and its interconnect is outlined in~\ref{fig:block}.
-
 This chapter explains how the different interconnect busses work, what their features are, why they are there, and how they are communicate with each other.
+
+The general SoC block diagram and its interconnect is outlined in figure~\ref{fig:block}.
 
 \section{General SoC interconnect: the Wishbone bus}
 Wishbone~\cite{wishbone} is a general purpose royalty-free SoC bus with open specifications, advocated by the maintainers of the OpenCores.org website.
@@ -713,10 +714,97 @@ The only form of hardware cache coherency the system has is related to the video
 
 However, it is very common that software modifies only a few pixels on the screen. If there was no hardware cache coherency at all, it would be tricky to implement a software mechanism that flushes the bridge cache at appropriate times. A solution can be to flush the cache every time a pixel or a group of pixels are written (which can be extremely slow if only small regions of the screen are modified at a time). Another solution would be to periodically check if the framebuffer had been modified and flush the cache if it was.
 
-Since those solutions are difficult to implement as they require a significant support from both the operating system and applications, it was chosen to make framebuffer read transactions by the VGA signal generator coherent with respect to the bridge cache. Every time the VGA signal generator fetches a burst of pixel, it first searches the bridge cache. If the data is in the cache, it is used. If not, the VGA signal generator fetches it from SDRAM (but does not replace any cache line).
+Since those solutions are difficult to implement as they require a significant support from both the operating system and applications, it was chosen to make framebuffer read transactions by the VGA signal generator coherent with respect to the bridge cache. Every time the VGA signal generator fetches a burst of pixels, it first searches the bridge cache. If the data is in the cache, it is used. If not, the VGA signal generator fetches it from SDRAM (but does not replace any cache line).
 
 \chapter{Texture mapping unit}
 \label{ch:tmu}
+High performance texture mapping was perhaps the most challenging technical part of the project. This chapter begins with the design of an efficient algorithm and continues with the hardware implementation of it, and in particular how it was pipelined and how its memory references are handled.
+\section{Two-dimensional interpolation}
+As outlined in section~\ref{sec:tm}, we need to interpolate linearly on a 2D polygon the X and Y texture coordinates according to known values on the vertices of the polygon.
+
+Traditional GPUs use the triangle as the primitive polygon, because it allows them to draw any other polygon by splitting it into a series of triangles. We do not need such flexibility. For rendering MilkDrop presets, the surface to be drawn is always a mesh of rectangles whose edges are parallel to the borders of the screen (traditional GPUs draw the surface using a triangle decomposition similar to the one shown in figure~\ref{fig:tridec}). We can therefore choose, as the primitive polygon, the rectangle with edges parallel to the borders of the screen, which is much simpler to draw than arbitrary triangles.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=50mm]{tridec.eps}
+\caption{Typical decomposition into triangular primitives of the MilkDrop rendering surface.}
+\label{fig:tridec}
+\end{figure}
+
+We then split the 2D interpolation problem into 1D interpolation problems as follows:
+\begin{itemize}
+\item The X and Y texture coordinates are interpolated independently.
+\item First, each coordinate is interpolated on the vertical edges of the rectangles (vertical interpolation) for each integer value of the ordinate.
+\item For each integer value of the ordinate, the results from the vertical interpolation are interpolated again for each integer value of the abscissa (horizontal interpolation). This scans all the pixels within the rectangle.
+\end{itemize}
+The process is illustrated in figure~\ref{fig:rectinter}.
+
+One could obtain the same result by starting with an horizontal interpolation followed by several vertical interpolations. However, when using a linear scan framebuffer (as Milkymist does), doing it in the proposed way yields output pixels whose memory addresses are consecutive in most cases (except when going to the next ordinate), which works well with the bursty nature of SDRAM accesses (subsection~\ref{subsec:fmlburst}) and the traditional organization of a cache.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=80mm]{rectinter.eps}
+\caption{2D linear interpolation on a rectangle.}
+\label{fig:rectinter}
+\end{figure}
+
+\section{One-dimensional interpolation}
+As previously discussed, it now boils down to the one-dimensional linear interpolation problem. Given two points $A(x_{0}, y_{0})$ and $B(x_{1}, y_{1})$ with integer coordinates, we need to compute the ordinate $y$ of $M(x, y) \in (AB)$ for all the integer values of $x$ between $x_{0}$ and $x_{1}$. For now, we are not interested in bilinear filtering, so what we actually want is the best integer approximation $[y]$ of $y$ so that the texture is sampled to the nearest pixel.
+
+In figure~\ref{fig:interalgo} we propose a fast and integer-only\footnote{And thus more suited to a resource-constrained hardware implementation.} algorithm, which was inspired by Bresenham's line drawing algorithm~\cite{bresenham}. Without loss of generality, we suppose that $x_{0} \leq x_{1}$ (the points can be reordered if this was not the case). We also suppose that $y_{0} \leq y_{1}$ (it is easy to modify the algorithm to handle the $y_{0} > y_{1}$ case as well\footnote{See the Verilog implementation in Milkymist (cores/tmu2/rtl/tmu2\_geninterp18.v).}).
+
+\begin{figure}
+\centering
+\begin{boxedminipage}{13cm}
+\begin{math}
+Dy \leftarrow y_{1} - y_{0} \\
+Dx \leftarrow x_{1} - x_{0} \\
+Q \leftarrow Dy / Dx \footnote{/ is the integer division} \\
+R \leftarrow Dy \% Dx \footnote{\% is the integer modulo}  \\
+x \leftarrow x_{0} \\
+\hspace{0cm} [y] \leftarrow y_{0} \\ % WA: latex doesn't like lines starting with [
+e \leftarrow 0 \\
+\textrm{result(x)} \leftarrow y \\
+\textrm{\textbf{while}~} x < x_{1} \\
+\textrm{~~~~~} x \leftarrow x + 1 \\
+\textrm{~~~~~} [y] \leftarrow [y] + Q \\
+\textrm{~~~~~} e \leftarrow e + R \\
+\textrm{~~~~~\textbf{if}~} 2\cdot e > Dx \\
+\textrm{~~~~~~~~~~} [y] \leftarrow [y] + 1 \\
+\textrm{~~~~~~~~~~} e \leftarrow e - Dx \\
+\textrm{~~~~~\textbf{end}} \\
+\textrm{~~~~~result(x)} \leftarrow [y] \\
+\textrm{\textbf{end}}
+\end{math}
+\end{boxedminipage}
+\caption{One-dimensional linear interpolation algorithm.}
+\label{fig:interalgo}
+\end{figure}
+
+The correctness of the algorithm lies in the fact that every time the result is being written, those conditions are verified (from which it can be derived that $[y]$ is the best integer approximation of $y$):
+\begin{enumerate}
+\item $|e| \leq \frac{Dx}{2}$ (which implies $|\frac{e}{Dx}| \leq \frac{1}{2}$)
+\item The perfect (rational) interpolated value $y$ is equal to $y = [y] + \frac{e}{Dx}$.
+\end{enumerate}
+
+These conditions can be proven by recursion:
+\begin{enumerate}
+\item For $x = x_{0}$, $e = 0$ therefore $|e| \leq \frac{Dx}{2}$. Let us now suppose that the hypothesis is true for a certain value of $x \geq x_{0}$, and prove that it is true for $x+1$.
+
+The instructions that affect $e$ between two consecutive values of $x$ are $e \leftarrow e + R$ and, if $2\cdot e > Dx$, $e \leftarrow e - Dx$.
+
+After the first instruction:
+\begin{itemize}
+\item if $e$ was negative or zero, we have $-\frac{Dx}{2} \leq e < Dx < \frac{3 \cdot Dx}{2} $ (because $R < Dx$).
+\item if $e$ was positive, it was inferior or equal to $\frac{Dx}{2}$ (because of the recursion hypothese), therefore we have $0 < e < \frac{3 \cdot Dx}{2} $.
+\end{itemize}
+\end{enumerate}
+
+After the second instruction, if we had $e > \frac{Dx}{2}$, we'll have $e < \frac{3 \cdot Dx}{2} - Dx$. Therefore, $e \leq \frac{Dx}{2}$. $\Box$
+
+\section{Bilinear filtering}
+
+\section{Performance considerations}
 
 \chapter{Floating point coprocessor}
 \label{ch:pfpu}
