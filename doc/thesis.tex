@@ -836,7 +836,7 @@ Figure~\ref{fig:filtfromfp} illustrates how the bilinear filtering is done using
 \begin{figure}[htp]
 \centering
 \includegraphics[height=85mm]{filtfromfp.eps}
-\caption{Bilinear filtering using the floating point texture coordinates.}
+\caption{Bilinear filtering using the fixed point texture coordinates.}
 \label{fig:filtfromfp}
 \end{figure}
 
@@ -847,7 +847,7 @@ c = \frac{(S-X.f)(S-Y.f) \cdot c_{1} + X.f(S-Y.f) \cdot c_{2} + (S-X.f)Y.f \cdot
 
 Since we are working with the RGB565 color format, having more than 6 extra bits of precision would not make a difference for the filtering. Therefore, we choose $S = 2^{6} = 64$.
 
-\section{Performance considerations}
+\section{Performance considerations} % TODO breakout tables
 \subsection{Context}
 To motivate the implementation choice of the texture mapping, we will study its execution time in the following  situation:
 \begin{itemize}
@@ -856,6 +856,7 @@ To motivate the implementation choice of the texture mapping, we will study its 
 \item We need at least 60 runs per second. Indeed, the renderer needs to distort the image and then scale it, 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 17ms of processing time at most. This is a very optimistic estimate; since the image typically needs to be upscaled to a resolution greater than 512x512, this part of the processing is expected to take more time than the 512x512 $\rightarrow$ 512x512 distortion. Other effects such as video echo or the inclusion of live video will also increase the burden on the texture mapping unit.
 \item The system clock is 100MHz.
 \item The $2\cdot e > Dx$ test is always false (which is optimistic).
+\item We optimistically do not take into account the extra instructions needed to handle interpolations with a negative slope ($y_{0} > y_{1}$).
 \end{itemize}
 
 For a software implementation, we use these cost estimates:\\
@@ -938,9 +939,28 @@ According to this (yet optimistic) estimate, it becomes clear that a software im
 \section{Pipelined hardware implementation}
 Given the performance constraints and the slowness of software implementations, we decided to implement the complete texture mapping process in hardware.
 
+\begin{figure}[htp]
+\centering
+\includegraphics[height=130mm]{tmublock.eps}
+\caption{Block diagram of the texture mapping unit architecture.}
+\label{fig:tmublock}
+\end{figure}
 
+A deeply pipelined implementation was chosen, whose block diagram is depicted in figure~\ref{fig:tmublock}. Many of the stages have internal pipeline sub-stages, and they are detailed below.
 
-\section{Memory access}
+\subsection{Vertex fetch engine}
+
+\subsection{Interpolators}
+
+\subsection{Address generator}
+
+\subsection{Texel cache}
+
+\subsection{Bilinear filter}
+
+\subsection{Write buffer}
+
+\subsection{Control interface}
 
 \section{Extra features}
 
