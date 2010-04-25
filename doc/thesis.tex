@@ -94,6 +94,7 @@ The idea behind the Milkymist project is to implement an embedded video synthesi
 \end{figure}
 
 \subsection{Principle}
+\label{subsec:mdprinciple}
 \subsubsection{General mode of operation}
 The MilkDrop-like renderer is the most compute and memory intensive process, from which stem most of the technical challenges. We will now get into more details about how the renderer works.
 
@@ -761,8 +762,8 @@ In figure~\ref{fig:interalgo} we propose a fast and integer-only\footnote{And th
 \begin{math}
 Dy \leftarrow y_{1} - y_{0} \\
 Dx \leftarrow x_{1} - x_{0} \\
-Q \leftarrow Dy / Dx \footnote{/ is the integer division} \\
-R \leftarrow Dy \% Dx \footnote{\% is the integer modulo}  \\
+Q \leftarrow Dy / Dx \footnote{/ is the integer division operator} \\
+R \leftarrow Dy \% Dx \footnote{\% is the integer modulo operator}  \\
 x \leftarrow x_{0} \\
 \hspace{0cm} [y] \leftarrow y_{0} \\ % WA: latex doesn't like lines starting with [
 e \leftarrow 0 \\
@@ -847,8 +848,94 @@ c = \frac{(S-X.f)(S-Y.f) \cdot c_{1} + X.f(S-Y.f) \cdot c_{2} + (S-X.f)Y.f \cdot
 Since we are working with the RGB565 color format, having more than 6 extra bits of precision would not make a difference for the filtering. Therefore, we choose $S = 2^{6} = 64$.
 
 \section{Performance considerations}
+\subsection{Context}
+To motivate the implementation choice of the texture mapping, we will study its execution time in the following  situation:
+\begin{itemize}
+\item The size of the source (texture) and destination pictures is 1024x1024.
+\item The size of the primitive rectangles is 16x16.
+\item We need at least 60 runs per second. Indeed, the renderer needs, at least, to distort the image and then scale it, 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 17ms of processing time at most.
+\item The system clock is 100MHz.
+\item The $2\cdot e > Dx$ test is always false (which is optimistic).
+\end{itemize}
 
-\section{Pipelined implementation}
+For a software implementation, we use these cost estimates:\\
+\begin{tabular}{|l|l|}
+\hline
+Addition or subtraction & 1 cycle \\
+\hline
+Multiplication & 2 cycles \\
+\hline
+Division or modulo & 32 cycles \\
+\hline
+Bit shift & 1 cycle \\
+\hline
+Test (<, >, =, etc.) & 1 cycle \\
+\hline
+Conditional jump & 3 cycles \\
+\hline
+Assignment & free (which is optimistic) \\
+\hline
+Reading or writing to the framebuffer & 2 cycles \\
+\hline
+\end{tabular}
+
+\subsection{Execution time of the interpolation algorithm}
+For each 1D interpolation with n steps, we need (in the same order as in figure~\ref{fig:interalgo}):\\
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Cycles} \\
+\hline
+2 subtractions & $2$ \\
+\hline
+Division & $32$ \\
+\hline
+Modulo & $32$ \\
+\hline
+Test & $n$ \\
+\hline
+Conditional jump & $3 \cdot n$ \\
+\hline
+3 additions & $3 \cdot n$ \\
+\hline
+Bit shift (multiply by 2) & $n$ \\
+\hline
+Test & $n$ \\
+\hline
+Conditional jump & $3 \cdot n$ \\
+\hline
+\textbf{Total} & $66 + 12 \cdot n$ \\
+\hline
+\end{tabular}
+
+\subsection{Total execution time}
+Using the above formula with $n=15$, we can compute an estimate of the execution time of a software implementation.
+
+1D interpolations need to be done twice, once for each texture coordinate.
+
+The number of framebuffer reads is computed by considering that for each pixel written to the 1024x1024 destination picture, 4 pixels must be read from the source picture.
+
+The cost of bilinear filtering is computed, for each destination pixel, with 4 subtractions, 8 multiplications, 4 additions and 1 bit shift times 3 color channels, which yields 75 cycles. This is optimistic as it does not take into account the time needed to decode the fixed point format. \\
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Operation} & \textbf{Cycles} & \textbf{Time} \\
+\hline
+Vertical interpolation & 2015232 & 20 ms \\
+\hline
+Horizontal interpolation & 32243712 & 322 ms \\
+\hline
+Framebuffer reads & 8388608 & 84 ms \\
+\hline
+Bilinear filtering & 78643200 & 786 ms \\
+\hline
+Framebuffer writes & 2097152 & 21 ms \\
+\hline
+\textbf{Total} & 123387904 & 1234 ms \\
+\hline
+\end{tabular}
+
+According to this (yet optimistic) estimate, it becomes clear that a software implementation could not suffice, as the required performance is 17 ms. Even the vertical interpolation cannot be implemented in software. We need an overall speedup by a factor of 70-80, using hardware acceleration.
+
+\section{Pipelined hardware implementation}
 
 \section{Memory access}
 
@@ -986,7 +1073,7 @@ The root causes of this performance improvement were not investigated; but since
 
 The main point of this comparison is to confirm the viability of Milkymist as a powerful SoC platform, that can withstand the competition with proprietary solutions.
 
-\section{Design of a MilkDrop-compatible rendering program}
+\section{Design of a MilkDrop-like rendering program}
 TODO HW/SW partitioning
 
 \chapter{Conclusion}
