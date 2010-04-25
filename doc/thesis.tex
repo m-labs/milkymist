@@ -44,7 +44,7 @@ The open source model supports the idea that any individual, if he or she has th
 \label{fig:ikos}
 \end{figure}
 
-But today, the cost of fast high-density FPGAs is falling and these devices are becoming available to the general public. For an example of this trend, I would mention the Ikos Pegasus application specific integrated circuit (ASIC) emulator, whose insides are depicted in figure~\ref{fig:ikos}. The LatticeMico32 CPU core used in the system-on-chip described in this thesis occupies alone 60\% of the resources of one of the XC4036XL FPGAs of this device, and runs at 30MHz. The Ikos Pegasus was a state-of-the-art device a decade ago. It consumes up to 3 kilowatts of power, weights dozens of kilos and probably costed the equivalent of several millions of SEK. The same CPU core now occupies about 15\% of a modern FPGA costing less than 500 SEK, where it runs in excess of 100MHz.
+But today, the cost of fast high-density FPGAs is falling and these devices are becoming available to the general public. For an example of this trend, we would mention the Ikos Pegasus application specific integrated circuit (ASIC) emulator, whose insides are depicted in figure~\ref{fig:ikos}. The LatticeMico32 CPU core used in the system-on-chip described in this thesis occupies alone 60\% of the resources of one of the XC4036XL FPGAs of this device, and runs at 30MHz. The Ikos Pegasus was a state-of-the-art device a decade ago. It consumes up to 3 kilowatts of power, weights dozens of kilos and probably costed the equivalent of several millions of SEK. The same CPU core now occupies about 15\% of a modern FPGA costing less than 500 SEK, where it runs in excess of 100MHz.
 
 \begin{figure}
 \centering
@@ -719,7 +719,9 @@ Since those solutions are difficult to implement as they require a significant s
 \chapter{Texture mapping unit}
 \label{ch:tmu}
 High performance texture mapping was perhaps the most challenging technical part of the project. This chapter begins with the design of an efficient algorithm and continues with the hardware implementation of it, and in particular how it was pipelined and how its memory references are handled.
-\section{Two-dimensional interpolation}
+
+\section{Algorithm}
+\subsection{Two-dimensional interpolation}
 As outlined in section~\ref{sec:tm}, we need to interpolate linearly on a 2D polygon the X and Y texture coordinates according to known values on the vertices of the polygon.
 
 Traditional GPUs use the triangle as the primitive polygon, because it allows them to draw any other polygon by splitting it into a series of triangles. We do not need such flexibility. For rendering MilkDrop presets, the surface to be drawn is always a mesh of rectangles whose edges are parallel to the borders of the screen (traditional GPUs draw the surface using a triangle decomposition similar to the one shown in figure~\ref{fig:tridec}). We can therefore choose, as the primitive polygon, the rectangle with edges parallel to the borders of the screen, which is much simpler to draw than arbitrary triangles.
@@ -748,8 +750,8 @@ One could obtain the same result by starting with an horizontal interpolation fo
 \label{fig:rectinter}
 \end{figure}
 
-\section{One-dimensional interpolation}
-As previously discussed, it now boils down to the one-dimensional linear interpolation problem. Given two points $A(x_{0}, y_{0})$ and $B(x_{1}, y_{1})$ with integer coordinates, we need to compute the ordinate $y$ of $M(x, y) \in (AB)$ for all the integer values of $x$ between $x_{0}$ and $x_{1}$. For now, we are not interested in bilinear filtering, so what we actually want is the best integer approximation $[y]$ of $y$ so that the texture is sampled to the nearest pixel.
+\subsection{One-dimensional interpolation}
+As previously discussed, the problem now boils down to performing a one-dimensional linear interpolation. Given two points $A(x_{0}, y_{0})$ and $B(x_{1}, y_{1})$ with integer coordinates, we need to compute the ordinate $y$ of $M(x, y) \in (AB)$ for all the integer values of $x$ between $x_{0}$ and $x_{1}$. For now, we are not interested in bilinear filtering, so what we actually want is the best integer approximation $[y]$ of $y$ so that the texture is sampled to the nearest pixel.
 
 In figure~\ref{fig:interalgo} we propose a fast and integer-only\footnote{And thus more suited to a resource-constrained hardware implementation.} algorithm, which was inspired by Bresenham's line drawing algorithm~\cite{bresenham}. Without loss of generality, we suppose that $x_{0} \leq x_{1}$ (the points can be reordered if this was not the case). We also suppose that $y_{0} \leq y_{1}$ (it is easy to modify the algorithm to handle the $y_{0} > y_{1}$ case as well\footnote{See the Verilog implementation in Milkymist (cores/tmu2/rtl/tmu2\_geninterp18.v).}).
 
@@ -798,13 +800,39 @@ After the first instruction:
 \item if $e$ was negative or zero, we have $-\frac{Dx}{2} \leq e < Dx < \frac{3 \cdot Dx}{2} $ (because $R < Dx$).
 \item if $e$ was positive, it was inferior or equal to $\frac{Dx}{2}$ (because of the recursion hypothese), therefore we have $0 < e < \frac{3 \cdot Dx}{2} $.
 \end{itemize}
-\end{enumerate}
-
 After the second instruction, if we had $e > \frac{Dx}{2}$, we'll have $e < \frac{3 \cdot Dx}{2} - Dx$. Therefore, $e \leq \frac{Dx}{2}$. $\Box$
 
-\section{Bilinear filtering}
+\item We need to prove that every time the result is being written, the following equation is verified:
+\begin{equation}
+\hspace{0cm} [y] + \frac{e}{Dx} = y_{0} + \frac{y_{1}-y_{0}}{x_{1}-x_{0}} \cdot (x - x_{0})
+\end{equation}
+For $x = x_{0}$, $[y] + \frac{e}{Dx} = y_{0}$, so the equation is verified. Let us now suppose that it is verified for a certain value of $x \geq x_{0}$, and prove that it is true for $x+1$.
+
+It can be noted that the instructions within the ``if'' do not change the value of $[y] + \frac{e}{Dx}$. The only instructions that change the result between two consecutive values of $x$ are $[y] \leftarrow [y] + Q$ and $e \leftarrow e + R$. Therefore, after the loop iteration, we have:
+\begin{equation}
+\hspace{0cm} [y] + \frac{e}{Dx} = y_{0} + \frac{y_{1}-y_{0}}{x_{1}-x_{0}} \cdot (x - x_{0}) + Q + \frac{R}{Dx}
+\end{equation}
+\begin{equation}
+\hspace{0cm} [y] + \frac{e}{Dx} = y_{0} + \frac{y_{1}-y_{0}}{x_{1}-x_{0}} \cdot (x - x_{0}) + \frac{y_{1}-y_{0}}{x_{1}-x_{0}} \\
+\end{equation}
+\begin{equation}
+\hspace{0cm} [y] + \frac{e}{Dx} = y_{0} + \frac{y_{1}-y_{0}}{x_{1}-x_{0}} \cdot ((x + 1) - x_{0})
+\end{equation}
+$\Box$
+\end{enumerate}
+
+\subsection{Bilinear filtering}
+
 
 \section{Performance considerations}
+
+\section{Pipelined implementation}
+
+\section{Memory access}
+
+\section{Extra features}
+
+\section{Implementation results}
 
 \chapter{Floating point coprocessor}
 \label{ch:pfpu}
@@ -823,7 +851,7 @@ The heart of the software execution capabilities of the SoC is the LatticeMico32
 
 The Milkymist system-on-chip uses LatticeMico32 with 2-way caches of 16KB each, and all the optional features enabled.
 
-At the time this thesis is written, LatticeMico32 is the only hardware component that I have not developed specifically for the Milkymist project.
+At the time this thesis is written, LatticeMico32 is the only hardware component that we have not developed specifically for the Milkymist project.
 
 \section{Capabilities}
 Linux has been ported to the Milkymist SoC (figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
