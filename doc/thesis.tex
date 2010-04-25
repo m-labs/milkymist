@@ -790,7 +790,7 @@ The correctness of the algorithm lies in the fact that every time the result is 
 \item The perfect (rational) interpolated value $y$ is equal to $y = [y] + \frac{e}{Dx}$.
 \end{enumerate}
 
-These conditions can be proven by recursion:
+These conditions can be proven true by recursion:
 \begin{enumerate}
 \item For $x = x_{0}$, $e = 0$ therefore $|e| \leq \frac{Dx}{2}$. Let us now suppose that the hypothesis is true for a certain value of $x \geq x_{0}$, and prove that it is true for $x+1$.
 
@@ -851,9 +851,9 @@ Since we are working with the RGB565 color format, having more than 6 extra bits
 \subsection{Context}
 To motivate the implementation choice of the texture mapping, we will study its execution time in the following  situation:
 \begin{itemize}
-\item The size of the source (texture) and destination pictures is 1024x1024.
+\item The size of the source (texture) and destination pictures is 512x512.
 \item The size of the primitive rectangles is 16x16.
-\item We need at least 60 runs per second. Indeed, the renderer needs, at least, to distort the image and then scale it, 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 17ms of processing time at most.
+\item We need at least 60 runs per second. Indeed, the renderer needs to distort the image and then scale it, 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 17ms of processing time at most. This is a very optimistic estimate; since the image typically needs to be upscaled to a resolution greater than 512x512, this part of the processing is expected to take more time than the 512x512 $\rightarrow$ 512x512 distortion. Other effects such as video echo or the inclusion of live video will also increase the burden on the texture mapping unit.
 \item The system clock is 100MHz.
 \item The $2\cdot e > Dx$ test is always false (which is optimistic).
 \end{itemize}
@@ -912,30 +912,33 @@ Using the above formula with $n=15$, we can compute an estimate of the execution
 
 1D interpolations need to be done twice, once for each texture coordinate.
 
-The number of framebuffer reads is computed by considering that for each pixel written to the 1024x1024 destination picture, 4 pixels must be read from the source picture.
+The number of framebuffer reads is computed by considering that for each pixel written to the 512x512 destination picture, 4 pixels must be read from the source picture.
 
 The cost of bilinear filtering is computed, for each destination pixel, with 4 subtractions, 8 multiplications, 4 additions and 1 bit shift times 3 color channels, which yields 75 cycles. This is optimistic as it does not take into account the time needed to decode the fixed point format. \\
 \begin{tabular}{|l|l|l|}
 \hline
 \textbf{Operation} & \textbf{Cycles} & \textbf{Time} \\
 \hline
-Vertical interpolation & 2015232 & 20 ms \\
+Vertical interpolation & 503808 & 5 ms \\
 \hline
-Horizontal interpolation & 32243712 & 322 ms \\
+Horizontal interpolation & 8060928 & 81 ms \\
 \hline
-Framebuffer reads & 8388608 & 84 ms \\
+Framebuffer reads & 2097152 & 21 ms \\
 \hline
-Bilinear filtering & 78643200 & 786 ms \\
+Bilinear filtering & 19660800 & 197 ms \\
 \hline
-Framebuffer writes & 2097152 & 21 ms \\
+Framebuffer writes & 524288 & 5 ms \\
 \hline
-\textbf{Total} & 123387904 & 1234 ms \\
+\textbf{Total} & 30846976 & 308 ms \\
 \hline
 \end{tabular}
 
-According to this (yet optimistic) estimate, it becomes clear that a software implementation could not suffice, as the required performance is 17 ms. Even the vertical interpolation cannot be implemented in software. We need an overall speedup by a factor of 70-80, using hardware acceleration.
+According to this (yet optimistic) estimate, it becomes clear that a software implementation could not suffice, as the required performance is 17 ms. Even the vertical interpolation can hardly be implemented in software, as it would use alone more than 30\% of the CPU power (which is needed for other tasks). We need an overall speedup by a factor of more than 20, using hardware acceleration.
 
 \section{Pipelined hardware implementation}
+Given the performance constraints and the slowness of software implementations, we decided to implement the complete texture mapping process in hardware.
+
+
 
 \section{Memory access}
 
