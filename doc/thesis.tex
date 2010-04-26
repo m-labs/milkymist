@@ -702,7 +702,13 @@ FML is a burst-only bus with a fixed burst length, while with Wishbone, bursts a
 
 A traditional write-back cache with a line length equal to the FML burst length provides an elegant solution to this problem. This cache is referred to as the ``L2 cache'', because, from the CPU point of view, it provides a second level of cache relative to its integrated instruction and data caches.
 
-The bridge provides very limited support for cache coherency. Cache coherency issues arise because of the masters directly connected to the FML bus:
+\section{Cache coherency}
+\label{sec:coherency}
+\subsection{Coherency issues around the CPU (L1) cache}
+TODO
+
+\subsection{Coherency issues around the Wishbone-FML (L2) cache}
+The Wishbone-FML bridge provides very limited support for cache coherency. Cache coherency issues arise because of the masters directly connected to the FML bus:
 \begin{itemize}
 \item The CPU may read a cached copy of a data that has been modified by a FML master.
 \item A FML master may read a value that has been modified by the CPU in the cache (dirty line) but not flushed to the SDRAM.
@@ -767,7 +773,7 @@ R \leftarrow Dy \% Dx \footnote{\% is the integer modulo operator}  \\
 x \leftarrow x_{0} \\
 \hspace{0cm} [y] \leftarrow y_{0} \\ % WA: latex doesn't like lines starting with [
 e \leftarrow 0 \\
-\textrm{result(x)} \leftarrow y \\
+\textrm{result(x)} \leftarrow [y] \\
 \textrm{\textbf{while}~} x < x_{1} \\
 \textrm{~~~~~} x \leftarrow x + 1 \\
 \textrm{~~~~~} [y] \leftarrow [y] + Q \\
@@ -829,7 +835,7 @@ We will therefore try to improve the previous algorithm so that we get a more pr
 
 The first thing that comes to mind is to try to use the error value $\frac{e}{Dx}$. However, this would require an integer to fixed point division to be performed at each interpolated result (the horizontal interpolation alone would require two such operations per pixel), which is expensive.
 
-A more elegant solution consists in multiplying all the texture coordinates by a power of 2, noted S (this is an inexpensive operation, as it can be implemented with a binary shift). Since the interpolation process is linear, the outputs are also multiplied by S -- but the precision is increased. In other words, the output of the interpolation stages comes directly in fixed point format, with $log_{2}(S)$ digits after the radix point.
+A more elegant solution consists in multiplying all the texture coordinates by a power of 2, noted S (this is an inexpensive operation, as it can be implemented with a bit shift). Since the interpolation process is linear, the outputs are also multiplied by S -- but the precision is increased. In other words, the output of the interpolation stages comes directly in fixed point format, with $log_{2}(S)$ digits after the radix point.
 
 Figure~\ref{fig:filtfromfp} illustrates how the bilinear filtering is done using the fixed point texture coordinates. The texture coordinates are noted X.i, X.f, Y.i and Y.f, with ``i'' denoting the integer part of the fixed point number (bits before the radix point) and ``f'' denoting the fractional part (bits after the radix point).
 
@@ -847,7 +853,7 @@ c = \frac{(S-X.f)(S-Y.f) \cdot c_{1} + X.f(S-Y.f) \cdot c_{2} + (S-X.f)Y.f \cdot
 
 Since we are working with the RGB565 color format, having more than 6 extra bits of precision would not make a difference for the filtering. Therefore, we choose $S = 2^{6} = 64$.
 
-\section{Performance considerations} % TODO breakout tables
+\section{Performance considerations}
 \subsection{Context}
 To motivate the implementation choice of the texture mapping, we will study its execution time in the following  situation:
 \begin{itemize}
@@ -859,8 +865,13 @@ To motivate the implementation choice of the texture mapping, we will study its 
 \item We optimistically do not take into account the extra instructions needed to handle interpolations with a negative slope ($y_{0} > y_{1}$).
 \end{itemize}
 
-For a software implementation, we use these cost estimates:\\
+For a software implementation, we use the cost estimates of table~\ref{tab:swcost}.
+
+\begin{table}
+\centering
 \begin{tabular}{|l|l|}
+\hline
+\textbf{Operation} & \textbf{Cost} \\
 \hline
 Addition or subtraction & 1 cycle \\
 \hline
@@ -879,9 +890,14 @@ Assignment & free (which is optimistic) \\
 Reading or writing to the framebuffer & 2 cycles \\
 \hline
 \end{tabular}
+\caption{Estimates of the cost of common software operations.} \label{tab:swcost}
+\end{table}
 
 \subsection{Execution time of the interpolation algorithm}
-For each 1D interpolation with n steps, we need (in the same order as in figure~\ref{fig:interalgo}):\\
+For each 1D interpolation with n steps, we need the amount of time detailed in table~\ref{tab:intertime}. The steps are in the same order as in figure~\ref{fig:interalgo}.
+
+\begin{table}
+\centering
 \begin{tabular}{|l|l|}
 \hline
 \textbf{Operation} & \textbf{Cycles} \\
@@ -907,15 +923,20 @@ Conditional jump & $3 \cdot n$ \\
 \textbf{Total} & $66 + 12 \cdot n$ \\
 \hline
 \end{tabular}
+\caption{Detailed estimate of the execution time of the interpolation algorithm.} \label{tab:intertime}
+\end{table}
 
 \subsection{Total execution time}
-Using the above formula with $n=15$, we can compute an estimate of the execution time of a software implementation.
+Using the above formula with $n=15$, we can compute an estimate of the execution time of a software implementation (table~\ref{tab:swtmutime}).
 
 1D interpolations need to be done twice, once for each texture coordinate.
 
 The number of framebuffer reads is computed by considering that for each pixel written to the 512x512 destination picture, 4 pixels must be read from the source picture.
 
-The cost of bilinear filtering is computed, for each destination pixel, with 4 subtractions, 8 multiplications, 4 additions and 1 bit shift times 3 color channels, which yields 75 cycles. This is optimistic as it does not take into account the time needed to decode the fixed point format. \\
+The cost of bilinear filtering is computed, for each destination pixel, with 4 subtractions, 8 multiplications, 4 additions and 1 bit shift times 3 color channels, which yields 75 cycles. This is optimistic as it does not take into account the time needed to decode the fixed point format.
+
+\begin{table}
+\centering
 \begin{tabular}{|l|l|l|}
 \hline
 \textbf{Operation} & \textbf{Cycles} & \textbf{Time} \\
@@ -933,6 +954,8 @@ Framebuffer writes & 524288 & 5 ms \\
 \textbf{Total} & 30846976 & 308 ms \\
 \hline
 \end{tabular}
+\caption{Optimistic estimate of the execution time of software texture mapping.} \label{tab:swtmutime}
+\end{table}
 
 According to this (yet optimistic) estimate, it becomes clear that a software implementation could not suffice, as the required performance is 17 ms. Even the vertical interpolation can hardly be implemented in software, as it would use alone more than 30\% of the CPU power (which is needed for other tasks). We need an overall speedup by a factor of more than 20, using hardware acceleration.
 
@@ -949,6 +972,9 @@ Given the performance constraints and the slowness of software implementations, 
 A deeply pipelined implementation was chosen, whose block diagram is depicted in figure~\ref{fig:tmublock}. Many of the stages have internal pipeline sub-stages, and they are detailed below.
 
 \subsection{Vertex fetch engine}
+There is not much to say about this stage, which is a straightforward finite state machine-based Wishbone bus master that fetches the texture coordinates of each vertex from the system memory, and sends them down the pipeline to the vertical interpolator.
+
+The vertex fetch engine is connected to the lower-bandwidth Wishbone bus because this saves resources compared to FML (which has a wider datapath) and makes it easier to handle cache coherency issues (section~\ref{sec:coherency}).
 
 \subsection{Interpolators}
 
