@@ -479,28 +479,32 @@ The Milkymist SoC uses 32-bit DDR SDRAM, configured to its maximum burst length 
 
 \begin{table}
 \centering
-\begin{tabular}{|l|l|}
+\begin{tabularx}{13cm}{|X|l|}
 \hline
 \textbf{Task} & \textbf{Required bandwidth} \\
 \hline
 VGA framebuffer, 1024x768, 75Hz, 16bpp & 950Mbps \\
 \hline
-Texture mapping, 512x512 to 512x512, 30fps, 16bpp & 250Mbps \\
+Distortion: texture mapping, 512x512 to 512x512, 30fps, 16bpp & 250Mbps \\
 \hline
-Texture mapping, 512x512 to 1024x768, 30fps, 16bpp & 500Mbps \\
+Live video: texture mapping, 720x576 to 512x512 with transparency, 30fps, 16bpp & 300Mbps \\
+\hline
+Scaling: texture mapping, 512x512 to 1024x768, 30fps, 16bpp & 500Mbps \\
+\hline
+Video echo: texture mapping, 512x512 to 1024x768 with transparency, 30fps, 16bpp & 900Mbps \\
 \hline
 NTSC input, 720x576, 30fps, 16bpp & 200Mbps \\
 \hline
-Software and misc. & 300Mbps \\
+Software and misc. & 200Mbps \\
 \hline
-\textbf{Total} & \textbf{2.2Gbps} \\
+\textbf{Total} & \textbf{3.3Gbps} \\
 \hline
-\end{tabular}
+\end{tabularx}
 \label{tab:membw}
 \caption{Estimate of the memory bandwidth consumption.}
 \end{table}
 
-The memory is run at 100MHz, yielding a peak theoretical bandwidth of 6.4Gbps, which is more than enough for the intended video synthesis application (table~\ref{tab:membw}). This bandwidth is however never attained: events such as switching DRAM rows which takes significant time and, to a lesser extent, DRAM refreshes introduce dead times on the data bus. We will see in section~\ref{sec:memperf} that such an oversizing of the off-chip memory is needed if we want to keep the memory controller simple.
+The memory is run at 100MHz, yielding a peak theoretical bandwidth of 6.4Gbps, which is more than enough for the intended video synthesis application (table~\ref{tab:membw}). This bandwidth is however never attained: events such as switching DRAM rows which takes significant time and, to a lesser extent, DRAM refreshes introduce dead times on the data bus. We will see in section~\ref{sec:memperf} that such an oversizing of the off-chip memory is needed if we want to keep the memory system simple.
 
 \begin{figure}[H]
 \centering
@@ -520,7 +524,7 @@ Finally, the bus interface is a piece of glue logic that connects the SoC pipeli
 
 HPDMC has been implemented in Verilog HDL, tested and debugged in RTL simulation using a DDR SDRAM Verilog model from Micron, integrated into the SoC, synthesized into FPGA technology, and eventually calibrated and tested by software routines running on the actual hardware.
 
-This design of memory controller, specifically crafted for the Milkymist project and released under the GNU GPL license on the internet, has been picked up by the NASA for a software defined radio project and may be put up onboard the international space station in 2011. Gregory Taylor, Electronics Engineer at the NASA Jet Propulsion Laboratory, writes:
+This design of memory controller, specifically crafted for the Milkymist project and released under the GNU GPL license on the internet, has been picked up by the NASA for a software defined radio project and may be put up onboard the international space station in 2011. Gregory Taylor, Electronics Engineer at the NASA Jet Propulsion Laboratory, wrote:
 
 \textit{While searching for a suitable SDRAM controller for the Jet Propulsion Laboratory's Software-Defined Radio onboard NASA's CoNNeCT experiment, I found S\'ebastien's HPDMC SDRAM controller on OpenCores.org. We needed a controller that was both high performance and well documented. Though the original HPDMC controller was designed for DDR SDRAM with a 32-bit bus, S\'ebastien clearly explained the modifications necessary to adapt the controller to our Single Data Rate, 40-bit wide SDRAM chip. I found the code to be well documented and easy to follow. The performance has met our requirements and the FPGA size requirement is small.}
 
@@ -621,13 +625,13 @@ Aderrasi - Candy Avian & 923 Mbps & 27 \% & 6.52 & 53 \% (3404 Mbps) \\
 \hline
 \end{tabular}
 \caption{Memory performance in different conditions (Milkymist 0.5).} \label{tab:memperformance}
-\end{table}
+\end{table} % TODO: update these results
 
 It is difficult to compare these results to those of other memory controllers as they are usually not published (or not measured at all).
 
 However, two conclusions can be drawn:
 \begin{itemize}
-\item there are enough occupancy and bandwidth margins for the system to operate at higher resolutions and/or color depths than 640x480 and 16 bits per pixel. The 2.2Gbps bandwidth requirement that was estimated in section~\ref{sec:memimpl} seems attainable.
+\item there are enough occupancy and bandwidth margins for the system to operate at higher resolutions and/or color depths than 640x480 and 16 bits per pixel. The 3.3 Gbps bandwidth requirement that was estimated in section~\ref{sec:memimpl} seems attainable, although challenging.
 \item to go further, an ``out-of-order'' memory controller can be envisioned. Such a controller would have a split transaction bus (allowing a larger number of outstanding transactions, thus minimizing the impact that latency has on bandwidth) and would be able to reorder pending memory transactions to maximize the page hit rate.
 \end{itemize}
 
@@ -804,7 +808,7 @@ The instructions that affect $e$ between two consecutive values of $x$ are $e \l
 
 After the first instruction:
 \begin{itemize}
-\item if $e$ was negative or zero, we have $-\frac{Dx}{2} \leq e < Dx < \frac{3 \cdot Dx}{2} $ (because $R < Dx$).
+\item if $e$ was negative or zero, we have $-\frac{Dx}{2} \leq e < Dx < \frac{3 \cdot Dx}{2} $ (because $0 \leq R < Dx$ and the recursion hypothese).
 \item if $e$ was positive, it was inferior or equal to $\frac{Dx}{2}$ (because of the recursion hypothese), therefore we have $0 < e < \frac{3 \cdot Dx}{2} $.
 \end{itemize}
 After the second instruction, if we had $e > \frac{Dx}{2}$, we'll have $e < \frac{3 \cdot Dx}{2} - Dx$. Therefore, $e \leq \frac{Dx}{2}$. $\Box$
@@ -847,7 +851,7 @@ Figure~\ref{fig:filtfromfp} illustrates how the bilinear filtering is done using
 \end{figure}
 
 The weights in the average should be proportional to the surface that the texel to be sampled with non-integer coordinates (the grey box on the figure) covers in each of the real texture pixels (numbered 1 to 4 on the figure). Thus, if $c_{1}$, $c_{2}$, $c_{3}$ and $c_{4}$ are respectively the color vectors of the texture pixels 1 to 4 and $c$ is the color vector of the result, we have:
-\begin{equation}
+\begin{equation}\label{eq:bfilter}
 c = \frac{(S-X.f)(S-Y.f) \cdot c_{1} + X.f(S-Y.f) \cdot c_{2} + (S-X.f)Y.f \cdot c_{3} + X.fY.f \cdot c_{4}}{S^{2}}
 \end{equation}
 
@@ -855,11 +859,12 @@ Since we are working with the RGB565 color format, having more than 6 extra bits
 
 \section{Performance considerations}
 \subsection{Context}
+\label{subsec:perfcontext}
 To motivate the implementation choice of the texture mapping, we will study its execution time in the following  situation:
 \begin{itemize}
 \item The size of the source (texture) and destination pictures is 512x512.
 \item The size of the primitive rectangles is 16x16.
-\item We need at least 60 runs per second. Indeed, the renderer needs to distort the image and then scale it, 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 17ms of processing time at most. This is a very optimistic estimate; since the image typically needs to be upscaled to a resolution greater than 512x512, this part of the processing is expected to take more time than the 512x512 $\rightarrow$ 512x512 distortion. Other effects such as video echo or the inclusion of live video will also increase the burden on the texture mapping unit.
+\item We need at least 120 runs per second. Indeed, the renderer needs to distort the image, include live video, scale it, and apply the video echo effect 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 8 ms of processing time at most (which corresponds to 31 megapixels per second). This is a very optimistic estimate; since scaling, inclusion of live video and the video echo effect work with resolutions greater than 512x512, these processes are expected to take more time than the 512x512 $\rightarrow$ 512x512 distortion.
 \item The system clock is 100MHz.
 \item The $2\cdot e > Dx$ test is always false (which is optimistic).
 \item We optimistically do not take into account the extra instructions needed to handle interpolations with a negative slope ($y_{0} > y_{1}$).
@@ -957,10 +962,19 @@ Framebuffer writes & 524288 & 5 ms \\
 \caption{Optimistic estimate of the execution time of software texture mapping.} \label{tab:swtmutime}
 \end{table}
 
-According to this (yet optimistic) estimate, it becomes clear that a software implementation could not suffice, as the required performance is 17 ms. Even the vertical interpolation can hardly be implemented in software, as it would use alone more than 30\% of the CPU power (which is needed for other tasks). We need an overall speedup by a factor of more than 20, using hardware acceleration.
+According to this (yet optimistic) estimate, it becomes clear that a software implementation could not suffice, as the required performance is 8 ms. Even the vertical interpolation can hardly be implemented in software, as it would use alone more than 60\% of the CPU power (which is needed for other tasks). We need an overall speedup by a factor of more than 40, using hardware acceleration.
 
 \section{Pipelined hardware implementation}
+\subsection{Strategy}
 Given the performance constraints and the slowness of software implementations, we decided to implement the complete texture mapping process in hardware.
+
+It is expected that the memory latency for reading the framebuffer would be a performance-limiting factor. Instead of trying to alleviate its effects by using complex and potentially resource-intensive techniques such as advanced prefetching or non-blocking caches, we simply use a direct-mapped blocking texel cache providing simplicity and fast hit times, and design the rest of the mapping unit so that the memory read latency becomes the \textit{only} limiting factor.
+
+With a direct-mapped texel cache having a hit rate of 90\%, a hit time of 1 cycle and a miss penalty of 9 cycles, the average memory access times is 1.8 cycles. With a 100MHz system clock, such a cache has a throughput of 55 megapixels per second, well above the optimistic estimate made in subsection~\ref{subsec:perfcontext}.\footnote{This is a quick estimate assuming a normal cache that does not support bilinear filtering. To implement bilinear filtering, the situation is more complex as the cache needs to look up 4 pixels at once. This will be discussed in subsection~\ref{subsec:texelcache}.}
+
+To make sure that the memory access time is the only limiting factor, it was chosen that the rest of the system should be designed to support a throughput of approximately one output pixel per clock cycle. This heuristic was influenced by the fact that it corresponds to a spatial implementation of the algorithm (i.e. with little or no time-based resource sharing of the hardware components) but does not require resource-intensive duplication of large hardware units either. A spatial implementation requires more area than a time-shared one, but it is simpler to understand, and needs fewer multiplexers and is less prone to routing congestions, making it easier to achieve timing closure in FPGAs.
+
+A deeply pipelined implementation of the texture mapping algorithm was thus chosen, whose block diagram is depicted in figure~\ref{fig:tmublock}. Many of the stages have internal pipeline sub-stages, and they are detailed below.
 
 \begin{figure}[htp]
 \centering
@@ -969,21 +983,21 @@ Given the performance constraints and the slowness of software implementations, 
 \label{fig:tmublock}
 \end{figure}
 
-A deeply pipelined implementation was chosen, whose block diagram is depicted in figure~\ref{fig:tmublock}. Many of the stages have internal pipeline sub-stages, and they are detailed below.
-
 \subsection{Vertex fetch engine}
 There is not much to say about this stage, which is a straightforward finite state machine-based Wishbone bus master that fetches the texture coordinates of each vertex from the system memory, and sends them down the pipeline to the vertical interpolator.
 
 The vertex fetch engine is connected to the lower-bandwidth Wishbone bus because this saves resources compared to FML (which has a wider datapath) and makes it easier to handle cache coherency issues (section~\ref{sec:coherency}).
 
 \subsection{Interpolators}
-The horizontal and vertical interpolators are both implemented in the same way. They are vector interpolators, which contain two scalar interpolators (figure~\ref{fig:xyinter}, one for each texture coordinate). Each scalar interpolator contains additional internal pipeline sub-stages, as described in figure~\ref{fig:pipeinter}.
+The horizontal and vertical interpolators are both implemented in the same way. They are vector interpolators, which contain two scalar interpolators (figure~\ref{fig:vectinter}, one for each texture coordinate). Each scalar interpolator contains additional internal pipeline sub-stages, as described in figure~\ref{fig:pipeinter}.
+
+The vertical interpolator contains two vector interpolators, one for each vertical edge of the rectangle.
 
 \begin{figure}[htp]
 \centering
 \includegraphics[height=70mm]{vectinter.eps}
 \caption{Vector interpolator.}
-\label{fig:pipeinter}
+\label{fig:vectinter}
 \end{figure}
 
 \begin{figure}[htp]
@@ -996,23 +1010,41 @@ The horizontal and vertical interpolators are both implemented in the same way. 
 \subsubsection{Stages of the scalar interpolator}
 \paragraph{Stage A: Dx and Dy computation.} This stage computes the two differences $y_{1} - y_{0}$ and $x_{1} - x_{0}$. It is based on simple registered arithemetic combinatorial functions, which compute the two differences in one clock cycle.
 
-\paragraph{Stage B: Q and R computation.} The next operation is to perform the Euclidian division of Dy by Dx. The hardware does so by using the restoring division method~\cite{restdiv}, which takes as many cycles as there are quotient digits.
+\paragraph{Stage B: Q and R computation.} The next operation is to perform the Euclidian division of Dy by Dx. The hardware does so by using the restoring division method~\cite{restdiv}, which takes as many cycles as there are quotient digits (our implementation has 18).
+
+In order to keep the resource usage low, the divider is not pipelined. After operands are sent to it, it will stall transmissions from the upstream stage for several cycles until the division is complete.
 
 \paragraph{Stage C: Interpolation loop.}
+Finally, the core of the algorithm (the ``while'' loop from figure~\ref{fig:interalgo}) is implemented in the last stage. This unit receives the Q and R values from the dividers, as well as the start $y_{0}$ value and the range $x_{0}$ to $x_{1}$ (which are forwarded through the previous stages). It then sends the series of interpolated values $[y]$ for $x_{0} \leq x < x_{1}$.
 
-\subsubsection{Resource sharing}
+The throughput of the stage is one interpolation point per clock cycle. While the interpolation is taking place, transmission of new parameters from the upstream stage is stalled. This justifies the choice of a slow but low-area restoring divider in stage B: with a typical rectangle size of 16, the processing times of the interpolation loop and of the divider are roughly the same, making the pipeline balanced.
 
 \subsection{Address generator}
+The address generator is a simple arithmetic circuit that turns the floating point texture coordinates into the four memory addresses of the pixels they cover, and the destination coordinate into the corresponding memory address in the destination framebuffer. It is pipelined on three sub-stages to meet timing goals.
+
+The formula used to convert a coordinate $(x,y)$ into a pixel address $A$ within a 16bpp framebuffer starting at $A_{base}$ and with an horizontal resolution $H$ is the following:
+\begin{equation}
+A = A_{base} + (H \cdot y + x) \cdot 2
+\end{equation}
 
 \subsection{Texel cache}
+\label{subsec:texelcache}
 
 \subsection{Bilinear filter}
+The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
 
 \subsection{Write buffer}
 
 \subsection{Control interface}
+The texture mapping unit is completely under software control thanks to a CSR interface through which the CPU can configure and control it using a set of configuration and status registers. The texture mapping unit has one interrupt line to signal completion of the process to the CPU.
 
 \section{Extra features}
+Beyond this basic principle of operation, the texture mapping unit supports several features which are implemented as additional pipeline stages:
+\begin{itemize}
+\item Fade to black. To implement the ``decay'' effect of MilkDrop, the output picture can be darkened by multiplying all its color components by a 6-bit fixed point number between 0 and 1.
+\item Chroma key. Texels of a given color can be ignored (not drawn in the output framebuffer). This is not used in normal rendering, but makes it possible to draw quickly text or symbols with transparent areas on the screen.
+\item Semi-transparency. The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping and writing the result back to memory. If transparency is not desired, the texture mapping unit will skip reading the destination picture in order to use less memory bandwidth.
+\end{itemize}
 
 \section{Implementation results}
 
