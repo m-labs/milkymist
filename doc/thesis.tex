@@ -557,12 +557,12 @@ Every FastMemoryLink transaction begins with the assertion of the strobe signal.
 
 In the equations that follow, these symbols are used:
 \begin{itemize}
-\item $f$ is the system clock frequency in Hz
-\item $T$ is the time during which the counters have been enabled
-\item $w$ is the width of a FML word in bits
-\item $n$ is the FML burst length
-\item $S$ is the number of cycles during which the strobe signal was active
-\item $A$ is the number of cycles during which the acknowledgement signal was active
+\item $f$ is the system clock frequency in Hz.
+\item $T$ is the time during which the counters have been enabled.
+\item $w$ is the width of a FML word in bits.
+\item $n$ is the FML burst length.
+\item $S$ is the number of cycles during which the strobe signal was active.
+\item $A$ is the number of cycles during which the acknowledgement signal was active.
 \end{itemize}
 
 \paragraph{Net bandwidth.} By counting the number of cycles for which the acknowledgement signal was active, one gets the number of transactions. Since each transaction carries exactly a burst of data, which is $w \cdot n$ bits in size, the volume of data transferred is given by $w \cdot n \cdot A $. Thus, one can derive the net bandwidth as:
@@ -833,7 +833,7 @@ $\Box$
 \end{enumerate}
 
 \subsection{Bilinear filtering}
-As outlined in section~\label{sec:tm}, bilinear filtering is needed to obtain good rendering results.
+As outlined in section~\ref{sec:tm}, bilinear filtering is needed to obtain good rendering results.
 
 We will therefore try to improve the previous algorithm so that we get a more precise, non-integer interpolation result. Preferably, the result should be in fixed point format so that it can be easily handled for the actual filtering stage (weighted average of adjacent pixels colors).
 
@@ -864,7 +864,7 @@ To motivate the implementation choice of the texture mapping, we will study its 
 \begin{itemize}
 \item The size of the source (texture) and destination pictures is 512x512.
 \item The size of the primitive rectangles is 16x16.
-\item We need at least 120 runs per second. Indeed, the renderer needs to distort the image, include live video, scale it, and apply the video echo effect 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 8 ms of processing time at most (which corresponds to 31 megapixels per second). This is a very optimistic estimate; since scaling, inclusion of live video and the video echo effect work with resolutions greater than 512x512, these processes are expected to take more time than the 512x512 $\rightarrow$ 512x512 distortion.
+\item We need at least 120 runs per second. Indeed, the renderer needs to distort the image, include live video, scale it, and apply the video echo effect 30 times per second (subsection~\ref{subsec:mdprinciple}). We therefore have approximately 8 ms of processing time at most (which corresponds to 31 megapixels per second). This is a very optimistic estimate: since scaling, inclusion of live video and the video echo effect work with resolutions greater than 512x512, these processes are expected to take more time than the 512x512 $\rightarrow$ 512x512 distortion.
 \item The system clock is 100MHz.
 \item The $2\cdot e > Dx$ test is always false (which is optimistic).
 \item We optimistically do not take into account the extra instructions needed to handle interpolations with a negative slope ($y_{0} > y_{1}$).
@@ -1023,7 +1023,7 @@ The throughput of the stage is one interpolation point per clock cycle. While th
 The address generator is a simple arithmetic circuit that turns the floating point texture coordinates into the four memory addresses of the pixels they cover, and the destination coordinate into the corresponding memory address in the destination framebuffer. It is pipelined on three sub-stages to meet timing goals.
 
 The formula used to convert a coordinate $(x,y)$ into a pixel address $A$ within a 16bpp framebuffer starting at $A_{base}$ and with an horizontal resolution $H$ is the following:
-\begin{equation}
+\begin{equation}\label{eq:fbadr}
 A = A_{base} + (H \cdot y + x) \cdot 2
 \end{equation}
 
@@ -1034,16 +1034,45 @@ A = A_{base} + (H \cdot y + x) \cdot 2
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
 
 \subsection{Write buffer}
+The write buffer is in charge of gathering the final pixel data produced by the algorithm, assemble them into FML bursts and write them to the memory.
+
+The write buffer has enough memory capacity to store two bursts on-chip. This storage space is used for a ``double buffering'' technique: while the first burst buffer receives pixels from the pipeline, the other buffer can transmit data to the memory controller. Bursts can be complete, which means that all data in them is valid, or incomplete, which means that the write buffer has not received a value for all the pixels within the burst but still needs to move the partial burst data it has off-chip because it does not have space to store it. Incomplete bursts are performed using the data mask (DM) signals of FML that will prevent some bytes from being written to the memory during the burst. Incomplete bursts should be avoided as they waste memory bandwidth and reduce performance.
+
+This small amount of on-chip memory is enough to perform well. Indeed, the algorithm scans the rectangles one by one horizontally and then vertically (figure~\ref{fig:rectinter}) and consecutive pixels on the same horizontal line are contiguous in memory (equation~\ref{eq:fbadr}). Thus, if the destination framebuffer is aligned to the start of a FML burst and if the horizontal size of the rectangles is a multiple of the number of pixels in a FML burst, the burst buffers will be used very efficiently, with complete bursts only. This is the recommended mode of operation for the texture mapping unit.
+
+Under this assumption, what limits the throughput of the write buffer is the time it takes to empty the second burst buffer into the memory. This time is equal to the memory write access time plus the length of the FML burst.
+
+In the equations that follow, these symbols are used:
+\begin{itemize}
+\item $f$ is the system clock frequency in Hz.
+\item $w$ is the width of a FML word in bits.
+\item $n$ is the FML burst length.
+\item $\Delta_{w}$ is the memory write access time.
+\item $d$ is the number of bits per pixel.
+\item $T$ is the throughput of the write buffer, in pixels per second.
+\end{itemize}
+
+We therefore have:
+\begin{equation}
+T = \frac{f \cdot n \cdot w}{d \cdot (\Delta_{w} + n)}
+\end{equation}
+
+Thus, the write buffer can achieve a throughput of one pixel per clock cycle ($T = f$) if the memory write access time verifies:
+\begin{equation}
+\Delta_{w} \leq \frac{n \cdot w}{d} - n
+\end{equation}
+
+In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words. Therefore, the write buffer can tolerate write latencies of up to 12 cycles while maintaining excellent performance, which is easily achieved.
 
 \subsection{Control interface}
 The texture mapping unit is completely under software control thanks to a CSR interface through which the CPU can configure and control it using a set of configuration and status registers. The texture mapping unit has one interrupt line to signal completion of the process to the CPU.
 
 \section{Extra features}
-Beyond this basic principle of operation, the texture mapping unit supports several features which are implemented as additional pipeline stages:
+Beyond this basic principle of operation, the texture mapping unit supports several features which are implemented as additional pipeline stages (not shown in figure~\ref{fig:tmublock}):
 \begin{itemize}
 \item Fade to black. To implement the ``decay'' effect of MilkDrop, the output picture can be darkened by multiplying all its color components by a 6-bit fixed point number between 0 and 1.
 \item Chroma key. Texels of a given color can be ignored (not drawn in the output framebuffer). This is not used in normal rendering, but makes it possible to draw quickly text or symbols with transparent areas on the screen.
-\item Semi-transparency. The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping and writing the result back to memory. If transparency is not desired, the texture mapping unit will skip reading the destination picture in order to use less memory bandwidth.
+\item Semi-transparency. The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping (by computing a weighted average) and writing the result back to memory. If transparency is not desired, the texture mapping unit will skip reading the destination picture in order to use less memory bandwidth and avoid blocking on unneeded memory references.
 \end{itemize}
 
 \section{Implementation results}
