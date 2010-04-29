@@ -709,7 +709,13 @@ A traditional write-back cache with a line length equal to the FML burst length 
 \section{Cache coherency}
 \label{sec:coherency}
 \subsection{Coherency issues around the CPU (L1) cache}
-TODO
+The LatticeMico32 CPU (section~\ref{sec:mico32}) uses a write-through cache without hardware coherency. Thus, the following operations must be done by the software to ensure cache coherency:
+\begin{itemize}
+\item Before reading DMA data from a peripheral using shared memory, the L1 cache should be cleared as it may hold an outdated copy of the data.
+\item When writing DMA data to a peripheral using shared memory on the Wishbone bus, no precaution should be taken. The CPU writes go directly to the bus, and end up in the L2 cache or the SDRAM where the peripheral will correctly retreive them.
+\end{itemize}
+
+It is noteworthy that the CSR address space is non-cacheable, therefore no cache-related precaution should be taken when reading or writing CSRs.
 
 \subsection{Coherency issues around the Wishbone-FML (L2) cache}
 The Wishbone-FML bridge provides very limited support for cache coherency. Cache coherency issues arise because of the masters directly connected to the FML bus:
@@ -726,6 +732,8 @@ The only form of hardware cache coherency the system has is related to the video
 However, it is very common that software modifies only a few pixels on the screen. If there was no hardware cache coherency at all, it would be tricky to implement a software mechanism that flushes the bridge cache at appropriate times. A solution can be to flush the cache every time a pixel or a group of pixels are written (which can be extremely slow if only small regions of the screen are modified at a time). Another solution would be to periodically check if the framebuffer had been modified and flush the cache if it was.
 
 Since those solutions are difficult to implement as they require a significant support from both the operating system and applications, it was chosen to make framebuffer read transactions by the VGA signal generator coherent with respect to the bridge cache. Every time the VGA signal generator fetches a burst of pixels, it first searches the bridge cache. If the data is in the cache, it is used. If not, the VGA signal generator fetches it from SDRAM (but does not replace any cache line).
+
+This also makes it easier to write Milkymist framebuffer drivers within the frameworks of common operating systems, such as Linux (figure~\ref{fig:linux}).
 
 \chapter{Texture mapping unit}
 \label{ch:tmu}
@@ -1083,6 +1091,7 @@ Beyond this basic principle of operation, the texture mapping unit supports seve
 \chapter{Software}
 \label{ch:sw}
 \section{LatticeMico32}
+\label{sec:mico32}
 The heart of the software execution capabilities of the SoC is the LatticeMico32 microprocessor core~\cite{mico32}. It is a classic 6-stage in-order pipelined RISC processor (figure~\ref{fig:lm32arch}) with a custom instruction set supported by the GNU (GCC-based) compiler toolchain. It supports separate instruction and data caches with up to two ways. There are an optional barrel shifter, pipelined multiplier and multi-cycle divider.
 
 \begin{figure}[htp]
@@ -1097,7 +1106,7 @@ The Milkymist system-on-chip uses LatticeMico32 with 2-way caches of 16KB each, 
 At the time this thesis is written, LatticeMico32 is the only hardware component that we have not developed specifically for the Milkymist project.
 
 \section{Capabilities}
-Linux has been ported to the Milkymist SoC (figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
+The ``nommu'' version of Linux has been ported to the Milkymist SoC (figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
 
 \begin{figure}[htp]
 \centering
