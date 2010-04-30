@@ -215,7 +215,7 @@ However, its drawbacks are:
 \begin{itemize}
 \item Code complexity. GRLIB is written in VHDL and makes intensive use of custom types, packages, generate statements, etc.
 \item Cores are not self-contained. GRLIB defines many ``building blocks'' that are used everywhere else in the code, making it difficult to re-use code in another project which is not based on GRLIB.
-\item Significant FPGA resource usage. A system comprising the LEON3 SPARC processor with a 2-way set-associative 16kB cache and no memory management unit (MMU), the DDR SDRAM controller, a RS232 serial port, and an Ethernet 10/100 MAC uses 13264 FPGA look-up tables (LUT). They map to 79\% of the Virtex-4 XC4VLX25 FPGA. We have carried out the test with the Xst synthesizer, Xilinx ISE 11.3, and GRLIB 1.0.21-b3957 (GPL release) using the default provided synthesis scripts. This undermines the possibility of adding hardware acceleration cores.
+\item Significant FPGA resource usage. A system comprising the LEON3 SPARC processor with a 2-way set-associative 16kB cache and no memory management unit (MMU), the DDR SDRAM controller, a RS232 serial port, and an Ethernet 10/100 MAC uses 13264 FPGA look-up tables (LUT). They map to 79\% of the Virtex-4 XC4VLX25 FPGA. We have carried out the test with the Xst synthesizer, Xilinx ISE 11.3, and GRLIB 1.0.21-b3957 (GPL release) using the default provided synthesis scripts. This undermines the possibility of adding hardware acceleration cores. In~\cite{softcorecomp}, a significant resource usage was also reported for an older version of LEON.
 \item Relatively low clock frequency. With the same parameters as above, the maximum clock frequency is 84MHz.
 \end{itemize}
 
@@ -226,7 +226,7 @@ ORPSoC is based on the OpenRISC~\cite{openrisc} processor core, which is the fla
 
 ORPSoC notably features the OpenRISC OR1200 processor core, the Wishbone~\cite{wishbone} bus, comprehensive debugging facilities, a 16550-compatible RS232 UART, a 10/100Mbps Ethernet MAC and a SDRAM controller.
 
-Unfortunately, ORPSoC is resource-inefficient and buggy. The OpenRISC implementation is not well optimized for synthesis. We carried out tests on the August 17, 2009 OpenRISC release. Still using the XC4VLX25 FPGA as target, synthesis with Xst and Xilinx ISE 11.4 yields an utilization of 5077 LUTs for the CPU core only (using the default FPGA configuration: no caches, no MMU, multiplier, and with the implementation of the RAMs using the RAMB16 elements of the FPGA selected), running at approximately 100MHz. The synthesis report shows asynchronous control signals where there should not be (such as on the output of the program counter), which can be an indication of poor quality of the design. Other IP cores comprising ORPSoC have similar issues (we tested the 16550 UART and the Ethernet MAC). Finally, the provided SDRAM controller only supports the low-bandwidth 16-bit single data rate option, has a high latency due to the extensive use of clock domain transfer FIFOs, does not support pipelined transfers and has a poorly written code.
+Unfortunately, ORPSoC is resource-inefficient and buggy. The OpenRISC implementation is not well optimized for synthesis. We carried out tests on the August 17, 2009 OpenRISC release. Still using the XC4VLX25 FPGA as target, synthesis with Xst and Xilinx ISE 11.4 yields an utilization of 5077 LUTs for the CPU core only (using the default FPGA configuration: no caches, no MMU, multiplier, and with the implementation of the RAMs using the RAMB16 elements of the FPGA selected), running at approximately 100MHz. A similar resource usage is reported in~\cite{softcorecomp}. The synthesis report shows asynchronous control signals where there should not be (such as on the output of the program counter), which can be an indication of poor quality of the design. Other IP cores comprising ORPSoC have similar issues (we tested the 16550 UART and the Ethernet MAC). Finally, the provided SDRAM controller only supports the low-bandwidth 16-bit single data rate option, has a high latency due to the extensive use of clock domain transfer FIFOs, does not support pipelined transfers and has a poorly written code.
 
 OpenRISC and ORPSoC therefore do not seem to be a good platform for the performance-demanding and resource-constrained video synthesis application.
 
@@ -239,13 +239,30 @@ One interesting move made by Lattice Semiconductor is that parts of the LatticeM
 
 While it is perhaps technically possible to build Milkymist on top of the LatticeMico32 System, there are licensing issues concerning most notably the DDR SDRAM controller which is proprietary.
 
-However, the LatticeMico32 microprocessor core is interesting. Synthesized for the XC4VLX25 with the 2-way set-associative caches enabled, it occupies only about 2400 LUTs and runs at more than 100MHz.
+However, the LatticeMico32 microprocessor core is interesting. Synthesized for the XC4VLX25 with the 2-way set-associative caches, the barrel shifter, the hardware divider and the hardware multiplier enabled, it occupies only about 2400 4-LUTs and runs at more than 100MHz.
 
 This microprocessor core has been retained for use in Milkymist, as described in chapter~\ref{ch:sw}.
 
 \subsubsection{Microblaze and Nios II}
 Even though we are not interested in proprietary designs, we still give a brief overview of the resource usage of Microblaze and Nios II systems as a comparison.
-TODO
+
+\paragraph{Microblaze.} In~\cite{softcorecomp}, the Microblaze core is reported to use approximately 2400 LUTs, like LatticeMico32. TODO: frequency.
+
+\paragraph{Nios II.} According to an Altera report~\cite{niosbench}, Nios II/f uses 1600 Cyclone II LEs. A LE is mainly comprised of a 4-LUT and a register, which is comparable to the Virtex-4 architecture on which LatticeMico32 was tested. Thus, it seems that the Nios II core would be approximately two thirds of the area of LatticeMico32.
+
+However, there are some differences between the LatticeMico32 configuration and the Nios II/f configuration used in the Altera report:
+\begin{itemize}
+\item Caches are direct-mapped and 512 bytes (each).
+\item There is no multiplier.
+\item Nios II/f uses a dynamic branch predictor, while LatticeMico32 uses a static branch predictor.
+\item The report does not say if the optional hardware divider, multiplier and shifter (that were enabled in LatticeMico32) were selected.
+\end{itemize}
+
+The Nios II is also reported to run at 140 MHz with this configuration and UART, JTAG UART, SDR SDRAM controller and timer peripherals. This is very fast, but cannot be compared to the LatticeMico32 results on Virtex-4 for two reasons:
+\begin{itemize}
+\item Routing resources and logic delays for the two FPGA families are different.
+\item It is possible that Altera hand-tuned the Nios II processor to their FPGA technology.
+\end{itemize}
 
 \section{DRAM technology}
 DRAM is by far today's dominant memory technology, often being the only affordable solution when relatively large densities (typically more than a few megabytes) are required. Unfortunately, DRAMs are not straightforward devices and we need preliminary knowledge specific to this technology in order to understand the choices discussed in chapter~\ref{ch:memory}. Indeed, in order to reduce system costs, the intelligence has been moved away from the memory chips and into the memory controller~\cite{dramlowcost}, leaving the controller designer with the task of dealing with the low-level details of the DRAM technology.
@@ -1087,6 +1104,7 @@ Beyond this basic principle of operation, the texture mapping unit supports seve
 
 \chapter{Floating point coprocessor}
 \label{ch:pfpu}
+TODO
 
 \chapter{Software}
 \label{ch:sw}
@@ -1220,6 +1238,7 @@ The main point of this comparison is to confirm the viability of Milkymist as a 
 TODO HW/SW partitioning
 
 \chapter{Conclusion}
+TODO
 
 \bibliography{thesis}{}
 \bibliographystyle{plain}
