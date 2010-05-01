@@ -991,6 +991,7 @@ According to this (yet optimistic) estimate, it becomes clear that a software im
 
 \section{Pipelined hardware implementation}
 \subsection{Strategy}
+\label{subsec:tmustrategy}
 Given the performance constraints and the slowness of software implementations, we decided to implement the complete texture mapping process in hardware.
 
 It is expected that the memory latency for reading the framebuffer would be a performance-limiting factor. Instead of trying to alleviate its effects by using complex and potentially resource-intensive techniques such as advanced prefetching or non-blocking caches, we simply use a direct-mapped blocking texel cache providing simplicity and fast hit times, and design the rest of the mapping unit so that the memory read latency becomes the \textit{only} limiting factor.
@@ -1054,6 +1055,30 @@ A = A_{base} + (H \cdot y + x) \cdot 2
 
 \subsection{Texel cache}
 \label{subsec:texelcache}
+\subsubsection{Presentation}
+Once the addresses of the four texture pixels have been computed, the next step is to retrieve data from the memory. This should be done fast: to meet the performance goal of 31 megapixels per second at the output of the texture mapping unit, the texel cache must be able to fetch at least 124 megapixels per second. This is, on average, at least 1.24 pixel per clock cycle with a 100MHz system clock.
+
+In consistence with the heuristic made at subsection~\ref{subsec:tmustrategy} that consists in designing the system for a performance of one output pixel per clock cycle in the absence of memory read delays, the texel cache should be able to service the four request ports (called \textit{channels}) in one clock cycle if all the channels hit the cache.
+
+Channel are numbered as follows (see figure~\ref{fig:bilinear}):
+\begin{itemize}
+\item Channel 1 fetches the \textit{base} pixel, that is to say, the pixel at the coordinates obtained by flooring the non-integer texture coordinates. It is always active.
+\item Channel 2 fetches the pixel at the right of the base pixel. It is active when the X texture coordinate has a non-zero fractional part.
+\item Channel 3 fetches the pixel at the bottom of the base pixel. It is active when the Y texture coordinate has a non-zero fractional part.
+\item Channel 4 fetches the pixel at the bottom-right of the base pixel. It is active when both the X and Y texture coordinate have a non-zero fractional part.
+\end{itemize}
+
+\subsubsection{Separate vs. shared caches}
+The obvious solution seems have one separate cache per channel. However, this solution is not optimal in terms of speed and memory efficiency. For example, let us take the case when the texture mapping consists in zooming the texture by a factor of 2 (the texture coordinates at each vertex are the vertex coordinates divided by 2). The sequence of events is as follows:
+\begin{enumerate}
+\item The interpolated fixed-point texture coordinates are (0, 0). Channel 1 misses its cache for a fetch of the pixel at (0, 0). Since the coordinates are integer, channels 2, 3 and 4 are idle and do not need to fetch data.
+\item The texture coordinates become (0.5, 0). Channel 1 hits its cache for the pixel at (0, 0). However, channel 2 misses its cache for the pixel at (1, 0) and a new memory request needs to be performed, even though the pixel at (1, 0) is in the cache of channel 1 (it was part of the burst that fetched the (0, 0) pixel). Channel 3 and 4 are idle, since the Y coordinate is integer.
+\end{enumerate}
+The problem repeats every time the X texture coordinate crosses a memory burst boundary, and is also present in the Y direction with channels 2 and 3. In total, the texel cache uses \textit{four times} as much memory bandwidth as it would use if it were able to share data between the channels' respective caches. Zooming (locally or globally) is a very common operation, so the issue needs to be addressed.
+
+\subsubsection{Cache conflicts}
+
+\subsubsection{Cache size}
 
 \subsection{Bilinear filter}
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
