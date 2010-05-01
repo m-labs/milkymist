@@ -781,7 +781,7 @@ One could obtain the same result by starting with an horizontal interpolation fo
 
 \begin{figure}[htp]
 \centering
-\includegraphics[height=80mm]{rectinter.eps}
+\includegraphics[height=70mm]{rectinter.eps}
 \caption{2D linear interpolation on a rectangle.}
 \label{fig:rectinter}
 \end{figure}
@@ -1069,14 +1069,37 @@ Channel are numbered as follows (see figure~\ref{fig:bilinear}):
 \end{itemize}
 
 \subsubsection{Separate vs. shared caches}
-The obvious solution seems have one separate cache per channel. However, this solution is not optimal in terms of speed and memory efficiency. For example, let us take the case when the texture mapping consists in zooming the texture by a factor of 2 (the texture coordinates at each vertex are the vertex coordinates divided by 2). The sequence of events is as follows:
+The obvious solution seems have one separate cache per channel. However, this solution is not optimal in terms of speed and memory efficiency. For example, let us take the case when the texture mapping consists in zooming the texture by a factor of 2 (the texture coordinates at each vertex are the vertex coordinates divided by 2). Assuming an empty cache at the beginning, the sequence of events is as follows:
 \begin{enumerate}
 \item The interpolated fixed-point texture coordinates are (0, 0). Channel 1 misses its cache for a fetch of the pixel at (0, 0). Since the coordinates are integer, channels 2, 3 and 4 are idle and do not need to fetch data.
-\item The texture coordinates become (0.5, 0). Channel 1 hits its cache for the pixel at (0, 0). However, channel 2 misses its cache for the pixel at (1, 0) and a new memory request needs to be performed, even though the pixel at (1, 0) is in the cache of channel 1 (it was part of the burst that fetched the (0, 0) pixel). Channel 3 and 4 are idle, since the Y coordinate is integer.
+\item The texture coordinates become (0.5, 0). Channel 1 hits its cache for the pixel at (0, 0). However, channel 2 misses its cache for the pixel at (1, 0) and a new memory request needs to be performed, even though the pixel at (1, 0) is in the cache of channel 1 (it was part of the burst that fetched the (0, 0) pixel). Channels 3 and 4 are idle, since the Y coordinate is integer.
 \end{enumerate}
-The problem repeats every time the X texture coordinate crosses a memory burst boundary, and is also present in the Y direction with channels 2 and 3. In total, the texel cache uses \textit{four times} as much memory bandwidth as it would use if it were able to share data between the channels' respective caches. Zooming (locally or globally) is a very common operation, so the issue needs to be addressed.
+The problem repeats every time the X texture coordinate crosses a memory burst boundary, and is also present in the Y direction with channels 3 and 4. In total, the texel cache uses \textit{four times} as much memory bandwidth as it would use if it were able to share data between the channels' respective caches.\footnote{Assuming at least two complete horizontal lines of pixels from a primitive rectangle fit in the cache, which is generally the case.} Zooming (locally or globally) is a very common operation, so the issue needs to be addressed.
 
-\subsubsection{Cache conflicts}
+A more efficient solution, which has been retained, consists therefore in having a single multi-ported data store.
+
+\subsubsection{Implementation}
+Our implementation is based on the traditional direct-mapped cache, but using quad-port SRAM for the data and tag stores. Quad-port SRAM can be mapped to FPGA technologies at a moderate cost by using two primitive dual-port SRAMs in which the data is replicated. During normal operation (hits), each port serves one channel, and, when refilling the cache on a miss, reading is disabled and two of the ports (one per primitive dual-port SRAM) are used to feed the data into the RAMs.
+
+A simplified block diagram of the texel cache is given in figure~\ref{fig:tcarch}. This block diagram does not include all of the logic needed to handle pipeline stalls and lacks the ``valid'' bits of the tags.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=100mm]{tcarch.eps}
+\caption{Architecture of the four-channel texel cache.}
+\label{fig:tcarch}
+\end{figure}
+
+At each clock cycle, the texel cache processes, in a pipelined manner\footnote{The SRAMs are registered, in order to improve timing and to map to the block RAMs of common modern FPGAs which always contain an internal register.}, four memory addresses from each channel if they hit the caches. The ``hit'' signal is kept high and the pipeline is always running.
+
+In case of a miss, the ``hit'' signal goes low (stalling the pipeline), and the priority encoder and the multiplexer (MUX) select one of the missed addresses (there can be one or many). The FastMemoryLink master issues a memory transaction to retrieve the data from the system memory, replaces the contents of the cache line and rewrites the tag. The address now becomes a cache hit. If no other address misses the cache, the texel cache has successfully handled the 4-channel transaction and the ``hit'' signal goes high again to proceed to the next. Otherwise, the process repeats until all addresses hit the cache.
+
+\subsubsection{Inter-channel cache conflicts}
+An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels request different addresses that have different tags but map to the same cache line.
+
+This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache -- which it can never achieve -- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
+
+This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive.}, second, ICCCs are easy to avoid in practice, and we will see how.
 
 \subsubsection{Cache size}
 
@@ -1112,7 +1135,7 @@ Thus, the write buffer can achieve a throughput of one pixel per clock cycle ($T
 \Delta_{w} \leq \frac{n \cdot w}{d} - n
 \end{equation}
 
-In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words. Therefore, the write buffer can tolerate write latencies of up to 12 cycles while maintaining excellent performance, which is easily achieved.
+In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words. Therefore, the write buffer can tolerate write latencies of up to 12 cycles while maintaining excellent performance, which is achievable.
 
 \subsection{Control interface}
 The texture mapping unit is completely under software control thanks to a CSR interface through which the CPU can configure and control it using a set of configuration and status registers. The texture mapping unit has one interrupt line to signal completion of the process to the CPU.
@@ -1122,7 +1145,7 @@ Beyond this basic principle of operation, the texture mapping unit supports seve
 \begin{itemize}
 \item Fade to black. To implement the ``decay'' effect of MilkDrop, the output picture can be darkened by multiplying all its color components by a 6-bit fixed point number between 0 and 1.
 \item Chroma key. Texels of a given color can be ignored (not drawn in the output framebuffer). This is not used in normal rendering, but makes it possible to draw quickly text or symbols with transparent areas on the screen.
-\item Semi-transparency. The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping (by computing a weighted average) and writing the result back to memory. If transparency is not desired, the texture mapping unit will skip reading the destination picture in order to use less memory bandwidth and avoid blocking on unneeded memory references.
+\item Semi-transparency (alpha blending). The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping (by computing a weighted average) and writing the result back to memory. If transparency is not desired, the texture mapping unit will skip reading the destination picture in order to use less memory bandwidth and avoid blocking on unneeded memory references.
 \end{itemize}
 
 \section{Implementation results}
