@@ -1102,7 +1102,7 @@ This condition is not desirable. With our implementation, the texel cache would 
 
 This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive.}, second, ICCCs are easy to avoid in practice, and we will see how.
 
-For simplicity, we use the pixel as unit. In the equations that follow:
+For simplicity, we use the pixel (2 bytes) as unit. In the equations that follow:
 \begin{itemize}
 \item $H$ is the horizontal texture resolution in pixels.
 \item $V$ is the vertical texture resolution in pixels.
@@ -1110,23 +1110,33 @@ For simplicity, we use the pixel as unit. In the equations that follow:
 \item $N_{c}$ is the total number of pixels the texel cache can hold. It is equal to the cache size in bytes (not counting the tag memory) divided by 2.
 \end{itemize}
 
-\paragraph{Characterization of cache conflicts.} A pixel at address $a_{p}$ (measured in pixels since the start of the framebuffer) is mapped to the cache line indexed by:
+\paragraph{Characterization of cache conflicts.} A pixel at address $a_{p}$ (measured in pixels, i.e. 2-byte words) is mapped to the cache line indexed by:
 \begin{equation}
 l_{p} = \left\lfloor \frac{a_{p}}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
 \end{equation}
 Thus, two pixels at addresses $a_{1}$ and $a_{2}$ will conflict in the cache if and only if:
 \begin{equation}\label{eq:cacheconflict}
 \begin{cases}
-|a_{1}-a_{2}| > N_{l} \\
+|a_{1}-a_{2}| \geq N_{l} \\
 \left\lfloor \frac{a_{1}}{N_{l}} \right\rfloor \equiv \left\lfloor \frac{a_{2}}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
 \end{cases}
 \end{equation}
 
 \paragraph{Conflicts between channels 1 and 2 (or 3 and 4).}
+\begin{figure}[htp]
+\centering
+\includegraphics[height=55mm]{chdisp_common.eps}
+\caption{Disposition of the channels within the texture, general case.}\label{fig:chdispcommon}
+\end{figure}
+\begin{figure}[htp]
+\centering
+\includegraphics[height=55mm]{chdisp_vwrap.eps}
+\caption{Disposition of the channels within the texture, vertical wrap.}\label{fig:chdispvwrap}
+\end{figure}
 The addresses $a_{A}$ and $a_{B}$ of these two channels can be separated by either:
 \begin{itemize}
-\item 1 pixel in the most common case (sampling in the middle of the texture). This cannot cause cache conflicts.
-\item $H-1$ pixels if texture wrapping is enabled and the texture is sampled at one of its vertical edges. In this case, the condition $|a_{A}-a_{B}| > N_{l}$ is often verified (except for small textures where $H < N_{l}$). To make sure that there will be no ICCC, we must thus make sure that the following condition is also verified:
+\item 1 pixel in the most common case (sampling in the middle of the texture, see figure~\ref{fig:chdispcommon}). This cannot cause inter-channel cache conflicts.
+\item $H-1$ pixels if texture wrapping is enabled and the texture is sampled at one of its vertical edges (figure~\ref{fig:chdispvwrap}). In this case, the condition $|a_{A}-a_{B}| \geq N_{l}$ is often verified (except for small textures where $H-1 < N_{l}$). To make sure that there will be no ICCC, we must thus make sure that the following condition is also verified:
 \begin{equation}\label{eq:noconflictwrap1}
 \left\lfloor \frac{a_{A}}{N_{l}} \right\rfloor \not \equiv \left\lfloor \frac{a_{A}+H-1}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
 \end{equation}
@@ -1156,7 +1166,7 @@ There is another way to make sure that the equation~\ref{eq:noconflictwrap1} is 
 \item The beginning of the framebuffer is aligned to the beginning of a cache line.
 \item The horizontal texture resolution is a multiple of the cache line length in pixels.
 \end{itemize}
-Without loss of generality, we suppose that the pixel at the address $a_{A}$ is at the beginning of the texture line (its X coordinate is 0) -- and the one at the address $a_{B}$ is at the end of the line (its X coordinate is $H-1$). Along with equation~\ref{eq:fbadr}, this implies that $a_{A}$ is a multiple of $N_{l}$. The equation~\ref{eq:noconflictwrap1} can thus be simplified to:
+Without loss of generality, we suppose that the pixel at the address $a_{A}$ is at the beginning of a texture line (its X coordinate is 0) -- and the one at the address $a_{B}$ is at the end of the line (its X coordinate is $H-1$). Along with equation~\ref{eq:fbadr}, this implies that $a_{A}$ is a multiple of $N_{l}$. The equation~\ref{eq:noconflictwrap1} can thus be simplified to:
 \begin{equation}
 \boxed{
 \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
@@ -1166,6 +1176,32 @@ which removes one condition compared to the equation~\ref{eq:noconflictwrap2} wh
 \end{itemize}
 
 \paragraph{Conflicts between channels 1 and 3 (or 2 and 4).}
+\begin{figure}[htp]
+\centering
+\includegraphics[height=55mm]{chdisp_hwrap.eps}
+\caption{Disposition of the channels within the texture, horizontal wrap.}\label{fig:chdisphwrap}
+\end{figure}
+The separation between the channels' addresses can be:
+\begin{itemize}
+\item $H$ pixels (according to equation~\ref{eq:fbadr}) in the general case (figure~\ref{fig:chdispcommon}). Using the same reasoning from above, we can deduce that it is sufficient to check that $H < N_{l}$ or:
+\begin{equation}
+\boxed{
+\begin{cases}
+\left\lfloor \frac{H}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
+\left\lfloor \frac{H}{N_{l}} \right\rfloor + 1 \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+}
+\end{equation}
+\item $H \cdot (V-1)$ pixels if texture wrapping is enabled and the texture is sampled at one of its horizontal edges (figure~\ref{fig:chdisphwrap}). Again, it is sufficient to check that $H \cdot (V-1) < N_{l}$ or:
+\begin{equation}
+\boxed{
+\begin{cases}
+\left\lfloor \frac{H \cdot (V-1)}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
+\left\lfloor \frac{H \cdot (V-1)}{N_{l}} \right\rfloor + 1 \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+}
+\end{equation}
+\end{itemize}
 
 \paragraph{Conflicts between channels 1 and 4.}
 \paragraph{Conflicts between channels 2 and 3.}
@@ -1204,7 +1240,7 @@ Thus, the write buffer can achieve a throughput of one pixel per clock cycle ($T
 \Delta_{w} \leq \frac{n \cdot w}{d} - n
 \end{equation}
 
-In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words. Therefore, the write buffer can tolerate write latencies of up to 12 cycles while maintaining excellent performance, which is achievable.
+In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words. Therefore, the write buffer can tolerate write latencies of up to 12 cycles while maintaining excellent performance, which seems perfectly achievable even when taking into account the delays due to bus arbitration.
 
 \subsection{Control interface}
 The texture mapping unit is completely under software control thanks to a CSR interface through which the CPU can configure and control it using a set of configuration and status registers. The texture mapping unit has one interrupt line to signal completion of the process to the CPU.
