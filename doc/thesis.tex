@@ -10,6 +10,7 @@
 \usepackage{cite}
 \usepackage{tabularx}
 \usepackage{units}
+\usepackage{amsmath}
 \usepackage{wasysym}
 
 \title{A performance-driven SoC architecture for video synthesis}
@@ -1100,6 +1101,74 @@ An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels
 This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache -- which it can never achieve -- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
 
 This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive.}, second, ICCCs are easy to avoid in practice, and we will see how.
+
+For simplicity, we use the pixel as unit. In the equations that follow:
+\begin{itemize}
+\item $H$ is the horizontal texture resolution in pixels.
+\item $V$ is the vertical texture resolution in pixels.
+\item $N_{l}$ is the number of pixels a cache line can hold. It is equal to the line size in bytes divided by 2.
+\item $N_{c}$ is the total number of pixels the texel cache can hold. It is equal to the cache size in bytes (not counting the tag memory) divided by 2.
+\end{itemize}
+
+\paragraph{Characterization of cache conflicts.} A pixel at address $a_{p}$ (measured in pixels since the start of the framebuffer) is mapped to the cache line indexed by:
+\begin{equation}
+l_{p} = \left\lfloor \frac{a_{p}}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
+\end{equation}
+Thus, two pixels at addresses $a_{1}$ and $a_{2}$ will conflict in the cache if and only if:
+\begin{equation}\label{eq:cacheconflict}
+\begin{cases}
+|a_{1}-a_{2}| > N_{l} \\
+\left\lfloor \frac{a_{1}}{N_{l}} \right\rfloor \equiv \left\lfloor \frac{a_{2}}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+\end{equation}
+
+\paragraph{Conflicts between channels 1 and 2 (or 3 and 4).}
+The addresses $a_{A}$ and $a_{B}$ of these two channels can be separated by either:
+\begin{itemize}
+\item 1 pixel in the most common case (sampling in the middle of the texture). This cannot cause cache conflicts.
+\item $H-1$ pixels if texture wrapping is enabled and the texture is sampled at one of its vertical edges. In this case, the condition $|a_{A}-a_{B}| > N_{l}$ is often verified (except for small textures where $H < N_{l}$). To make sure that there will be no ICCC, we must thus make sure that the following condition is also verified:
+\begin{equation}\label{eq:noconflictwrap1}
+\left\lfloor \frac{a_{A}}{N_{l}} \right\rfloor \not \equiv \left\lfloor \frac{a_{A}+H-1}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
+\end{equation}
+
+To make sure that this condition is verified for all possible pixel addresses, it is sufficient to check that:
+\begin{equation}
+\forall a \in \{0, 1, ... N_{l}-1\}, \left\lfloor \frac{a+H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{equation}
+Indeed, by division by $N_{l}$ we have $a_{A} = k \cdot N_{l} + a$ with $0 \leq a \leq N_{l}-1$, which transforms equation~\ref{eq:noconflictwrap1} into:
+\begin{equation}
+k + \left\lfloor \frac{a}{N_{l}} \right\rfloor \not \equiv k + \left\lfloor \frac{a+H-1}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
+\end{equation}
+which leads easily to the result, considering that $\left\lfloor \frac{a}{N_{l}} \right\rfloor = 0$.
+
+This can be further simplified:
+\begin{equation}~\label{eq:noconflictwrap2}
+\boxed{
+\begin{cases}
+\left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
+\left\lfloor \frac{H-1}{N_{l}} \right\rfloor + 1 \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+}
+\end{equation}
+
+There is another way to make sure that the equation~\ref{eq:noconflictwrap1} is always verified: by imposing alignment requirements. We make the following two hypotheses:
+\begin{itemize}
+\item The beginning of the framebuffer is aligned to the beginning of a cache line.
+\item The horizontal texture resolution is a multiple of the cache line length in pixels.
+\end{itemize}
+Without loss of generality, we suppose that the pixel at the address $a_{A}$ is at the beginning of the texture line (its X coordinate is 0) -- and the one at the address $a_{B}$ is at the end of the line (its X coordinate is $H-1$). Along with equation~\ref{eq:fbadr}, this implies that $a_{A}$ is a multiple of $N_{l}$. The equation~\ref{eq:noconflictwrap1} can thus be simplified to:
+\begin{equation}
+\boxed{
+\left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+}
+\end{equation}
+which removes one condition compared to the equation~\ref{eq:noconflictwrap2} which is valid in the general case (without alignment requirements).
+\end{itemize}
+
+\paragraph{Conflicts between channels 1 and 3 (or 2 and 4).}
+
+\paragraph{Conflicts between channels 1 and 4.}
+\paragraph{Conflicts between channels 2 and 3.}
 
 \subsubsection{Cache size}
 
