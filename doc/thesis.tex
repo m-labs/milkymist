@@ -1005,7 +1005,7 @@ A deeply pipelined implementation of the texture mapping algorithm was thus chos
 
 \begin{figure}[htp]
 \centering
-\includegraphics[height=130mm]{tmublock.eps}
+\includegraphics[height=165mm]{tmublock.eps}
 \caption{Block diagram of the texture mapping unit architecture.}
 \label{fig:tmublock}
 \end{figure}
@@ -1045,6 +1045,17 @@ In order to keep the resource usage low, the divider is not pipelined. After ope
 Finally, the core of the algorithm (the ``while'' loop from figure~\ref{fig:interalgo}) is implemented in the last stage. This unit receives the Q and R values from the dividers, as well as the start $y_{0}$ value and the range $x_{0}$ to $x_{1}$ (which are forwarded through the previous stages). It then sends the series of interpolated values $[y]$ for $x_{0} \leq x < x_{1}$.
 
 The throughput of the stage is one interpolation point per clock cycle. While the interpolation is taking place, transmission of new parameters from the upstream stage is stalled. This justifies the choice of a slow but low-area restoring divider in stage B: with a typical rectangle size of 16, the processing times of the interpolation loop and of the divider are roughly the same, making the pipeline balanced.
+
+\subsection{Clamping/wrapping}
+This unit processes interpolated texture points whose coordinates are beyond the boundaries of the texture (i.e. they are negative or exceed the texture's horizontal or vertical resolution).
+
+There are two, selectable, ways of dealing with them:
+\begin{itemize}
+\item \textit{clamping}, which consists in replacing an out-of-range coordinate with 0 (if it was negative) or with the horizontal or vertical resolution of the texture minus one (if it was too large).
+\item \textit{wrapping}, which consists in computing the positive modulo of each coordinate with respect to the horizontal or vertical texture resolution. In order to avoid using an expensive fast divider, only textures whose sizes are a power of 2 are supported for wrapping. This enables the replacement of the divider with a bitwise AND operation, which is way less expensive. The problem of negative texture coordinates is solved by simply masking out the sign bit, which yields the correct result as the coordinates are represented in two's complement format.
+\end{itemize}
+
+This stage is implemented by simple arithmetic combinatorial functions, which are registered and pipelined on two sub-stages to meet timing requirements.
 
 \subsection{Address generator}
 The address generator is a simple arithmetic circuit that turns the floating point texture coordinates into the four memory addresses of the pixels they cover, and the destination coordinate into the corresponding memory address in the destination framebuffer. It is pipelined on three sub-stages to meet timing goals.
@@ -1100,7 +1111,7 @@ An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels
 
 This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache -- which it can never achieve -- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
 
-This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive.}, second, ICCCs are easy to avoid for our purposes, and we will see how.
+This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance anyway as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive. Furthermore, when keeping a direct-mapped cache, it makes sense to add hardware that would deal with infrequent cases of ICCCs such as those arising when wrapping at texture boundaries.}, second, ICCCs are easy to avoid for our purposes, and we will see how.
 
 For simplicity, we use the pixel (2 bytes) as unit. In the equations that follow:
 \begin{itemize}
@@ -1335,6 +1346,7 @@ Beyond this basic principle of operation, the texture mapping unit supports seve
 \end{itemize}
 
 \section{Implementation results}
+TODO
 
 \chapter{Floating point coprocessor}
 \label{ch:pfpu}
