@@ -251,7 +251,7 @@ Even though we are not interested in proprietary designs, we still give a brief 
 
 \paragraph{Nios II.} According to an Altera report~\cite{niosbench}, Nios II/f uses 1600 Cyclone II LEs. A LE is mainly comprised of a 4-LUT and a register, which is comparable to the Virtex-4 architecture on which LatticeMico32 was tested. Thus, it seems that the Nios II core would be approximately two thirds of the area of LatticeMico32.
 
-However, there are some differences between the LatticeMico32 configuration and the Nios II/f configuration used in the Altera report:
+Some differences can be noted between the LatticeMico32 configuration and the Nios II/f configuration used in the Altera report:
 \begin{itemize}
 \item Caches are direct-mapped and 512 bytes (each).
 \item There is no multiplier.
@@ -1100,7 +1100,7 @@ An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels
 
 This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache -- which it can never achieve -- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
 
-This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive.}, second, ICCCs are easy to avoid in practice, and we will see how.
+This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive.}, second, ICCCs are easy to avoid for our purposes, and we will see how.
 
 For simplicity, we use the pixel (2 bytes) as unit. In the equations that follow:
 \begin{itemize}
@@ -1122,6 +1122,8 @@ Thus, two pixels at addresses $a_{1}$ and $a_{2}$ will conflict in the cache if 
 \end{cases}
 \end{equation}
 
+Texture clamping only causes one or more channel addresses to be equal, and therefore does not introduce additional cases of ICCCs. However, texture wrapping does introduce new dispositions of the channels within the texture, and new ICCC conditions.
+
 \paragraph{Conflicts between channels 1 and 2 (or 3 and 4).}
 \begin{figure}[htp]
 \centering
@@ -1131,7 +1133,7 @@ Thus, two pixels at addresses $a_{1}$ and $a_{2}$ will conflict in the cache if 
 \begin{figure}[htp]
 \centering
 \includegraphics[height=55mm]{chdisp_vwrap.eps}
-\caption{Disposition of the channels within the texture, vertical wrap.}\label{fig:chdispvwrap}
+\caption{Disposition of the channels within the texture, vertical wrapping.}\label{fig:chdispvwrap}
 \end{figure}
 The addresses $a_{A}$ and $a_{B}$ of these two channels can be separated by either:
 \begin{itemize}
@@ -1153,58 +1155,137 @@ which leads easily to the result, considering that $\left\lfloor \frac{a}{N_{l}}
 
 This can be further simplified:
 \begin{equation}~\label{eq:noconflictwrap2}
-\boxed{
 \begin{cases}
 \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
-\left\lfloor \frac{H-1}{N_{l}} \right\rfloor + 1 \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+1 + \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
 \end{cases}
-}
 \end{equation}
-
-There is another way to make sure that the equation~\ref{eq:noconflictwrap1} is always verified: by imposing alignment requirements. We make the following two hypotheses:
-\begin{itemize}
-\item The beginning of the framebuffer is aligned to the beginning of a cache line.
-\item The horizontal texture resolution is a multiple of the cache line length in pixels.
-\end{itemize}
-Without loss of generality, we suppose that the pixel at the address $a_{A}$ is at the beginning of a texture line (its X coordinate is 0) -- and the one at the address $a_{B}$ is at the end of the line (its X coordinate is $H-1$). Along with equation~\ref{eq:fbadr}, this implies that $a_{A}$ is a multiple of $N_{l}$. The equation~\ref{eq:noconflictwrap1} can thus be simplified to:
-\begin{equation}
-\boxed{
-\left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
-}
-\end{equation}
-which removes one condition compared to the equation~\ref{eq:noconflictwrap2} which is valid in the general case (without alignment requirements).
 \end{itemize}
 
 \paragraph{Conflicts between channels 1 and 3 (or 2 and 4).}
 \begin{figure}[htp]
 \centering
 \includegraphics[height=55mm]{chdisp_hwrap.eps}
-\caption{Disposition of the channels within the texture, horizontal wrap.}\label{fig:chdisphwrap}
+\caption{Disposition of the channels within the texture, horizontal wrapping.}\label{fig:chdisphwrap}
 \end{figure}
 The separation between the channels' addresses can be:
 \begin{itemize}
 \item $H$ pixels (according to equation~\ref{eq:fbadr}) in the general case (figure~\ref{fig:chdispcommon}). Using the same reasoning from above, we can deduce that it is sufficient to check that $H < N_{l}$ or:
 \begin{equation}
-\boxed{
 \begin{cases}
 \left\lfloor \frac{H}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
-\left\lfloor \frac{H}{N_{l}} \right\rfloor + 1 \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+1 + \left\lfloor \frac{H}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
 \end{cases}
-}
 \end{equation}
 \item $H \cdot (V-1)$ pixels if texture wrapping is enabled and the texture is sampled at one of its horizontal edges (figure~\ref{fig:chdisphwrap}). Again, it is sufficient to check that $H \cdot (V-1) < N_{l}$ or:
 \begin{equation}
-\boxed{
 \begin{cases}
 \left\lfloor \frac{H \cdot (V-1)}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
-\left\lfloor \frac{H \cdot (V-1)}{N_{l}} \right\rfloor + 1 \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+1 + \left\lfloor \frac{H \cdot (V-1)}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
 \end{cases}
-}
 \end{equation}
 \end{itemize}
 
 \paragraph{Conflicts between channels 1 and 4.}
+\begin{figure}[htp]
+\centering
+\includegraphics[height=55mm]{chdisp_hvwrap.eps}
+\caption{Disposition of the channels within the texture, horizontal and vertical wrapping.}\label{fig:chdisphvwrap}
+\end{figure}
+The channels' addresses can be separated by:
+\begin{itemize}
+\item $H + 1$ pixels (according to equation~\ref{eq:fbadr}) in the general case (figure~\ref{fig:chdispcommon}). It is therefore sufficient to check that $H+1 < N_{l}$ or:
+\begin{equation}
+\begin{cases}
+\left\lfloor \frac{H+1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
+1 + \left\lfloor \frac{H+1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+\end{equation}
+\item 1 pixel in case of vertical wrapping (figure~\ref{fig:chdispvwrap}). This cannot cause ICCCs.
+\item $H \cdot (V-1) - 1$ pixels in case of horizontal wrapping (figure~\ref{fig:chdisphwrap}). Similarly, we can check that $H \cdot (V-1) - 1 < N_{l}$ or:
+\begin{equation}
+\begin{cases}
+\left\lfloor \frac{H \cdot (V-1) - 1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
+1 + \left\lfloor \frac{H \cdot (V-1) - 1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+\end{equation}
+\item $H \cdot V - 1$ in case of wrapping in both directions (figure~\ref{fig:chdisphvwrap}). We can check that $H \cdot V - 1 < N_{l}$ or:
+\begin{equation}
+\begin{cases}
+\left\lfloor \frac{H \cdot V - 1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
+1 + \left\lfloor \frac{H \cdot V - 1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+\end{equation}
+\end{itemize}
+
 \paragraph{Conflicts between channels 2 and 3.}
+Like above, we can check that $H-1 < N_{l}$ or:
+\begin{equation}~\label{eq:noconflictwrap2}
+\begin{cases}
+\left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
+1 + \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{cases}
+\end{equation}
+
+Furthermore, if texture wrapping is enabled, the differences between pixel addresses can become (resulting in similar conditions to check for):
+\begin{itemize}
+\item $2 \cdot H - 1$ (vertical wrapping, figure~\ref{fig:chdispvwrap}).
+\item $H \cdot (V - 1) + 1$ (horizontal wrapping, figure~\ref{fig:chdisphwrap}).
+\item $H \cdot (V - 2) + 1$ (wrapping in both directions, figure~\ref{fig:chdisphvwrap}).
+\end{itemize}
+
+\paragraph{Summary.}
+To avoid inter-channel cache conflicts, when texture clamping is used, it is sufficient to check that (all equivalences are modulo $\frac{N_{c}}{N_{l}}$):
+\begin{equation}
+\boxed{
+\begin{cases}
+H-1 < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases} \\
+H < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases} \\
+H+1 < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H+1}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H+1}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases}
+\end{cases}
+}
+\end{equation}
+
+If texture wrapping is used, additional conditions appear:
+\begin{equation}
+\boxed{
+\begin{cases}
+H \cdot (V-1) - 1 < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H \cdot (V-1) - 1}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H \cdot (V-1) - 1}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases} \\
+H \cdot (V-1) < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H \cdot (V-1)}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H \cdot (V-1)}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases} \\
+H \cdot (V-1) + 1 < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H \cdot (V-1) + 1}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H \cdot (V-1) + 1}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases} \\
+H \cdot (V-2) + 1 < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H \cdot (V-2) + 1}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H \cdot (V-2) + 1}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases} \\
+2 \cdot H - 1 < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{2 \cdot H - 1}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{2 \cdot H - 1}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases} \\
+H \cdot V - 1 < N_{l} & \textrm{ or } \begin{cases}
+\left\lfloor \frac{H \cdot V - 1}{N_{l}} \right\rfloor \not \equiv 0 \\
+1 + \left\lfloor \frac{H \cdot V - 1}{N_{l}} \right\rfloor \not \equiv 0
+\end{cases}
+\end{cases}
+}
+\end{equation}
 
 \subsubsection{Cache size}
 
@@ -1212,7 +1293,7 @@ The separation between the channels' addresses can be:
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
 
 \subsection{Write buffer}
-The write buffer is in charge of gathering the final pixel data produced by the algorithm, assemble them into FML bursts and write them to the memory.
+The write buffer is in charge of gathering the final pixels produced by the algorithm, assemble them into FML bursts and write them to the memory.
 
 The write buffer has enough memory capacity to store two bursts on-chip. This storage space is used for a ``double buffering'' technique: while the first burst buffer receives pixels from the pipeline, the other buffer can transmit data to the memory controller. Bursts can be complete, which means that all data in them is valid, or incomplete, which means that the write buffer has not received a value for all the pixels within the burst but still needs to move the partial burst data it has off-chip because it does not have space to store it. Incomplete bursts are performed using the data mask (DM) signals of FML that will prevent some bytes from being written to the memory during the burst. Incomplete bursts should be avoided as they waste memory bandwidth and reduce performance.
 
