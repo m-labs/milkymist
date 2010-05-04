@@ -59,7 +59,7 @@ always #5 sys_clk = ~sys_clk;
 
 tmu2 #(
 	.fml_depth(fml_depth),
-	.texel_cache_depth(12)
+	.texel_cache_depth(13)
 ) dut (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -124,7 +124,7 @@ begin
 end
 endtask
 
-`define TEST_ROTOZOOM
+`define TEST_COPY
 
 /* Handle WB master for texture coordinates reads */
 reg [6:0] x;

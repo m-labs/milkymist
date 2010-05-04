@@ -1305,6 +1305,14 @@ To study the impact of the cache size on the hit rate, we simulated the complete
 
 The source and destination images have a resolution of 512x512 pixels, and are tesselated with 16x16 rectangles forming a 32x32 mesh --- which matches the configuration used for distortions by the renderer program. Different sets of texture coordinates were used at each vertex, according to table~\ref{tab:tcsets}. Texture coordinates are multiplied by 64 to perform the conversion of integers into the fixed point format used throughout the linear interpolation process (see subsection~\ref{subsec:bilfpformat}). $x$ and $y$ refer to the indices of the vertex in the mesh. Texture wrapping was enabled, as it puts more load on the cache than texture clamping.
 
+The sets were chosen for the following reasons:
+\begin{itemize}
+\item \textit{copy} does not introduce any distortion and is meant to test the performance of the TMU as a blitter, that could be used e.g. for GUI acceleration. It is also a very simple case that verifies the consistency of the results.
+\item \textit{zoomin} scales up the picture. This tests the TMU in a favorable case: as the amount of zoom is important, the texels are swept across slower than output pixels are drawn. This is expected to generate a lot of cache hits.
+\item \textit{zoomout} scales down and repeats the picture. This is a detrimental case: the texels are swept across faster than the output pixel are drawn, and some values from the cache lines read from memory will have to be discarded. This is expected to generate a lot of cache misses.
+\item \textit{rotozoom} slightly scales down and rotates the picture. This is an intermediate case that reflects what MilkDrop typically does: rotation and slight scale-down are common preset effects.
+\end{itemize}
+
 \begin{table}
 \centering
 \begin{tabularx}{13cm}{|c|c|X|X|}
@@ -1320,13 +1328,13 @@ zoomout & Figure~\ref{fig:tmuoutzoomout} & $x \cdot 40 \cdot 64$ & $y \cdot 40 \
 rotozoom & Figure~\ref{fig:tmuoutrotozoom} & $(x\cdot16-256)\cdot67 - (y\cdot16-256)\cdot28+256\cdot64$ & $(x\cdot16-256)\cdot28 + (y\cdot16-256)\cdot67+256\cdot64$ \\
 \hline
 \end{tabularx}
-\caption{Texture coordinate sets used for tuning the texel cache.}\label{tab:tcsets}
+\caption{Texture coordinate sets used for benchmarking the texel cache.}\label{tab:tcsets}
 \end{table}
 
 \begin{figure}[htp]
 \centering
 \includegraphics[height=85mm]{tmuout_copy.eps}
-\caption{TMU output picture for the ``copy'' set.}
+\caption{TMU output picture for the ``copy'' set (original picture).}
 \label{fig:tmuoutcopy}
 \end{figure}
 
@@ -1351,6 +1359,7 @@ rotozoom & Figure~\ref{fig:tmuoutrotozoom} & $(x\cdot16-256)\cdot67 - (y\cdot16-
 \label{fig:tmuoutrotozoom}
 \end{figure}
 
+The length of the cache line is set to the length of a FML burst in the SoC (4 words of 64 bits each) for simplicity of the design.
 
 Simulations were carried out using the free GPL Cver Verilog simulator~\cite{gplcver}. To visually inspect the results of the distortions stemming from each set of texture coordinates, the simulation reads and writes input and output picture files thanks to a Verilog VPI~\cite{vpi} plug-in.\footnote{This was also part of the usual test bench used to debug the Verilog implementation of the texture mapping unit.} A typical simulation trace is reproduced in figure~\ref{fig:tmusimtrace}. Even though GPL Cver is relatively slow\footnote{Its runtime is between one and three minutes on a Intel Core 2 Duo 2.5GHz machine.} to carry out such a complex simulation, it produced consistent results, which supports the idea that it is a viable alternative to proprietary and expensive simulators commonly taught in university courses.
 
@@ -1404,7 +1413,7 @@ to $finish.
 \label{fig:tmusimtrace}
 \end{figure}
 
-Results are reported in table~\ref{tab:tcresults}. Only the \textit{global} hit rate is reported, which is computed as the global number of hits over the global number of accesses. The global number of hits (respectively  accesses) is the sum of the number of hits (respectively accesses) for all channels. The reported cache size is the size of the data store only (not counting the tag memory).
+Results are reported in table~\ref{tab:tcresults} and figure~\ref{fig:tcresultsgraph}. Only the \textit{global} hit rate is reported, which is computed as the global number of hits over the global number of accesses. The global number of hits (respectively  accesses) is the sum of the number of hits (respectively accesses) for all channels. The reported cache size is the size of the data store only (not counting the tag memory).
 
 \begin{table}
 \centering
@@ -1412,11 +1421,33 @@ Results are reported in table~\ref{tab:tcresults}. Only the \textit{global} hit 
 \hline
 \textbf{Cache size} & \textbf{copy} & \textbf{zoomin} & \textbf{zoomout} & \textbf{rotozoom} \\
 \hline
-8KB & 93.75 \% & 98.08 \% &  83.33 \% &  82.94 \% \\
+2KB & 93.75 \% & 98.08 \% & 83.33 \% & 73.06 \% \\
+\hline
+4KB & 93.75 \% & 98.08 \% & 83.33 \% & 82.94 \% \\
+\hline
+8KB & 93.75 \% & 98.62 \% & 83.33 \% & 93.73 \% \\
+\hline
+16KB & 93.75 \% & 99.27 \% & 86.94 \% & 95.74 \% \\
+\hline
+32KB & 93.75 \% & 99.27 \% & 91.44 \% & 96.02 \% \\
+\hline
+64KB & 93.75 \% & 99.27 \% & 94.14 \% & 96.02 \% \\
+\hline
+128KB & 93.75 \% & 99.27 \% & 94.14 \% & 96.15 \% \\
 \hline
 \end{tabular}
-\caption{Hit rate results of the texel cache for each set of texture coordinates and different cache sizes.}\label{tab:tcresults}
+\caption{Hit rates for each set of texture coordinates and different cache sizes.}\label{tab:tcresults}
 \end{table}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=95mm]{tcresultsgraph.eps}
+\caption{Hit rates versus texel cache size. The X axis (cache size) uses a logarithmic scale.}
+\label{fig:tcresultsgraph}
+\end{figure}
+
+Before we go on choosing a texel cache size, a few comments on these results can be made.
+TODO
 
 \subsection{Bilinear filter}
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
