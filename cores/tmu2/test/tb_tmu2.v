@@ -110,7 +110,7 @@ begin
 	csr_di = data;
 	csr_we = 1'b1;
 	waitclock;
-	$display("Configuration Write: %x=%x", address, data);
+	$display("CSR write: %x=%x", address, data);
 	csr_we = 1'b0;
 end
 endtask
@@ -120,9 +120,11 @@ input [31:0] address;
 begin
 	csr_a = address[16:2];
 	waitclock;
-	$display("Configuration Read : %x=%x", address, csr_do);
+	$display("CSR read : %x=%x", address, csr_do);
 end
 endtask
+
+`define TEST_ROTOZOOM
 
 /* Handle WB master for texture coordinates reads */
 reg [6:0] x;
@@ -132,10 +134,33 @@ always @(posedge sys_clk) begin
 		x = wbm_adr_o[9:3];
 		y = wbm_adr_o[16:10];
 
+`ifdef TEST_COPY
 		if(wbm_adr_o[2])
-			wbm_dat_i = y*640*64 - 100*64;
+			wbm_dat_i = y*16*64;
 		else
-			wbm_dat_i = x*480*64 - 100*64;
+			wbm_dat_i = x*16*64;
+`endif
+`ifdef TEST_ZOOMIN
+		if(wbm_adr_o[2])
+			wbm_dat_i = y*10*64;
+		else
+			wbm_dat_i = x*10*64;
+`endif
+`ifdef TEST_ZOOMOUT
+		if(wbm_adr_o[2])
+			wbm_dat_i = y*40*64;
+		else
+			wbm_dat_i = x*40*64;
+`endif
+`ifdef TEST_ROTOZOOM
+		// 73*cos(pi/8) ~ 67
+		// 73*sin(pi/8) ~ 28
+		if(wbm_adr_o[2])
+			wbm_dat_i = (x*16-256)*28 + (y*16-256)*67 + 256*64;
+		else
+			wbm_dat_i = (x*16-256)*67 - (y*16-256)*28 + 256*64;
+`endif
+
 		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
@@ -155,8 +180,8 @@ reg [15:0] p3;
 reg [15:0] p4;
 begin
 	read_addr2 = addr[20:0]/2;
-	x = read_addr2 % 640;
-	y = read_addr2 / 640;
+	x = read_addr2 % 512;
+	y = read_addr2 / 512;
 
 	$image_get(img, x + 0, y, p1);
 	$image_get(img, x + 1, y, p2);
@@ -239,8 +264,8 @@ integer x;
 integer y;
 begin
 	write_addr2 = write_addr[20:0]/2;
-	x = write_addr2 % 640;
-	y = write_addr2 / 640;
+	x = write_addr2 % 512;
+	y = write_addr2 / 512;
 	if(fmlw_sel[7])
 		$image_set(1, x + 0, y, fmlw_do[63:48]);
 	if(fmlw_sel[5])
@@ -277,7 +302,18 @@ always @(posedge sys_clk) begin
 	end
 end
 
+integer c_req_a;
+integer c_hit_a;
+integer c_req_b;
+integer c_hit_b;
+integer c_req_c;
+integer c_hit_c;
+integer c_req_d;
+integer c_hit_d;
+integer c_req_global;
+integer c_hit_global;
 always begin
+	$display("Opening input picture...");
 	$image_open;
 	
 	/* Reset / Initialize our logic */
@@ -302,23 +338,60 @@ always begin
 	waitclock;
 
 	/* Setup */
+	$display("Configuring TMU...");
 	csrwrite(32'h2C, 32'h01000000); /* dst framebuffer */
 
-	csrwrite(32'h04, 1); /* hmeshlast */
-	csrwrite(32'h08, 1); /* vmeshlast */
-	csrwrite(32'h1C, 640); /* texhres */
-	csrwrite(32'h20, 480); /* texhres */
-	csrwrite(32'h40, 50); /* squarew */
-	csrwrite(32'h44, 50); /* squareh */
+	csrwrite(32'h04, 32); /* hmeshlast */
+	csrwrite(32'h08, 32); /* vmeshlast */
+	csrwrite(32'h1C, 512); /* texhres */
+	csrwrite(32'h20, 512); /* texvres */
+	csrwrite(32'h30, 512); /* dsthres */
+	csrwrite(32'h34, 512); /* dstvres */
+	csrwrite(32'h40, 16); /* squarew */
+	csrwrite(32'h44, 16); /* squareh */
 
-	csrwrite(32'h48, 38); /* alpha */
+	csrwrite(32'h24, 32'h7fff); /* hmask, enable 512x512 wrapping */
+	csrwrite(32'h28, 32'h7fff); /* vmask */
+
+	csrwrite(32'h48, 63); /* alpha */
 
 	/* Start */
+	$display("Starting TMU...");
 	csrwrite(32'h00, 32'd1);
 
 	@(posedge irq);
-	
+	$display("Received DONE IRQ from TMU!");
+
+	$display("Gathering texel cache statistics...");
+	csrread(32'h50);
+	c_req_a = csr_do;
+	csrread(32'h54);
+	c_hit_a = csr_do;
+	csrread(32'h58);
+	c_req_b = csr_do;
+	csrread(32'h5C);
+	c_hit_b = csr_do;
+	csrread(32'h60);
+	c_req_c = csr_do;
+	csrread(32'h64);
+	c_hit_c = csr_do;
+	csrread(32'h68);
+	c_req_d = csr_do;
+	csrread(32'h6C);
+	c_hit_d = csr_do;
+
+	c_req_global = c_req_a + c_req_b + c_req_c + c_req_d;
+	c_hit_global = c_hit_a + c_hit_b + c_hit_c + c_hit_d;
+
+	$display("Channel A: %d / %d hits (%f %%)", c_hit_a, c_req_a, 100.0*c_hit_a/(1.0*c_req_a));
+	$display("Channel B: %d / %d hits (%f %%)", c_hit_b, c_req_b, 100.0*c_hit_b/(1.0*c_req_b));
+	$display("Channel C: %d / %d hits (%f %%)", c_hit_c, c_req_c, 100.0*c_hit_c/(1.0*c_req_c));
+	$display("Channel D: %d / %d hits (%f %%)", c_hit_d, c_req_d, 100.0*c_hit_d/(1.0*c_req_d));
+	$display("GLOBAL   : %d / %d hits (%f %%)", c_hit_global, c_req_global, 100.0*c_hit_global/(1.0*c_req_global));
+
+	$display("Writing output picture...");
 	$image_close;
+	$display("All done!");
 	$finish;
 end
 

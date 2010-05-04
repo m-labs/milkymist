@@ -95,6 +95,15 @@ wire [10:0] dst_squareh;		/* < 44 height of each destination rectangle (positive
 wire alpha_en;
 wire [5:0] alpha;			/* < 48 opacity of the output 0-63 */
 
+wire [21:0] c_req_a;			/* < 50 texel cache requests on channel A */
+wire [21:0] c_hit_a;			/* < 54 texel cache hits on channel A */
+wire [21:0] c_req_b;			/* < 58 texel cache requests on channel B */
+wire [21:0] c_hit_b;			/* < 5C texel cache hits on channel B */
+wire [21:0] c_req_c;			/* < 60 texel cache requests on channel C */
+wire [21:0] c_hit_c;			/* < 64 texel cache hits on channel C */
+wire [21:0] c_req_d;			/* < 68 texel cache requests on channel D */
+wire [21:0] c_hit_d;			/* < 6C texel cache hits on channel D */
+
 tmu2_ctlif #(
 	.csr_addr(csr_addr),
 	.fml_depth(fml_depth)
@@ -131,7 +140,16 @@ tmu2_ctlif #(
 	.dst_squarew(dst_squarew),
 	.dst_squareh(dst_squareh),
 	.alpha_en(alpha_en),
-	.alpha(alpha)
+	.alpha(alpha),
+
+	.c_req_a(c_req_a),
+	.c_hit_a(c_hit_a),
+	.c_req_b(c_req_b),
+	.c_hit_b(c_hit_b),
+	.c_req_c(c_req_c),
+	.c_hit_c(c_hit_c),
+	.c_req_d(c_req_d),
+	.c_hit_d(c_hit_d)
 );
 
 /* Stage 1 - Fetch vertices */
@@ -643,7 +661,16 @@ tmu2_texcache #(
 	.tcolorc(tcolorc),
 	.tcolord(tcolord),
 	.x_frac_f(x_frac_f),
-	.y_frac_f(y_frac_f)
+	.y_frac_f(y_frac_f),
+
+	.c_req_a(c_req_a),
+	.c_hit_a(c_hit_a),
+	.c_req_b(c_req_b),
+	.c_hit_b(c_hit_b),
+	.c_req_c(c_req_c),
+	.c_hit_c(c_hit_c),
+	.c_req_d(c_req_d),
+	.c_hit_d(c_hit_d)
 );
 
 /* Stage 11 - Blend neighbouring pixels for bilinear filtering */

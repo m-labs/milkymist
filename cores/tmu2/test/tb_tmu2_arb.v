@@ -225,8 +225,8 @@ reg [15:0] p3;
 reg [15:0] p4;
 begin
 	read_addr2 = addr[20:0]/2;
-	x = read_addr2 % 640;
-	y = read_addr2 / 640;
+	x = read_addr2 % 512;
+	y = read_addr2 / 512;
 
 	$image_get(img, x + 0, y, p1);
 	$image_get(img, x + 1, y, p2);
@@ -245,8 +245,8 @@ integer x;
 integer y;
 begin
 	write_addr2 = write_addr[20:0]/2;
-	x = write_addr2 % 640;
-	y = write_addr2 / 640;
+	x = write_addr2 % 512;
+	y = write_addr2 / 512;
 	if(fml_sel[7])
 		$image_set(1, x + 0, y, fml_dw[63:48]);
 	if(fml_sel[5])
@@ -362,8 +362,10 @@ always begin
 
 	csrwrite(32'h04, 10); /* hmeshlast */
 	csrwrite(32'h08, 10); /* vmeshlast */
-	csrwrite(32'h1C, 640); /* texhres */
-	csrwrite(32'h20, 480); /* texhres */
+	csrwrite(32'h1C, 512); /* texhres */
+	csrwrite(32'h20, 512); /* texhres */
+	csrwrite(32'h30, 512); /* dsthres */
+	csrwrite(32'h34, 512); /* dstvres */
 	csrwrite(32'h40, 16); /* squarew */
 	csrwrite(32'h44, 16); /* squareh */
 

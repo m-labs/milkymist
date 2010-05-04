@@ -48,7 +48,16 @@ module tmu2_texcache #(
 	output [15:0] tcolorc,
 	output [15:0] tcolord,
 	output reg [5:0] x_frac_f,
-	output reg [5:0] y_frac_f
+	output reg [5:0] y_frac_f,
+
+	output reg [21:0] c_req_a,
+	output reg [21:0] c_hit_a,
+	output reg [21:0] c_req_b,
+	output reg [21:0] c_hit_b,
+	output reg [21:0] c_req_c,
+	output reg [21:0] c_hit_c,
+	output reg [21:0] c_req_d,
+	output reg [21:0] c_hit_d
 );
 
 /*
@@ -194,6 +203,50 @@ assign pipe_stb_o = access_requested & hit_a & hit_b & hit_c & hit_d;
 assign pipe_ack_o = (pipe_ack_i & pipe_stb_o) | ~access_requested;
 
 assign retry = ~pipe_ack_o;
+
+/* STATISTICS COLLECTION */
+reg pipe_ack_o_r;
+
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		pipe_ack_o_r <= 1'b0;
+	else
+		pipe_ack_o_r <= pipe_ack_o;
+end
+
+always @(posedge sys_clk) begin
+	if(sys_rst|flush) begin
+		c_req_a <= 22'd0;
+		c_hit_a <= 22'd0;
+		c_req_b <= 22'd0;
+		c_hit_b <= 22'd0;
+		c_req_c <= 22'd0;
+		c_hit_c <= 22'd0;
+		c_req_d <= 22'd0;
+		c_hit_d <= 22'd0;
+	end else begin
+		if(pipe_ack_o_r & access_requested) begin
+			c_req_a <= c_req_a + 22'd1;
+			if(hit_a)
+				c_hit_a <= c_hit_a + 22'd1;
+			if(~ignore_b) begin
+				c_req_b <= c_req_b + 22'd1;
+				if(hit_b)
+					c_hit_b <= c_hit_b + 22'd1;
+			end
+			if(~ignore_c) begin
+				c_req_c <= c_req_c + 22'd1;
+				if(hit_c)
+					c_hit_c <= c_hit_c + 22'd1;
+			end
+			if(~ignore_d) begin
+				c_req_d <= c_req_d + 22'd1;
+				if(hit_d)
+					c_hit_d <= c_hit_d + 22'd1;
+			end
+		end
+	end
+end
 
 `ifdef VERIFY_TEXCACHE
 

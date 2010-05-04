@@ -33,12 +33,12 @@ static int open_calltf(char *user_data)
 {
 	FILE *fd;
 
-	fd = fopen("lena.jpg", "rb");
+	fd = fopen("lena.png", "rb");
 	if(fd == NULL) {
 		perror("Unable to open input picture");
 		exit(1);
 	}
-	src = gdImageCreateFromJpeg(fd);
+	src = gdImageCreateFromPng(fd);
 	if(src == NULL) {
 		fprintf(stderr, "Unable to read input picture\n");
 		exit(1);

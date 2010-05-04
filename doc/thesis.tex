@@ -190,7 +190,7 @@ Per-vertex equations are thus evaluated at each vertex (whose position can be re
 As discussed in chapter~\ref{ch:tmu}, the floating point computations for each vertex are intensive and required the use of a dedicated coprocessor.
 
 \section{Open source SoC platforms}
-There is an existing effort to build open source system-on-chips. It is interesting to review these projects in order to look forward to building upon them -- possibly adding hardware accelerators or performing other modifications in order to improve performance.
+There is an existing effort to build open source system-on-chips. It is interesting to review these projects in order to look forward to building upon them --- possibly adding hardware accelerators or performing other modifications in order to improve performance.
 
 There are many SoC designs available on the Internet, which are more or less mature. The system-on-chip projects listed here meet the following criteria:
 \begin{itemize}
@@ -518,8 +518,7 @@ Software and misc. & 200Mbps \\
 \textbf{Total} & \textbf{3.3Gbps} \\
 \hline
 \end{tabularx}
-\label{tab:membw}
-\caption{Estimate of the memory bandwidth consumption.}
+\caption{Estimate of the memory bandwidth consumption.}\label{tab:membw}
 \end{table}
 
 The memory is run at 100MHz, yielding a peak theoretical bandwidth of 6.4Gbps, which is more than enough for the intended video synthesis application (table~\ref{tab:membw}). This bandwidth is however never attained: events such as switching DRAM rows which takes significant time and, to a lesser extent, DRAM refreshes introduce dead times on the data bus. We will see in section~\ref{sec:memperf} that such an oversizing of the off-chip memory is needed if we want to keep the memory system simple.
@@ -642,7 +641,7 @@ Geiss - Anomaly 2 & 1127 Mbps & 33 \% & 6.58 & 53 \% (3377 Mbps) \\
 Aderrasi - Candy Avian & 923 Mbps & 27 \% & 6.52 & 53 \% (3404 Mbps) \\
 \hline
 \end{tabular}
-\caption{Memory performance in different conditions (Milkymist 0.5).} \label{tab:memperformance}
+\caption{Memory performance in different conditions (Milkymist 0.5).}\label{tab:memperformance}
 \end{table} % TODO: update these results
 
 It is difficult to compare these results to those of other memory controllers as they are usually not published (or not measured at all).
@@ -755,7 +754,7 @@ This also makes it easier to write Milkymist framebuffer drivers within the fram
 
 \chapter{Texture mapping unit}
 \label{ch:tmu}
-High performance texture mapping was perhaps the most challenging technical part of the project. This chapter begins with the design of an efficient algorithm and continues with the hardware implementation of it, and in particular how it was pipelined and how its memory references are handled.
+High performance texture mapping was perhaps the most challenging and interesting part of the SoC design project. This chapter begins with the design of an efficient algorithm and continues with the hardware implementation of it, and in particular how it was pipelined and how its memory references are handled.
 
 \section{Algorithm}
 \subsection{Two-dimensional interpolation}
@@ -859,13 +858,14 @@ $\Box$
 \end{enumerate}
 
 \subsection{Bilinear filtering}
+\label{subsec:bilfpformat}
 As outlined in section~\ref{sec:tm}, bilinear filtering is needed to obtain good rendering results.
 
 We will therefore try to improve the previous algorithm so that we get a more precise, non-integer interpolation result. Preferably, the result should be in fixed point format so that it can be easily handled for the actual filtering stage (weighted average of adjacent pixels colors).
 
 The first thing that comes to mind is to try to use the error value $\frac{e}{Dx}$. However, this would require an integer to fixed point division to be performed at each interpolated result (the horizontal interpolation alone would require two such operations per pixel), which is expensive.
 
-A more elegant solution consists in multiplying all the texture coordinates by a power of 2, noted S (this is an inexpensive operation, as it can be implemented with a bit shift). Since the interpolation process is linear, the outputs are also multiplied by S -- but the precision is increased. In other words, the output of the interpolation stages comes directly in fixed point format, with $log_{2}(S)$ digits after the radix point.
+A more elegant solution consists in multiplying all the texture coordinates by a power of 2, noted S (this is an inexpensive operation, as it can be implemented with a bit shift). Since the interpolation process is linear, the outputs are also multiplied by S --- but the precision is increased. In other words, the output of the interpolation stages comes directly in fixed point format, with $log_{2}(S)$ digits after the radix point.
 
 Figure~\ref{fig:filtfromfp} illustrates how the bilinear filtering is done using the fixed point texture coordinates. The texture coordinates are noted X.i, X.f, Y.i and Y.f, with ``i'' denoting the integer part of the fixed point number (bits before the radix point) and ``f'' denoting the fractional part (bits after the radix point).
 
@@ -921,7 +921,7 @@ Assignment & free (which is optimistic) \\
 Reading or writing to the framebuffer & 2 cycles \\
 \hline
 \end{tabular}
-\caption{Estimates of the cost of common software operations.} \label{tab:swcost}
+\caption{Estimates of the cost of common software operations.}\label{tab:swcost}
 \end{table}
 
 \subsection{Execution time of the interpolation algorithm}
@@ -954,7 +954,7 @@ Conditional jump & $3 \cdot n$ \\
 \textbf{Total} & $66 + 12 \cdot n$ \\
 \hline
 \end{tabular}
-\caption{Detailed estimate of the execution time of the interpolation algorithm.} \label{tab:intertime}
+\caption{Detailed estimate of the execution time of the interpolation algorithm.}\label{tab:intertime}
 \end{table}
 
 \subsection{Total execution time}
@@ -985,7 +985,7 @@ Framebuffer writes & 524288 & 5 ms \\
 \textbf{Total} & 30846976 & 308 ms \\
 \hline
 \end{tabular}
-\caption{Optimistic estimate of the execution time of software texture mapping.} \label{tab:swtmutime}
+\caption{Optimistic estimate of the execution time of software texture mapping.}\label{tab:swtmutime}
 \end{table}
 
 According to this (yet optimistic) estimate, it becomes clear that a software implementation could not suffice, as the required performance is 8 ms. Even the vertical interpolation can hardly be implemented in software, as it would use alone more than 60\% of the CPU power (which is needed for other tasks). We need an overall speedup by a factor of more than 40, using hardware acceleration.
@@ -1052,7 +1052,7 @@ This unit processes interpolated texture points whose coordinates are beyond the
 There are two, selectable, ways of dealing with them:
 \begin{itemize}
 \item \textit{clamping}, which consists in replacing an out-of-range coordinate with 0 (if it was negative) or with the horizontal or vertical resolution of the texture minus one (if it was too large).
-\item \textit{wrapping}, which consists in computing the positive modulo of each coordinate with respect to the horizontal or vertical texture resolution. In order to avoid using an expensive fast divider, only textures whose sizes are a power of 2 are supported for wrapping. This enables the replacement of the divider with a bitwise AND operation, which is way less expensive. The problem of negative texture coordinates is solved by simply masking out the sign bit, which yields the correct result as the coordinates are represented in two's complement format.
+\item \textit{wrapping}, which repeats the texture and consists in computing the positive modulo of each coordinate with respect to the horizontal or vertical texture resolution. In order to avoid using an expensive fast divider, only textures whose sizes are a power of 2 are supported for wrapping. This enables the replacement of the divider with a bitwise AND operation, which is way less expensive. The problem of negative texture coordinates is solved by simply masking out the sign bit, which yields the correct result as the coordinates are represented in two's complement format.
 \end{itemize}
 
 This stage is implemented by simple arithmetic combinatorial functions, which are registered and pipelined on two sub-stages to meet timing requirements.
@@ -1109,7 +1109,7 @@ In case of a miss, the ``hit'' signal goes low (stalling the pipeline), and the 
 \subsubsection{Inter-channel cache conflicts}
 An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels request different addresses that have different tags but map to the same cache line.
 
-This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache -- which it can never achieve -- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
+This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache --- which it can never achieve --- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
 
 This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance anyway as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive. Furthermore, when keeping a direct-mapped cache, it makes sense to add hardware that would deal with infrequent cases of ICCCs such as those arising when wrapping at texture boundaries.}, second, ICCCs are easy to avoid for our purposes, and we will see how.
 
@@ -1299,6 +1299,124 @@ H \cdot V - 1 < N_{l} & \textrm{ or } \begin{cases}
 \end{equation}
 
 \subsubsection{Cache size}
+We must now determine an optimal size for the texel cache. The size must represent a compromise between hit rate (and, thus, performance) and costly utilization of on-chip RAM. Furthermore, it must be chosen so that inter-channel cache conflicts do not occur for our use cases.
+
+To study the impact of the cache size on the hit rate, we simulated the complete Verilog code of texture mapping unit with different cache sizes. The CSR interface of the texture mapping unit (subsection~\ref{subsec:tmucsr}) supports eight registers that measure, for each channel, the number of requests\footnote{As outlined above, channels are only active (i.e. issue a cache request) when needed (i.e. when the interpolated texture coordinates are not integer). Channel 1 is always active and therefore makes as many accesses as there are pixels in the output picture. Its accesses are however still counted as a means to check that the texture mapping unit is operating correctly.} and how many of those requests hit the cache. Those registers are still present after logic synthesis, and can be used to validate the performance of the texel cache in the real system.\footnote{The reason why we performed the tests using Verilog simulations instead of the real FPGA-based system is because logic synthesis --- needed for each tested cache size --- takes a long time, and some cache configurations may cause resource shortages or timing problems that would need to be manually addressed.}
+
+The source and destination images have a resolution of 512x512 pixels, and are tesselated with 16x16 rectangles forming a 32x32 mesh --- which matches the configuration used for distortions by the renderer program. Different sets of texture coordinates were used at each vertex, according to table~\ref{tab:tcsets}. Texture coordinates are multiplied by 64 to perform the conversion of integers into the fixed point format used throughout the linear interpolation process (see subsection~\ref{subsec:bilfpformat}). $x$ and $y$ refer to the indices of the vertex in the mesh. Texture wrapping was enabled, as it puts more load on the cache than texture clamping.
+
+\begin{table}
+\centering
+\begin{tabularx}{13cm}{|c|c|X|X|}
+\hline
+\textbf{Set name} & \textbf{Output picture} & \textbf{X} & \textbf{Y} \\
+\hline
+copy & Figure~\ref{fig:tmuoutcopy} & $x \cdot 16 \cdot 64$ & $y \cdot 16 \cdot 64$ \\
+\hline
+zoomin & Figure~\ref{fig:tmuoutzoomin} & $x \cdot 10 \cdot 64$ & $y \cdot 10 \cdot 64$ \\
+\hline
+zoomout & Figure~\ref{fig:tmuoutzoomout} & $x \cdot 40 \cdot 64$ & $y \cdot 40 \cdot 64$ \\
+\hline
+rotozoom & Figure~\ref{fig:tmuoutrotozoom} & $(x\cdot16-256)\cdot67 - (y\cdot16-256)\cdot28+256\cdot64$ & $(x\cdot16-256)\cdot28 + (y\cdot16-256)\cdot67+256\cdot64$ \\
+\hline
+\end{tabularx}
+\caption{Texture coordinate sets used for tuning the texel cache.}\label{tab:tcsets}
+\end{table}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=85mm]{tmuout_copy.eps}
+\caption{TMU output picture for the ``copy'' set.}
+\label{fig:tmuoutcopy}
+\end{figure}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=85mm]{tmuout_zoomin.eps}
+\caption{TMU output picture for the ``zoomin'' set.}
+\label{fig:tmuoutzoomin}
+\end{figure}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=85mm]{tmuout_zoomout.eps}
+\caption{TMU output picture for the ``zoomout'' set.}
+\label{fig:tmuoutzoomout}
+\end{figure}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=85mm]{tmuout_rotozoom.eps}
+\caption{TMU output picture for the ``rotozoom'' set.}
+\label{fig:tmuoutrotozoom}
+\end{figure}
+
+
+Simulations were carried out using the free GPL Cver Verilog simulator~\cite{gplcver}. To visually inspect the results of the distortions stemming from each set of texture coordinates, the simulation reads and writes input and output picture files thanks to a Verilog VPI~\cite{vpi} plug-in.\footnote{This was also part of the usual test bench used to debug the Verilog implementation of the texture mapping unit.} A typical simulation trace is reproduced in figure~\ref{fig:tmusimtrace}. Even though GPL Cver is relatively slow\footnote{Its runtime is between one and three minutes on a Intel Core 2 Duo 2.5GHz machine.} to carry out such a complex simulation, it produced consistent results, which supports the idea that it is a viable alternative to proprietary and expensive simulators commonly taught in university courses.
+
+\begin{figure}
+\centering
+\begin{boxedminipage}{13cm}
+\begin{verbatim}
+$ make TB=tb_tmu2.v
+cver +loadvpi=./vpi_images.so:vpi_register tb_tmu2.v
+(...)
+GPLCVER_2.12a of 05/16/07 (Linux-elf).
+Copyright (c) 1991-2007 Pragmatic C Software Corp.
+  All Rights reserved.  Licensed under the GNU General Public
+  License (GPL).
+  See the 'COPYING' file for details.  NO WARRANTY provided.
+Today is Tue May  4 14:46:22 2010.
+PLI Image I/O functions registered
+Compiling source file "tb_tmu2.v"
+Compiling source file "../rtl/tmu2_adrgen.v"
+(...)
+
+Opening input picture...
+Configuring TMU...
+CSR write: 0000002c=01000000
+CSR write: 00000004=00000020
+(...)
+CSR write: 00000044=00000010
+CSR write: 00000048=0000003f
+Starting TMU...
+CSR write: 00000000=00000001
+Received DONE IRQ from TMU!
+Gathering texel cache statistics...
+CSR read : 00000050=00040000
+CSR read : 00000054=0003c000
+(...)
+CSR read : 00000068=00000000
+CSR read : 0000006c=00000000
+Channel A:      245760 /      262144 hits (93.750000 %)
+Channel B:           0 /           0 hits (nan %)
+Channel C:           0 /           0 hits (nan %)
+Channel D:           0 /           0 hits (nan %)
+GLOBAL   :      245760 /      262144 hits (93.750000 %)
+Writing output picture...
+All done!
+Halted at location **tb_tmu2.v(367) time 4585546 from call
+to $finish.
+  There were 0 error(s), 32 warning(s), and 402 inform(s).
+\end{verbatim}
+\end{boxedminipage}
+\caption{Typical TMU simulation trace (excerpt).}
+\label{fig:tmusimtrace}
+\end{figure}
+
+Results are reported in table~\ref{tab:tcresults}. Only the \textit{global} hit rate is reported, which is computed as the global number of hits over the global number of accesses. The global number of hits (respectively  accesses) is the sum of the number of hits (respectively accesses) for all channels. The reported cache size is the size of the data store only (not counting the tag memory).
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Cache size} & \textbf{copy} & \textbf{zoomin} & \textbf{zoomout} & \textbf{rotozoom} \\
+\hline
+8KB & 93.75 \% & 98.08 \% &  83.33 \% &  82.94 \% \\
+\hline
+\end{tabular}
+\caption{Hit rate results of the texel cache for each set of texture coordinates and different cache sizes.}\label{tab:tcresults}
+\end{table}
 
 \subsection{Bilinear filter}
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
@@ -1335,6 +1453,7 @@ Thus, the write buffer can achieve a throughput of one pixel per clock cycle ($T
 In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words. Therefore, the write buffer can tolerate write latencies of up to 12 cycles while maintaining excellent performance, which seems perfectly achievable even when taking into account the delays due to bus arbitration.
 
 \subsection{Control interface}
+\label{subsec:tmucsr}
 The texture mapping unit is completely under software control thanks to a CSR interface through which the CPU can configure and control it using a set of configuration and status registers. The texture mapping unit has one interrupt line to signal completion of the process to the CPU.
 
 \section{Extra features}
@@ -1449,8 +1568,7 @@ tiffmedian & 26.48 s & 26.26 s & 26.37 s & 0.84 \% \\
 typeset & 21.44 s & 21.79 s & 21.62 s & 1.63 \% \\
 \hline
 \end{tabular}
-\label{tab:milkymistspeed}
-\caption{User execution times on Milkymist 0.2.}
+\caption{User execution times on Milkymist 0.2.}\label{tab:milkymistspeed}
 \end{table}
 
 \begin{table}
@@ -1472,8 +1590,7 @@ tiffmedian & 35.02 s & 33.05 s & 34.04 s & 5.96 \% \\
 typeset & 28.91 s & 28.83 s & 28.87 s & 0.28 \% \\
 \hline
 \end{tabular}
-\label{tab:microblazespeed}
-\caption{User execution times on Microblaze 10.1.}
+\caption{User execution times on Microblaze 10.1.}\label{tab:microblazespeed}
 \end{table}
 
 The root causes of this performance improvement were not investigated; but since LatticeMico32 and Microblaze share a very close architecture, it is suspected that these differences are vastly explained by the combination of the low-latency HPDMC controller and the improved caches.

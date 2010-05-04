@@ -51,7 +51,16 @@ module tmu2_ctlif #(
 	output reg [10:0] dst_squarew,
 	output reg [10:0] dst_squareh,
 	output reg alpha_en,
-	output reg [5:0] alpha
+	output reg [5:0] alpha,
+
+	input [21:0] c_req_a,
+	input [21:0] c_hit_a,
+	input [21:0] c_req_b,
+	input [21:0] c_hit_b,
+	input [21:0] c_req_c,
+	input [21:0] c_hit_c,
+	input [21:0] c_req_d,
+	input [21:0] c_hit_d
 );
 
 reg old_busy;
@@ -163,6 +172,15 @@ always @(posedge sys_clk) begin
 				5'b10001: csr_do <= dst_squareh;
 
 				5'b10010: csr_do <= alpha;
+
+				5'b10100: csr_do <= c_req_a;
+				5'b10101: csr_do <= c_hit_a;
+				5'b10110: csr_do <= c_req_b;
+				5'b10111: csr_do <= c_hit_b;
+				5'b11000: csr_do <= c_req_c;
+				5'b11001: csr_do <= c_hit_c;
+				5'b11010: csr_do <= c_req_d;
+				5'b11011: csr_do <= c_hit_d;
 				default: csr_do <= 32'bx;
 			endcase
 		end
