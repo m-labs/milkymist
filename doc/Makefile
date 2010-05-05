@@ -12,6 +12,7 @@ TOC=$(TEX:.tex=.toc)
 BBL=$(TEX:.tex=.bbl)
 BLG=$(TEX:.tex=.blg)
 LOF=$(TEX:.tex=.lof)
+LOT=$(TEX:.tex=.lot)
 
 all: $(PDF)
 
@@ -49,6 +50,6 @@ milkdrop.dvi: milkdrop.tex
 	ps2pdf $<
 
 clean:
-	rm -f $(DVI) $(PS) $(PDF) $(AUX) $(LOG) $(SNM) $(OUT) $(NAV) $(TOC) $(BBL) $(BLG) $(LOF) *~
+	rm -f $(DVI) $(PS) $(PDF) $(AUX) $(LOG) $(SNM) $(OUT) $(NAV) $(TOC) $(BBL) $(BLG) $(LOF) $(LOT) *~
 
 .PHONY: clean

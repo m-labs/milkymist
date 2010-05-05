@@ -1,4 +1,5 @@
 % http://www.idt.mdh.se/phd/thesis/kthesis-1.0/
+% TODO: spellcheck
 \documentclass[a4paper,11pt]{kthesis}
 \usepackage[T1]{fontenc}
 \usepackage[normalem]{ulem}
@@ -32,6 +33,7 @@ TODO
 
 \tableofcontents
 \listoffigures
+\listoftables
 
 \mainmatter
 
@@ -758,7 +760,7 @@ High performance texture mapping was perhaps the most challenging and interestin
 
 \section{Algorithm}
 \subsection{Two-dimensional interpolation}
-As outlined in section~\ref{sec:tm}, we need to interpolate linearly on a 2D polygon the X and Y texture coordinates according to known values on the vertices of the polygon.
+As underlined in section~\ref{sec:tm}, we need to interpolate linearly on a 2D polygon the X and Y texture coordinates according to known values on the vertices of the polygon.
 
 Traditional GPUs use the triangle as the primitive polygon, because it allows them to draw any other polygon by splitting it into a series of triangles. We do not need such flexibility. For rendering MilkDrop presets, the surface to be drawn is always a mesh of rectangles whose edges are parallel to the borders of the screen (traditional GPUs draw the surface using a triangle decomposition similar to the one shown in figure~\ref{fig:tridec}). We can therefore choose, as the primitive polygon, the rectangle with edges parallel to the borders of the screen, which is much simpler to draw than arbitrary triangles.
 
@@ -995,7 +997,7 @@ According to this (yet optimistic) estimate, it becomes clear that a software im
 \label{subsec:tmustrategy}
 Given the performance constraints and the slowness of software implementations, we decided to implement the complete texture mapping process in hardware.
 
-It is expected that the memory latency for reading the framebuffer would be a performance-limiting factor. Instead of trying to alleviate its effects by using complex and potentially resource-intensive techniques such as advanced prefetching or non-blocking caches, we simply use a direct-mapped blocking texel cache providing simplicity and fast hit times, and design the rest of the mapping unit so that the memory read latency becomes the \textit{only} limiting factor.
+It is expected that the memory latency for reading the framebuffer would be a performance-limiting factor. Instead of trying to alleviate its effects by using complex and potentially resource-intensive techniques such as advanced prefetching or non-blocking caches, we simply use a direct-mapped blocking texel cache providing simplicity and fast hit times, and design the rest of the texture mapping unit so that the memory read latency becomes the \textit{only} limiting factor.
 
 With a direct-mapped texel cache having a hit rate of 90\%, a hit time of 1 cycle and a miss penalty of 9 cycles, the average memory access times is 1.8 cycles. With a 100MHz system clock, such a cache has a throughput of 55 megapixels per second, well above the optimistic estimate made in subsection~\ref{subsec:perfcontext}.\footnote{This is a quick estimate assuming a normal cache that does not support bilinear filtering. To implement bilinear filtering, the situation is more complex as the cache needs to look up 4 pixels at once. This will be discussed in subsection~\ref{subsec:texelcache}.}
 
@@ -1102,7 +1104,7 @@ A simplified block diagram of the texel cache is given in figure~\ref{fig:tcarch
 \label{fig:tcarch}
 \end{figure}
 
-At each clock cycle, the texel cache processes, in a pipelined manner\footnote{The SRAMs are registered, in order to improve timing and to map to the block RAMs of common modern FPGAs which always contain an internal register.}, four memory addresses from each channel if they hit the caches. The ``hit'' signal is kept high and the pipeline is always running.
+At each clock cycle, the texel cache processes, in a pipelined manner,\footnote{The SRAMs are registered, in order to improve timing and to map to the block RAMs of common modern FPGAs which always contain an internal register.} four memory addresses from each channel if they hit the caches. The ``hit'' signal is kept high and the pipeline is always running.
 
 In case of a miss, the ``hit'' signal goes low (stalling the pipeline), and the priority encoder and the multiplexer (MUX) select one of the missed addresses (there can be one or many). The FastMemoryLink master issues a memory transaction to retrieve the data from the system memory, replaces the contents of the cache line and rewrites the tag. The address now becomes a cache hit. If no other address misses the cache, the texel cache has successfully handled the 4-channel transaction and the ``hit'' signal goes high again to proceed to the next. Otherwise, the process repeats until all addresses hit the cache.
 
@@ -1111,7 +1113,7 @@ An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels
 
 This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache --- which it can never achieve --- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
 
-This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance anyway as some memory bursts would be there only for retrieving one pixel and solving the conflict\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive. Furthermore, when keeping a direct-mapped cache, it makes sense to add hardware that would deal with infrequent cases of ICCCs such as those arising when wrapping at texture boundaries.}, second, ICCCs are easy to avoid for our purposes, and we will see how.
+This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance anyway as some memory bursts would be there only for retrieving one pixel and solving the conflict,\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive. Furthermore, when keeping a direct-mapped cache, it makes sense to add hardware that would deal with infrequent cases of ICCCs such as those arising when wrapping at texture boundaries.} second, ICCCs are easy to avoid for our purposes, and we will see how.
 
 For simplicity, we use the pixel (2 bytes) as unit. In the equations that follow:
 \begin{itemize}
@@ -1301,7 +1303,7 @@ H \cdot V - 1 < N_{l} & \textrm{ or } \begin{cases}
 \subsubsection{Cache size}
 We must now determine an optimal size for the texel cache. The size must represent a compromise between hit rate (and, thus, performance) and costly utilization of on-chip RAM. Furthermore, it must be chosen so that inter-channel cache conflicts do not occur for our use cases.
 
-To study the impact of the cache size on the hit rate, we simulated the complete Verilog code of texture mapping unit with different cache sizes. The CSR interface of the texture mapping unit (subsection~\ref{subsec:tmucsr}) supports eight registers that measure, for each channel, the number of requests\footnote{As outlined above, channels are only active (i.e. issue a cache request) when needed (i.e. when the interpolated texture coordinates are not integer). Channel 1 is always active and therefore makes as many accesses as there are pixels in the output picture. Its accesses are however still counted as a means to check that the texture mapping unit is operating correctly.} and how many of those requests hit the cache. Those registers are still present after logic synthesis, and can be used to validate the performance of the texel cache in the real system.\footnote{The reason why we performed the tests using Verilog simulations instead of the real FPGA-based system is because logic synthesis --- needed for each tested cache size --- takes a long time, and some cache configurations may cause resource shortages or timing problems that would need to be manually addressed.}
+To study the impact of the cache size on the hit rate, we simulated the complete Verilog code of texture mapping unit with different cache sizes. The CSR interface of the texture mapping unit (subsection~\ref{subsec:tmucsr}) supports eight registers that measure, for each channel, the number of requests\footnote{As outlined above, channels are only active (i.e. issue a cache request) when needed (i.e. when the interpolated texture coordinates are not integer). Channel 1 is always active and therefore makes as many accesses as there are pixels in the output picture. Its accesses are however still counted as a means to check that the texture mapping unit is operating correctly.} and how many of those requests hit the cache. Those registers are still present after logic synthesis, and can be used to validate the performance of the texel cache in the real system.\footnote{The reason why we performed the tests using Verilog simulations instead of the real FPGA-based system is because logic synthesis --- needed for each tested cache size --- takes a long time, and some cache configurations may cause resource shortages, timing problems or even Xst synthesizer bugs that would need to be manually addressed.}
 
 The source and destination images have a resolution of 512x512 pixels, and are tesselated with 16x16 rectangles forming a 32x32 mesh --- which matches the configuration used for distortions by the renderer program. Different sets of texture coordinates were used at each vertex, according to table~\ref{tab:tcsets}. Texture coordinates are multiplied by 64 to perform the conversion of integers into the fixed point format used throughout the linear interpolation process (see subsection~\ref{subsec:bilfpformat}). $x$ and $y$ refer to the indices of the vertex in the mesh. Texture wrapping was enabled, as it puts more load on the cache than texture clamping.
 
@@ -1447,7 +1449,14 @@ Results are reported in table~\ref{tab:tcresults} and figure~\ref{fig:tcresultsg
 \end{figure}
 
 Before we go on choosing a texel cache size, a few comments on these results can be made.
-TODO
+
+First, for the ``copy'' set, the hit rate remains at a constant 93.75 \%. This is expected and supports the validity of the results. Indeed, the texture mapping unit is copying rectangles whose horizontal size is the length in pixels of a cache line (4 words of 64-bit each yields 16 pixels of 16 bits each). In our tests, the texture framebuffer was aligned to the beginning of a cache line and 512 (the horizontal texture size) is a multiple of the cache line length in pixels, therefore each horizontal line in a rectangle corresponds to a cache line. Each texture pixel is read exactly once (channels 2, 3 and 4 are idle as the interpolated texture coordinates are always integer). What happens is that, for each horizontal line in each rectangle, the first texel is read and misses the cache. Then, the next 15 texels in the line are immediately read and hit the cache. This indeed yields a cache hit rate of $\frac{15}{16} = 0.9375$.
+
+A result more surprising at first sight is that for the ``zoomout'' set, which is supposed to be the worst case, the cache hit rate is low --- as expected --- and increases, until it slightly exceeds the hit rate for the ``copy'' set for cache sizes of 64KB and above.
+
+This has to do with the fact that the texture mapping unit draws the rectangles in the same order as framebuffers are scanned (from left to right and top to bottom). When the cache reaches 64KB, it is able to memorize a full band of texels that is more than 48 pixels high ($512\cdot48\cdot2 = 49152 < 65536$) which contains more than all the texels needed to draw a full line of rectangles (16 pixels high) in the output picture. Since the output picture repeats the texture, the repetition generates cache hits that are not present with the ``copy'' set.
+
+As for choosing a texel cache size, we went for a 32KB cache. There is no significant performance improvement with using a larger cache except for the ``zoomout'' set for which there is a slight increase in the hit rate between 32KB and 64KB. Since the ``zoomout'' set is a worst-case scenario seldom found in practice (MilkDrop usually zooms out by factors much less than the one we used, resulting in fewer cache misses), we felt it was not worth doubling the cache size to improve its performance.
 
 \subsection{Bilinear filter}
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
@@ -1481,7 +1490,14 @@ Thus, the write buffer can achieve a throughput of one pixel per clock cycle ($T
 \Delta_{w} \leq \frac{n \cdot w}{d} - n
 \end{equation}
 
-In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words. Therefore, the write buffer can tolerate write latencies of up to 12 cycles while maintaining excellent performance, which seems perfectly achievable even when taking into account the delays due to bus arbitration.
+In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words, which leads to the throughput plot of figure~\ref{fig:thwbufperf}.\footnote{In our implementation, the throughput is also limited to a maximum of 100 megapixels per second because of the width of the write buffer input port.} The write buffer can tolerate write latencies of up to 12 cycles while maintaining an excellent performance of one pixel per clock cycle, which seems perfectly achievable even when taking into account the delays due to bus arbitration.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=95mm]{thwbufperf.eps}
+\caption{Theoretical write buffer throughput versus memory write access time.}
+\label{fig:thwbufperf}
+\end{figure}
 
 \subsection{Control interface}
 \label{subsec:tmucsr}
