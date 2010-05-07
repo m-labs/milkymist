@@ -103,7 +103,7 @@ The MilkDrop-like renderer is the most compute and memory intensive process, fro
 
 Rendering is based on a framebuffer on which the steps below are continuously repeated. This repetition is at the origin of many feedback or ``fractal'' effects.
 \begin{itemize}
-\item The current frame is distorted (zoomed, translated, warped, scaled, rotated...) by texture mapping. This step will be described with more detail in section~\ref{sec:tm}.
+\item The current frame is distorted (zoomed, translated, warped, scaled, rotated...) by texture mapping. This step is described with more detail in section~\ref{sec:tm}.
 \item The frame is darkened (the colors are shifted to black).
 \item A waveform of the currently played music is drawn. The wave can be drawn linearly (like an oscilloscope), in a circle, etc.
 \item Borders around the screen are drawn. If the distortion zooms out, the borders will be pulled into the picture (some effects are based on this).
@@ -178,7 +178,7 @@ Using initial conditions only limits the interaction and evolution possibilities
 
 It is therefore possible to make the parameters evolve over time, thanks to the per-frame equations. As their name suggests, the per-frame equations are mathematical expressions that are evaluated at each frame.
 
-The example patch (figure~\ref{fig:samplepatch}) shows some of them (the lines beginning with \verb!per_frame!). In this example, they change the wave color over time by modifying the \verb!wave_r!, \verb!wave_g! and \verb!wave_b! values in sinusoidal patterns, as well as the zoom, rotation (\verb!rot!) and center of rotation (\verb!cx! and \verb!cy!).
+The example patch (figure~\ref{fig:samplepatch}) shows some of them (the lines beginning with \verb!per_frame!). In this example, they change the wave color over time by modifying the \verb!wave_r!, \verb!wave_g! and \verb!wave_b! values in sinusoidal patterns, as well as the zoom (\verb!zoom!), rotation (\verb!rot!) and center of rotation (\verb!cx! and \verb!cy!).
 
 Per-frame equations can make the patch react to sound, for example through the \verb!bass!, \verb!mid! and \verb!treb! variables that indicate the intensity of the sound in three frequency bands. One of the ideas in Milkymist is to add other variables that can be controlled by the DMX512 and MIDI protocols, enabling the use of a whole range of devices commonly found among musicians (electronic instruments, faders, stage light consoles, joysticks,...) to control the visual effects.
 
@@ -328,11 +328,11 @@ Texture mapping is a common computer graphics operation found in accelerated 3D 
 
 With common GPUs, texture mapping is performed on triangles (and more complex polygons are broke down into a series of triangles). The inputs to the algorithm are the 2D (possibly projected from the original 3D coordinates) positions of the three vertices of the triangle to be filled, and the 2D texture coordinates for these three vertices.
 
-The algorithm will then draw a textured triangle pixel by pixel, by interpolating linearly the texture coordinates of the vertices for each pixel and then copying the texture pixel (\textit{texel}) at these coordinates.
+The algorithm then draws a textured triangle pixel by pixel, by interpolating linearly the texture coordinates of the vertices for each pixel and then copying the texture pixel (\textit{texel}) at these coordinates.
 
 Image processing operations like zooming, rotating or scaling can be implemented with texture mapping, by simply changing the vertices' positions or the textures coordinates at each vertex.
 
-More often than not, the results of the linear interpolation will not be integer, which means that the texture should be sampled between four adjacent pixels (figure~\ref{fig:bilinear}). In this case, for a better rendering, the four pixels should be read and their colors should be averaged (with different weights depending on the fractional parts). This process is called \textit{bilinear filtering} and is required to obtain a good rendering of MilkDrop presets (see figures \ref{fig:mdbilin} and \ref{fig:mdnearest}).
+More often than not, the results of the linear interpolation are not integer, which means that the texture should be sampled between four adjacent pixels (figure~\ref{fig:bilinear}). In this case, for a better rendering, the four pixels should be read and their colors should be averaged (with different weights depending on the fractional parts). This process is called \textit{bilinear filtering} and is required to obtain a good rendering of MilkDrop presets (see figures \ref{fig:mdbilin} and \ref{fig:mdnearest}).
 
 \begin{figure}
 \centering
@@ -456,7 +456,7 @@ Burst access is a form of prefetching that improves latency. It is only efficien
 \begin{itemize}
 \item The CPU core has caches which access memory by complete cache lines. Thus, if the cache line length is a multiple of the burst length, the bursts can be easily fully memorized.
 \item The video framebuffer repeatedly reads the same block of data in a sequential manner, and can easily make full use of the prefetched data assuming that is has sufficient on-chip buffer space.
-\item The texture mapping unit also has a cache and a write buffer which work well with burst accesses. This will be discussed in Chapter~\ref{ch:tmu}.
+\item The texture mapping unit also has a cache and a write buffer which work well with burst accesses. This is discussed in Chapter~\ref{ch:tmu}.
 \end{itemize}
 
 \subsection{Burst reordering}
@@ -531,7 +531,7 @@ The memory is run at 100MHz, yielding a peak theoretical bandwidth of 6.4Gbps, w
 \caption{Block diagram of the HPDMC architecture.}\label{fig:hpdmc_block}
 \end{figure}
 
-The architecture of the memory controller, dubbed HPDMC (for ``High Performance Dynamic Memory Controller''), is outlined in figure~\ref{fig:hpdmc_block}.
+The architecture of the memory controller, called HPDMC (for ``High Performance Dynamic Memory Controller''), is outlined in figure~\ref{fig:hpdmc_block}.
 
 The control interface is used by the system to configure the controller, and also to issue the start-up sequence to the SDRAM. Indeed, SDRAM chips require a sophisticated sequence of commands upon power-up. In many memory controller designs, a hardware finite state machine is used to issue this command sequence. In order to save hardware resources, the system used  here leaves this task to the software, and, for this purpose, includes a ``bypass MUX'' that routes directly a configuration and status register of HPDMC to the SDRAM command and address pins. Once the SoC has run a software routine that sends the correct initialization sequence to the SDRAM, it switches permanently the bypass MUX to the ``SDRAM management unit'' and can use off-chip memory normally.
 
@@ -665,7 +665,7 @@ Wishbone~\cite{wishbone} is a general purpose royalty-free SoC bus with open spe
 
 Wishbone is a synchronous sequential bus with support for variable latency (wait states) through the use of an acknowledgement signal that marks the end of the transaction. Burst modes (automatic transfer of consecutive words) are supported and are configurable on a per-transaction basis (i.e. bursts of arbitrary lengths and single-word transactions can be freely mixed on the same bus). However, there is no pipelining.
 
-Wishbone is used around the SoC's LatticeMico32 CPU core and for simple DMA masters which have modest requirements of bandwidth and of volume of transferred data. As will be explained in Section~\ref{sec:fmlbrg}, connecting DMA masters that transfer small amounts of data (which can fit in the L2 cache) to the same bus as the CPU simplifies dealing with cache coherency issues.
+Wishbone is used around the SoC's LatticeMico32 CPU core and for simple DMA masters which have modest requirements of bandwidth and of volume of transferred data. As explained in Section~\ref{sec:fmlbrg}, connecting DMA masters that transfer small amounts of data (which can fit in the L2 cache) to the same bus as the CPU simplifies dealing with cache coherency issues.
 
 The data width used for the Wishbone bus is 32, yielding a peak bandwidth of 3.2Gbps when the system is running at 100MHz.
 
@@ -999,7 +999,7 @@ Given the performance constraints and the slowness of software implementations, 
 
 It is expected that the memory latency for reading the framebuffer would be a performance-limiting factor. Instead of trying to alleviate its effects by using complex and potentially resource-intensive techniques such as advanced prefetching or non-blocking caches, we simply use a direct-mapped blocking texel cache providing simplicity and fast hit times, and design the rest of the texture mapping unit so that the memory read latency becomes the \textit{only} limiting factor.
 
-With a direct-mapped texel cache having a hit rate of 90\%, a hit time of 1 cycle and a miss penalty of 9 cycles, the average memory access times is 1.8 cycles. With a 100MHz system clock, such a cache has a throughput of 55 megapixels per second, well above the optimistic estimate made in subsection~\ref{subsec:perfcontext}.\footnote{This is a quick estimate assuming a normal cache that does not support bilinear filtering. To implement bilinear filtering, the situation is more complex as the cache needs to look up 4 pixels at once. This will be discussed in subsection~\ref{subsec:texelcache}.}
+With a direct-mapped texel cache having a hit rate of 90\%, a hit time of 1 cycle and a miss penalty of 9 cycles, the average memory access times is 1.8 cycles. With a 100MHz system clock, such a cache has a throughput of 55 megapixels per second, well above the optimistic estimate made in subsection~\ref{subsec:perfcontext}.\footnote{This is a quick estimate assuming a normal cache that does not support bilinear filtering. To implement bilinear filtering, the situation is more complex as the cache needs to look up 4 pixels at once. This is discussed in subsection~\ref{subsec:texelcache}.}
 
 To make sure that the memory access time is the only limiting factor, it was chosen that the rest of the system should be designed to support a throughput of approximately one output pixel per clock cycle. This heuristic was influenced by the fact that it corresponds to a spatial implementation of the algorithm (i.e. with little or no time-based resource sharing of the hardware components) but does not require resource-intensive duplication of large hardware units either. A spatial implementation requires more area than a time-shared one, but it is simpler to understand, and needs fewer multiplexers and is less prone to routing congestions, making it easier to achieve timing closure in FPGAs.
 
@@ -1041,7 +1041,7 @@ The vertical interpolator contains two vector interpolators, one for each vertic
 
 \paragraph{Stage B: Q and R computation.} The next operation is to perform the Euclidian division of Dy by Dx. The hardware does so by using the restoring division method~\cite{restdiv}, which takes as many cycles as there are quotient digits (our implementation has 18).
 
-In order to keep the resource usage low, the divider is not pipelined. After operands are sent to it, it will stall transmissions from the upstream stage for several cycles until the division is complete.
+In order to keep the resource usage low, the divider is not pipelined. After operands are sent to it, it stalls transmissions from the upstream stage for several cycles until the division is complete.
 
 \paragraph{Stage C: Interpolation loop.}
 Finally, the core of the algorithm (the ``while'' loop from figure~\ref{fig:interalgo}) is implemented in the last stage. This unit receives the Q and R values from the dividers, as well as the start $y_{0}$ value and the range $x_{0}$ to $x_{1}$ (which are forwarded through the previous stages). It then sends the series of interpolated values $[y]$ for $x_{0} \leq x < x_{1}$.
@@ -1111,7 +1111,7 @@ In case of a miss, the ``hit'' signal goes low (stalling the pipeline), and the 
 \subsubsection{Inter-channel cache conflicts}
 An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels request different addresses that have different tags but map to the same cache line.
 
-This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache --- which it can never achieve --- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error.}
+This condition is not desirable. With our implementation, the texel cache would go into an infinite loop fetching data from the memory in an attempt to make all channels hit the cache --- which it can never achieve --- until it is manually reset.\footnote{As a safety measure, it is therefore recommended that software drivers for the texture mapping unit check for the possibility of ICCC conditions before running the TMU and report an error if an ICCC is possible.}
 
 This choice has been made for two reasons: first, adding hardware to deal with ICCCs would yield poor performance anyway as some memory bursts would be there only for retrieving one pixel and solving the conflict,\footnote{This is true only if we keep a direct-mapped cache. With a multiple-way set-associative cache and a smart replacement policy that allocates one specific way to each conflicting channel when an ICCC occurs, the hardware can both deal with ICCCs and yield high performance. However, it is more complex and expensive. Furthermore, when keeping a direct-mapped cache, it makes sense to add hardware that would deal with infrequent cases of ICCCs such as those arising when wrapping at texture boundaries.} second, ICCCs are easy to avoid for our purposes, and we will see how.
 
@@ -1127,7 +1127,7 @@ For simplicity, we use the pixel (2 bytes) as unit. In the equations that follow
 \begin{equation}
 l_{p} = \left\lfloor \frac{a_{p}}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
 \end{equation}
-Thus, two pixels at addresses $a_{1}$ and $a_{2}$ will conflict in the cache if and only if:
+Thus, two pixels at addresses $a_{1}$ and $a_{2}$ conflict in the cache if and only if:
 \begin{equation}\label{eq:cacheconflict}
 \begin{cases}
 |a_{1}-a_{2}| \geq N_{l} \\
@@ -1458,13 +1458,15 @@ This has to do with the fact that the texture mapping unit draws the rectangles 
 
 As for choosing a texel cache size, we went for a 32KB cache. There is no significant performance improvement with using a larger cache except for the ``zoomout'' set for which there is a slight increase in the hit rate between 32KB and 64KB. Since the ``zoomout'' set is a worst-case scenario seldom found in practice (MilkDrop usually zooms out by factors much less than the one we used, resulting in fewer cache misses), we felt it was not worth doubling the cache size to improve its performance.
 
+% TODO: ICCC
+
 \subsection{Bilinear filter}
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
 
 \subsection{Write buffer}
 The write buffer is in charge of gathering the final pixels produced by the algorithm, assemble them into FML bursts and write them to the memory.
 
-The write buffer has enough memory capacity to store two bursts on-chip. This storage space is used for a ``double buffering'' technique: while the first burst buffer receives pixels from the pipeline, the other buffer can transmit data to the memory controller. Bursts can be complete, which means that all data in them is valid, or incomplete, which means that the write buffer has not received a value for all the pixels within the burst but still needs to move the partial burst data it has off-chip because it does not have space to store it. Incomplete bursts are performed using the data mask (DM) signals of FML that will prevent some bytes from being written to the memory during the burst. Incomplete bursts should be avoided as they waste memory bandwidth and reduce performance.
+The write buffer has enough memory capacity to store two bursts on-chip. This storage space is used for a ``double buffering'' technique: while the first burst buffer receives pixels from the pipeline, the other buffer can transmit data to the memory controller. Bursts can be complete, which means that all data in them is valid, or incomplete, which means that the write buffer has not received a value for all the pixels within the burst but still needs to move the partial burst data it has off-chip because it does not have space to store it. Incomplete bursts are performed using the data mask (DM) signals of FML that prevent some bytes from being written to the memory during the burst. Incomplete bursts should be avoided as they waste memory bandwidth and reduce performance.
 
 This small amount of on-chip memory is enough to perform well. Indeed, the algorithm scans the rectangles one by one horizontally and then vertically (figure~\ref{fig:rectinter}) and consecutive pixels on the same horizontal line are contiguous in memory (equation~\ref{eq:fbadr}). Thus, if the destination framebuffer is aligned to the start of a FML burst and if the horizontal size of the rectangles is a multiple of the number of pixels in a FML burst, the burst buffers will be used very efficiently, with complete bursts only. This is the recommended mode of operation for the texture mapping unit.
 
@@ -1508,7 +1510,7 @@ Beyond this basic principle of operation, the texture mapping unit supports seve
 \begin{itemize}
 \item Fade to black. To implement the ``decay'' effect of MilkDrop, the output picture can be darkened by multiplying all its color components by a 6-bit fixed point number between 0 and 1.
 \item Chroma key. Texels of a given color can be ignored (not drawn in the output framebuffer). This is not used in normal rendering, but makes it possible to draw quickly text or symbols with transparent areas on the screen.
-\item Semi-transparency (alpha blending). The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping (by computing a weighted average) and writing the result back to memory. If transparency is not desired, the texture mapping unit will skip reading the destination picture in order to use less memory bandwidth and avoid blocking on unneeded memory references.
+\item Semi-transparency (alpha blending). The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping (by computing a weighted average) and writing the result back to memory. If transparency is not desired, the texture mapping unit skips reading the destination picture in order to use less memory bandwidth and avoid blocking on unneeded memory references.
 \end{itemize}
 
 \section{Implementation results}
@@ -1516,7 +1518,103 @@ TODO
 
 \chapter{Floating point coprocessor}
 \label{ch:pfpu}
-TODO
+\section{Purpose}
+Patches define floating-point equations that are evaluated at each vertex (subsection~\ref{subsec:mdprinciple}). Furthermore, per-frame variables such as \verb!zoom!, \verb!rot! or \verb!cx! alter the texture coordinates at each vertex, and correspond to built-in per-vertex equations.
+
+We would like to be able to generate a mesh of up to 64x64 vertices at 30 frames per second, that is to say, compute the X and Y texture coordinates for 122880 vertices each second. With a 100MHz system clock, we have, on average, 813 cycles to fully process each vertex. We want to be able to do 470 basic floating point operations (addition, subtraction, multiplication) per vertex.\footnote{The MilkDrop patches contain many other functions. We count divisions and square roots as 15 basic floating point operations and trigonometric functions as 10. We want a patch to be able to do, per vertex, 150 base operations, 8 divisions/square root extractions, and 20 trigonometric operations. This yields the estimate of $150+8\cdot15+20\cdot10=470$ basic operations.} This means we have, on average, 1.73 cycles to perform each basic floating point operation.
+
+This rules out any software-based implementation. Even assuming a favorable case where patches are compiled (not interpreted) and the LatticeMico32 ISA (section~\ref{sec:mico32}) equipped with a traditional floating point unit, each basic floating point operation would take approximately 5 cycles at least.\footnote{FPGAs are unlikely to compute the totality of a floating point operation in less than 50ns, which is 5 cycles at 100MHz. Since LatticeMico32 uses a fixed-length in-order pipeline, the CPU would need to be stalled during those cycles.} Even at 100\% CPU utilization, a software implementation would be 3 times too slow!
+
+We have therefore designed and implemented a coprocessor for those computations, called PFPU (Programmable Floating Point Unit).
+
+\section{Forms of parallelism}
+We need a parallel implementation to solve the problem of performance. Two approaches can be thought of: \textit{vertex-level parallelism} and \textit{instruction-level parallelism}.
+
+Vertex-level parallelism is a very simple concept. Since the vertices are independent, the idea is to process several at once. The problem with this approach is that a significant amount of (typically on-chip) memory is needed to store all the intermediate results generated by this technique.
+
+Instruction-level parallelism consists in carrying out in parallel two or more independent computations \textit{for the same vertex}. With this approach, the vertices can be computed sequentially, which reduces the required amount of on-chip storage for intermediate results and simplifies the memory access subsystem.
+
+The two approaches are not mutually exclusive. A hybrid solution can consist in starting with instruction-level parallelism, and then try to schedule more vertices into the same program until the on-chip memory capacity is exceeded.
+
+We do not want such a complex solution to begin with, so we are going with instruction-level parallelism only. If more performance is needed, the addition of vertex-level parallelism can be tried at the expense of relatively small modifications to the hardware.
+
+\section{Hardware architecture}
+\subsection{Overview}
+A fully software-based extraction of instruction-level parallelism was chosen for several reasons:
+\begin{itemize}
+\item Hardware-based extraction is more costly in terms of resources and more difficult to develop.
+\item In terms of performance, choosing an hardware-based extraction only pays off compared to a software-based solution when some delays can only be determined at run-time (typically, the memory references). In our case, computations last for approximately 800 cycles and end up with a memory write phase that takes approximately 10 cycles, so the memory delays are negligible and all the other processes (arithmetic pipelines and register writes) have known latencies. Furthermore, we only write to the memory, which means that we can even use a write queue to completely hide the memory write latency.
+\item A software-based instruction scheduler can have a large instruction window, and thus extract more parallelism than an hardware solution could.
+\end{itemize}
+
+This trait makes the floating point coprocessor a VLIW (Very Long Instruction Word) processor. The architecture we designed is quite simple, and its block diagram is given in figure~\ref{fig:pfpuarch}.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=100mm]{pfpu_architecture.eps}
+\caption{Hardware architecture of the floating point coprocessor.}
+\label{fig:pfpuarch}
+\end{figure}
+
+\subsection{Instruction set}
+The 25-bit PFPU instruction format is given in table~\ref{tab:pfpuinst}. The PFPU executes one such instruction per clock cycle.
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\textbf{Parameter} & Operand A & Operand B & Opcode & Destination \\
+\hline
+\textbf{Length} & 7 & 7 & 4 & 7 \\
+\hline
+\textbf{Bits} & \verb!24..18! & \verb!17..11! & \verb!10..7! & \verb!7..0! \\
+\hline
+\end{tabular}
+\caption{PFPU instruction format.}\label{tab:pfpuinst}
+\end{table}
+
+An instruction can be split into two parts: the \textit{issue} part, made of the two operand fields and the opcode field, and the \textit{commit} part, made of the destination field. At each cycle, the issue part can fetch two operands from the register file and pushes them into one of the several arithmetic pipelines forming the ALU (Arithmetic and Logic Unit), selected by the ``opcode'' field. At the same time, the commit part can fetch one result from the ALU (stemming from a previously issued operation that has just finished) and write it back to the register file.
+
+The PFPU program must be written so that all data dependencies are satisfied and only up to one instruction finishes at any given clock cycle (having more than one would create a conflict as there is only a single write port on the register file).
+
+A special instruction is used to write the final result to the memory. It writes the two operands in a format that can be directly read as a texture coordinate by the texture mapping unit (chapter~\ref{ch:tmu}). Upon the execution of this instruction, the program for the current vertex is terminated and run again for the next, until all vertices have been processed.
+
+\subsection{Instruction RAM}
+The instruction RAM belongs on-chip for two simple reasons:
+\begin{itemize}
+\item it is small: it must only contain hundreds of instructions (the program for one vertex), so its capacity is only a few kilobytes.
+\item it transfers a large amount of data: one 25-bit instruction on each clock cycle at 100MHz yields a bandwidth of 2.5Gbps.
+\end{itemize}
+There are no jumps or loop structures (for each vertex, the program is always executed linearly), so it does not make sense to replace it with a DRAM-backed cache.
+
+\subsection{ALU}
+\subsubsection{Overview}
+The Arithmetic and Logic Unit (ALU) uses 32-bit floats using the same representation as specified by the IEEE 754 standard. This gives enough precision for graphics operations.
+
+The major pipelines of the ALU are listed below.
+
+\subsubsection{Basic operations}
+The unit has pipelines that perform common operations: addition, subtraction, multiplication, absolute value and conversion between floats and two's complement integers.
+
+\subsubsection{Inverse square root approximation}
+The ALU can compute an approximate of the inverse square root of a floating point number using the Quake III method~\cite{invsqrt}. The ALU only performs the integer operation \verb!0x5f3759df - (i >> 1)!, the subsequent floating point Newton-Raphson iterations need to be be done with additional instructions. This is described in subsection~\ref{subsec:fpvm}.
+
+\subsubsection{Sine and cosine}
+Sine and cosine are implemented with a look-up table and some logic that exploits the evenness and periodicity of those functions to reduce the size of the look-up table. To compute the sine or cosine of a floating point number, additional instructions need to be generated to convert this number into an integer suitable for indexing the look-up table.
+
+\subsubsection{Comparisons}
+The ALU can test the equality of two floating point numbers and test if one is greater than the other, using two separate opcodes. The result of these operations is 0.0 or 1.0, which can be used as a floating point number in other computations or written to register R2 to implement a conditional statement.
+
+\subsubsection{Conditional statements}
+Conditional statements (if... then... else...) are uncommon in MilkDrop patches, so a low area and straightforward --- but slow --- implementation was chosen. A special opcode enables a multiplexer that switches between operand A and B and returns the result. The multiplexer is controlled by the register R2, the value of this register being null or non-null selects one or the other input.
+
+Thus, to implement a conditional statement, the PFPU would need to compute both of its branches and store their values in registers (including the branch that is not taken), evaluate the condition and store its value in R2 and finally execute an \verb!IF! operation.
+
+\section{Run-time compiler}
+\subsection{Virtual machine instructions}
+\label{subsec:fpvm}
+\subsection{Scheduling}
+\subsection{Results}
 
 \chapter{Software}
 \label{ch:sw}
