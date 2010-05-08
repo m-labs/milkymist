@@ -1167,7 +1167,7 @@ k + \left\lfloor \frac{a}{N_{l}} \right\rfloor \not \equiv k + \left\lfloor \fra
 which leads easily to the result, considering that $\left\lfloor \frac{a}{N_{l}} \right\rfloor = 0$.
 
 This can be further simplified:
-\begin{equation}~\label{eq:noconflictwrap2}
+\begin{equation}\label{eq:noconflictwrap2}
 \begin{cases}
 \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
 1 + \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
@@ -1233,7 +1233,7 @@ The channels' addresses can be separated by:
 
 \paragraph{Conflicts between channels 2 and 3.}
 Like above, we can check that $H-1 < N_{l}$ or:
-\begin{equation}~\label{eq:noconflictwrap2}
+\begin{equation}\label{eq:noconflictwrap2}
 \begin{cases}
 \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
 1 + \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
@@ -1249,7 +1249,7 @@ Furthermore, if texture wrapping is enabled, the differences between pixel addre
 
 \paragraph{Summary.}
 To avoid inter-channel cache conflicts, when texture clamping is used, it is sufficient to check that (all equivalences are modulo $\frac{N_{c}}{N_{l}}$):
-\begin{equation}
+\begin{equation}\label{eq:icccsum}
 \boxed{
 \begin{cases}
 H-1 < N_{l} & \textrm{ or } \begin{cases}
@@ -1269,7 +1269,7 @@ H+1 < N_{l} & \textrm{ or } \begin{cases}
 \end{equation}
 
 If texture wrapping is used, additional conditions appear:
-\begin{equation}
+\begin{equation}\label{eq:icccsumwrap}
 \boxed{
 \begin{cases}
 H \cdot (V-1) - 1 < N_{l} & \textrm{ or } \begin{cases}
@@ -1458,7 +1458,20 @@ This has to do with the fact that the texture mapping unit draws the rectangles 
 
 As for choosing a texel cache size, we went for a 32KB cache. There is no significant performance improvement with using a larger cache except for the ``zoomout'' set for which there is a slight increase in the hit rate between 32KB and 64KB. Since the ``zoomout'' set is a worst-case scenario seldom found in practice (MilkDrop usually zooms out by factors much less than the one we used, resulting in fewer cache misses), we felt it was not worth doubling the cache size to improve its performance.
 
-% TODO: ICCC
+We also need to check that this cache size cannot cause inter-channel cache conflicts (ICCCs). The cache line size is 32 bytes, thus, the cache line length in 16bpp pixels is $N_{l} = 16$ and the cache holds $\frac{N_{c}}{N_{l}}=1024$ lines. The texture mapping unit is operated with 512x512 textures and texture wrapping is enabled.
+
+With these parameters, all the conditions of equations \ref{eq:icccsum} and \ref{eq:icccsumwrap} are verified, except one: we have $1 + \left\lfloor \frac{H \cdot V - 1}{N_{l}} \right\rfloor \equiv 0$, which means that there can be inter-channel cache conflicts between channels 1 and 4 due to wrapping. Without additional hypotheses, this can only be solved by increasing the cache size to at least 1MB, which would be very expensive.
+
+Fortunately, there is a cheaper solution. What we actually need to verify is this condition, obtained in the same way as equation~\ref{eq:noconflictwrap1}:
+\begin{equation}
+\left\lfloor \frac{a_{A}}{N_{l}} \right\rfloor \not \equiv \left\lfloor \frac{a_{A}+H \cdot V-1}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
+\end{equation}
+
+We \textit{add} the hypothese that the framebuffer address is a multiple of the cache line length, which we can easily achieve by imposing alignment requirements to the software toolchain. Without loss of generality, we suppose that $a_{A}$ is the address of channel 4, which is equal to the address of the framebuffer in the case creating the problem (figure~\ref{fig:chdisphvwrap}). $\frac{a_{A}}{N_{l}}$ is therefore integer, and the only condition that implies the absence of conflict between channels 1 and 4 becomes:
+\begin{equation}
+\left\lfloor \frac{H \cdot V-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
+\end{equation}
+This condition is verified. So, ICCCs will always be avoided with a 32KB texel cache if we make sure that the 512x512 texture is aligned to a 32-byte boundary.
 
 \subsection{Bilinear filter}
 The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
@@ -1597,7 +1610,7 @@ The major pipelines of the ALU are listed below.
 The unit has pipelines that perform common operations: addition, subtraction, multiplication, absolute value and conversion between floats and two's complement integers.
 
 \subsubsection{Inverse square root approximation}
-The ALU can compute an approximate of the inverse square root of a floating point number using the Quake III method~\cite{invsqrt}. The ALU only performs the integer operation \verb!0x5f3759df - (i >> 1)!, the subsequent floating point Newton-Raphson iterations need to be be done with additional instructions. This is described in subsection~\ref{subsec:fpvm}.
+The ALU can compute an approximate of the inverse square root of a floating point number using the Quake III method~\cite{invsqrt}. The ALU only performs the integer operation \verb!0x5f3759df - (i >> 1)!, the subsequent floating point Newton-Raphson iterations needing to be done with additional instructions. This is described in subsection~\ref{subsec:fpvm}.
 
 \subsubsection{Sine and cosine}
 Sine and cosine are implemented with a look-up table and some logic that exploits the evenness and periodicity of those functions to reduce the size of the look-up table. To compute the sine or cosine of a floating point number, additional instructions need to be generated to convert this number into an integer suitable for indexing the look-up table.
@@ -1606,7 +1619,7 @@ Sine and cosine are implemented with a look-up table and some logic that exploit
 The ALU can test the equality of two floating point numbers and test if one is greater than the other, using two separate opcodes. The result of these operations is 0.0 or 1.0, which can be used as a floating point number in other computations or written to register R2 to implement a conditional statement.
 
 \subsubsection{Conditional statements}
-Conditional statements (if... then... else...) are uncommon in MilkDrop patches, so a low area and straightforward --- but slow --- implementation was chosen. A special opcode enables a multiplexer that switches between operand A and B and returns the result. The multiplexer is controlled by the register R2, the value of this register being null or non-null selects one or the other input.
+Conditional statements (if... then... else...) are relatively uncommon in MilkDrop patches, so a low area and straightforward --- but slow --- implementation was chosen. A special opcode enables a multiplexer that switches between operand A and B and returns the result. The multiplexer is controlled by the register R2, the value of this register being null or non-null selects one or the other input.
 
 Thus, to implement a conditional statement, the PFPU would need to compute both of its branches and store their values in registers (including the branch that is not taken), evaluate the condition and store its value in R2 and finally execute an \verb!IF! operation.
 
