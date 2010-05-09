@@ -1560,7 +1560,7 @@ A fully software-based extraction of instruction-level parallelism was chosen fo
 \item A software-based instruction scheduler can have a large instruction window, and thus extract more parallelism than an hardware solution could.
 \end{itemize}
 
-This trait makes the floating point coprocessor a VLIW (Very Long Instruction Word) processor. The architecture we designed is quite simple, and its block diagram is given in figure~\ref{fig:pfpuarch}.
+This static scheduling technique makes the floating point coprocessor close to a VLIW (Very Long Instruction Word) processor --- even though its instruction words are, in fact, not particularly long, as the design is very simple (only one operation is issued per instruction, and jumps are not supported). The architecture we designed is outlined in figure~\ref{fig:pfpuarch}.
 
 \begin{figure}[htp]
 \centering
@@ -1624,7 +1624,7 @@ Conditional statements (if... then... else...) are relatively uncommon in MilkDr
 Thus, to implement a conditional statement, the PFPU would need to compute both of its branches and store their values in registers (including the branch that is not taken), evaluate the condition and store its value in R2 and finally execute an \verb!IF! operation.
 
 \section{Run-time compiler}
-Equations from the patches need to be compiled and scheduled before they can be evaluated by the PFPU. These operations take place on the CPU core of the SoC (section~\ref{sec:mico32}).
+Equations from the patches need to be compiled and scheduled before they can be evaluated by the programmable floating point unit (PFPU). These operations take place on the CPU core of the SoC (section~\ref{sec:mico32}).
 
 \subsection{Compilation into virtual machine instructions}
 \label{subsec:fpvm}
@@ -1635,7 +1635,7 @@ The first step in this process is the compilation proper, i.e. parsing the equat
 \item The number of registers is unlimited.\footnote{Actually, it is limited to $2^{32}$ in our implementation, which can be considered unlimited for our purposes.}
 \end{itemize}
 
-The compiler employs the fact that the number of registers is unlimited to generate a code that is free from false dependencies\footnote{Almost. In order to interface in a simple way the code with the ``outside world'' (subsection~\ref{subsec:constparam}), the compiler can be constrained to allocate a given variable to a given register. Depending on how the variable is used, false dependencies might actually appear and the scheduler therefore has to check for write-after-read (WAR) hazards. Furthermore, conditional statements can cause WAR hazards around the R2 register, since the IF operation can only use R2 to get the condition value from. However, since all these hazards are extremely rare, they can be resolved by waiting (instead of register renaming) without a significant impact on performance.} (by allocating a new register for each result) in order to simplify the task of the scheduler (subsection~\ref{subsec:vliwsched}), which does not have to perform register renaming to create more opportunities for out-of-order execution.
+The compiler employs the fact that the number of registers is unlimited to generate a code that is free from false and output dependencies\footnote{Almost. In order to interface in a simple way the code with the ``outside world'' (subsection~\ref{subsec:constparam}), the compiler can be constrained to allocate a given variable to a given register. Depending on how the variable is used, false and output dependencies might actually appear. The scheduler therefore has to check for write-after-read (WAR) and write-after-write (WAW) hazards. Furthermore, conditional statements can cause WAR and WAW hazards around the R2 register, since the IF operation can only use R2 to get the condition value from. However, since all these hazards are extremely rare, they can be resolved by waiting (instead of register renaming) without a significant impact on performance.} (by allocating a new register for each result) in order to simplify the task of the scheduler (subsection~\ref{subsec:vliwsched}), which does not have to perform register renaming to create more opportunities for out-of-order execution.
 
 Because of the limited functionality of the operations supported by the FPVM (and the PFPU), some ``compound'' functions need to be implemented with several instructions. They are detailed below.
 
@@ -1677,11 +1677,33 @@ Divisions of arbitrary numbers are performed by first transferring the sign of t
 
 The compiler needs to generate many instructions to implement a division, which makes it a rather slow process. However, with this method, very little hardware needs to be added to the PFPU: only support for transferring the sign to the numerator needs to be implemented.
 
-\subsection{VLIW scheduling}
+\subsection{Scheduling}
 \label{subsec:vliwsched}
-\subsection{Constants and parameters}
+Once the complete code is available as FPVM instructions, the next step is to map these instructions to the PFPU and schedule them.
+
+Our scheduling algorithm proceeds cycle by cycle. At each PFPU cycle (which corresponds to a PFPU instruction), it searches the complete set of FPVM instructions waiting to be scheduled for one that meets the following four conditions:
+\begin{enumerate}
+\item No read-after-write (RAW) hazard. The operands for the instruction to be scheduled must have been stored into the register file of the PFPU, otherwise, the instruction is not scheduled.
+\item No write-after-write (WAW) hazard. If there is a previous uncompleted instruction that writes to the same register as the instruction to be scheduled, the instruction is not scheduled.
+\item No write-after-read (WAR) hazard. If there is a previous unscheduled FPVM instruction that reads the register that the instruction to be scheduled modifies, the instruction is not scheduled.
+\item No output conflict. The instruction to be scheduled must not complete at the same cycle as another previously scheduled instruction.
+\end{enumerate}
+If an instruction is found, the FPVM registers of its operands are translated to PFPU registers, a PFPU register is allocated for its output register so that further instructions needing the result can read it, and the instruction is written to the PFPU program. If no further instruction needs to read the operands of the instruction just scheduled, the registers are deallocated in order to save the limited PFPU register space (unless they are bound to a constant or user variable, see subsection \ref{subsec:constparam}). The algorithm then proceeds to the next cycle.
+
+It can be noted that the handling of WAW and WAR hazards is zealous, as some hazards detected by the algorithm may actually not be present because of the pipeline delays. Since those hazards are infrequent, this approach does not have a large impact on the performance but simplifies the algorithm.
+
+Several instructions can sometimes meet the conditions to be schedulable at the same cycle. In this case, the algorithm chooses the first one to appear in the FPVM instruction flow. This \textit{greedy} approach can certainly be optimized, though no effort has been made in this direction.
+
+\subsection{Constants and user variables}
 \label{subsec:constparam}
+Constant values are assigned a specific register by the compiler, that needs to be initialized before the code is run. User variables can also be bound to a given register, and thereby can be read and written from and to the PFPU. Those registers will then be used exclusively for the constant or user variable.
+
+To differentiate registers used by constants and user variables from registers used to store internal results, the former are given positive numbers by the FPVM compiler while the latter are given negative numbers.
+
+The scheduler then maps all positive FPVM registers to the PFPU register with the same number, so that they can be easily accessed by the user. Negative FPVM registers are dynamically allocated during the scheduling among the remaining PFPU registers.
+
 \subsection{Results}
+TODO
 
 \chapter{Software}
 \label{ch:sw}
