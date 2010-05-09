@@ -1167,7 +1167,7 @@ k + \left\lfloor \frac{a}{N_{l}} \right\rfloor \not \equiv k + \left\lfloor \fra
 which leads easily to the result, considering that $\left\lfloor \frac{a}{N_{l}} \right\rfloor = 0$.
 
 This can be further simplified:
-\begin{equation}\label{eq:noconflictwrap2}
+\begin{equation}
 \begin{cases}
 \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
 1 + \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
@@ -1183,7 +1183,7 @@ This can be further simplified:
 \end{figure}
 The separation between the channels' addresses can be:
 \begin{itemize}
-\item $H$ pixels (according to equation~\ref{eq:fbadr}) in the general case (figure~\ref{fig:chdispcommon}). Using the same reasoning from above, we can deduce that it is sufficient to check that $H < N_{l}$ or:
+\item $H$ pixels (according to the equation~\ref{eq:fbadr}) in the general case (figure~\ref{fig:chdispcommon}). Using the same reasoning from above, we can deduce that it is sufficient to check that $H < N_{l}$ or:
 \begin{equation}
 \begin{cases}
 \left\lfloor \frac{H}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
@@ -1207,7 +1207,7 @@ The separation between the channels' addresses can be:
 \end{figure}
 The channels' addresses can be separated by:
 \begin{itemize}
-\item $H + 1$ pixels (according to equation~\ref{eq:fbadr}) in the general case (figure~\ref{fig:chdispcommon}). It is therefore sufficient to check that $H+1 < N_{l}$ or:
+\item $H + 1$ pixels (according to the equation~\ref{eq:fbadr}) in the general case (figure~\ref{fig:chdispcommon}). It is therefore sufficient to check that $H+1 < N_{l}$ or:
 \begin{equation}
 \begin{cases}
 \left\lfloor \frac{H+1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
@@ -1233,7 +1233,7 @@ The channels' addresses can be separated by:
 
 \paragraph{Conflicts between channels 2 and 3.}
 Like above, we can check that $H-1 < N_{l}$ or:
-\begin{equation}\label{eq:noconflictwrap2}
+\begin{equation}
 \begin{cases}
 \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}} \\
 1 + \left\lfloor \frac{H-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
@@ -1363,7 +1363,7 @@ rotozoom & Figure~\ref{fig:tmuoutrotozoom} & $(x\cdot16-256)\cdot67 - (y\cdot16-
 
 The length of the cache line is set to the length of a FML burst in the SoC (4 words of 64 bits each) for simplicity of the design.
 
-Simulations were carried out using the free GPL Cver Verilog simulator~\cite{gplcver}. To visually inspect the results of the distortions stemming from each set of texture coordinates, the simulation reads and writes input and output picture files thanks to a Verilog VPI~\cite{vpi} plug-in.\footnote{This was also part of the usual test bench used to debug the Verilog implementation of the texture mapping unit.} A typical simulation trace is reproduced in figure~\ref{fig:tmusimtrace}. Even though GPL Cver is relatively slow\footnote{Its runtime is between one and three minutes on a Intel Core 2 Duo 2.5GHz machine.} to carry out such a complex simulation, it produced consistent results, which supports the idea that it is a viable alternative to proprietary and expensive simulators commonly taught in university courses.
+Simulations were carried out using the free GPL Cver Verilog simulator~\cite{gplcver}. To visually inspect the results of the distortions stemming from each set of texture coordinates, the simulation reads and writes input and output picture files thanks to a Verilog VPI~\cite{vpi} plug-in.\footnote{This was also part of the usual test bench used to debug the Verilog implementation of the texture mapping unit.} A typical simulation trace is reproduced in figure~\ref{fig:tmusimtrace}. Even though GPL Cver is relatively slow\footnote{Its runtime is between one and three minutes on a Intel Core 2 Duo 2.5GHz machine.} to carry out such a complex simulation, it produced consistent results, which supports the idea that it is, in many cases, a viable alternative to proprietary and expensive simulators commonly taught in university courses.
 
 \begin{figure}
 \centering
@@ -1474,7 +1474,7 @@ We \textit{add} the hypothese that the framebuffer address is a multiple of the 
 This condition is verified. So, ICCCs will always be avoided with a 32KB texel cache if we make sure that the 512x512 texture is aligned to a 32-byte boundary.
 
 \subsection{Bilinear filter}
-The bilinear filter is a straightforward arithmetic circuit that implements equation~\ref{eq:bfilter} with five pipeline sub-stages.
+The bilinear filter is a straightforward arithmetic circuit that implements the equation~\ref{eq:bfilter} with five pipeline sub-stages.
 
 \subsection{Write buffer}
 The write buffer is in charge of gathering the final pixels produced by the algorithm, assemble them into FML bursts and write them to the memory.
@@ -1545,7 +1545,7 @@ We need a parallel implementation to solve the problem of performance. Two appro
 
 Vertex-level parallelism is a very simple concept. Since the vertices are independent, the idea is to process several at once. The problem with this approach is that a significant amount of (typically on-chip) memory is needed to store all the intermediate results generated by this technique.
 
-Instruction-level parallelism consists in carrying out in parallel two or more independent computations \textit{for the same vertex}. With this approach, the vertices can be computed sequentially, which reduces the required amount of on-chip storage for intermediate results and simplifies the memory access subsystem.
+Instruction-level parallelism consists in carrying out in parallel two or more independent computations \textit{for the same vertex}. With this approach, the vertices can be computed one by one, which reduces the required amount of on-chip storage for intermediate results and simplifies the memory access subsystem (as it does not have to handle accesses to different vertices stemming from the same PFPU program).
 
 The two approaches are not mutually exclusive. A hybrid solution can consist in starting with instruction-level parallelism, and then try to schedule more vertices into the same program until the on-chip memory capacity is exceeded.
 
@@ -1556,7 +1556,7 @@ We do not want such a complex solution to begin with, so we are going with instr
 A fully software-based extraction of instruction-level parallelism was chosen for several reasons:
 \begin{itemize}
 \item Hardware-based extraction is more costly in terms of resources and more difficult to develop.
-\item In terms of performance, choosing an hardware-based extraction only pays off compared to a software-based solution when some delays can only be determined at run-time (typically, the memory references). In our case, computations last for approximately 800 cycles and end up with a memory write phase that takes approximately 10 cycles, so the memory delays are negligible and all the other processes (arithmetic pipelines and register writes) have known latencies. Furthermore, we only write to the memory, which means that we can even use a write queue to completely hide the memory write latency.
+\item In terms of performance, choosing an hardware-based extraction only pays off compared to a software-based solution when some delays can only be determined at run-time (for example, the memory references). In our case, computations last for approximately 800 cycles and end up with a memory write phase that takes approximately 10 cycles, so the memory delays are negligible and all the other processes (arithmetic pipelines and register writes) have known latencies. Furthermore, we only write to the memory, which means that we can even use a write queue to completely hide the memory write latency.
 \item A software-based instruction scheduler can have a large instruction window, and thus extract more parallelism than an hardware solution could.
 \end{itemize}
 
@@ -1624,9 +1624,63 @@ Conditional statements (if... then... else...) are relatively uncommon in MilkDr
 Thus, to implement a conditional statement, the PFPU would need to compute both of its branches and store their values in registers (including the branch that is not taken), evaluate the condition and store its value in R2 and finally execute an \verb!IF! operation.
 
 \section{Run-time compiler}
-\subsection{Virtual machine instructions}
+Equations from the patches need to be compiled and scheduled before they can be evaluated by the PFPU. These operations take place on the CPU core of the SoC (section~\ref{sec:mico32}).
+
+\subsection{Compilation into virtual machine instructions}
 \label{subsec:fpvm}
-\subsection{Scheduling}
+The first step in this process is the compilation proper, i.e. parsing the equations and generating instructions for the so-called \textit{floating point virtual machine} (FPVM). This virtual machine has the following properties:
+\begin{itemize}
+\item It has the same operations and opcodes as the PFPU.
+\item Instructions complete and write their result to the register file in one cycle.
+\item The number of registers is unlimited.\footnote{Actually, it is limited to $2^{32}$ in our implementation, which can be considered unlimited for our purposes.}
+\end{itemize}
+
+The compiler employs the fact that the number of registers is unlimited to generate a code that is free from false dependencies\footnote{Almost. In order to interface in a simple way the code with the ``outside world'' (subsection~\ref{subsec:constparam}), the compiler can be constrained to allocate a given variable to a given register. Depending on how the variable is used, false dependencies might actually appear and the scheduler therefore has to check for write-after-read (WAR) hazards. Furthermore, conditional statements can cause WAR hazards around the R2 register, since the IF operation can only use R2 to get the condition value from. However, since all these hazards are extremely rare, they can be resolved by waiting (instead of register renaming) without a significant impact on performance.} (by allocating a new register for each result) in order to simplify the task of the scheduler (subsection~\ref{subsec:vliwsched}), which does not have to perform register renaming to create more opportunities for out-of-order execution.
+
+Because of the limited functionality of the operations supported by the FPVM (and the PFPU), some ``compound'' functions need to be implemented with several instructions. They are detailed below.
+
+\subsubsection{Sine and cosine}
+The sine and cosine instructions expect an integer angle expressed in $\frac{1}{8192}$ turns. Angles outside of the range $[0; 8191]$ are correctly processed (i.e. multiples of 8192 are added or subtracted, by simply ignoring the most significant bits of the input). Therefore, to return the sine or cosine of a floating point angle expressed in radians, the compiler needs to generate three instructions:
+\begin{enumerate}
+\item Multiply by $\frac{8192}{2 \cdot \pi}$.
+\item Convert to integer.
+\item Look-up the sine or cosine value.
+\end{enumerate}
+
+\subsubsection{Inverse square root}
+\begin{figure}
+\centering
+\begin{boxedminipage}{13cm}
+\begin{math}
+y \leftarrow \textrm{cast\_to\_float}(\textrm{0x5f3759df} - (\textrm{cast\_to\_integer}(x) >> 1)) \\
+y \leftarrow y \cdot (1.5 - 0.5 \cdot x \cdot y \cdot y)\textrm{ // first Newton-Raphson iteration} \\
+y \leftarrow y \cdot (1.5 - 0.5 \cdot x \cdot y \cdot y)\textrm{ // second iteration}
+\end{math}
+\end{boxedminipage}
+\caption{Fast inverse square root algorithm.}
+\label{fig:invsqrt}
+\end{figure}
+
+The inverse square root ($\frac{1}{\sqrt{x}}$) is implemented using the Quake III algorithm~\cite{invsqrt}, reproduced in figure~\ref{fig:invsqrt} with the two Newton-Raphson iterations for improved precision. The input of the algorithm is $x$ and the output $y$. The cast\_to\_float function returns the float whose binary representation as specified by IEEE 754 is the same as that of the integer parameter. The cast\_to\_integer function performs the opposite operation. They allow the bit twiddling of the numbers in order to produce an initial approximation of the result, which is then refined using the Newton-Raphson method. This is the core idea of the algorithm.
+
+The algorithm produces an approximate value of the inverse square root, with a worst case relative precision of $4.66 \cdot 10^{-6}$ over all floating point values when the two Newton-Raphson iterations are used (according to \cite{invsqrt}).
+
+Only a special instruction for performing the first approximation step is provided. The compiler must therefore generate extra multiplication and subtraction instructions for the two iteration steps.
+
+\subsubsection{Square root}
+The square root is implemented using inverse square root with an additional multiplication, according to $\sqrt{x} = x \cdot \frac{1}{\sqrt{x}}$. The relative precision stays approximately\footnote{Not counting the loss of precision incurred by truncating the mantissa of the floating point multiplication result.} the same.
+
+\subsubsection{Inverse and division}
+The inverse of positive numbers is implemented by squaring the inverse square root: $\frac{1}{x} = \frac{1}{\sqrt{x}} \cdot \frac{1}{\sqrt{x}}$. The relative precision obtained is approximately $9.32 \cdot 10^{-6}$.
+
+Divisions of arbitrary numbers are performed by first transferring the sign of the denominator to the numerator, and then multiplying it by the inverse (obtained as above) of the denominator: $\frac{a}{b} = \textrm{sign}(b) \cdot a \cdot \frac{1}{\sqrt{|b|}} \cdot \frac{1}{\sqrt{|b|}}$. The relative precision is still approximately $9.32 \cdot 10^{-6}$.
+
+The compiler needs to generate many instructions to implement a division, which makes it a rather slow process. However, with this method, very little hardware needs to be added to the PFPU: only support for transferring the sign to the numerator needs to be implemented.
+
+\subsection{VLIW scheduling}
+\label{subsec:vliwsched}
+\subsection{Constants and parameters}
+\label{subsec:constparam}
 \subsection{Results}
 
 \chapter{Software}
