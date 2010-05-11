@@ -249,7 +249,7 @@ This microprocessor core has been retained for use in Milkymist, as described in
 \subsubsection{Microblaze and Nios II}
 Even though we are not interested in proprietary designs, we still give a brief overview of the resource usage of Microblaze and Nios II systems as a comparison.
 
-\paragraph{Microblaze.} In~\cite{softcorecomp}, the Microblaze core is reported to use approximately 2400 LUTs, like LatticeMico32. TODO: frequency.
+\paragraph{Microblaze.} In~\cite{softcorecomp}, the Microblaze core is reported to use approximately 2400 LUTs, like LatticeMico32. The platform builder GUI in Xilinx ISE 12.1 also limits the frequency of Microblaze systems to 100MHz when targetting the Virtex-4 family. Thus, Microblaze is close to LatticeMico32 regarding area and frequency.
 
 \paragraph{Nios II.} According to an Altera report~\cite{niosbench}, Nios II/f uses 1600 Cyclone II LEs. A LE is mainly comprised of a 4-LUT and a register, which is comparable to the Virtex-4 architecture on which LatticeMico32 was tested. Thus, it seems that the Nios II core would be approximately two thirds of the area of LatticeMico32.
 
