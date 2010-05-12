@@ -502,8 +502,79 @@ static void tmudemo()
 		}
 		vga_swap_buffers();
 	}
-	irq_ack(IRQ_GPIO);
+	irq_ack(IRQ_GPIO|IRQ_TIMER1);
 	irq_setmask(oldmask);
+}
+
+static void tmubench()
+{
+	unsigned int oldmask;
+	int i;
+	int zoom;
+	int x, y;
+	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
+	static unsigned short int texture[512*512] __attribute__((aligned(16)));
+	struct tmu_td td;
+	volatile int complete;
+	unsigned int t;
+	int hits, reqs;
+
+	/* Disable slowout */
+	oldmask = irq_getmask();
+	irq_setmask(oldmask & (~IRQ_TIMER1));
+	uart_force_sync(1);
+	
+	for(i=0;i<512*512;i++)
+		texture[i] = i;
+	flush_bridge_cache();
+
+	for(zoom=0;zoom<16*64*2;zoom++) {
+		for(y=0;y<=32;y++)
+			for(x=0;x<=32;x++) {
+				srcmesh[y][x].x = zoom*x;
+				srcmesh[y][x].y = zoom*y;
+			}
+
+		td.flags = 0;
+		td.hmeshlast = 32;
+		td.vmeshlast = 32;
+		td.brightness = TMU_BRIGHTNESS_MAX;
+		td.chromakey = 0;
+		td.vertices = &srcmesh[0][0];
+		td.texfbuf = texture;
+		td.texhres = 512;
+		td.texvres = 512;
+		td.texhmask = 0x7FFF;
+		td.texvmask = 0x7FFF;
+		td.dstfbuf = vga_backbuffer;
+		td.dsthres = vga_hres;
+		td.dstvres = vga_vres;
+		td.dsthoffset = 0;
+		td.dstvoffset = 0;
+		td.dstsquarew = vga_hres/32;
+		td.dstsquareh = vga_vres/32;
+		td.alpha = TMU_ALPHA_MAX;
+
+		td.callback = tmutest_callback;
+		td.user = (void *)&complete;
+
+		complete = 0;
+		CSR_TIMER1_CONTROL = 0;
+		CSR_TIMER1_COUNTER = 0;
+		CSR_TIMER1_COMPARE = 0xffffffff;
+		CSR_TIMER1_CONTROL = TIMER_ENABLE;
+		tmu_submit_task(&td);
+		while(!complete);
+		t = CSR_TIMER1_COUNTER;
+		hits = CSR_TMU_HIT_A + CSR_TMU_HIT_B + CSR_TMU_HIT_C + CSR_TMU_HIT_D;
+		reqs = CSR_TMU_REQ_A + CSR_TMU_REQ_B + CSR_TMU_REQ_C + CSR_TMU_REQ_D;
+		printf("%d,%d,%d\n", t, hits, reqs);
+		vga_swap_buffers();
+	}
+
+	irq_ack(IRQ_TIMER1);
+	irq_setmask(oldmask);
+	uart_force_sync(0);
 }
 
 static short audio_buffer1[SND_MAX_NSAMPLES*2];
@@ -601,6 +672,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "pfputest") == 0) pfputest();
 		else if(strcmp(command, "tmutest") == 0) tmutest();
 		else if(strcmp(command, "tmudemo") == 0) tmudemo();
+		else if(strcmp(command, "tmubench") == 0) tmubench();
 		else if(strcmp(command, "echo") == 0) echo();
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);

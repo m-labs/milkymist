@@ -1104,7 +1104,7 @@ A simplified block diagram of the texel cache is given in figure~\ref{fig:tcarch
 
 At each clock cycle, the texel cache processes, in a pipelined manner,\footnote{The SRAMs are registered, in order to improve timing and to map to the block RAMs of common modern FPGAs which always contain an internal register.} four memory addresses from each channel if they hit the caches. The ``hit'' signal is kept high and the pipeline is always running.
 
-In case of a miss, the ``hit'' signal goes low (stalling the pipeline), and the priority encoder and the multiplexer (MUX) select one of the missed addresses (there can be one or many). The FastMemoryLink master issues a memory transaction to retrieve the data from the system memory, replaces the contents of the cache line and rewrites the tag. The address now becomes a cache hit. If no other address misses the cache, the texel cache has successfully handled the 4-channel transaction and the ``hit'' signal goes high again to proceed to the next. Otherwise, the process repeats until all addresses hit the cache.
+In case of a miss, the ``hit'' signal goes low (stalling the pipeline), and the priority encoder and the multiplexer (MUX) select one of the missed addresses (there can be one or many). The FastMemoryLink master issues a memory transaction to retrieve the data from the system memory, replaces the contents of the cache line and rewrites the tag. The address now becomes a cache hit. If no other address misses the cache, the texel cache has successfully handled the 4-channel transaction and the ``hit'' signal goes high again to proceed to the next. Otherwise, the process repeats until all addresses hit the cache. Our design does not take advantage of the pipelining feature of the FastMemoryLink bus and issues requests sequentially.
 
 \subsubsection{Inter-channel cache conflicts}
 An \textit{inter-channel cache conflict} (ICCC) occurs when two or more channels request different addresses that have different tags but map to the same cache line.
@@ -1503,7 +1503,7 @@ Thus, the write buffer can achieve a throughput of one pixel per clock cycle ($T
 \Delta_{w} \leq \frac{n \cdot w}{d} - n
 \end{equation}
 
-In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words, which leads to the throughput plot of figure~\ref{fig:thwbufperf}.\footnote{In our implementation, the throughput is also limited to a maximum of 100 megapixels per second because of the width of the write buffer input port.} The write buffer can tolerate write latencies of up to 12 cycles while maintaining an excellent performance of one pixel per clock cycle, which seems perfectly achievable even when taking into account the delays due to bus arbitration.
+In Milkymist, the color format uses 16 bits per pixel and the FML bus is based on bursts of four 64-bit words, which leads to the throughput plot of figure~\ref{fig:thwbufperf}.\footnote{In our implementation, the throughput is also limited to a maximum of 100 megapixels per second because of the width of the write buffer input port.} The write buffer can tolerate write latencies of up to 12 cycles while maintaining an excellent performance of one pixel per clock cycle, which seems achievable even when taking into account the delays due to bus arbitration. Beyond this point, performance drops.
 
 \begin{figure}[htp]
 \centering
@@ -1525,7 +1525,29 @@ Beyond this basic principle of operation, the texture mapping unit supports seve
 \end{itemize}
 
 \section{Implementation results}
-TODO
+We were unable to implement the planned 32KB texel cache in the XC4VLX25 FPGA of our ML401 development board, because the complete SoC with such a cache exceeds the on-chip SRAM capacity of the FPGA. Therefore, for these experiments, we had to use a 16KB cache instead. This issue should be resolved easily in the future, as our final board (chapter~\ref{ch:conclusion}) will have an FPGA with much more on-chip memory.
+
+We wanted to validate the performance of our texture mapping unit (TMU) design, measured in megapixels per second at the output (also called \textit{fill rate}). Since it is a memory-bound process (subsection~\ref{subsec:tmustrategy}), it is relevant to examine its performance for different values of the texel cache hit rate.
+
+To do so, we varied the texel cache hit rate by making the TMU zoom a picture at different levels. We proceeded with a texture size of 512x512 and an output picture of 640x480. The vertex mesh had a resolution of 32x32, and, to implement the different zoom levels, the vertex coordinates were $(z \cdot x, z \cdot y)$ with $z$ varying between 0 and 2047. Each measurement was done twice to reduce the risk of errors and transients (CPU interrupts, DRAM refreshes, etc.), yielding 4096 points which are plotted in figure~\ref{fig:tmuresult}. The measurements were done programmatically by a software routine running on the system-on-chip itself. The video output was enabled during the process (and showing the result of the texture mapping), running in the standard VGA mode of 640x480 at 60Hz and putting a background load of approximately 300 Mbit/s on the memory system for scanning the frame buffer.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[height=75mm]{tmuresult.eps}
+\caption{Measured TMU performance versus global texel cache hit rate.}
+\label{fig:tmuresult}
+\end{figure}
+
+The plot underlines the importance of the memory subsystem in a performance-driven texture mapping unit design. Indeed, performance drops sharply as soon as many off-chip memory references begin to be made (especially between hit rates of 100\% and 98.5\%). Our texture mapping unit is unable to meet its initial performance goal of 31 megapixels per second for hit rates below approximately 96\%. Prefetching would be a good way to improve this result~\cite{tmprefetch}, but it comes at the cost of an increased hardware complexity.
+
+However, our design still appears suitable for the application of rendering MilkDrop-like patches with all the options enabled (i.e. in the worst case) at VGA resolution (640x480). Indeed, this would involve:
+\begin{enumerate}
+\item Distortion of a 512x512 texture to a 512x512 texture. This is represented by the ``rotozoom'' set of vertex coordinates (table~\ref{tab:tcsets}) whose resulting cache hit rate is 95.74 \% (table~\ref{tab:tcresults}). The fill rate is therefore approximately 30 megapixels per second (figure~\ref{fig:tmuresult}). The time taken by this process is thus $\frac{512 \cdot 512}{30 \cdot 10^{6}}=8.7\unit{ms}$.
+\item Inclusion of a live video frame into the texture.\footnote{We are --- very optimistically --- neglecting the time it takes to read the output picture when alpha blending is enabled.} We assume the input video frame to be 720x288 (we are using \textit{bob deinterlacing}, i.e. line doubling of the interlaced video frames) and the target rectangle in the texture to be 360x288. This is represented by the ``zoomout'' set with a cache hit rate of 86.94 \% yielding a fill rate of very approximately 15 megapixels per second. The time taken by this process is $\frac{360 \cdot 288}{15 \cdot 10^{6}}=6.9\unit{ms}$.
+\item Zooming of the 512x512 texture to 640x480 resolution, done twice (once for the normal picture and once for video echo\footnote{Again neglecting the extra delay due to alpha blending.}). This is represented by the ``zoomin'' set of vertex coordinates. The texel hit rate is estimated at 99.27\%, and the fill rate at 55 megapixels per second. The time taken is estimated to be $2 \cdot \frac{640 \cdot 480}{55 \cdot 10^{6}}=11.2\unit{ms}$.
+\end{enumerate}
+
+The total time is $26.8\unit{ms}$, which corresponds to 37 frames per second. This is more than enough to achieve a smooth video animation.
 
 \chapter{Floating point coprocessor}
 \label{ch:pfpu}
@@ -1638,7 +1660,7 @@ The compiler employs the fact that the number of registers is unlimited to gener
 Because of the limited functionality of the operations supported by the FPVM (and the PFPU), some ``compound'' functions need to be implemented with several instructions. They are detailed below.
 
 \subsubsection{Sine and cosine}
-The sine and cosine instructions expect an integer angle expressed in $\frac{1}{8192}$ turns. Angles outside of the range $[0; 8191]$ are correctly processed (i.e. multiples of 8192 are added or subtracted, by simply ignoring the most significant bits of the input). Therefore, to return the sine or cosine of a floating point angle expressed in radians, the compiler needs to generate three instructions:
+The sine and cosine instructions expect an integer angle expressed in $\frac{1}{8192}$ turns. Angles outside of the range $[0, 8191]$ are correctly processed (i.e. multiples of 8192 are added or subtracted, by simply ignoring the most significant bits of the input). Therefore, to return the sine or cosine of a floating point angle expressed in radians, the compiler needs to generate three instructions:
 \begin{enumerate}
 \item Multiply by $\frac{8192}{2 \cdot \pi}$.
 \item Convert to integer.
@@ -1833,6 +1855,7 @@ The main point of this comparison is to confirm the viability of Milkymist as a 
 TODO HW/SW partitioning
 
 \chapter{Conclusion}
+\label{ch:conclusion}
 TODO
 
 \bibliography{thesis}{}

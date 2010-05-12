@@ -61,5 +61,16 @@ struct tmu_vertex {
 
 #define TMU_MESH_MAXSIZE	128
 
+/* Performance monitoring */
+
+#define CSR_TMU_REQ_A		MMPTR(0x80006050)
+#define CSR_TMU_HIT_A		MMPTR(0x80006054)
+#define CSR_TMU_REQ_B		MMPTR(0x80006058)
+#define CSR_TMU_HIT_B		MMPTR(0x8000605C)
+#define CSR_TMU_REQ_C		MMPTR(0x80006060)
+#define CSR_TMU_HIT_C		MMPTR(0x80006064)
+#define CSR_TMU_REQ_D		MMPTR(0x80006068)
+#define CSR_TMU_HIT_D		MMPTR(0x8000606C)
+
 #endif /* __HW_TMU_H */
 
