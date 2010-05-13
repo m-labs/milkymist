@@ -626,7 +626,7 @@ Results are summarized in table~\ref{tab:memperformance}. The first line corresp
 \centering
 \begin{tabular}{|l|l|l|l|l|l|}
 \hline
-\textbf{Preset} & $\beta$ & $\epsilon$ & $\Delta$ & $\alpha$ & $\beta_{max}$ \\
+\textbf{Patch} & $\beta$ & $\epsilon$ & $\Delta$ & $\alpha$ & $\beta_{max}$ \\
 \hline
 Idle & 292 & 7 \% & 5.51 & 61 \% & 3932 \\
 \hline
@@ -1552,6 +1552,7 @@ The total time is $26.8\unit{ms}$, which corresponds to 37 frames per second. Th
 \chapter{Floating point coprocessor}
 \label{ch:pfpu}
 \section{Purpose}
+\label{sec:pfpupurpose}
 Patches define floating-point equations that are evaluated at each vertex (subsection~\ref{subsec:mdprinciple}). Furthermore, per-frame variables such as \verb!zoom!, \verb!rot! or \verb!cx! alter the texture coordinates at each vertex, and correspond to built-in per-vertex equations.
 
 We would like to be able to generate a mesh of up to 64x64 vertices at 30 frames per second, that is to say, compute the X and Y texture coordinates for 122880 vertices each second. With a 100MHz system clock, we have, on average, 813 cycles to fully process each vertex. We want to be able to do 470 basic floating point operations (addition, subtraction, multiplication) per vertex.\footnote{The MilkDrop patches contain many other functions. We count divisions and square roots as 15 basic floating point operations and trigonometric functions as 10. We want a patch to be able to do, per vertex, 150 base operations, 8 divisions/square root extractions, and 20 trigonometric operations. This yields the estimate of $150+8\cdot15+20\cdot10=470$ basic operations.} This means we have, on average, 1.73 cycles to perform each basic floating point operation.
@@ -1580,7 +1581,7 @@ A fully software-based extraction of instruction-level parallelism was chosen fo
 \item A software-based instruction scheduler can have a large instruction window, and thus extract more parallelism than an hardware solution could.
 \end{itemize}
 
-This static scheduling technique makes the floating point coprocessor close to a VLIW (Very Long Instruction Word) processor --- even though its instruction words are, in fact, not particularly long, as the design is very simple (only one operation is issued per instruction, and jumps are not supported). The architecture we designed is outlined in figure~\ref{fig:pfpuarch}.
+This static scheduling technique makes the floating point coprocessor close to a VLIW (Very Long Instruction Word) processor --- even though its instruction words are, in fact, not particularly long, as the design is very simple (only one operation is issued per instruction, and jumps are not supported). The architecture we designed is outlined in figure~\ref{fig:pfpuarch}.
 
 \begin{figure}[htp]
 \centering
@@ -1722,8 +1723,88 @@ To differentiate registers used by constants and user variables from registers u
 
 The scheduler then maps all positive FPVM registers to the PFPU register with the same number, so that they can be easily accessed by the user. Negative FPVM registers are dynamically allocated during the scheduling among the remaining PFPU registers.
 
-\subsection{Results}
-TODO
+\section{Results}
+The performance of the PFPU depends directly on the performance of the scheduler, that is to say, its ability to take advantage of out-of-order execution opportunities to hide the latencies of the hardware.
+
+We compiled and scheduled a few MilkDrop patches, and counted the resulting number of instructions and the number of cycles after scheduling. The ratio between the two figures is the CPI (Cycles Per Instruction), which represents the average time it takes to execute one instruction. The results are given in table~\ref{tab:gfpusperf}. The ``Default'' patch is a patch that contains no user-defined per-vertex equations, and the instructions correspond to the implicit equations needed to implement the built-in effects (zoom, scaling, ...).
+
+From this table, it is apparent that our approach, albeit simple, is very efficient at extracting instruction-level parallelism. Indeed, the CPI stays between 1.38 and 1.41 while the latencies of the hardware pipelines executing the instructions are much higher, between 2 and 5 (table~\ref{tab:pfpulatency}).
+
+\begin{table}
+\centering
+\begin{tabularx}{13cm}{|X|l|l|l|l|l|}
+\hline
+\textbf{Patch} & \textbf{Instructions} & \textbf{Cycles} & \textbf{CPI} \\
+\hline
+Default & 192 & 259 & 1.35 \\
+\hline
+Fvese - The Tunnel (Final Stage Mix) (simplified) & 208 & 286 & 1.38 \\
+\hline
+Geiss - Warp of Dali 1 & 220 & 292 & 1.33 \\
+\hline
+Krash - Digital Flame (simplified) & 216 & 293 & 1.36 \\
+\hline
+Unchained \& Rovastar - Wormhole Pillars (Hall of Shadows mix) & 231 & 326 & 1.41 \\
+\hline
+\end{tabularx}
+\caption{Greedy PFPU scheduler performance with the per-vertex math of different MilkDrop patches (Milkymist 0.5.1).}\label{tab:gfpusperf}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabularx}{13cm}{|X|l|}
+\hline
+\textbf{Instruction} & \textbf{Latency} \\
+\hline
+Floating point addition & 4 \\
+\hline
+Floating point subtraction & 4 \\
+\hline
+Floating point multiplication & 5 \\
+\hline
+Floating point absolute value & 2 \\
+\hline
+Conversion from float to integer & 2 \\
+\hline
+Conversion from integer to float & 3 \\
+\hline
+Sine/cosine table look-up & 4 \\
+\hline
+Comparisons & 2 \\
+\hline
+Copy & 2 \\
+\hline
+Conditional & 2 \\
+\hline
+Inversion of the sign of operand 1 if operand 2 is negative & 2 \\
+\hline
+Inverse square root approximation & 2 \\
+\hline
+\end{tabularx}
+\caption{PFPU latencies in cycles (Milkymist 0.5.1).}\label{tab:pfpulatency}
+\end{table}
+
+To put this in contrast with our initial goals (section~\ref{sec:pfpupurpose}), let us consider a typical patch that performs, per vertex, 150 base operations (addition, subtraction, multiplication), 4 divisions, 4 square root extractions and 20 sine or cosine computations (which is close to the patch used in our initial estimate). According to the table~\ref{tab:pfpucost}, this would mean 318 PFPU instructions. The maximum CPI that lets us achieve our performance goal is therefore 2.56. Our performance goal is easily met.
+
+\begin{table}
+\centering
+\begin{tabularx}{13cm}{|X|l|l|l|l|l|}
+\hline
+\textbf{Operation} & \textbf{Instructions} \\
+\hline
+Addition, subtraction, multiplication & 1 \\
+\hline
+Sine and cosine & 3 \\
+\hline
+Inverse square root & 11 \\
+\hline
+Square root & 12 \\
+\hline
+Division & 15 \\
+\hline
+\end{tabularx}
+\caption{Exact cost in instructions of common operations on the PFPU.}\label{tab:pfpucost}
+\end{table}
 
 \chapter{Software}
 \label{ch:sw}
