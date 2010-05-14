@@ -57,7 +57,7 @@ But the cost of FPGAs is falling (this was already the case between 1985 and 199
 
 This evolution makes it possible to implement complex high-performance system-on-chips (SoC) that can be modified and improved by anyone, thanks to the flexibility of the FPGA platform.
 
-This master thesis introduces Milkymist\texttrademark \cite{milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}. However, this approach has some drawbacks and using an embedded device instead would be interesting:
+This Master's thesis introduces Milkymist\texttrademark \cite{milkymist}, a fast and resource-efficient FPGA-based system-on-chip designed for the application of rendering live video effects during performances such as concerts, clubs or contemporary art installations. Such effects are already popularized by artists known as ``video jockeys'', or ``VJs''. VJing is commonly done with a PC and computer software such as GrandVJ~\cite{grandvj} or Resolume~\cite{resolume}. However, this approach has some drawbacks and using an embedded device instead would be interesting:
 \begin{itemize}
 \item A device of very small size and weight is possible, which is convenient in mobile or temporary setups.
 \item Boot and set-up time (launching the software) can be greatly reduced (to a few seconds).
@@ -66,7 +66,7 @@ This master thesis introduces Milkymist\texttrademark \cite{milkymist}, a fast a
 
 Besides the fact that this is an interesting, creative and popular application, it is also demanding in terms of computational power and memory performance. Such a project would also be a proof that high performance open source system-on-chip design is possible in practice; with a view to help, foster and catalyze similar ``open hardware'' initiatives. As the Milkymist system-on-chip is entirely made of synthesizable Verilog and, for the most part, released under the GNU General Public License (GPL), its code can be re-used by other open hardware projects.
 
-Meeting the performance constraints while still using cheap and relatively small FPGAs is perhaps the most interesting and challenging technical point of this project, and it could not be done without substantial work in the field of computer architecture. This is what this master thesis covers.
+Meeting the performance constraints while still using cheap and relatively small FPGAs is perhaps the most interesting and challenging technical point of this project, and it could not be done without substantial work in the field of computer architecture. This is what this Master's thesis covers.
 
 \chapter{Background}
 \section{Video synthesis}
@@ -99,9 +99,16 @@ The idea behind the Milkymist project is to implement an embedded video synthesi
 \subsection{Principle}
 \label{subsec:mdprinciple}
 \subsubsection{General mode of operation}
-The MilkDrop-like renderer is the most compute and memory intensive process, from which stem most of the technical challenges. We will now get into more details about how the renderer works.
+The MilkDrop-like renderer is the most compute and memory intensive process, from which stem most of the technical challenges. We will now get into more details about how the renderer works (figure~\ref{fig:renderflow}).
 
-Rendering is based on a framebuffer on which the steps below are continuously repeated. This repetition is at the origin of many feedback or ``fractal'' effects.
+\begin{figure}[htp]
+\centering
+\includegraphics[height=130mm]{renderflow.eps}
+\caption{Basic MilkDrop rendering flow.}
+\label{fig:renderflow}
+\end{figure}
+
+Rendering is based on a frame buffer on which the steps below are continuously repeated. This repetition is at the origin of many feedback or ``fractal'' effects.
 \begin{itemize}
 \item The current frame is distorted (zoomed, translated, warped, scaled, rotated...) by texture mapping. This step is described with more detail in section~\ref{sec:tm}.
 \item The frame is darkened (the colors are shifted to black).
@@ -113,10 +120,10 @@ Rendering is based on a framebuffer on which the steps below are continuously re
 
 These are the basic features of MilkDrop. There are more (custom waves, shapes,...) which are listed on the MilkDrop website~\cite{milkdrop}. Some other features (such as adding live video) will be added to the Milkymist renderer in the future.
 
-This process is done on an internal framebuffer whose horizontal and vertical dimensions are a power of 2. This framebuffer is then scaled to the size of the screen in order to be displayed. This brings two features:
+This process is done on an internal frame buffer whose horizontal and vertical dimensions are a power of 2. This frame buffer is then scaled to the size of the screen in order to be displayed. This brings two features:
 \begin{itemize}
 \item The sizes being a power of 2 allows out-of-bounds texture coordinates to be wrapped (in order to repeat the texture) by simply performing a bitwise AND of the coordinate, instead of the full computation of a division remainder which is a much more expensive operation (even on the traditional GPUs MilkDrop was designed for).
-\item It enables the implementation of the \textit{video echo} effect: after the internal framebuffer has been drawn to the screen at its nominal dimensions, a zoomed and semi-transparent copy of it can be overprinted.
+\item It enables the implementation of the \textit{video echo} effect: after the internal frame buffer has been drawn to the screen at its nominal dimensions, a zoomed and semi-transparent copy of it can be overprinted.
 \end{itemize}
 It must be noted that this two-step process increases the computation time and the consumption of memory bandwidth.
 
@@ -455,7 +462,7 @@ Using bursts frees the bus and DRAM control signals while other words are transf
 Burst access is a form of prefetching that improves latency. It is only efficient when the prefetched data can be used by the requesting bus master. In the Milkymist system-on-chip, this is often the case:
 \begin{itemize}
 \item The CPU core has caches which access memory by complete cache lines. Thus, if the cache line length is a multiple of the burst length, the bursts can be easily fully memorized.
-\item The video framebuffer repeatedly reads the same block of data in a sequential manner, and can easily make full use of the prefetched data assuming that is has sufficient on-chip buffer space.
+\item The video frame buffer repeatedly reads the same block of data in a sequential manner, and can easily make full use of the prefetched data assuming that is has sufficient on-chip buffer space.
 \item The texture mapping unit also has a cache and a write buffer which work well with burst accesses. This is discussed in Chapter~\ref{ch:tmu}.
 \end{itemize}
 
@@ -503,7 +510,7 @@ The Milkymist SoC uses 32-bit DDR SDRAM, configured to its maximum burst length 
 \hline
 \textbf{Task} & \textbf{Required bandwidth} \\
 \hline
-VGA framebuffer, 1024x768, 75Hz, 16bpp & 950Mbps \\
+VGA frame buffer, 1024x768, 75Hz, 16bpp & 950Mbps \\
 \hline
 Distortion: texture mapping, 512x512 to 512x512, 30fps, 16bpp & 250Mbps \\
 \hline
@@ -706,13 +713,13 @@ Pipelined requests may come from the same core that issued the initial transfer,
 \subsection{Usage}
 The data width used for the FML bus is 64, yielding a peak bandwidth of 6.4Gbps when the system is running at 100MHz. This is twice the peak bandwidth of the Wishbone bus. Furthermore, this bus provides a short path to the memory controller, reducing latency and therefore potentially further increasing effective bandwidth, as discussed in Section~\ref{sec:memorywall}.
 
-Peripherals directly connected to FML are typically those which transfer large amounts of data (that would exceed the capacity of the L2 cache presented in Section~\ref{sec:fmlbrg}) and which have high bandwidth requirements (and therefore can take advantage of the bandwidth and latency improvement compared to Wishbone).
+Peripherals directly connected to FML are typically those which transfer large amounts of data (that would exceed the capacity of the L2 cache presented in section~\ref{sec:fmlbrg}) and which have high bandwidth requirements (and therefore can take advantage of the bandwidth and latency improvement compared to Wishbone).
 
 In the Milkymist SoC, they are comprised of:
 \begin{itemize}
-\item the VGA output controller, which needs to continously scan a framebuffer up to several megabytes in size to generate the video signal.
+\item the VGA output controller, which needs to continously scan a frame buffer up to several megabytes in size to generate the video signal.
 \item the (planned) video input, which writes, every second, dozens of digitized video frames weighting hundreds of kilobytes each.
-\item the texture mapping unit (Chapter~\ref{ch:tmu}), which needs to deal with large textures at high speed.
+\item the texture mapping unit (chapter~\ref{ch:tmu}), which needs to deal with large textures at high speed.
 \end{itemize}
 
 \section{Bridging Wishbone to FML}
@@ -744,13 +751,13 @@ The Wishbone-FML bridge provides very limited support for cache coherency. Cache
 
 Because cache coherency is expensive to implement in hardware, the task of managing the coherency of caches has been moved almost entirely to the software. The bridge exposes an interface for the software to invalidate cache lines, flushing them to the SDRAM if they are dirty. On the software side, device drivers should use this interface appropriately when transferring data with hardware units that use shared memory.
 
-The only form of hardware cache coherency the system has is related to the video framebuffer. The VGA signal generator is connected directly to the SDRAM bus, because the framebuffer is continuously scanned and is too large to fit entirely in the cache.
+The only form of hardware cache coherency the system has is related to the video frame buffer. The VGA signal generator is connected directly to the SDRAM bus, because the frame buffer is continuously scanned and is too large to fit entirely in the cache.
 
-However, it is very common that software modifies only a few pixels on the screen. If there was no hardware cache coherency at all, it would be tricky to implement a software mechanism that flushes the bridge cache at appropriate times. A solution can be to flush the cache every time a pixel or a group of pixels are written (which can be extremely slow if only small regions of the screen are modified at a time). Another solution would be to periodically check if the framebuffer had been modified and flush the cache if it was.
+However, it is very common that software modifies only a few pixels on the screen. If there was no hardware cache coherency at all, it would be tricky to implement a software mechanism that flushes the bridge cache at appropriate times. A solution can be to flush the cache every time a pixel or a group of pixels are written (which can be extremely slow if only small regions of the screen are modified at a time). Another solution would be to periodically check if the frame buffer had been modified and flush the cache if it was.
 
-Since those solutions are difficult to implement as they require a significant support from both the operating system and applications, it was chosen to make framebuffer read transactions by the VGA signal generator coherent with respect to the bridge cache. Every time the VGA signal generator fetches a burst of pixels, it first searches the bridge cache. If the data is in the cache, it is used. If not, the VGA signal generator fetches it from SDRAM (but does not replace any cache line).
+Since those solutions are difficult to implement as they require a significant support from both the operating system and applications, it was chosen to make frame buffer read transactions by the VGA signal generator coherent with respect to the bridge cache. Every time the VGA signal generator fetches a burst of pixels, it first searches the bridge cache. If the data is in the cache, it is used. If not, the VGA signal generator fetches it from SDRAM (but does not replace any cache line).
 
-This also makes it easier to write Milkymist framebuffer drivers within the frameworks of common operating systems, such as Linux (figure~\ref{fig:linux}).
+This also makes it easier to write Milkymist frame buffer drivers within the frameworks of common operating systems, such as Linux (figure~\ref{fig:linux}).
 
 \chapter{Texture mapping unit}
 \label{ch:tmu}
@@ -777,7 +784,7 @@ We then split the 2D interpolation problem into 1D interpolation problems as fol
 \end{itemize}
 The process is illustrated in figure~\ref{fig:rectinter}.
 
-One could obtain the same result by starting with an horizontal interpolation followed by several vertical interpolations. However, when using a linear scan framebuffer (as Milkymist does), doing it in the proposed way yields output pixels whose memory addresses are consecutive in most cases (except when going to the next ordinate), which works well with the bursty nature of SDRAM accesses (subsection~\ref{subsec:fmlburst}) and the traditional organization of a cache.
+One could obtain the same result by starting with an horizontal interpolation followed by several vertical interpolations. However, when using a linear scan frame buffer (as Milkymist does), doing it in the proposed way yields output pixels whose memory addresses are consecutive in most cases (except when going to the next ordinate), which works well with the bursty nature of SDRAM accesses (subsection~\ref{subsec:fmlburst}) and the traditional organization of a cache.
 
 \begin{figure}[htp]
 \centering
@@ -918,7 +925,7 @@ Conditional jump & 3 cycles \\
 \hline
 Assignment & free (which is optimistic) \\
 \hline
-Reading or writing to the framebuffer & 2 cycles \\
+Reading or writing to the frame buffer & 2 cycles \\
 \hline
 \end{tabular}
 \caption{Estimates of the cost of common software operations.}\label{tab:swcost}
@@ -962,7 +969,7 @@ Using the above formula with $n=15$, we can compute an estimate of the execution
 
 1D interpolations need to be done twice, once for each texture coordinate.
 
-The number of framebuffer reads is computed by considering that for each pixel written to the 512x512 destination picture, 4 pixels must be read from the source picture.
+The number of frame buffer reads is computed by considering that for each pixel written to the 512x512 destination picture, 4 pixels must be read from the source picture.
 
 The cost of bilinear filtering is computed, for each destination pixel, with 4 subtractions, 8 multiplications, 4 additions and 1 bit shift times 3 color channels, which yields 75 cycles. This is optimistic as it does not take into account the time needed to decode the fixed point format.
 
@@ -995,7 +1002,7 @@ According to this (yet optimistic) estimate, it becomes clear that a software im
 \label{subsec:tmustrategy}
 Given the performance constraints and the slowness of software implementations, we decided to implement the complete texture mapping process in hardware.
 
-It is expected that the memory latency for reading the framebuffer would be a performance-limiting factor. Instead of trying to alleviate its effects by using complex and potentially resource-intensive techniques such as advanced prefetching or non-blocking caches, we simply use a direct-mapped blocking texel cache providing simplicity and fast hit times, and design the rest of the texture mapping unit so that the memory read latency becomes the \textit{only} limiting factor.
+It is expected that the memory latency for reading the frame buffer would be a performance-limiting factor. Instead of trying to alleviate its effects by using complex and potentially resource-intensive techniques such as advanced prefetching or non-blocking caches, we simply use a direct-mapped blocking texel cache providing simplicity and fast hit times, and design the rest of the texture mapping unit so that the memory read latency becomes the \textit{only} limiting factor.
 
 With a direct-mapped texel cache having a hit rate of 90\%, a hit time of 1 cycle and a miss penalty of 9 cycles, the average memory access times is 1.8 cycles. With a 100MHz system clock, such a cache has a throughput of 55 megapixels per second, well above the optimistic estimate made in subsection~\ref{subsec:perfcontext}.\footnote{This is a quick estimate assuming a normal cache that does not support bilinear filtering. To implement bilinear filtering, the situation is more complex as the cache needs to look up 4 pixels at once. This is discussed in subsection~\ref{subsec:texelcache}.}
 
@@ -1058,9 +1065,9 @@ There are two, selectable, ways of dealing with them:
 This stage is implemented by simple arithmetic combinatorial functions, which are registered and pipelined on two sub-stages to meet timing requirements.
 
 \subsection{Address generator}
-The address generator is a simple arithmetic circuit that turns the floating point texture coordinates into the four memory addresses of the pixels they cover, and the destination coordinate into the corresponding memory address in the destination framebuffer. It is pipelined on three sub-stages to meet timing goals.
+The address generator is a simple arithmetic circuit that turns the floating point texture coordinates into the four memory addresses of the pixels they cover, and the destination coordinate into the corresponding memory address in the destination frame buffer. It is pipelined on three sub-stages to meet timing goals.
 
-The formula used to convert a coordinate $(x,y)$ into a pixel address $A$ within a 16bpp framebuffer starting at $A_{base}$ and with an horizontal resolution $H$ is the following:
+The formula used to convert a coordinate $(x,y)$ into a pixel address $A$ within a 16bpp frame buffer starting at $A_{base}$ and with an horizontal resolution $H$ is the following:
 \begin{equation}\label{eq:fbadr}
 A = A_{base} + (H \cdot y + x) \cdot 2
 \end{equation}
@@ -1448,11 +1455,11 @@ Results are reported in table~\ref{tab:tcresults} and figure~\ref{fig:tcresultsg
 
 Before we go on choosing a texel cache size, a few comments on these results can be made.
 
-First, for the ``copy'' set, the hit rate remains at a constant 93.75 \%. This is expected and supports the validity of the results. Indeed, the texture mapping unit is copying rectangles whose horizontal size is the length in pixels of a cache line (4 words of 64-bit each yields 16 pixels of 16 bits each). In our tests, the texture framebuffer was aligned to the beginning of a cache line and 512 (the horizontal texture size) is a multiple of the cache line length in pixels, therefore each horizontal line in a rectangle corresponds to a cache line. Each texture pixel is read exactly once (channels 2, 3 and 4 are idle as the interpolated texture coordinates are always integer). What happens is that, for each horizontal line in each rectangle, the first texel is read and misses the cache. Then, the next 15 texels in the line are immediately read and hit the cache. This indeed yields a cache hit rate of $\frac{15}{16} = 0.9375$.
+First, for the ``copy'' set, the hit rate remains at a constant 93.75 \%. This is expected and supports the validity of the results. Indeed, the texture mapping unit is copying rectangles whose horizontal size is the length in pixels of a cache line (4 words of 64-bit each yields 16 pixels of 16 bits each). In our tests, the texture frame buffer was aligned to the beginning of a cache line and 512 (the horizontal texture size) is a multiple of the cache line length in pixels, therefore each horizontal line in a rectangle corresponds to a cache line. Each texture pixel is read exactly once (channels 2, 3 and 4 are idle as the interpolated texture coordinates are always integer). What happens is that, for each horizontal line in each rectangle, the first texel is read and misses the cache. Then, the next 15 texels in the line are immediately read and hit the cache. This indeed yields a cache hit rate of $\frac{15}{16} = 0.9375$.
 
 A result more surprising at first sight is that for the ``zoomout'' set, which is supposed to be the worst case, the cache hit rate is low --- as expected --- and increases, until it slightly exceeds the hit rate for the ``copy'' set for cache sizes of 64KB and above.
 
-This has to do with the fact that the texture mapping unit draws the rectangles in the same order as framebuffers are scanned (from left to right and top to bottom). When the cache reaches 64KB, it is able to memorize a full band of texels that is more than 48 pixels high ($512\cdot48\cdot2 = 49152 < 65536$) which contains more than all the texels needed to draw a full line of rectangles (16 pixels high) in the output picture. Since the output picture repeats the texture, the repetition generates cache hits that are not present with the ``copy'' set.
+This has to do with the fact that the texture mapping unit draws the rectangles in the same order as frame buffers are scanned (from left to right and top to bottom). When the cache reaches 64KB, it is able to memorize a full band of texels that is more than 48 pixels high ($512\cdot48\cdot2 = 49152 < 65536$) which contains more than all the texels needed to draw a full line of rectangles (16 pixels high) in the output picture. Since the output picture repeats the texture, the repetition generates cache hits that are not present with the ``copy'' set.
 
 As for choosing a texel cache size, we went for a 32KB cache. There is no significant performance improvement with using a larger cache except for the ``zoomout'' set for which there is a slight increase in the hit rate between 32KB and 64KB. Since the ``zoomout'' set is a worst-case scenario seldom found in practice (MilkDrop usually zooms out by factors much less than the one we used, resulting in fewer cache misses), we felt it was not worth doubling the cache size to improve its performance.
 
@@ -1465,7 +1472,7 @@ Fortunately, there is a cheaper solution. What we actually need to verify is thi
 \left\lfloor \frac{a_{A}}{N_{l}} \right\rfloor \not \equiv \left\lfloor \frac{a_{A}+H \cdot V-1}{N_{l}} \right\rfloor \pmod{\frac{N_{c}}{N_{l}}}
 \end{equation}
 
-We \textit{add} the hypothese that the framebuffer address is a multiple of the cache line length, which we can easily achieve by imposing alignment requirements to the software toolchain. Without loss of generality, we suppose that $a_{A}$ is the address of channel 4, which is equal to the address of the framebuffer in the case creating the problem (figure~\ref{fig:chdisphvwrap}). $\frac{a_{A}}{N_{l}}$ is therefore integer, and the only condition that implies the absence of conflict between channels 1 and 4 becomes:
+We \textit{add} the hypothese that the frame buffer address is a multiple of the cache line length, which we can easily achieve by imposing alignment requirements to the software toolchain. Without loss of generality, we suppose that $a_{A}$ is the address of channel 4, which is equal to the address of the frame buffer in the case creating the problem (figure~\ref{fig:chdisphvwrap}). $\frac{a_{A}}{N_{l}}$ is therefore integer, and the only condition that implies the absence of conflict between channels 1 and 4 becomes:
 \begin{equation}
 \left\lfloor \frac{H \cdot V-1}{N_{l}} \right\rfloor \not \equiv 0 \pmod{\frac{N_{c}}{N_{l}}}
 \end{equation}
@@ -1479,7 +1486,7 @@ The write buffer is in charge of gathering the final pixels produced by the algo
 
 The write buffer has enough memory capacity to store two bursts on-chip. This storage space is used for a ``double buffering'' technique: while the first burst buffer receives pixels from the pipeline, the other buffer can transmit data to the memory controller. Bursts can be complete, which means that all data in them is valid, or incomplete, which means that the write buffer has not received a value for all the pixels within the burst but still needs to move the partial burst data it has off-chip because it does not have space to store it. Incomplete bursts are performed using the data mask (DM) signals of FML that prevent some bytes from being written to the memory during the burst. Incomplete bursts should be avoided as they waste memory bandwidth and reduce performance.
 
-This small amount of on-chip memory is enough to perform well. Indeed, the algorithm scans the rectangles one by one horizontally and then vertically (figure~\ref{fig:rectinter}) and consecutive pixels on the same horizontal line are contiguous in memory (equation~\ref{eq:fbadr}). Thus, if the destination framebuffer is aligned to the start of a FML burst and if the horizontal size of the rectangles is a multiple of the number of pixels in a FML burst, the burst buffers will be used very efficiently, with complete bursts only. This is the recommended mode of operation for the texture mapping unit.
+This small amount of on-chip memory is enough to perform well. Indeed, the algorithm scans the rectangles one by one horizontally and then vertically (figure~\ref{fig:rectinter}) and consecutive pixels on the same horizontal line are contiguous in memory (equation~\ref{eq:fbadr}). Thus, if the destination frame buffer is aligned to the start of a FML burst and if the horizontal size of the rectangles is a multiple of the number of pixels in a FML burst, the burst buffers will be used very efficiently, with complete bursts only. This is the recommended mode of operation for the texture mapping unit.
 
 Under this assumption, what limits the throughput of the write buffer is the time it takes to empty the second burst buffer into the memory. This time is equal to the memory write access time plus the length of the FML burst.
 
@@ -1520,7 +1527,7 @@ The texture mapping unit is completely under software control thanks to a CSR in
 Beyond this basic principle of operation, the texture mapping unit supports several features which are implemented as additional pipeline stages (not shown in figure~\ref{fig:tmublock}):
 \begin{itemize}
 \item Fade to black. To implement the ``decay'' effect of MilkDrop, the output picture can be darkened by multiplying all its color components by a 6-bit fixed point number between 0 and 1.
-\item Chroma key. Texels of a given color can be ignored (not drawn in the output framebuffer). This is not used in normal rendering, but makes it possible to draw quickly text or symbols with transparent areas on the screen.
+\item Chroma key. Texels of a given color can be ignored (not drawn in the output frame buffer). This is not used in normal rendering, but makes it possible to draw quickly text or symbols with transparent areas on the screen.
 \item Semi-transparency (alpha blending). The output can be made semi-transparent with 64 transparency levels. This is accomplished by reading the destination picture, mixing each pixel with the output of the texture mapping (by computing a weighted average) and writing the result back to memory. If transparency is not desired, the texture mapping unit skips reading the destination picture in order to use less memory bandwidth and avoid blocking on unneeded memory references.
 \end{itemize}
 
@@ -1645,6 +1652,7 @@ Conditional statements (if... then... else...) are relatively uncommon in MilkDr
 Thus, to implement a conditional statement, the PFPU would need to compute both of its branches and store their values in registers (including the branch that is not taken), evaluate the condition and store its value in R2 and finally execute an \verb!IF! operation.
 
 \section{Run-time compiler}
+\label{sec:pfpucomp}
 Equations from the patches need to be compiled and scheduled before they can be evaluated by the programmable floating point unit (PFPU). These operations take place on the CPU core of the SoC (section~\ref{sec:mico32}).
 
 \subsection{Compilation into virtual machine instructions}
@@ -1784,7 +1792,7 @@ Inverse square root approximation & 2 \\
 \caption{PFPU latencies in cycles (Milkymist 0.5.1).}\label{tab:pfpulatency}
 \end{table}
 
-To put this in contrast with our initial goals (section~\ref{sec:pfpupurpose}), let us consider a typical patch that performs, per vertex, 150 base operations (addition, subtraction, multiplication), 4 divisions, 4 square root extractions and 20 sine or cosine computations (which is close to the patch used in our initial estimate). According to the table~\ref{tab:pfpucost}, this would mean 318 PFPU instructions. The maximum CPI that lets us achieve our performance goal is therefore 2.56. Our performance goal is easily met.
+To put this in contrast with our initial goals (section~\ref{sec:pfpupurpose}), let us consider a typical patch that performs, per vertex, 150 base operations (addition, subtraction, multiplication), 4 divisions, 4 square root extractions and 20 sine or cosine computations (which is close to the patch used in our initial estimate). According to the table~\ref{tab:pfpucost}, this would mean 318 PFPU instructions. The maximum CPI that lets us achieve our performance goal is therefore 2.56. Our performance goal is easily met, assuming that other patches expose the same opportunities for out-of-order execution.
 
 \begin{table}
 \centering
@@ -1824,7 +1832,7 @@ The Milkymist system-on-chip uses LatticeMico32 with 2-way caches of 16KB each, 
 At the time this thesis is written, LatticeMico32 is the only hardware component that we have not developed specifically for the Milkymist project.
 
 \section{Capabilities}
-The ``nommu'' version of Linux has been ported to the Milkymist SoC (figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this master thesis. Still, this demonstrates the ability of the platform to run complex software.
+The ``nommu'' version of Linux has been ported to the Milkymist SoC (figure~\ref{fig:linux}). Since this is a community effort with a significant contribution by Takeshi Matsuya from Keio University, the details are not covered in this Master's thesis. Still, this demonstrates the ability of the platform to run complex software.
 
 \begin{figure}[htp]
 \centering
@@ -1928,12 +1936,71 @@ typeset & 28.91 s & 28.83 s & 28.87 s & 0.28 \% \\
 \caption{User execution times on Microblaze 10.1.}\label{tab:microblazespeed}
 \end{table}
 
-The root causes of this performance improvement were not investigated; but since LatticeMico32 and Microblaze share a very close architecture, it is suspected that these differences are vastly explained by the combination of the low-latency HPDMC controller and the improved caches.
+The root causes of this performance improvement were not investigated; but since LatticeMico32 and Microblaze share a very close architecture, it is suspected that these differences are vastly explained by the combination of the low-latency HPDMC memory controller and the improved caches.
 
 The main point of this comparison is to confirm the viability of Milkymist as a powerful SoC platform, that can withstand the competition with proprietary solutions.
 
 \section{Design of a MilkDrop-like rendering program}
-TODO HW/SW partitioning
+\subsection{Description}
+With all those elements at hand, the last task is to design a complete renderer program compatible with MilkDrop. The block diagram of our renderer is given by the figure~\ref{fig:swarch}.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=\textwidth]{swarch.eps}
+\caption{Rendering software architecture.}
+\label{fig:swarch}
+\end{figure}
+
+Before the rendering proper can take place, the code of the patch needs to be parsed and microcode for the PFPU generated (section~\ref{sec:pfpucomp}). This process, implemented entirely in software, is slow (several hundreds of milliseconds) but it is not performance-critical, as it only needs to be done once before the rendering. Furthermore, its results could be cached to allow a smooth transition between pre-defined patches.
+
+The first step of the rendering process is to digitize the audio signal. This is achieved using the system-on-chip's AC97 controller and its device driver. They are programmed to pack the audio samples into buffers, each of them holding exactly the number of samples that corresponds to the desired video frame rate of 30 frames per second. The buffers are written to the memory using DMA through the L2 cache.
+
+The next operation is to analyze each audio buffer to extract its energy content in three frequency bands, in order to generate the \verb!bass!, \verb!mid! and \verb!treb! parameters that can be used in MilkDrop patches to connect the visual effects to sound. This is done using three decimating finite impulse response (FIR) filters, each followed by an accumulator that adds the energies of each sample at its filter's output. This is several times faster than the original MilkDrop implementation, which consisted in performing a Fourier transform followed by a spectral summation of the energies in the three bands, and allows a software implementation. Indeed, this process has been observed to take approximately $8\unit{ms}$ when run on the system-on-chip, which is more than 3 times less than the video frame period. The filters operate directly on the audio data sent into the memory by the AC97 controller, avoiding any time-wasting memory copy.
+
+The next step is to evaluate the per-frame equations. Even though hardware acceleration is not really needed there, this step is still performed on the PFPU in order to re-use the existing compilation and evaluation infrastructure.
+
+Once per-frame parameters are known, the renderer proceeds to evaluating per-vertex equations on the PFPU. This generates the full mesh of vertex coordinates to be used later by the texture mapping unit for distorting the frame.
+
+All the processes we have seen so far are part of the \textit{analysis loop}. Its output is a stream of packets, each packet describing the operations to be done for one frame. One packet contains the audio samples, the results of the audio analysis, the outputs of the per-vertex equations (as well as the fixed patch parameters) and the distortion mesh data. The packet is sent to the \textit{rendering loop}.
+
+Upon reception of the packet, the rendering loop takes its current frame, and runs the TMU (chapter~\ref{ch:tmu}) to distort it.
+
+Then, it superimposes waves, borders and motion vectors on the result. This is implemented in software, as the processor is fast enough for these tasks.
+
+Finally, the TMU is run twice to scale the internal frame buffer to the screen size and to apply the video echo.
+
+The output is now ready to be displayed. This is done by simply instructing the VGA controller to switch to the newly generated frame buffer. The VGA controller then performs the requested buffer switch during the next vertical blanking interval, in order to produce a transition without any tearing artifact. A triple-buffering technique is used so that the software never has to wait for the VGA controller to release a buffer,\footnote{Assuming that the frame rate is less than the screen refresh frequency, which is always the case in practice as the frame rate is limited to 30 fps and all display devices refresh at much more than 30 Hz.} at the expense of an increased memory consumption.
+
+Our implementation is \textit{event-driven}. Instead of being fully sequential, the software waits for and acts upon events (for example, the texture mapping unit finishing processing, or a new audio buffer being ready). After an event is received, the CPU can either process the data itself (for example, run the FIR filters after a new audio buffer is ready) or run another hardware unit (for example, run the TMU after the PFPU has evaluated the per-vertex equations). This approach improves performance by letting the three main processing units of the system (the CPU, the PFPU and the TMU) operate in parallel.
+
+\subsection{Cache coherency}
+The system-on-chip provides limited support for cache coherency (section~\ref{sec:coherency}). Therefore, several operations to ensure coherency must be done by the software throughout the rendering process.
+
+\subsubsection{Cache coherency within the analysis loop}
+The only precaution that should be taken is to invalidate the L1 cache after each received buffer from the AC97 audio controller.
+
+There is no need to invalidate the any cache after evaluation of the per-frame equations, as the outputs are read directly from the PFPU register file which is mapped in the non-cacheable CSR address space.
+
+The output the per-vertex equations is sent directly to the rendering loop.
+
+\subsubsection{Cache coherency between the analysis and rendering loops}
+Among the data sent from the analysis loop, there is one element which is not coherent with respect to the L1 cache: the vertex data generated from the per-vertex equations. However, this data is not read by the CPU but only by the TMU. The latter fetches it from the L2 cache, which is also where the PFPU writes data. Therefore, no operation is needed to ensure cache coherency.
+
+\subsubsection{Cache coherency within the rendering loop}
+Most operations are done by the texture mapping unit, which deals directly with the SDRAM. There are two cases where cache coherency issues can arise:
+\begin{enumerate}
+\item Between the CPU and the TMU during the wave (and other elements) drawing process.
+\item Between the CPU and the VGA controller. Indeed, the VGA controller makes coherent transactions with respect to the L2 cache. If the cache holds an outdated copy of the data, it will be used instead of the more recent version in SDRAM.
+\end{enumerate}
+
+To solve these issues with a minimal number of cache invalidations, we make sure that the L1 and L2 cache never hold any data from any frame buffer except during the wave drawing process. This is ensured by:
+\begin{enumerate}
+\item Aligning all frame buffers to a multiple of both the line lengths of the L1 and L2 caches (i.e. of the least common multiple of the line lengths). In our case, this does not add any additional constraint as those buffers already had tighter alignment requirements stemming from the VGA controller and the avoidance of inter-channel cache conflicts within the texture mapping unit.
+\item Invalidating the L1 and L2 cache just after the wave drawing process.
+\end{enumerate}
+
+\subsection{Results}
+Our system is successfully able to render many original MilkDrop presets at 30 frames per seconds in 640x480 resolution. However, it is often operating near its limit, and sometimes above it, as some presets exhibit a lower frame rate.
 
 \chapter{Conclusion}
 \label{ch:conclusion}

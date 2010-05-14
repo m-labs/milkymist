@@ -1,4 +1,4 @@
-TEX=fml.tex csr.tex system.tex milkdrop.tex confslides.tex confslides_overview.tex paper_overview.tex thesis.tex
+TEX=fml.tex csr.tex system.tex confslides.tex confslides_overview.tex paper_overview.tex thesis.tex
 
 DVI=$(TEX:.tex=.dvi)
 PS=$(TEX:.tex=.ps)
@@ -35,10 +35,6 @@ confslides.dvi: confslides.tex
 confslides_overview.dvi: confslides_overview.tex
 	latex confslides_overview.tex
 	latex confslides_overview.tex
-
-milkdrop.dvi: milkdrop.tex
-	latex milkdrop.tex
-	latex milkdrop.tex
 
 %.dvi: %.tex
 	latex $<
