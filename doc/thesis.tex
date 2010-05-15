@@ -28,19 +28,29 @@
 \isbn{x-xxxx-xxx-x}
 \begin{document}
 \begin{abstract}
-TODO
+Commercial system-on-chips with advanced graphics acceleration capabilities are becoming ubiquitous today. However, in contradiction with the open source idea, little is known about the details of their architecture and implementation, as they are usually covered by trade secrets.
+
+Fostered by the falling costs of high-density FPGAs, our thesis project encompasses researching, developing and implementing the key points of the architecture of an open source and comprehensive system-on-chip with competitive yet reasonable graphics capabilities. The chosen target application is the synthesis of visual effects similar to those produced by the popular MilkDrop visualization plug-in for Winamp.
+
+Our system-on-chip design consists principally of a custom bus infrastructure, a custom DDR SDRAM memory controller, a microprocessor core, and custom graphics accelerators for texture mapping and floating point processing.
+
+Our base microprocessor system is capable of running Linux (without MMU) and outperforms a Microblaze-based solution tested in similar conditions by a 15 to 35\% increase in speed of execution. For our video synthesis application, our texture mapping accelerator achieves an average fill rate of 44 megapixels per second and our floating point processing unit provides in excess of 70 million floating point operations per second. Everything, including I/O peripherals (AC97 audio, Ethernet, RS232 UART, GPIO), is implemented on a Virtex-4 XC4VLX25 FPGA, where it utilizes about 80\% of the resources.
+
+Finally, we have successfully developed an embedded video synthesis program that leverages the possibilities of our hardware architecture to permit the live rendering of many MilkDrop effects in 640x480 resolution at 30 frames per second.
 \end{abstract}
 
 \begin{acknowledgments}
-First, I would like to express my gratitude to Professor Mats Brorsson, my supervisor and examiner at the Royal Institute of Technology, for having the open-mindedness of letting me write my thesis on this subject and his help and advice with it.
+First, I would like to express my gratitude to Professor Mats Brorsson, my supervisor and examiner at the Royal Institute of Technology, for having the open-mindedness of letting me write my thesis on this subject and for his help and advice with it.
 
-Then, I would like to thank all the researchers who have retained their copyright on their papers (or have put them in the public domain) and distribute them online for everybody to download freely (incidentally in accordance with the principle of free exchange of information from the KTH ethics policy). This in spite of the default agreement of many publishers such as the IEEE, which asks authors to assign their copyrights to the publishers so the latter have the exclusive permission to sell the download of documents that they did not write, without giving back to the authors, at a price supposedly meant to cover publishing expenses but which is not justified by today's low costs of network bandwidth and servers.
+I would also like to thank Lattice Semiconductor for opening the source code of their LatticeMico32 processor core.
+
+Special thanks go to all the people who are indirectly involved with this Master's thesis project: Henry de Beauchesne (Xilinx) for getting me started with high-end FPGA tools, Shawn Tan (Aeste Works (M) Sdn Bhd) for his help with understanding the WISHBONE bus, Gregory Taylor (NASA's Jet Propulsion Laboratory) for letting me know that they were using parts of my code in the development of a communications system to be put onboard the international space station, Takeshi Matsuya (Keio University) for his work on the port of Linux to the system-on-chip described herein, Michael Walle for developing support of the system-on-chip in the QEMU emulator and Wolfgang Spraul (Sharism at Work Ltd.) for proposing me an agreement for manufacturing devices using the system-on-chip design.
+
+Thanks to the Eid\^olon music band (Reims, France), for whom I wrote my first PC-based video synthesis program in 2005, which has been a source of inspiration for this project.
+
+Finally, I would like to thank all the researchers who have retained their copyright on their papers (or have put them in the public domain) and distribute them online for everybody to download freely (incidentally in accordance with the principle of free exchange of information from the KTH ethics policy). This in spite of the default agreement of many publishers such as the IEEE, which asks authors to assign their copyrights to the publishers so the latter have the exclusive permission to sell the download of documents that they did not write, without giving back to the authors, at a price supposedly meant to cover publishing expenses but which is not justified by today's low costs of network bandwidth and servers.
 
 Thanks to these researchers, I have been able to access quality scientific literature before I went to a university, from which I have learned a lot. Even throughout the writing of this Master's thesis, papers freely available online enabled greater productivity as access to them was much faster.
-
-Thanks also go to Lattice Semiconductor for opening the source code of their LatticeMico32 processor core.
-
-Finally, special thanks go to all the people who are indirectly involved with this Master's thesis project: Henry de Beauchesne (Xilinx) for getting me started with high-end FPGA tools, Shawn Tan (Aeste Works (M) Sdn Bhd) for his help with understanding the WISHBONE bus, Gregory Taylor (NASA's Jet Propulsion Laboratory) for letting me know that they were using parts of my code in the development of a communications system to be put onboard the international space station, Takeshi Matsuya (Keio University) for his work on the port of Linux to the system-on-chip described herein, Michael Walle for developing support of the system-on-chip in the QEMU emulator and Wolfgang Spraul (Sharism at Work Ltd.) for proposing me an agreement for manufacturing devices using the system-on-chip design.
 \end{acknowledgments}
 
 \tableofcontents
@@ -435,7 +445,7 @@ Latency and bandwidth are however linked in practice. Decreasing the latency als
 
 High-end processors for servers and workstations have a good ability to cope with relatively high memory latency, because techniques such as out-of-order execution and hardware multi-threading enable the processor to issue new instructions even though one is blocking on a memory access.
 
-Thus, most of today's SDRAM controllers do a lot to optimize bandwidth but have little focus on latency. Bandwidth-optimizing techniques include:
+Some SDRAM controllers do a lot to optimize bandwidth but have little focus on latency. Bandwidth-optimizing techniques include:
 \begin{itemize}
 \item reordering memory transactions to maximize the page mode hit rate.
 \item grouping reads and writes together to reduce write recovery times. Along with the above technique, this has a detrimental impact on latency because of the delays incurred by the additional logic in the address datapath.
