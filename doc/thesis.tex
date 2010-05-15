@@ -2013,11 +2013,39 @@ To solve these issues with a minimal number of cache invalidations, we make sure
 Our implementation is \textit{event-driven}. Instead of being fully sequential, the software waits for and acts upon events (for example, the texture mapping unit finishing processing, or a new audio buffer being ready). After an event is received, the CPU can either process the data itself (for example, run the FIR filters after a new audio buffer is ready) or run another hardware unit (for example, run the TMU after the PFPU has evaluated the per-vertex equations). This approach improves performance by letting the three main processing units of the system (the CPU, the PFPU and the TMU) operate in parallel.
 
 \subsection{Results}
-Our system is able to render successfully many original MilkDrop presets at 30 frames per seconds in 640x480 resolution. However, it is often operating near its limit, and sometimes above it, as some presets exhibit a lower frame rate. This is often due to the fact that drawing the waves and the borders take a long time on the CPU, especially when many semi-transparent pixels need to be drawn. This precludes the possibility of supporting presets that employ complex custom waves and shapes.
+Our system is able to render successfully many original MilkDrop presets at 30 frames per seconds in 640x480 resolution. However, it is often operating near its limit, and sometimes above it, as some presets exhibit a lower frame rate. This is often due to the fact that drawing the waves and the borders take a long time on the CPU, especially when many semi-transparent pixels need to be drawn. This precludes the possibility of supporting presets that employ complex custom waves and shapes (that would be drawn by the CPU), unless further acceleration techniques are devloped.
 
 \chapter{Conclusion and future works}
 \label{ch:conclusion}
-TODO
+Through this thesis project, we have covered many different aspects of computer architecture, which were necessary to achieve our goal of designing a high-performance system-on-chip for video synthesis.
+
+We first exposed the difficulties involved with the amount of memory required for the video synthesis application, and the latency and bandwidth challenges stemming from the DRAM technology. Our solution consisted of a combination of a page mode control algorithm, using of burst transfers with critical-word-first support, and pipelining. It keeps the hardware small and simple, and our results have shown that it allows using the memory bandwidth at roughly half the peak capacity of the chips, which was enough for our application taking into account an oversizing of the memory system.
+
+Then, we explained how we split the system interconnect on three different busses, solving high fanout and large multiplexer problems, enabling devices on different bus segments to communicate in parallel, and having specific bus standards on each segment, depending on the feature and bandwidth needs of the devices using it.
+
+We went on with the problems stemming from the compute-intensive parts of the video rendering process: texture mapping and fast evaluation of the equations that define the texture coordinates. We solved those by developing custom hardware accelerators, the texture mapping unit (TMU) and the programmable floating point unit (PFPU). The PFPU easily exceeded its design goals, but our TMU was challenged by its important consumption of memory bandwidth and the associated memory latencies issues. It was nonetheless able to meet our expectation of enabling the rendering of the video effects in VGA (640x480) resolution.
+
+Finally, we chose and integrated a good CPU core to control the system and perform less compute-intensive and software-friendly tasks. Our choice was the LatticeMico32 core, which, when integrated into our system, exceeded the performance of the competing proprietary Microblaze solution. We wrote video rendering software for it, leveraging the possibilities of our SoC architecture.
+
+Overall, our goal has been met as we have been successful at rendering many MilkDrop presets in VGA resolution on our system at a good frame rate. However, several tracks for computer architecture related improvements can be thought of:
+\begin{enumerate}
+\item In order to be able to use more memory bandwidth from the SDRAM chips, an out-of-order memory controller could be designed.
+\item The texture mapping unit could use a prefetching technique to be less affected by the memory latency. Such a technique could also enable several outstanding memory requests from the texture mapping unit at the same time, allowing the memory controller to reorder them in order to leverage more bandwidth from the SDRAM chips.
+\item During the development of the texture mapping unit (which was done in plain Verilog HDL), we felt that it was not very productive to repeatedly design manually the pipeline interlocking logic for each stage. This made us think of an ambitious research project that could consist in designing a programming language that would describe similar pipelines from a higher level of abstraction, which would bring many advantages. First, productivity would be improved as the designer would not have to design and code manually (with a risk of errors) many elements. Second, the language could be simulated to validate the high level functionality of the design. Third, this simulation  could also be used to explore the design space of functionally-equivalent implementations with different area, power and speed performances (for example, by observing the impact on speed that the cache size of a memory access point has in order to strike a good compromise between the two). A computer program could even be used to perform part or all of this exploration in order to meet pre-defined power, area and speed goals, and back-annotate all the design choices it made into the design.
+
+With such a powerful tool, we could, for example, quite easily upgrade the texture mapping unit's graphics pipeline so it could support the full OpenGL ES specification. It could also certainly be used in many other fields unrelated to computer graphics.
+\end{enumerate}
+
+The Milkymist project is not entirely about computer architecture and system-on-chip design. We are also working, in collaboration with Sharism at Work Ltd. and other contributors, on building complete ``open source hardware'' products around the SoC described herein. Our first device will be the Milkymist One interactive VJ station. Technical aspects of this wider project also include printed circuit board layout (figure~\ref{fig:mm1}) and software engineering. All of the work is covered by open source licenses.
+
+We hope that this open hardware platform will be successful --- used not only for its intended live video synthesis purpose, but also as a learning tool, as a development platform and as a base or even a design library for other open source projects.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=\textwidth]{mm1.eps}
+\caption{Printed circuit board floorplan of the Milkymist One.}
+\label{fig:mm1}
+\end{figure}
 
 \bibliography{thesis}{}
 \bibliographystyle{plain}
