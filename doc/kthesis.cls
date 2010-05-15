@@ -209,7 +209,8 @@
   \@maketitle}
 \newcommand{\acknowledgmentsname}{Acknowledgments}
 \newenvironment{acknowledgments}{%
-  \chapter*{\acknowledgmentsname%
+  \thispagestyle{plain}%
+  \section*{\acknowledgmentsname%
     \@mkboth{\acknowledgmentsname}{\acknowledgmentsname}}}{}
 \newenvironment{preface}{%
   \chapter*{\prefacename%

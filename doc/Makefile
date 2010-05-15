@@ -22,7 +22,7 @@ paper_overview.dvi: paper_overview.tex paper_overview.bib
 	latex paper_overview.tex
 	latex paper_overview.tex
 	
-thesis.dvi: thesis.tex thesis.bib
+thesis.dvi: thesis.tex thesis.bib kthesis.cls
 	latex thesis.tex
 	bibtex thesis
 	latex thesis.tex

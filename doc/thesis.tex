@@ -31,6 +31,18 @@
 TODO
 \end{abstract}
 
+\begin{acknowledgments}
+First, I would like to express my gratitude to Professor Mats Brorsson, my supervisor and examiner at the Royal Institute of Technology, for having the open-mindedness of letting me write my thesis on this subject and his help and advice with it.
+
+Then, I would like to thank all the researchers who have retained their copyright on their papers (or have put them in the public domain) and distribute them online for everybody to download freely (incidentally in accordance with the principle of free exchange of information from the KTH ethics policy). This in spite of the default agreement of many publishers such as the IEEE, which asks authors to assign their copyrights to the publishers so the latter have the exclusive permission to sell the download of documents that they did not write, without giving back to the authors, at a price supposedly meant to cover publishing expenses but which is not justified by today's low costs of network bandwidth and servers.
+
+Thanks to these researchers, I have been able to access quality scientific literature before I went to a university, from which I have learned a lot. Even throughout the writing of this Master's thesis, papers freely available online enabled greater productivity as access to them was much faster.
+
+Thanks also go to Lattice Semiconductor for opening the source code of their LatticeMico32 processor core.
+
+Finally, special thanks go to all the people who are indirectly involved with this Master's thesis project: Henry de Beauchesne (Xilinx) for getting me started with high-end FPGA tools, Shawn Tan (Aeste Works (M) Sdn Bhd) for his help with understanding the WISHBONE bus, Gregory Taylor (NASA's Jet Propulsion Laboratory) for letting me know that they were using parts of my code in the development of a communications system to be put onboard the international space station, Takeshi Matsuya (Keio University) for his work on the port of Linux to the system-on-chip described herein, Michael Walle for developing support of the system-on-chip in the QEMU emulator and Wolfgang Spraul (Sharism at Work Ltd.) for proposing me an agreement for manufacturing devices using the system-on-chip design.
+\end{acknowledgments}
+
 \tableofcontents
 \listoffigures
 \listoftables
@@ -1971,8 +1983,6 @@ Finally, the TMU is run twice to scale the internal frame buffer to the screen s
 
 The output is now ready to be displayed. This is done by simply instructing the VGA controller to switch to the newly generated frame buffer. The VGA controller then performs the requested buffer switch during the next vertical blanking interval, in order to produce a transition without any tearing artifact. A triple-buffering technique is used so that the software never has to wait for the VGA controller to release a buffer,\footnote{Assuming that the frame rate is less than the screen refresh frequency, which is always the case in practice as the frame rate is limited to 30 fps and all display devices refresh at much more than 30 Hz.} at the expense of an increased memory consumption.
 
-Our implementation is \textit{event-driven}. Instead of being fully sequential, the software waits for and acts upon events (for example, the texture mapping unit finishing processing, or a new audio buffer being ready). After an event is received, the CPU can either process the data itself (for example, run the FIR filters after a new audio buffer is ready) or run another hardware unit (for example, run the TMU after the PFPU has evaluated the per-vertex equations). This approach improves performance by letting the three main processing units of the system (the CPU, the PFPU and the TMU) operate in parallel.
-
 \subsection{Cache coherency}
 The system-on-chip provides limited support for cache coherency (section~\ref{sec:coherency}). Therefore, several operations to ensure coherency must be done by the software throughout the rendering process.
 
@@ -1999,10 +2009,13 @@ To solve these issues with a minimal number of cache invalidations, we make sure
 \item Invalidating the L1 and L2 cache just after the wave drawing process.
 \end{enumerate}
 
-\subsection{Results}
-Our system is successfully able to render many original MilkDrop presets at 30 frames per seconds in 640x480 resolution. However, it is often operating near its limit, and sometimes above it, as some presets exhibit a lower frame rate.
+\subsection{Event-driven operation}
+Our implementation is \textit{event-driven}. Instead of being fully sequential, the software waits for and acts upon events (for example, the texture mapping unit finishing processing, or a new audio buffer being ready). After an event is received, the CPU can either process the data itself (for example, run the FIR filters after a new audio buffer is ready) or run another hardware unit (for example, run the TMU after the PFPU has evaluated the per-vertex equations). This approach improves performance by letting the three main processing units of the system (the CPU, the PFPU and the TMU) operate in parallel.
 
-\chapter{Conclusion}
+\subsection{Results}
+Our system is able to render successfully many original MilkDrop presets at 30 frames per seconds in 640x480 resolution. However, it is often operating near its limit, and sometimes above it, as some presets exhibit a lower frame rate. This is often due to the fact that drawing the waves and the borders take a long time on the CPU, especially when many semi-transparent pixels need to be drawn. This precludes the possibility of supporting presets that employ complex custom waves and shapes.
+
+\chapter{Conclusion and future works}
 \label{ch:conclusion}
 TODO
 
