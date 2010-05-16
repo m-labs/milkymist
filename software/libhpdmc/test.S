@@ -28,8 +28,8 @@ _reset_handler:
 	ori	r1, r1, lo(_reset_handler)
 	wcsr	EBA, r1
 	xor	r2, r2, r2
-	bi	_sdram_init
-	nop
+	calli	_sdram_init
+	bi	done
 
 _breakpoint_handler:
 	nop; nop; nop; nop
@@ -59,7 +59,7 @@ _system_call_handler:
 	nop; nop; nop; nop
 	nop; nop; nop; nop 
 
-_sdram_init_return:
+done:
 	mvhi	r1, hi(CSR_UART_RXTX)
 	ori	r1, r1, lo(CSR_UART_RXTX)
 	mvhi	r2, hi(endmsg)

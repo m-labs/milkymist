@@ -25,11 +25,13 @@
  * GLOBAL VARIABLES
  * r25: Input delay
  * r24: DQS phase
+ * r23: return address
  */
 
 .section .text, "ax", @progbits 
 .global _sdram_init
 _sdram_init:
+	mv	r23, ra
 	mvhi	r1, hi(banner)
 	ori	r1, r1, lo(banner)
 	calli	print
@@ -61,7 +63,7 @@ autocalibrate_success_return:
 	ori	r1, r1, lo(continueboot)
 	calli	print
 	
-	bi _sdram_init_return
+	b	r23
 memtest_fail:
 	mvhi	r1, hi(testfailmsg)
 	ori	r1, r1, lo(testfailmsg)
@@ -131,7 +133,7 @@ send_init:
 	mvu	r3, (HPDMC_SYSTEM_CKE)
 	sw 	(r2+0), r3
 
-	bi send_init_return
+	bi	send_init_return
 
 /* clobbers: */
 autocalibrate:
@@ -263,7 +265,7 @@ boot:
 	ori	r1, r1, lo(CSR_VGA_RESET)
 	mvi	r2, VGA_RESET
 	sw 	(r1+0), r2
-	bi	_sdram_init_return
+	b	r23
 
 /* memtest - tests memory
  *
