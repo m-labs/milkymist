@@ -92,8 +92,9 @@ Most of the work is (C) Copyright 2007, 2008, 2009, 2010 Sebastien Bourdeauducq.
 For this work:
  - The hardware design is licensed under GNU GPLv3.
    See the LICENSE.GPL file for more information.
- - The software (software/*) is licensed under GNU GPLv3.
-   See LICENSE.GPL.
+ - The software (software/*) is licensed under GNU GPLv3, except the SDRAM
+   initialization runtime (libHPDMC) which is under GNU LGPLv3.
+   See LICENSE.GPL and LICENSE.LGPL.
  - The documentation is licensed under FDL.
    See LICENSE.FDL.
 
