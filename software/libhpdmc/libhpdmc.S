@@ -55,8 +55,9 @@ autocalibrate_success_return:
 	ori	r1, r1, lo(autocalok)
 	calli	print
 	
-	/* test all memory */
+	/* big memory test */
 	mvi	r1, 1
+	xor	r2, r2, r2
 	calli	memtest
 	be	r1, r0, memtest_fail
 	mvhi	r1, hi(continueboot)
@@ -221,10 +222,12 @@ wait_dqs:
 	bi	mancal_loop
 small_test:
 	xor	r1, r1, r1
+	xor	r2, r2, r2
 	calli	memtest
 	bi	after_test
 big_test:
 	mvu	r1, 1
+	xor	r2, r2, r2
 	calli memtest
 after_test:
 	be	r1, r0, print_test_fail
@@ -270,29 +273,38 @@ boot:
 /* memtest - tests memory
  *
  * inputs:	r1 - 64MB/1MB
+ *              r2 - PRNG seed
  * outputs:	r1 - pass/fail
- * clobbers:	r1, r2, r3, r4
+ * clobbers:	r1, r3, r4, r5, r6, r7
  */
 memtest:
 	/* 1. fill with pattern */
-	mvhi	r2, 0x4000	/* r2 - current address */
+	mvhi	r5, 0x4000	/* r5 - current address */
 	mvhi	r3, 0x100	/* r3 - remaining words */
 	mv	r4, r3		/* r4 - number of words to test */
+	mv	r6, r2		/* r6 - current value of the PRNG */
+	mvhi	r7, hi(22695477)
+	ori	r7, r7, lo(22695477)
 	bne	r1, r0, patloop
 	mvhi	r3, 0x4
 	mv	r4, r3
 patloop:
-	sw	(r2+0), r3
-	addi	r2, r2, 4
+	sw	(r5+0), r6
+	mul	r6, r6, r7
+	addi	r6, r6, 1
+	addi	r5, r5, 4
 	addi	r3, r3, -1
 	bne	r3, r0, patloop
 	/* 2. check pattern */
-	mvhi	r2, 0x4000	/* r2 - current address */
+	mvhi	r5, 0x4000	/* r5 - current address */
 	mv	r3, r4		/* r3 - remaining words */
+	mv	r6, r2		/* r6 - current value of the PRNG */
 chkloop:
-	lw	r4, (r2+0)
-	bne	r4, r3, testfail
-	addi	r2, r2, 4
+	lw	r4, (r5+0)
+	bne	r4, r6, testfail
+	mul	r6, r6, r7
+	addi	r6, r6, 1
+	addi	r5, r5, 4
 	addi	r3, r3, -1
 	bne	r3, r0, chkloop
 	mvu	r1, 1
