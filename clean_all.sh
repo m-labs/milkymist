@@ -6,6 +6,7 @@ source $BASEDIR/coredoc.inc
 
 cd $BASEDIR/tools && make clean
 
+cd $BASEDIR/software/libhpdmc && make clean
 cd $BASEDIR/software/libbase && make clean
 cd $BASEDIR/software/libmath && make clean
 cd $BASEDIR/software/libhal && make clean

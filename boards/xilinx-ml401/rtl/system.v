@@ -249,46 +249,37 @@ wire		cpuibus_ack,
 //------------------------------------------------------------------
 wire [31:0]	brg_adr,
 		norflash_adr,
-		bram_adr,
 		csrbrg_adr,
 		aceusb_adr;
 
-wire [2:0]	brg_cti,
-		bram_cti;
+wire [2:0]	brg_cti;
 
 wire [31:0]	brg_dat_r,
 		brg_dat_w,
 		norflash_dat_r,
-		bram_dat_r,
-		bram_dat_w,
 		csrbrg_dat_r,
 		csrbrg_dat_w,
 		aceusb_dat_r,
 		aceusb_dat_w;
 
-wire [3:0]	brg_sel,
-		bram_sel;
+wire [3:0]	brg_sel;
 
 wire		brg_we,
-		bram_we,
 		csrbrg_we,
 		aceusb_we;
 
 wire		brg_cyc,
 		norflash_cyc,
-		bram_cyc,
 		csrbrg_cyc,
 		aceusb_cyc;
 
 wire		brg_stb,
 		norflash_stb,
-		bram_stb,
 		csrbrg_stb,
 		aceusb_stb;
 
 wire		brg_ack,
 		norflash_ack,
-		bram_ack,
 		csrbrg_ack,
 		aceusb_ack;
 
@@ -298,7 +289,7 @@ wire		brg_ack,
 conbus #(
 	.s_addr_w(3),
 	.s0_addr(3'b000),	// norflash	0x00000000
-	.s1_addr(3'b001),	// bram		0x20000000
+	.s1_addr(3'b001),	// free		0x20000000
 	.s2_addr(3'b010),	// FML bridge	0x40000000
 	.s3_addr(3'b100),	// CSR bridge	0x80000000
 	.s4_addr(3'b101)	// aceusb	0xa0000000
@@ -384,15 +375,15 @@ conbus #(
 	.s0_stb_o(norflash_stb),
 	.s0_ack_i(norflash_ack),
 	// Slave 1
-	.s1_dat_i(bram_dat_r),
-	.s1_dat_o(bram_dat_w),
-	.s1_adr_o(bram_adr),
-	.s1_cti_o(bram_cti),
-	.s1_sel_o(bram_sel),
-	.s1_we_o(bram_we),
-	.s1_cyc_o(bram_cyc),
-	.s1_stb_o(bram_stb),
-	.s1_ack_i(bram_ack),
+	.s1_dat_i(32'bx),
+	.s1_dat_o(),
+	.s1_adr_o(),
+	.s1_cti_o(),
+	.s1_sel_o(),
+	.s1_we_o(),
+	.s1_cyc_o(),
+	.s1_stb_o(),
+	.s1_ack_i(1'b0),
 	// Slave 2
 	.s2_dat_i(brg_dat_r),
 	.s2_dat_o(brg_dat_w),
@@ -731,25 +722,6 @@ assign flash_ce = 1'b1;
 assign sram_clk = sys_clk;
 assign sram_ce_n = 1'b1;
 assign sram_zz = 1'b1;
-
-//---------------------------------------------------------------------------
-// BRAM
-//---------------------------------------------------------------------------
-bram #(
-	.adr_width(12)
-) bram (
-	.sys_clk(sys_clk),
-	.sys_rst(sys_rst),
-
-	.wb_adr_i(bram_adr),
-	.wb_dat_o(bram_dat_r),
-	.wb_dat_i(bram_dat_w),
-	.wb_sel_i(bram_sel),
-	.wb_stb_i(bram_stb),
-	.wb_cyc_i(bram_cyc),
-	.wb_ack_o(bram_ack),
-	.wb_we_i(bram_we)
-);
 
 //---------------------------------------------------------------------------
 // UART

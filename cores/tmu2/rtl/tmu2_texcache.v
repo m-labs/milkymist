@@ -159,6 +159,8 @@ tmu2_qpram #(
 
 /* HIT HANDLING */
 
+reg flush_mode;
+
 reg access_requested;
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -200,7 +202,7 @@ wire hit_c = ignore_c | (~tagmem_we_r & valid_c & (tag_c == tadrc8_r[fml_depth-1
 wire hit_d = ignore_d | (~tagmem_we_r & valid_d & (tag_d == tadrd8_r[fml_depth-1:cache_depth]));
 
 assign pipe_stb_o = access_requested & hit_a & hit_b & hit_c & hit_d;
-assign pipe_ack_o = (pipe_ack_i & pipe_stb_o) | ~access_requested;
+assign pipe_ack_o = ~flush_mode & ((pipe_ack_i & pipe_stb_o) | ~access_requested);
 
 assign retry = ~pipe_ack_o;
 
@@ -327,7 +329,6 @@ always @(posedge sys_clk) begin
 end
 
 wire flush_done;
-reg flush_mode;
 reg [cache_depth-1-5:0] flush_counter;
 always @(posedge sys_clk) begin
 	if(flush_mode)

@@ -63,11 +63,6 @@ Mico32 from Lattice Semiconductor has been chosen for this purpose. It can run a
 \subsubsection{NOR flash}
 The Milkymist BIOS is stored in an external NOR flash chip. The NOR flash controller in Milkymist has been designed to prioritize hardware simplicity over performance and functionality. It only supports reading from the flash; storing the boot image must be done using another tool.
 
-\subsubsection{On-chip SRAM}
-The SoC is equipped with a 4KB on-chip RAM, which is mainly used for the initial execution environment, before SDRAM is initialized and functional.
-
-The choice has been made to include this on-chip RAM so that advanced debug programs that do not rely on SDRAM can easily be developed and run. Those programs are very useful for debugging the SDRAM, which is often prone to problems.
-
 \subsubsection{SDRAM}
 For large volatile data storage, Milkymist is designed to use affordable and industry-standard DDR SDRAM chips. A custom memory controller (HPDMC) has been designed as part of the project, as all other free cores were either non-functional or slow.
 
@@ -181,8 +176,6 @@ A minimal Ethernet 10/100 MAC is provided, which connects to MII PHYs.
 \bf{Base address} & \bf{Cacheable} & \bf{Peripheral} \\
 \hline
 0x00000000 & Yes & Boot ROM (NOR Flash) \\
-\hline
-0x20000000 & Yes & On-chip SRAM \\
 \hline
 0x40000000 & Yes & \textit{FastMemoryLink bridge} \\
 \hline

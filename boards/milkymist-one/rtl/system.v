@@ -247,48 +247,32 @@ wire		cpuibus_ack,
 //------------------------------------------------------------------
 wire [31:0]	brg_adr,
 		norflash_adr,
-		bram_adr,
-		csrbrg_adr,
-		isp1362_adr;
+		csrbrg_adr;
 
-wire [2:0]	brg_cti,
-		bram_cti;
+wire [2:0]	brg_cti;
 
 wire [31:0]	brg_dat_r,
 		brg_dat_w,
 		norflash_dat_r,
-		bram_dat_r,
-		bram_dat_w,
 		csrbrg_dat_r,
-		csrbrg_dat_w,
-		isp1362_dat_r,
-		isp1362_dat_w;
+		csrbrg_dat_w;
 
-wire [3:0]	brg_sel,
-		bram_sel;
+wire [3:0]	brg_sel;
 
 wire		brg_we,
-		bram_we,
-		csrbrg_we,
-		isp1362_we;
+		csrbrg_we;
 
 wire		brg_cyc,
 		norflash_cyc,
-		bram_cyc,
-		csrbrg_cyc,
-		isp1362_cyc;
+		csrbrg_cyc;
 
 wire		brg_stb,
 		norflash_stb,
-		bram_stb,
-		csrbrg_stb,
-		isp1362_stb;
+		csrbrg_stb;
 
 wire		brg_ack,
 		norflash_ack,
-		bram_ack,
-		csrbrg_ack,
-		isp1362_ack;
+		csrbrg_ack;
 
 //---------------------------------------------------------------------------
 // Wishbone switch
@@ -296,10 +280,10 @@ wire		brg_ack,
 conbus #(
 	.s_addr_w(3),
 	.s0_addr(3'b000),	// norflash	0x00000000
-	.s1_addr(3'b001),	// bram		0x20000000
+	.s1_addr(3'b001),	// free		0x20000000
 	.s2_addr(3'b010),	// FML bridge	0x40000000
 	.s3_addr(3'b100),	// CSR bridge	0x80000000
-	.s4_addr(3'b101)	// isp1362	0xa0000000
+	.s4_addr(3'b101)	// free		0xa0000000
 ) conbus (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -362,15 +346,15 @@ conbus #(
 	.s0_stb_o(norflash_stb),
 	.s0_ack_i(norflash_ack),
 	// Slave 1
-	.s1_dat_i(bram_dat_r),
-	.s1_dat_o(bram_dat_w),
-	.s1_adr_o(bram_adr),
-	.s1_cti_o(bram_cti),
-	.s1_sel_o(bram_sel),
-	.s1_we_o(bram_we),
-	.s1_cyc_o(bram_cyc),
-	.s1_stb_o(bram_stb),
-	.s1_ack_i(bram_ack),
+	.s1_dat_i(32'bx),
+	.s1_dat_o(),
+	.s1_adr_o(),
+	.s1_cti_o(),
+	.s1_sel_o(),
+	.s1_we_o(),
+	.s1_cyc_o(),
+	.s1_stb_o(),
+	.s1_ack_i(1'b0),
 	// Slave 2
 	.s2_dat_i(brg_dat_r),
 	.s2_dat_o(brg_dat_w),
@@ -390,13 +374,13 @@ conbus #(
 	.s3_stb_o(csrbrg_stb),
 	.s3_ack_i(csrbrg_ack),
 	// Slave 4
-	.s4_dat_i(isp1362_dat_r),
-	.s4_dat_o(isp1362_dat_w),
-	.s4_adr_o(isp1362_adr),
-	.s4_we_o(isp1362_we),
-	.s4_cyc_o(isp1362_cyc),
-	.s4_stb_o(isp1362_stb),
-	.s4_ack_i(isp1362_ack)
+	.s4_dat_i(32'bx),
+	.s4_dat_o(),
+	.s4_adr_o(),
+	.s4_we_o(),
+	.s4_cyc_o(),
+	.s4_stb_o(),
+	.s4_ack_i(1'b0)
 );
 
 //------------------------------------------------------------------
@@ -659,25 +643,6 @@ assign flash_we_n = 1'b1;
 assign flash_ce = 1'b1;
 
 //---------------------------------------------------------------------------
-// BRAM
-//---------------------------------------------------------------------------
-bram #(
-	.adr_width(12)
-) bram (
-	.sys_clk(sys_clk),
-	.sys_rst(sys_rst),
-
-	.wb_adr_i(bram_adr),
-	.wb_dat_o(bram_dat_r),
-	.wb_dat_i(bram_dat_w),
-	.wb_sel_i(bram_sel),
-	.wb_stb_i(bram_stb),
-	.wb_cyc_i(bram_cyc),
-	.wb_ack_o(bram_ack),
-	.wb_we_i(bram_we)
-);
-
-//---------------------------------------------------------------------------
 // UART
 //---------------------------------------------------------------------------
 uart #(
@@ -760,29 +725,6 @@ sysctl #(
 gen_capabilities gen_capabilities(
 	.capabilities(capabilities)
 );
-
-
-//---------------------------------------------------------------------------
-// USB interface
-//---------------------------------------------------------------------------
-`ifdef ENABLE_ISP1362
-isp1362 isp1362(
-	.sys_clk(sys_clk),
-	.sys_rst(sys_rst),
-	
-	.wb_cyc_i(isp1362_cyc),
-	.wb_stb_i(isp1362_stb),
-	.wb_ack_o(isp1362_ack),
-	.wb_adr_i(isp1362_adr),
-	.wb_dat_i(isp1362_dat_w),
-	.wb_dat_o(isp1362_dat_r),
-	.wb_we_i(isp1362_we),
-	
-);
-`else
-assign isp1362_ack = isp1362_cyc & isp1362_stb;
-assign isp1362_dat_r = 32'habadface;
-`endif
 
 //---------------------------------------------------------------------------
 // DDR SDRAM
