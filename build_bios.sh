@@ -25,6 +25,16 @@ else
 fi
 
 echo "Building embedded software :"
+echo -n "  HPDMC runtime..."
+echo >> $LOGFILE
+date >> $LOGFILE
+cd $BASEDIR/software/libhpdmc && make >> $LOGFILE 2>&1
+if [ "$?" != 0 ] ; then
+        echo "FAILED"
+	exit 1
+else
+        echo "OK"
+fi
 echo -n "  Base library..."
 echo >> $LOGFILE
 date >> $LOGFILE

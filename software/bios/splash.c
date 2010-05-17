@@ -22,16 +22,15 @@
 
 static int splash_hres;
 static int splash_vres;
-static unsigned short *splash_fb = NULL;
+static unsigned short splash_fb[640*480] __attribute__((aligned(32)));;
 
-void splash_display(void *fbadr)
+void splash_display()
 {
 	int i;
 	unsigned short *splash_src = (unsigned short *)65536;
 	
 	printf("I: Displaying splash screen...");
 
-	splash_fb = (unsigned short *)fbadr;
 	splash_hres = 640;
 	splash_vres = 480;
 
@@ -49,7 +48,7 @@ void splash_showerr()
 	int x, y;
 	unsigned short color = 0xF800;
 
-	if(splash_fb == NULL) return;
+	if(splash_hres == 0) return;
 	for(y=0;y<5;y++)
 		for(x=0;x<splash_hres;x++)
 			splash_fb[splash_hres*y+x] = color;

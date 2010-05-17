@@ -28,24 +28,18 @@
 .global     _start
 _start:
 _reset_handler:
-	xor     r0, r0, r0
-	wcsr    IE, r0
-	mvhi    r1, hi(_reset_handler)
-	ori     r1, r1, lo(_reset_handler)
-	wcsr    EBA, r1
+	xor	r0, r0, r0
+	wcsr	IE, r0
+	mvhi	r1, hi(_reset_handler)
+	ori	r1, r1, lo(_reset_handler)
+	wcsr	EBA, r1
+	calli	_sdram_init
 	xor	r2, r2, r2
-	calli   _crt0
-	nop
+	calli	_crt0
 
 _breakpoint_handler:
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+	nop; nop; nop; nop
+	nop; nop; nop; nop
 
 _instruction_bus_error_handler:
 	nop; nop; nop; nop
@@ -88,7 +82,7 @@ _crt0:
 	sw      (r1+0), r0
 	addi    r1, r1, 4
 	bi      .clearBSS
-	
+
 .callMain:
 	mv      r1, r2
 	mvi     r2, 0

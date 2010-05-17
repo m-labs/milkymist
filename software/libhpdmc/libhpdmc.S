@@ -1,4 +1,4 @@
-/* 
+/*
  * libHPDMC - SDRAM initialization runtime for Milkymist bootloaders
  * Copyright (C) 2010 Sebastien Bourdeauducq
  *
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, see <http://www.gnu.org/licenses>.
  */
@@ -20,6 +20,9 @@
 #include <hw/hpdmc.h>
 #include <hw/vga.h>
 #include <hw/interrupts.h>
+#include <hw/sysctl.h>
+#include <hw/gpio.h>
+#include <version.h>
 
 /*
  * GLOBAL VARIABLES
@@ -28,12 +31,21 @@
  * r23: return address
  */
 
-.section .text, "ax", @progbits 
+.section .text, "ax", @progbits
 .global _sdram_init
 _sdram_init:
 	mv	r23, ra
 	mvhi	r1, hi(banner)
 	ori	r1, r1, lo(banner)
+	calli	print
+	mvhi	r1, hi(version)
+	ori	r1, r1, lo(version)
+	calli	print
+	mvhi	r1, hi(nl)
+	ori	r1, r1, lo(nl)
+	calli	print
+	mvhi	r1, hi(nl)
+	ori	r1, r1, lo(nl)
 	calli	print
 	
 	bi send_init
@@ -41,9 +53,21 @@ send_init_return:
 	mvhi	r1, hi(seqcomplete)
 	ori	r1, r1, lo(seqcomplete)
 	calli	print
-	
+
+	/* set IDELAY=0 */
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_IDELAY_RST)
+	sw	(r1+0), r2
 	xor	r25, r25, r25
 	xor	r24, r24, r24
+
+	mvhi	r1, hi(CSR_GPIO_IN)
+	ori	r1, r1, lo(CSR_GPIO_IN)
+	lw	r2, (r1+0)
+	andi	r2, r2, (GPIO_PBC)
+	bne	r2, r0, mancal
+
 	bi	autocalibrate
 autocalibrate_fail_return:
 	mvhi	r1, hi(autocalfail)
@@ -55,8 +79,8 @@ autocalibrate_success_return:
 	ori	r1, r1, lo(autocalok)
 	calli	print
 	
-	/* big memory test */
-	mvi	r1, 1
+	/* small memory test */
+	mvi	r1, 0
 	xor	r2, r2, r2
 	calli	memtest
 	be	r1, r0, memtest_fail
@@ -136,9 +160,29 @@ send_init:
 
 	bi	send_init_return
 
-/* clobbers: */
+/*
+ * TODO: proper dynamic autocalibration:
+ * scan IDELAY/DQS and memtest,
+ * then place in the middle of the working zone.
+ */
+/* clobbers: r1, r2, r3, r4 */
 autocalibrate:
-	bi	autocalibrate_fail_return
+	mvu	r24, 244 /* DQS phase, change this number for your board */
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	xor	r2, r2, r2
+	mvu	r3, (HPDMC_DQSDELAY_CE|HPDMC_DQSDELAY_INC)
+	be	r2, r24, dqs_loop_end
+dqs_loop:
+	sw	(r1+0), r3
+dqs_loop_wait:
+	lw	r4, (r1+0)
+	andi	r4, r4, HPDMC_DQSDELAY_RDY
+	be	r4, r0, dqs_loop_wait
+	addi	r2, r2, 1
+	bne	r2, r24, dqs_loop
+dqs_loop_end:
+	bi	autocalibrate_success_return
 
 /* does not return */
 mancal:
@@ -272,7 +316,7 @@ boot:
 
 /* memtest - tests memory
  *
- * inputs:	r1 - 64MB/1MB
+ * inputs:	r1 - big/small
  *              r2 - PRNG seed
  * outputs:	r1 - pass/fail
  * clobbers:	r1, r3, r4, r5, r6, r7
@@ -286,7 +330,7 @@ memtest:
 	mvhi	r7, hi(22695477)
 	ori	r7, r7, lo(22695477)
 	bne	r1, r0, patloop
-	mvhi	r3, 0x4
+	mvhi	r3, 0x10
 	mv	r4, r3
 patloop:
 	sw	(r5+0), r6
@@ -406,14 +450,15 @@ delay:
 	ret
 
 .section .rodata, "a"
-banner: .string "libHPDMC SDRAM initialization runtime\n(c) Copyright 2010 Sebastien Bourdeauducq, released under GNU LGPL version 3.\n\n\0"
-seqcomplete: .string "Initialization sequence completed.\n\0"
-autocalfail: .string "Autocalibration failed, entering manual mode.\n\0"
-autocalok: .string "Autocalibration OK, testing memory...\n\0"
-continueboot: .string "All SDRAM initialization completed, boot continuing.\n\0"
-testfailmsg: .string "Memory test failed, entering manual mode.\n\0"
-manualkeys: .string "\nu: inc. input delay // d: dec. input delay\nU: inc. DQS phase   // D: dec. DQS phase\nt: test 1MB         // T: test 64MB\np: display pattern\nb: boot\n\0"
-memtestfailed: .string "Memory test failed.\n\0"
-memtestpassed: .string "Memory test passed.\n\0"
-spacer: .string " -- \0"
-nl: .string "\n\0"
+banner: .string "libHPDMC SDRAM initialization runtime\n(c) Copyright 2010 Sebastien Bourdeauducq, released under GNU LGPL version 3.\nVersion "
+version: .string VERSION
+seqcomplete: .string "Initialization sequence completed.\n"
+autocalfail: .string "Autocalibration failed, entering manual mode.\n"
+autocalok: .string "Autocalibration OK, testing memory...\n"
+continueboot: .string "All SDRAM initialization completed, boot continuing.\n\n"
+testfailmsg: .string "Memory test failed, entering manual mode.\n"
+manualkeys: .string "\nu: inc. input delay // d: dec. input delay\nU: inc. DQS phase   // D: dec. DQS phase\nt: test (small)     // T: test (large)\np: display pattern\nb: boot\n"
+memtestfailed: .string "Memory test failed.\n"
+memtestpassed: .string "Memory test passed.\n"
+spacer: .string " -- "
+nl: .string "\n"

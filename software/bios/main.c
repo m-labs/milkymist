@@ -25,205 +25,18 @@
 #include <board.h>
 #include <version.h>
 #include <net/mdio.h>
-#include <hw/hpdmc.h>
 #include <hw/vga.h>
 #include <hw/fmlbrg.h>
 #include <hw/sysctl.h>
 #include <hw/capabilities.h>
 #include <hw/gpio.h>
 #include <hw/uart.h>
+#include <hw/hpdmc.h>
 
 #include "boot.h"
 #include "splash.h"
 
 const struct board_desc *brd_desc;
-
-/* SDRAM functions */
-
-static int dqs_ps;
-
-static void ddrinit()
-{
-	volatile unsigned int i;
-
-	putsnonl("I: Initializing SDRAM [DDR200 CL=2 BL=8]...");
-	/* Bring CKE high */
-	CSR_HPDMC_SYSTEM = HPDMC_SYSTEM_BYPASS|HPDMC_SYSTEM_RESET|HPDMC_SYSTEM_CKE;
-	for(i=0;i<2;i++);
-	CSR_HPDMC_BYPASS = 0x400B;	/* Precharge All */
-	for(i=0;i<2;i++);
-	CSR_HPDMC_BYPASS = 0x2000F;	/* Load Extended Mode Register */
-	for(i=0;i<2;i++);
-	CSR_HPDMC_BYPASS = 0x123F;	/* Load Mode Register */
-	for(i=0;i<200;i++);
-	CSR_HPDMC_BYPASS = 0x400B;	/* Precharge All */
-	for(i=0;i<2;i++);
-	CSR_HPDMC_BYPASS = 0xD;		/* Auto Refresh */
-	for(i=0;i<8;i++);
-	CSR_HPDMC_BYPASS = 0xD;		/* Auto Refresh */
-	for(i=0;i<8;i++);
-	CSR_HPDMC_BYPASS = 0x23F;	/* Load Mode Register, Enable DLL */
-	for(i=0;i<200;i++);
-	/* Leave Bypass mode and bring up hardware controller */
-	CSR_HPDMC_SYSTEM = HPDMC_SYSTEM_CKE;
-	
-	/* Set up pre-programmed data bus timings */
-	CSR_HPDMC_IODELAY = HPDMC_IDELAY_RST;
-	for(i=0;i<brd_desc->ddr_idelay;i++)
-		CSR_HPDMC_IODELAY = HPDMC_IDELAY_CE|HPDMC_IDELAY_INC;
-	
-	dqs_ps = brd_desc->ddr_dqsdelay;
-	for(i=0;i<brd_desc->ddr_dqsdelay;i++) {
-		CSR_HPDMC_IODELAY = HPDMC_DQSDELAY_CE|HPDMC_DQSDELAY_INC;
-		while(!(CSR_HPDMC_IODELAY & HPDMC_DQSDELAY_RDY));
-	}
-	
-	printf("OK\n");
-}
-
-static int plltest()
-{
-	int ok1, ok2;
-
-	printf("I: Checking if SDRAM clocking is functional:\n");
-	ok1 = CSR_HPDMC_IODELAY & HPDMC_PLL1_LOCKED;
-	ok2 = CSR_HPDMC_IODELAY & HPDMC_PLL2_LOCKED;
-	printf("I:   PLL#1: %s\n", ok1 ? "Locked" : "Error");
-	printf("I:   PLL#2: %s\n", ok2 ? "Locked" : "Error");
-	return(ok1 && ok2);
-}
-
-static int memtest(unsigned int div)
-{
-	unsigned int *testbuf = (unsigned int *)SDRAM_BASE;
-	unsigned int expected;
-	unsigned int i;
-	unsigned int size;
-
-	putsnonl("I: SDRAM test...");
-
-	size = brd_desc->sdram_size*1024*1024/(4*div);
-	for(i=0;i<size;i++)
-		testbuf[i] = i;
-
-	/* NB. The Mico32 cache (Level-1) is write-through,
-	 * therefore there is no order to flush the cache hierarchy.
-	 */
-	asm volatile( /* Invalidate Level-1 data cache */
-		"wcsr DCC, r0\n"
-		"nop\n"
-	);
-	flush_bridge_cache(); /* Invalidate Level-2 cache */
-
-	for(i=0;i<size;i++) {
-		expected = i;
-		if(testbuf[i] != expected) {
-			printf("\nE: Failed offset 0x%08x (got 0x%08x, expected 0x%08x)\n", i, testbuf[i], expected);
-			return 0;
-		}
-	}
-
-	printf("%u/%uMB tested OK\n", brd_desc->sdram_size/div, brd_desc->sdram_size);
-	return 1;
-}
-
-static void calibrate()
-{
-	int taps;
-	int quit;
-	char c;
-
-	printf("================================\n");
-	printf("DDR SDRAM calibration tool\n");
-	printf("================================\n");
-	printf("Memo:\n");
-	printf("[> Input Delay\n");
-	printf(" r = reset to 0 taps\n");
-	printf(" u = add 1 tap\n");
-	printf(" d = remove 1 tap\n");
-	printf("[> DQS output phase\n");
-	printf(" U = increase phase\n");
-	printf(" D = decrease phase\n");
-	printf("[> Misc\n");
-	printf(" t = load image to framebuffer\n");
-	printf(" q = quit\n");
-	
-	CSR_VGA_RESET = 0;
-	
-	CSR_HPDMC_IODELAY = HPDMC_IDELAY_RST;
-	
-	taps = 0;
-	quit = 0;
-	while(!quit) {
-		printf("Taps: %02d (78ps each) - DQS phase: %04d/255\r", taps, dqs_ps);
-		c = readchar();
-		switch(c) {
-			case 'q':
-				quit = 1;
-				break;
-			case 'r':
-				taps = 0;
-				CSR_HPDMC_IODELAY = HPDMC_IDELAY_RST;
-				break;
-			case 'u':
-				if(taps < 63) {
-					taps++;
-					CSR_HPDMC_IODELAY = HPDMC_IDELAY_CE|HPDMC_IDELAY_INC;
-				}
-				break;
-			case 'd':
-				if(taps > 0) {
-					taps--;
-					CSR_HPDMC_IODELAY = HPDMC_IDELAY_CE;
-				}
-				break;
-			case 'U':
-				if(dqs_ps < 255) {
-					dqs_ps++;
-					CSR_HPDMC_IODELAY = HPDMC_DQSDELAY_CE|HPDMC_DQSDELAY_INC;
-					while(!(CSR_HPDMC_IODELAY & HPDMC_DQSDELAY_RDY));
-				}
-				break;
-			case 'D':
-				if(dqs_ps > 0) {
-					dqs_ps--;
-					CSR_HPDMC_IODELAY = HPDMC_DQSDELAY_CE;
-					while(!(CSR_HPDMC_IODELAY & HPDMC_DQSDELAY_RDY));
-				}
-				break;
-			case 't':
-				splash_display((void *)SDRAM_BASE);
-				break;
-		}
-	}
-
-	CSR_VGA_RESET = VGA_RESET;
-
-	printf("\n");
-}
-
-static void scandqs(char *endp)
-{
-	int end;
-	char *c;
-
-	if(*endp == 0)
-		end = 255;
-	else {
-		end = (unsigned *)strtoul(endp, &c, 0);
-		if(*c != 0) {
-			printf("incorrect end phase\n");
-			return;
-		}
-	}
-	while(dqs_ps < end) {
-		dqs_ps++;
-		printf("DQS phase: %d\n", dqs_ps);
-		CSR_HPDMC_IODELAY = HPDMC_DQSDELAY_CE|HPDMC_DQSDELAY_INC;
-		while(!(CSR_HPDMC_IODELAY & HPDMC_DQSDELAY_RDY));
-		memtest(1);
-	}
-}
 
 /* General address space functions */
 
@@ -479,9 +292,6 @@ static void help()
 	puts("It is used for system development and maintainance, and not");
 	puts("for regular operation.\n");
 	puts("Available commands:");
-	puts("plltest    - print status of the SDRAM clocking PLLs");
-	puts("memtest    - extended SDRAM test");
-	puts("calibrate  - run DDR SDRAM calibration tool");
 	puts("flush      - flush FML bridge cache");
 	puts("mr         - read address space");
 	puts("mw         - write address space");
@@ -519,11 +329,7 @@ static void do_command(char *c)
 
 	token = get_token(&c);
 
-	if(strcmp(token, "plltest") == 0) plltest();
-	else if(strcmp(token, "memtest") == 0) memtest(1);
-	else if(strcmp(token, "calibrate") == 0) calibrate();
-	else if(strcmp(token, "scandqs") == 0) scandqs(get_token(&c));
-	else if(strcmp(token, "flush") == 0) flush_bridge_cache();
+	if(strcmp(token, "flush") == 0) flush_bridge_cache();
 
 	else if(strcmp(token, "mr") == 0) mr(get_token(&c), get_token(&c));
 	else if(strcmp(token, "mw") == 0) mw(get_token(&c), get_token(&c), get_token(&c));
@@ -619,14 +425,14 @@ static void display_capabilities()
 
 static const char banner[] =
 	"\nMILKYMIST(tm) v"VERSION" BIOS\thttp://www.milkymist.org\n"
-	"(c) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq\n\n"
+	"(c) Copyright 2007, 2008, 2009, 2010 Sebastien Bourdeauducq\n\n"
 	"This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, version 3 of the License.\n\n";
 
 static void boot_sequence()
 {
-	splash_display((void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-1)));
+	splash_display();
 	if(test_user_abort()) {
 		serialboot(1);
 		netboot();
@@ -659,16 +465,7 @@ int main(int i, char **c)
 	display_board();
 	display_capabilities();
 	
-	if(plltest()) {
-		ddrinit();
-		flush_bridge_cache();
-
-		if(memtest(8))
-			boot_sequence();
-		else
-			printf("E: Aborted boot on memory error\n");
-	} else
-		printf("E: Faulty SDRAM clocking\n");
+	boot_sequence();
 
 	splash_showerr();
 	while(1) {

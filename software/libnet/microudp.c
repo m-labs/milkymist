@@ -15,9 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <crc.h>
+#include <irq.h>
 #include <hw/minimac.h>
 #include <hw/sysctl.h>
+#include <hw/interrupts.h>
 
 #include <net/microudp.h>
 
@@ -127,7 +130,8 @@ static void send_packet()
 	txlen += 4;
 	CSR_MINIMAC_TXADR = (unsigned int)txbuffer;
 	CSR_MINIMAC_TXREMAINING = txlen;
-	while(CSR_MINIMAC_TXREMAINING != 0);
+	while((irq_pending() & IRQ_ETHTX) == 0);
+	irq_ack(IRQ_ETHTX);
 }
 
 static unsigned char my_mac[6];
@@ -362,6 +366,8 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 	int i;
 	char *_buffers = (char *)buffers;
 
+	irq_ack(IRQ_ETHRX|IRQ_ETHTX);
+
 	rxbuffer = (ethernet_buffer *)_buffers;
 	rxbuffer_back = (ethernet_buffer *)(_buffers + sizeof(ethernet_buffer));;
 	txbuffer = (ethernet_buffer *)(_buffers + 2*sizeof(ethernet_buffer));
@@ -384,24 +390,36 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 void microudp_service()
 {
 	ethernet_buffer *buf;
-	
-	if(CSR_MINIMAC_STATE0 == MINIMAC_STATE_PENDING) {
-		asm volatile( /* Invalidate Level-1 data cache */
-			"wcsr DCC, r0\n"
-			"nop\n"
-		);
-		rxlen = CSR_MINIMAC_COUNT0;
-		/* Switch RX buffers */
-		buf = rxbuffer;
-		rxbuffer = rxbuffer_back;
-		rxbuffer_back = buf;
-		/* Re-arm DMA engine ASAP */
-		CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer_back;
-		CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
-		/* Now we have time to do the processing */
-		process_frame();
+
+	if(irq_pending() & IRQ_ETHRX) {
+		if(CSR_MINIMAC_SETUP & MINIMAC_SETUP_RXRST) {
+			printf("Minimac RX FIFO overflow!\n");
+			CSR_MINIMAC_SETUP = 0;
+			irq_ack(IRQ_ETHRX);
+		}
+		if(CSR_MINIMAC_STATE0 == MINIMAC_STATE_PENDING) {
+			asm volatile( /* Invalidate Level-1 data cache */
+				"wcsr DCC, r0\n"
+				"nop\n"
+			);
+			rxlen = CSR_MINIMAC_COUNT0;
+			/*
+			 * Ack interrupt.
+			 * We must empty the slot before so Minimac deasserts its IRQ line.
+			 */
+			CSR_MINIMAC_STATE0 = MINIMAC_STATE_EMPTY;
+			irq_ack(IRQ_ETHRX);
+			/* Switch RX buffers */
+			buf = rxbuffer;
+			rxbuffer = rxbuffer_back;
+			rxbuffer_back = buf;
+			/* Re-arm DMA engine ASAP */
+			CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer_back;
+			CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
+			/* Now we have time to do the processing */
+			process_frame();
+		}
 	}
-	CSR_MINIMAC_SETUP = 0;
 }
 
 void microudp_shutdown()

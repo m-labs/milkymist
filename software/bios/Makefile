@@ -11,8 +11,8 @@ all: bios_splash.bin
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@ write
 
-bios.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase-light.a $(MMDIR)/software/libnet/libnet.a
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lbase-light -lnet
+bios.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libhpdmc/libhpdmc.a $(MMDIR)/software/libbase/libbase-light.a $(MMDIR)/software/libnet/libnet.a
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lhpdmc -lbase-light -lnet
 	chmod -x $@
 
 splash.raw: splash.png
@@ -53,12 +53,12 @@ main.o: ../../software/include/base/cffat.h ../../software/include/base/crc.h
 main.o: ../../software/include/base/system.h
 main.o: ../../software/include/base/board.h
 main.o: ../../software/include/base/version.h
-main.o: ../../software/include/net/mdio.h ../../software/include/hw/hpdmc.h
-main.o: ../../software/include/hw/common.h ../../software/include/hw/vga.h
-main.o: ../../software/include/hw/fmlbrg.h ../../software/include/hw/sysctl.h
+main.o: ../../software/include/net/mdio.h ../../software/include/hw/vga.h
+main.o: ../../software/include/hw/common.h ../../software/include/hw/fmlbrg.h
+main.o: ../../software/include/hw/sysctl.h
 main.o: ../../software/include/hw/capabilities.h
 main.o: ../../software/include/hw/gpio.h ../../software/include/hw/uart.h
-main.o: boot.h splash.h
+main.o: ../../software/include/hw/hpdmc.h boot.h splash.h
 splash.o: ../../software/include/base/stdio.h
 splash.o: ../../software/include/base/stdlib.h
 splash.o: ../../software/include/hw/vga.h ../../software/include/hw/common.h

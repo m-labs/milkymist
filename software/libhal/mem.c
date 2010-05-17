@@ -17,7 +17,6 @@
 
 #include <stdio.h>
 #include <malloc.h>
-#include <hw/sram.h>
 
 #include <hal/mem.h>
 
@@ -27,10 +26,6 @@ struct malloc_bank banks[2] = {
 	{
 		.addr_start = (unsigned int)&heap,
 		.addr_end = (unsigned int)&heap + sizeof(heap)
-	},
-	{
-		.addr_start = SRAM_BASE,
-		.addr_end = SRAM_BASE + SRAM_SIZE
 	}
 };
 

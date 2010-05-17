@@ -33,8 +33,7 @@ hdlcd.o: ../../software/include/hal/slowout.h
 hdlcd.o: ../../software/include/hal/hdlcd.h
 mem.o: ../../software/include/base/stdio.h
 mem.o: ../../software/include/base/stdlib.h
-mem.o: ../../software/include/base/malloc.h ../../software/include/hw/sram.h
-mem.o: ../../software/include/hal/mem.h
+mem.o: ../../software/include/base/malloc.h ../../software/include/hal/mem.h
 pfpu.o: ../../software/include/base/stdio.h
 pfpu.o: ../../software/include/base/stdlib.h
 pfpu.o: ../../software/include/base/irq.h

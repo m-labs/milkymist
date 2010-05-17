@@ -215,6 +215,8 @@ static int tftp_get_v(unsigned int ip, const char *filename, char *buffer)
 	return r;
 }
 
+static char microudp_buf[MICROUDP_BUFSIZE];
+
 void netboot()
 {
 	int size;
@@ -228,7 +230,7 @@ void netboot()
 
 	ip = IPTOINT(REMOTEIP1, REMOTEIP2, REMOTEIP3, REMOTEIP4);
 	
-	microudp_start(macadr, IPTOINT(LOCALIP1, LOCALIP2, LOCALIP3, LOCALIP4), (void *)(SDRAM_BASE+1024*1024*(brd_desc->sdram_size-2)));
+	microudp_start(macadr, IPTOINT(LOCALIP1, LOCALIP2, LOCALIP3, LOCALIP4), microudp_buf);
 	
 	if(tftp_get_v(ip, "boot.bin", (void *)SDRAM_BASE) <= 0) {
 		printf("E: Network boot failed\n");

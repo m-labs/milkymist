@@ -20,6 +20,8 @@
 
 #define IPTOINT(a, b, c, d) ((a << 24)|(b << 16)|(c << 8)|d)
 
+#define MICROUDP_BUFSIZE (3*1532)
+
 typedef void (*udp_callback)(unsigned int src_ip, unsigned short src_port, unsigned short dst_port, void *data, unsigned int length);
 
 void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers);
