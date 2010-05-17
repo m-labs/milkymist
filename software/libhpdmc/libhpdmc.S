@@ -48,20 +48,26 @@ _sdram_init:
 	ori	r1, r1, lo(nl)
 	calli	print
 	
+	/* set IDELAY=0, wait for DQS generator ready */
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_IDELAY_RST)
+	sw	(r1+0), r2
+wait_dqs_start:
+	lw	r2, (r1+0)
+	andi	r2, r2, HPDMC_DQSDELAY_RDY
+	be	r2, r0, wait_dqs_start
+	xor	r25, r25, r25
+	xor	r24, r24, r24
+
+	/* send init sequence */
 	bi send_init
 send_init_return:
 	mvhi	r1, hi(seqcomplete)
 	ori	r1, r1, lo(seqcomplete)
 	calli	print
 
-	/* set IDELAY=0 */
-	mvhi	r1, hi(CSR_HPDMC_IODELAY)
-	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
-	mvu	r2, (HPDMC_IDELAY_RST)
-	sw	(r1+0), r2
-	xor	r25, r25, r25
-	xor	r24, r24, r24
-
+	/* if PBC is pushed, go into debug/manual mode */
 	mvhi	r1, hi(CSR_GPIO_IN)
 	ori	r1, r1, lo(CSR_GPIO_IN)
 	lw	r2, (r1+0)
@@ -450,7 +456,7 @@ delay:
 	ret
 
 .section .rodata, "a"
-banner: .string "libHPDMC SDRAM initialization runtime\n(c) Copyright 2010 Sebastien Bourdeauducq, released under GNU LGPL version 3.\nVersion "
+banner: .string "\nlibHPDMC SDRAM initialization runtime\n(c) Copyright 2010 Sebastien Bourdeauducq, released under GNU LGPL version 3.\nVersion "
 version: .string VERSION
 seqcomplete: .string "Initialization sequence completed.\n"
 autocalfail: .string "Autocalibration failed, entering manual mode.\n"
