@@ -183,6 +183,18 @@ static int const_to_reg(struct fpvm_fragment *fragment, float c)
 	return fragment->nbindings++;
 }
 
+static int find_negative_constant(struct fpvm_fragment *fragment)
+{
+	int i;
+
+	for(i=0;i<fragment->nbindings;i++) {
+		if(!fragment->bindings[i].isvar &&
+			(fragment->bindings[i].b.c < 0.0))
+			return i;
+	}
+	return const_to_reg(fragment, -1.0);
+}
+
 static int add_isn(struct fpvm_fragment *fragment, int opcode, int opa, int opb, int dest)
 {
 	int len;
@@ -312,6 +324,19 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 			reg = opa;
 		return reg;
 	}
+	if((strcmp(node->label, "!") == 0) && (node->contents.branches.a->label[0] == 0)) {
+		/* Node is a negative constant */
+		struct ast_node *n;
+
+		n = node->contents.branches.a;
+		opa = const_to_reg(fragment, -n->contents.constant);
+		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		if(reg != FPVM_INVALID_REG) {
+			if(!add_isn(fragment, FPVM_OPCODE_COPY, opa, 0, reg)) return FPVM_INVALID_REG;
+		} else
+			reg = opa;
+		return reg;
+	}
 	/* AST node is an operator or function */
 	if(strcmp(node->label, "if") == 0) {
 		/*
@@ -428,6 +453,10 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, opa, opa, reg)) return FPVM_INVALID_REG;
 	} else if(strcmp(node->label, "int") == 0) {
 		if(!add_int(fragment, opa, reg)) return FPVM_INVALID_REG;
+	} else if(strcmp(node->label, "!") == 0) {
+		opb = find_negative_constant(fragment);
+		if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		if(!add_isn(fragment, FPVM_OPCODE_TSIGN, opa, opb, reg)) return FPVM_INVALID_REG;
 	} else {
 		/* Normal case */
 		opcode = operator2opcode(node->label);
