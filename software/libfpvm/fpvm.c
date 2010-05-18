@@ -60,6 +60,8 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 	fragment->tbindings[1].sym[1] = 'Y';
 	fragment->tbindings[1].sym[2] = 'o';
 	fragment->tbindings[1].sym[3] = 0;
+
+	fragment->nrenamings = 0;
 	
 	fragment->next_sur = -3;
 	fragment->ninstructions = 0;
@@ -103,6 +105,9 @@ static int lookup(struct fpvm_fragment *fragment, const char *sym)
 {
 	int i;
 
+	for(i=0;i<fragment->nrenamings;i++)
+		if(strcmp(sym, fragment->renamings[i].sym) == 0)
+			return fragment->renamings[i].reg;
 	for(i=0;i<fragment->nbindings;i++)
 		if(fragment->bindings[i].isvar &&
 			(strcmp(sym, fragment->bindings[i].b.v) == 0))
@@ -123,6 +128,25 @@ static int tbind(struct fpvm_fragment *fragment, const char *sym)
 	strcpy(fragment->tbindings[fragment->ntbindings].sym, sym);
 	fragment->ntbindings++;
 	return fragment->next_sur--;
+}
+
+static int rename(struct fpvm_fragment *fragment, const char *sym, int reg)
+{
+	int i;
+	
+	for(i=0;i<fragment->nrenamings;i++)
+		if(strcmp(sym, fragment->renamings[i].sym) == 0) {
+			fragment->renamings[i].reg = reg;
+			return 1;
+		}
+	if(fragment->nrenamings == FPVM_MAXRENAMINGS) {
+		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Failed to allocate renamed register for variable: %s", sym);
+		return 0;
+	}
+	fragment->renamings[fragment->nrenamings].reg = reg;
+	strcpy(fragment->renamings[fragment->nrenamings].sym, sym);
+	fragment->nrenamings++;
+	return 1;
 }
 
 static int sym_to_reg(struct fpvm_fragment *fragment, const char *sym, int *created)
@@ -443,6 +467,7 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 	int dest_reg;
 	struct fpvm_backup backup;
 	int created;
+	int use_renaming;
 
 	n = fpvm_parse(expr);
 	if(n == NULL) {
@@ -452,7 +477,15 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 
 	fragment_backup(fragment, &backup);
 
-	dest_reg = sym_to_reg(fragment, dest, &created);
+	use_renaming = fragment->vector_mode
+		&& (strcmp(dest, fragment->tbindings[0].sym) != 0) /* do not rename output X and Y */
+		&& (strcmp(dest, fragment->tbindings[1].sym) != 0);
+	if(use_renaming) {
+		dest_reg = fragment->next_sur;
+		fragment->next_sur--;
+		created = 1;
+	} else
+		dest_reg = sym_to_reg(fragment, dest, &created);
 	if(dest_reg == FPVM_INVALID_REG) {
 		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Failed to allocate register for destination");
 		fpvm_parse_free(n);
@@ -468,6 +501,13 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 		fpvm_parse_free(n);
 		fragment_restore(fragment, &backup);
 		return 0;
+	}
+	if(use_renaming) {
+		if(!rename(fragment, dest, dest_reg)) {
+			fpvm_parse_free(n);
+			fragment_restore(fragment, &backup);
+			return 0;
+		}
 	}
 
 	fpvm_parse_free(n);

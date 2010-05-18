@@ -28,6 +28,7 @@
 
 #define FPVM_MAXBINDINGS	128
 #define FPVM_MAXTBINDINGS	128
+#define FPVM_MAXRENAMINGS	32
 #define FPVM_MAXCODELEN		2048
 #define FPVM_MAXSYMLEN		32
 
@@ -64,6 +65,14 @@ struct fpvm_fragment {
 	 */
 	int ntbindings;
 	struct fpvm_tbinding tbindings[FPVM_MAXTBINDINGS];
+
+	/*
+	 * Renamings are bindings that override others.
+	 * They are used internally in vector mode to prevent
+	 * variables modified in one vector to altering the next vectors.
+	 */
+	int nrenamings;
+	struct fpvm_tbinding renamings[FPVM_MAXRENAMINGS];
 
 	/* Next single-use-register to allocate */
 	int next_sur;
