@@ -42,7 +42,7 @@ end
 
 minimac_asfifo #(
 	.DATA_WIDTH(8),
-	.ADDRESS_WIDTH(6)
+	.ADDRESS_WIDTH(7)
 ) fifo (
 	.Data_out(fifo_out),
 	.Empty_out(fifo_empty),
