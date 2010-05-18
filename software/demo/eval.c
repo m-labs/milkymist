@@ -392,6 +392,15 @@ void eval_transfer_pvv_regs()
 	write_pvv(pvv_warp, eval_read_pfv(pfv_warp));
 	write_pvv(pvv_warp_anim_speed, eval_read_pfv(pfv_warp_anim_speed));
 	write_pvv(pvv_warp_scale, eval_read_pfv(pfv_warp_scale));
+
+	write_pvv(pvv_q1, eval_read_pfv(pfv_q1));
+	write_pvv(pvv_q2, eval_read_pfv(pfv_q2));
+	write_pvv(pvv_q3, eval_read_pfv(pfv_q3));
+	write_pvv(pvv_q4, eval_read_pfv(pfv_q4));
+	write_pvv(pvv_q5, eval_read_pfv(pfv_q5));
+	write_pvv(pvv_q6, eval_read_pfv(pfv_q6));
+	write_pvv(pvv_q7, eval_read_pfv(pfv_q7));
+	write_pvv(pvv_q8, eval_read_pfv(pfv_q8));
 }
 
 static int init_pvv()
