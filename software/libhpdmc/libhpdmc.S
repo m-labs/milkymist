@@ -47,15 +47,22 @@ _sdram_init:
 	mvhi	r1, hi(nl)
 	ori	r1, r1, lo(nl)
 	calli	print
-	
-	/* set IDELAY=0, wait for DQS generator ready */
+
+	/* wait for the PLLs to lock */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r3, (HPDMC_PLL1_LOCKED|HPDMC_PLL2_LOCKED)
+wait_pll:
+	lw	r2, (r1+0)
+	and	r2, r2, r3
+	bne	r2, r3, wait_pll
+	
+	/* set IDELAY=0, wait for DQS generator ready */
 	mvu	r2, (HPDMC_IDELAY_RST)
 	sw	(r1+0), r2
 wait_dqs_start:
 	lw	r2, (r1+0)
-	andi	r2, r2, HPDMC_DQSDELAY_RDY
+	andi	r2, r2, (HPDMC_DQSDELAY_RDY)
 	be	r2, r0, wait_dqs_start
 	xor	r25, r25, r25
 	xor	r24, r24, r24
@@ -183,7 +190,7 @@ dqs_loop:
 	sw	(r1+0), r3
 dqs_loop_wait:
 	lw	r4, (r1+0)
-	andi	r4, r4, HPDMC_DQSDELAY_RDY
+	andi	r4, r4, (HPDMC_DQSDELAY_RDY)
 	be	r4, r0, dqs_loop_wait
 	addi	r2, r2, 1
 	bne	r2, r24, dqs_loop
