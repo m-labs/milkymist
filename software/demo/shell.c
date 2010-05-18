@@ -210,10 +210,7 @@ static void stats()
 static void help()
 {
 	puts("Milkymist demo firmware\n");
-	puts("Available commands :");
-	puts("mr         - read address space");
-	puts("mw         - write address space");
-	puts("flush      - flush FML bridge cache");
+	puts("Available commands:");
 	puts("ls         - list files on the memory card");
 	puts("render     - start rendering a patch");
 	puts("irender    - input patch equations interactively");
@@ -221,6 +218,35 @@ static void help()
 	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
 	puts("reboot     - system reset");
+}
+
+static void cpucfg()
+{
+	unsigned long cpu_cfg;
+	
+	__asm__ volatile(
+		"rcsr %0, cfg\n\t"
+		: "=r"(cpu_cfg)
+	);
+	printf("CPU config word: 0x%08x\n", cpu_cfg);
+	printf("Options: ");
+	if(cpu_cfg & 0x001) printf("M ");
+	if(cpu_cfg & 0x002) printf("D ");
+	if(cpu_cfg & 0x004) printf("S ");
+	if(cpu_cfg & 0x008) printf("X ");
+	if(cpu_cfg & 0x010) printf("U ");
+	if(cpu_cfg & 0x020) printf("CC ");
+	if(cpu_cfg & 0x040) printf("DC ");
+	if(cpu_cfg & 0x080) printf("IC ");
+	if(cpu_cfg & 0x100) printf("G ");
+	if(cpu_cfg & 0x200) printf("H ");
+	if(cpu_cfg & 0x400) printf("R ");
+	if(cpu_cfg & 0x800) printf("J ");
+	printf("\n");
+	printf("IRQs: %d\n", (cpu_cfg >> 12) & 0x3F);
+	printf("Breakpoints: %d\n", (cpu_cfg >> 18) & 0x0F);
+	printf("Watchpoints: %d\n", (cpu_cfg >> 22) & 0x0F);
+	printf("CPU revision: %d\n", cpu_cfg >> 26);
 }
 
 static void loadpic(const char *filename)
@@ -667,6 +693,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "help") == 0) help();
 
 		/* Test functions and hacks */
+		else if(strcmp(command, "cpucfg") == 0) cpucfg();
 		else if(strcmp(command, "loadpic") == 0) loadpic(param1);
 		else if(strcmp(command, "checker") == 0) checker();
 		else if(strcmp(command, "pfputest") == 0) pfputest();
