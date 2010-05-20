@@ -113,8 +113,6 @@
 \def\imprint#1{\gdef\@imprint{#1}}
 \def\publisher#1{\gdef\@publisher{#1}}
 \def\trita#1{\gdef\@trita{#1}}
-\def\issn#1{\gdef\@issn{#1}}
-\def\isrn#1{\gdef\@isrn{#1}}
 \def\isbn#1{\@isbntrue \gdef\@isbn{#1}}
 \def\tmnotice#1{\gdef\@tmnotice{#1}}
 \def\dedication#1{\@dedicationtrue \gdef\@dedication{#1}}
@@ -130,8 +128,6 @@
 \def\@address{\@latex@warning{No address to the author given}}
 \def\@publisher{\@latex@warning{No publisher given}}
 \def\@trita{\@latex@warning{No TRITA number given}}
-\def\@issn{\@latex@warning{No ISSN given}}
-\def\@isrn{\@latex@warning{No ISRN given}}
 \def\@tmnotice{\relax}
 \let\thanks\empty
 \newcommand\@make@title@page{%
@@ -142,9 +138,7 @@
   \hfill%
   \if@isbn\else%
   \vbox to 0mm{\vglue-\headheight\vglue-\headsep\scriptsize
-      \hbox to 0mm{\hss TRITA-\@trita}
-      \hbox to 0mm{\hss ISSN~\@issn}
-      \hbox to 0mm{\hss ISRN~\@isrn}\vss}%
+      \hbox to 0mm{\hss TRITA-\@trita}\vss}%
   \fi\par
   \vskip 120\p@
   \begin{center}%
@@ -163,6 +157,8 @@
       \begin{tabular}[t]{c}%
         \@type \\ \@institute \\ \@department
       \end{tabular}\par}%
+    \vskip 1em%
+    {\large TRITA-\@trita \par}
   \end{center}\par
   \setcounter{footnote}{0}}
 \newcommand\@maketitle{%
@@ -177,9 +173,7 @@
   \vskip 1.5em\relax%
   \noindent\if@isbn%
     ISBN~\@isbn \\[\smallskipamount]
-    TRITA-\@trita \\
-    ISSN~\@issn \\
-    ISRN~\@isrn \\[1.5em]
+    TRITA-\@trita \\[1.5em]
   \fi%
   \copyright \space \@author, \@date. \@tmnotice \\[1.5em]
   \@publisher, \@imprint \par
@@ -195,8 +189,6 @@
   \global\let\imprint\relax
   \global\let\publisher\relax
   \global\let\trita\relax
-  \global\let\issn\relax
-  \global\let\isrn\relax
   \global\let\isbn\relax
   \global\let\tmnotice\relax
   \global\let\dedication\relax
@@ -222,9 +214,7 @@
 }{%
   \par\medskip\vbox{\scriptsize\hbox to\textwidth{%
     \hss\if@isbn ISBN~\@isbn\space$\bullet$\space\fi%
-    TRITA-\@trita\space$\bullet$\space%
-    ISSN~\@issn\space$\bullet$\space%
-    ISRN~\@isrn\hss}}\par
+    TRITA-\@trita}}\par
   \clearpage}
 \newcommand*\chaptermark[1]{}
 \setcounter{secnumdepth}{2}
@@ -272,8 +262,6 @@
   \global\let\@imprint\relax
   \global\let\@publisher\relax
   \global\let\@trita\relax
-  \global\let\@issn\relax
-  \global\let\@isrn\relax
   \global\let\@isbn\relax
   \global\let\@dedication\relax}
 \newcommand\part{%
