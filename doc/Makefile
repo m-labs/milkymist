@@ -27,6 +27,7 @@ thesis.dvi: thesis.tex thesis.bib kthesis.cls
 	bibtex thesis
 	latex thesis.tex
 	latex thesis.tex
+	latex thesis.tex
 
 confslides.dvi: confslides.tex
 	latex confslides.tex
