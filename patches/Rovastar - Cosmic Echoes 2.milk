@@ -68,4 +68,4 @@ per_frame_11=blue = blue + (blue_aim - blue)*if(equal(swapcolour,1),0.45,0.65);
 per_frame_12=wave_r = red;
 per_frame_13=wave_g = green;
 per_frame_14=wave_b = blue;
-per_pixel_1=dy = if(above(y,0.5),sin(0.5-y)*0.1, sqrt(1/y)*0.29);
+per_pixel_1=dy = if(above(y,0.5),sin(0.5-y)*0.1, invsqrt(y)*0.29);
