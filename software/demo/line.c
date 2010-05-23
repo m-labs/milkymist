@@ -22,49 +22,82 @@ void line_init_context(struct line_context *ctx, unsigned short int *framebuffer
 	ctx->color = 0xFFFF;
 }
 
-static void setpixel(struct line_context *ctx, unsigned int x, unsigned int y)
+typedef void (*pixelfun)(struct line_context *ctx, unsigned int x, unsigned int y);
+
+static void setpixel_additive_alpha(struct line_context *ctx, unsigned int x, unsigned int y)
 {
-	if((x < ctx->hres) && (y < ctx->vres)) {
-		if(ctx->additive) {
-			unsigned int cs, cd;
-			unsigned int r, g, b;
+	unsigned int cs, cd;
+	unsigned int r, g, b;
 
-			cd = ctx->framebuffer[y*ctx->hres+x];
-			cs = ctx->color;
-			if(ctx->alpha >= 64) {
-				r = GETR(cs) + GETR(cd);
-				g = GETG(cs) + GETG(cd);
-				b = GETB(cs) + GETB(cd);
-			} else {
-				r = (GETR(cs)*ctx->alpha >> 6) + GETR(cd);
-				g = (GETG(cs)*ctx->alpha >> 6) + GETG(cd);
-				b = (GETB(cs)*ctx->alpha >> 6) + GETB(cd);
-			}
-			/* Saturate in case of overflow */
-			if(r > 31) r = 31;
-			if(g > 63) g = 63;
-			if(b > 31) b = 31;
-			ctx->framebuffer[y*ctx->hres+x] = MAKERGB565(r, g, b);
-		} else {
-			if(ctx->alpha >= 64)
-				ctx->framebuffer[y*ctx->hres+x] = ctx->color;
-			else {
-				unsigned int cs, cd;
-				unsigned int r, g, b;
+	if((x < 0)||(y < 0)||(x >= ctx->hres)||(y >= ctx->vres)) return;
+	cd = ctx->framebuffer[y*ctx->hres+x];
+	cs = ctx->color;
+	r = (GETR(cs)*ctx->alpha >> 6) + GETR(cd);
+	g = (GETG(cs)*ctx->alpha >> 6) + GETG(cd);
+	b = (GETB(cs)*ctx->alpha >> 6) + GETB(cd);
+	/* Saturate in case of overflow */
+	if(r > 31) r = 31;
+	if(g > 63) g = 63;
+	if(b > 31) b = 31;
+	ctx->framebuffer[y*ctx->hres+x] = MAKERGB565(r, g, b);
+}
 
-				cd = ctx->framebuffer[y*ctx->hres+x];
-				cs = ctx->color;
-				r = (GETR(cs)*ctx->alpha >> 6) + (GETR(cd)*(64-ctx->alpha) >> 6);
-				g = (GETG(cs)*ctx->alpha >> 6) + (GETG(cd)*(64-ctx->alpha) >> 6);
-				b = (GETB(cs)*ctx->alpha >> 6) + (GETB(cd)*(64-ctx->alpha) >> 6);
-				ctx->framebuffer[y*ctx->hres+x] = MAKERGB565(r, g, b);
-			}
-		}
+static void setpixel_additive_noalpha(struct line_context *ctx, unsigned int x, unsigned int y)
+{
+	unsigned int cs, cd;
+	unsigned int r, g, b;
+
+	if((x < 0)||(y < 0)||(x >= ctx->hres)||(y >= ctx->vres)) return;
+	cd = ctx->framebuffer[y*ctx->hres+x];
+	cs = ctx->color;
+	r = GETR(cs) + GETR(cd);
+	g = GETG(cs) + GETG(cd);
+	b = GETB(cs) + GETB(cd);
+	/* Saturate in case of overflow */
+	if(r > 31) r = 31;
+	if(g > 63) g = 63;
+	if(b > 31) b = 31;
+	ctx->framebuffer[y*ctx->hres+x] = MAKERGB565(r, g, b);
+}
+
+static void setpixel_alpha(struct line_context *ctx, unsigned int x, unsigned int y)
+{
+	unsigned int cs, cd;
+	unsigned int r, g, b;
+
+	if((x < 0)||(y < 0)||(x >= ctx->hres)||(y >= ctx->vres)) return;
+	cd = ctx->framebuffer[y*ctx->hres+x];
+	cs = ctx->color;
+	r = (GETR(cs)*ctx->alpha >> 6) + (GETR(cd)*(64-ctx->alpha) >> 6);
+	g = (GETG(cs)*ctx->alpha >> 6) + (GETG(cd)*(64-ctx->alpha) >> 6);
+	b = (GETB(cs)*ctx->alpha >> 6) + (GETB(cd)*(64-ctx->alpha) >> 6);
+	ctx->framebuffer[y*ctx->hres+x] = MAKERGB565(r, g, b);
+}
+
+static void setpixel_noalpha(struct line_context *ctx, unsigned int x, unsigned int y)
+{
+	if((x < 0)||(y < 0)||(x >= ctx->hres)||(y >= ctx->vres)) return;
+	ctx->framebuffer[y*ctx->hres+x] = ctx->color;
+}
+
+static pixelfun get_pixelfun(struct line_context *ctx)
+{
+	if(ctx->additive) {
+		if(ctx->alpha >= 64)
+			return setpixel_additive_noalpha;
+		else
+			return setpixel_additive_alpha;
+	} else {
+		if(ctx->alpha >= 64)
+			return setpixel_noalpha;
+		else
+			return setpixel_alpha;
 	}
 }
 
 void hline(struct line_context *ctx, int y, int x1, int x2)
 {
+	pixelfun setpixel = get_pixelfun(ctx);
 	int ymin = y - (ctx->thickness >> 1);
 	int ymax = ymin + ctx->thickness - 1;
 	if(ymin < 0) ymin = 0;
@@ -83,6 +116,7 @@ void hline(struct line_context *ctx, int y, int x1, int x2)
 
 void vline(struct line_context *ctx, int x, int y1, int y2)
 {
+	pixelfun setpixel = get_pixelfun(ctx);
 	int xmin = x - (ctx->thickness >> 1);
 	int xmax = xmin + ctx->thickness - 1;
 	if(xmin < 0) xmin = 0;
@@ -101,6 +135,7 @@ void vline(struct line_context *ctx, int x, int y1, int y2)
 
 static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 {
+	pixelfun setpixel;
 	int dx, dy, incr1, incr2, d, x, y, xend, yend, xdirflag, ydirflag;
 	int wid;
 	int w, wstart;
@@ -119,6 +154,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 		return;
 	}
 
+	setpixel = get_pixelfun(ctx);
 	if(dy <= dx) {
 		/* More-or-less horizontal. use wid for vertical stroke */
 		/* Doug Claar: watch out for NaN in atan2 (2.0.5) */
@@ -154,7 +190,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 		}
 
 		/* Set up line thickness */
-		wstart = y - wid / 2;
+		wstart = y - (wid >> 1);
 		for(w = wstart; w < wstart + wid; w++)
 			setpixel(ctx, x, w);
 
@@ -167,7 +203,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 					y++;
 					d += incr2;
 				}
-				wstart = y - wid / 2;
+				wstart = y - (wid >> 1);
 				for(w = wstart; w < wstart + wid; w++)
 					setpixel(ctx, x, w);
 			}
@@ -180,7 +216,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 					y--;
 					d += incr2;
 				}
-				wstart = y - wid / 2;
+				wstart = y - (wid >> 1);
 				for(w = wstart; w < wstart + wid; w++)
 					setpixel(ctx, x, w);
 			}
@@ -214,7 +250,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 		}
 
 		/* Set up line thickness */
-		wstart = x - wid / 2;
+		wstart = x - (wid >> 1);
 		for(w = wstart; w < wstart + wid; w++)
 		setpixel(ctx, w, y);
 
@@ -227,7 +263,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 					x++;
 					d += incr2;
 				}
-				wstart = x - wid / 2;
+				wstart = x - (wid >> 1);
 				for(w = wstart; w < wstart + wid; w++)
 					setpixel(ctx, w, y);
 			}
@@ -240,7 +276,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 					x--;
 					d += incr2;
 				}
-				wstart = x - wid / 2;
+				wstart = x - (wid >> 1);
 				for(w = wstart; w < wstart + wid; w++)
 					setpixel(ctx, w, y);
 			}
@@ -250,6 +286,7 @@ static void line_plain(struct line_context *ctx, int x1, int y1, int x2, int y2)
 
 static void dashed_set(struct line_context *ctx, int x, int y, int *onP, int *dashStepP, int wid, int vert)
 {
+	pixelfun setpixel = get_pixelfun(ctx);
 	int dashStep = *dashStepP;
 	int on = *onP;
 	int w, wstart, wend;
@@ -261,12 +298,12 @@ static void dashed_set(struct line_context *ctx, int x, int y, int *onP, int *da
 	}
 	if(on) {
 		if(vert) {
-			wstart = y - wid / 2;
+			wstart = y - (wid >> 1);
 			wend = wstart + wid;
 			for(w = wstart; w < wend; w++)
 				setpixel(ctx, x, w);
 		} else {
-			wstart = x - wid / 2;
+			wstart = x - (wid >> 1);
 			wend = wstart + wid;
 			for(w = wstart; w < wend; w++)
 				setpixel(ctx, w, y);
