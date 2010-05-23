@@ -24,6 +24,17 @@
 #include <hw/gpio.h>
 #include <version.h>
 
+#include "libhpdmc.h"
+
+/* evaluate feature dependencies */
+#if defined(FEAT_MANUAL_CALIBRATION) && defined(FEAT_NO_OUTPUT)
+#  error "Can't use FEAT_MANUAL_CALIBRATION with FEAT_NO_OUTPUT"
+#endif
+
+#if defined(FEAT_PBC_MANUAL_CALIBRATION) && ! defined(FEAT_MANUAL_CALIBRATION)
+#  error "FEAT_PBC_MANUAL_CALIBRATION needs FEAT_MANUAL_CALIBRATION"
+#endif
+
 /*
  * GLOBAL VARIABLES
  * r25: Input delay
@@ -31,22 +42,30 @@
  * r23: return address
  */
 
+#ifndef FEAT_NO_OUTPUT
+.macro PRINT str
+	mvhi	r1, hi(\str)
+	ori	r1, r1, lo(\str)
+	calli	print
+.endm
+#else
+.macro PRINT str
+.endm
+#endif
+
+.macro RETURN rc
+	mvi	r1, \rc
+	b	r23
+.endm
+
 .section .text, "ax", @progbits
 .global _sdram_init
 _sdram_init:
 	mv	r23, ra
-	mvhi	r1, hi(banner)
-	ori	r1, r1, lo(banner)
-	calli	print
-	mvhi	r1, hi(version)
-	ori	r1, r1, lo(version)
-	calli	print
-	mvhi	r1, hi(nl)
-	ori	r1, r1, lo(nl)
-	calli	print
-	mvhi	r1, hi(nl)
-	ori	r1, r1, lo(nl)
-	calli	print
+	PRINT(banner)
+	PRINT(version)
+	PRINT(nl)
+	PRINT(nl)
 
 	/* wait for the PLLs to lock */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
@@ -70,43 +89,49 @@ wait_dqs_start:
 	/* send init sequence */
 	bi send_init
 send_init_return:
-	mvhi	r1, hi(seqcomplete)
-	ori	r1, r1, lo(seqcomplete)
-	calli	print
+	PRINT(seqcomplete)
 
+#ifdef FEAT_PBC_MANUAL_CALIBRATION
 	/* if PBC is pushed, go into debug/manual mode */
 	mvhi	r1, hi(CSR_GPIO_IN)
 	ori	r1, r1, lo(CSR_GPIO_IN)
 	lw	r2, (r1+0)
 	andi	r2, r2, (GPIO_PBC)
 	bne	r2, r0, mancal
+#endif
 
 	bi	autocalibrate
 autocalibrate_fail_return:
-	mvhi	r1, hi(autocalfail)
-	ori	r1, r1, lo(autocalfail)
-	calli	print
+	PRINT(autocalfail)
+#ifdef FEAT_MANUAL_CALIBRATION
 	bi	mancal /* does not return */
+#endif
+#ifdef FEAT_RETURN_STATUS
+	RETURN(LIBHPDMC_CALIBRATION_FAILED)
+#endif
+	bi	autocalibrate_fail_return
+
 autocalibrate_success_return:
-	mvhi	r1, hi(autocalok)
-	ori	r1, r1, lo(autocalok)
-	calli	print
+	PRINT(autocalok)
 	
 	/* small memory test */
 	mvi	r1, 0
 	xor	r2, r2, r2
 	calli	memtest
 	be	r1, r0, memtest_fail
-	mvhi	r1, hi(continueboot)
-	ori	r1, r1, lo(continueboot)
-	calli	print
+	PRINT(continueboot)
 	
-	b	r23
+	RETURN(LIBHPDMC_SUCCESS)
+
 memtest_fail:
-	mvhi	r1, hi(testfailmsg)
-	ori	r1, r1, lo(testfailmsg)
-	calli	print
+	PRINT(testfailmsg)
+#ifdef FEAT_MANUAL_CALIBRATON
 	bi	mancal /* does not return */
+#endif
+#ifdef FEAT_RETURN_STATUS
+	RETURN(LIBHPDMC_MEMTEST_FAILED)
+#endif
+	bi	memtest_fail
 
 /* clobbers: r1, r2, r3 */
 send_init:
@@ -197,6 +222,7 @@ dqs_loop_wait:
 dqs_loop_end:
 	bi	autocalibrate_success_return
 
+#ifdef FEAT_MANUAL_CALIBRATION
 /* does not return */
 mancal:
 	/* enable VGA out */
@@ -208,19 +234,13 @@ mancal:
 	ori	r1, r1, lo(CSR_VGA_RESET)
 	sw 	(r1+0), r0
 mancal_loop:
-	mvhi	r1, hi(manualkeys)
-	ori	r1, r1, lo(manualkeys)
-	calli	print
+	PRINT(manualkeys)
 	mv	r1, r25
 	calli	printint
-	mvhi	r1, hi(spacer)
-	ori	r1, r1, lo(spacer)
-	calli	print
+	PRINT(spacer)
 	mv	r1, r24
 	calli	printint
-	mvhi	r1, hi(nl)
-	ori	r1, r1, lo(nl)
-	calli	print
+	PRINT(nl)
 	calli	getkey
 	mvu	r2, 'u'
 	be	r1, r2, inc_input_delay
@@ -288,14 +308,10 @@ big_test:
 	calli memtest
 after_test:
 	be	r1, r0, print_test_fail
-	mvhi	r1, hi(memtestpassed)
-	ori	r1, r1, lo(memtestpassed)
-	calli	print
+	PRINT(memtestpassed)
 	bi	mancal_loop
 print_test_fail:
-	mvhi	r1, hi(memtestfailed)
-	ori	r1, r1, lo(memtestfailed)
-	calli	print
+	PRINT(memtestfailed)
 	bi	mancal_loop
 disp_pattern:
 	mvu	r1, 640
@@ -325,7 +341,24 @@ boot:
 	ori	r1, r1, lo(CSR_VGA_RESET)
 	mvi	r2, VGA_RESET
 	sw 	(r1+0), r2
-	b	r23
+	RETURN(LIBHPDMC_SUCCESS)
+
+/* getkey - gets a character from the console
+ *
+ * inputs:	none
+ * outputs:	r1 - character
+ * clobbers:	r1
+ */
+getkey:
+	rcsr	r1, IP
+	andi	r1, r1, IRQ_UARTRX
+	be	r1, r0, getkey
+	wcsr	IP, r1
+	mvhi	r1, hi(CSR_UART_RXTX)
+	ori	r1, r1, lo(CSR_UART_RXTX)
+	lw	r1, (r1+0)
+	ret
+#endif /* FEAT_MANUAL_CALIBRATION */
 
 /* memtest - tests memory
  *
@@ -367,25 +400,10 @@ chkloop:
 	mvu	r1, 1
 	ret
 testfail:
-	xor r1, r1, r1
+	xor	r1, r1, r1
 	ret
 
-/* getkey - gets a character from the console
- *
- * inputs:	none
- * outputs:	r1 - character
- * clobbers:	r1
- */
-getkey:
-	rcsr	r1, IP
-	andi	r1, r1, IRQ_UARTRX
-	be	r1, r0, getkey
-	wcsr	IP, r1
-	mvhi	r1, hi(CSR_UART_RXTX)
-	ori	r1, r1, lo(CSR_UART_RXTX)
-	lw	r1, (r1+0)
-	ret
-
+#ifndef FEAT_NO_OUTPUT
 /* printint - prints an integer 0-999
  *
  * inputs:	r1 - input
@@ -450,6 +468,7 @@ writewait:
 	bi	writeloop
 print_endloop:
 	ret
+#endif /* FEAT_NO_OUTPUT */
 
 /* delay - delay loop
  *
@@ -462,6 +481,7 @@ delay:
 	bne	r1, r0, delay
 	ret
 
+#ifndef FEAT_NO_OUTPUT
 .section .rodata, "a"
 banner: .string "\nlibHPDMC SDRAM initialization runtime\n(c) Copyright 2010 Sebastien Bourdeauducq, released under GNU LGPL version 3.\nVersion "
 version: .string VERSION
@@ -475,3 +495,5 @@ memtestfailed: .string "Memory test failed.\n"
 memtestpassed: .string "Memory test passed.\n"
 spacer: .string " -- "
 nl: .string "\n"
+#endif /* FEAT_NO_OUTPUT */
+

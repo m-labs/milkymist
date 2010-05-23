@@ -6,6 +6,8 @@ SEGMENTS=-j .text -j .data -j .rodata
 
 all: libhpdmc.a test.bin
 
+libhpdmc.o: libhpdmc.S libhpdmc.h
+
 libhpdmc.a: libhpdmc.o
 	$(AR) clr libhpdmc.a libhpdmc.o
 	$(RANLIB) libhpdmc.a
