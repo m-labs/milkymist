@@ -113,10 +113,8 @@
 \def\imprint#1{\gdef\@imprint{#1}}
 \def\publisher#1{\gdef\@publisher{#1}}
 \def\trita#1{\gdef\@trita{#1}}
-\def\isbn#1{\@isbntrue \gdef\@isbn{#1}}
 \def\tmnotice#1{\gdef\@tmnotice{#1}}
 \def\dedication#1{\@dedicationtrue \gdef\@dedication{#1}}
-\newif\if@isbn \@isbnfalse
 \newif\if@dedication \@dedicationfalse
 \def\@shortauthor{\@author}
 \def\@shorttitle{\@title}
@@ -136,10 +134,9 @@
   \vbox to 5mm{\vglue-\headheight\vglue-\headsep
       \hbox{\includegraphics{kthtext.eps}}\vss}%
   \hfill%
-  \if@isbn\else%
   \vbox to 0mm{\vglue-\headheight\vglue-\headsep\scriptsize
       \hbox to 0mm{\hss TRITA-\@trita}\vss}%
-  \fi\par
+  \par
   \vskip 120\p@
   \begin{center}%
     {\LARGE \@title \par}%
@@ -157,8 +154,6 @@
       \begin{tabular}[t]{c}%
         \@type \\ \@institute \\ \@department
       \end{tabular}\par}%
-    \vskip 1em%
-    {\large TRITA-\@trita \par}
   \end{center}\par
   \setcounter{footnote}{0}}
 \newcommand\@maketitle{%
@@ -171,10 +166,8 @@
   \@comment%
   \par%
   \vskip 1.5em\relax%
-  \noindent\if@isbn%
-    ISBN~\@isbn \\[\smallskipamount]
+  \noindent
     TRITA-\@trita \\[1.5em]
-  \fi%
   \copyright \space \@author, \@date. \@tmnotice \\[1.5em]
   \@publisher, \@imprint \par
   \newpage
@@ -189,7 +182,6 @@
   \global\let\imprint\relax
   \global\let\publisher\relax
   \global\let\trita\relax
-  \global\let\isbn\relax
   \global\let\tmnotice\relax
   \global\let\dedication\relax
   \global\let\and\relax
@@ -213,8 +205,7 @@
     \@mkboth{\abstractname}{\abstractname}}%
 }{%
   \par\medskip\vbox{\scriptsize\hbox to\textwidth{%
-    \hss\if@isbn ISBN~\@isbn\space$\bullet$\space\fi%
-    TRITA-\@trita}}\par
+    \hss TRITA-\@trita}}\par
   \clearpage}
 \newcommand*\chaptermark[1]{}
 \setcounter{secnumdepth}{2}
@@ -262,7 +253,6 @@
   \global\let\@imprint\relax
   \global\let\@publisher\relax
   \global\let\@trita\relax
-  \global\let\@isbn\relax
   \global\let\@dedication\relax}
 \newcommand\part{%
   \cleardoublepage
