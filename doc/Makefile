@@ -1,4 +1,4 @@
-TEX=fml.tex csr.tex system.tex confslides.tex confslides_overview.tex paper_overview.tex thesis.tex
+TEX=fml.tex csr.tex system.tex thesisslides.tex confslides_overview.tex paper_overview.tex thesis.tex
 
 DVI=$(TEX:.tex=.dvi)
 PS=$(TEX:.tex=.ps)
@@ -29,9 +29,9 @@ thesis.dvi: thesis.tex thesis.bib kthesis.cls
 	latex thesis.tex
 	latex thesis.tex
 
-confslides.dvi: confslides.tex
-	latex confslides.tex
-	latex confslides.tex
+thesisslides.dvi: thesisslides.tex
+	latex thesisslides.tex
+	latex thesisslides.tex
 
 confslides_overview.dvi: confslides_overview.tex
 	latex confslides_overview.tex
