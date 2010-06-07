@@ -67,16 +67,16 @@ At the frontier between...
 
 In two words:
   \begin{itemize}
-  \item Take the current image, and distort it
+  \item Take the current image, and distort it:
   \begin{itemize}
     \item zoom
     \item rotation
     \item scaling
     \item others...
   \end{itemize}
-  \item Draw waves and shapes
-  \item Display the result
-  \item Repeat the process (iterative rendering)
+  \item Draw waves and shapes.
+  \item Display the result.
+  \item Repeat the process (iterative rendering).
   \end{itemize}
 }
 
@@ -85,10 +85,10 @@ In two words:
   \frametitle{How does MilkDrop work?}
 
   \begin{itemize}
-  \item Distortion and waves are controlled by fully customizable equations
-  \item The set of those equations is called a ``preset'' or ``patch''
+  \item Distortion and waves are controlled by fully customizable equations.
+  \item The set of those equations is called a ``preset'' or ``patch''.
   \item Interaction of the visuals with sound is defined by those equations
-  \item ...and also with DMX and MIDI in Milkymist
+  \item ...and also with DMX and MIDI in Milkymist.
   \end{itemize}
 }
 
@@ -98,20 +98,20 @@ In two words:
   \frametitle{Challenges}
 
   \begin{itemize}
-  \item The need for a CPU
+  \item The need for a CPU:
   \begin{itemize}
      \item flexibility
      \item ease of reprogramming, patching software bugs
      \item software-friendly tasks: GUI, filesystems, protocols, ...
   \end{itemize}
-  \item Speed, size, and cost
+  \item Speed, size, and cost:
   \begin{itemize}
      \item careful design
      \item balance between hardware and software
      \item software is cheap and slow, hardware is expensive and fast
   \end{itemize}
-  \item Memory problems: bandwidth, size
-  \item Compute-intensive operations
+  \item Memory problems: bandwidth, size.
+  \item Compute-intensive operations:
   \begin{itemize}
      \item distorting the image
      \item evaluating the equations
@@ -125,14 +125,14 @@ In two words:
   \frametitle{SoC platform}
 
   \begin{itemize}
-  \item What is needed is a SoC with graphics acceleration
-  \item They are ubiquitous today
+  \item What is needed is a SoC with graphics acceleration.
+  \item They are ubiquitous today:
   \begin{itemize}
   \item Texas Instruments OMAP
   \item Freescale i.MX
   \end{itemize}
-  \item However, those are closed and proprietary
-  \item This work: a new open source SoC that can run MilkDrop
+  \item However, those are closed and proprietary.
+  \item This work: a new open source SoC that can run MilkDrop.
   \end{itemize}
 }
 
@@ -180,7 +180,7 @@ In two words:
   \begin{itemize}
   \item One DDR SDRAM chip running at 100MHz:
   \begin{itemize}
-  \item 3.2Gbps \underline{peak bandwidth}
+  \item 3.2Gb/s \underline{peak bandwidth}
   \item 32MB capacity
   \item a few dollars
   \end{itemize}
@@ -198,7 +198,7 @@ In two words:
   \includegraphics[height=30mm]{memlatency.eps}
   \end{figure}
 
-  In Milkymist, memory transfers are always done using bursts of 4 consecutive words. The bus master caches or discards the data it does not want.
+  Memory transfers are always done using bursts of 4 consecutive words. The bus master caches or discards the data it does not want.
 }
 
 \frame
@@ -240,9 +240,9 @@ In two words:
   \end{figure}
 
   \begin{itemize}
-  \item 2 chips of 32-bit DDR SDRAM at 100MHz
-  \item Peak bandwidth of 6.4Gbps
-  \item Oversized -- but this is necessary
+  \item 2 chips of 32-bit DDR SDRAM at 100MHz.
+  \item Peak bandwidth of 6.4Gb/s.
+  \item Oversized -- but this is necessary.
   \end{itemize}
 }
 
@@ -252,7 +252,7 @@ In two words:
 
   \begin{tabular}{|l|l|l|l|}
   \hline
-  \textbf{Patch} & BW & AMAT & Max. BW bound \\
+  \textbf{Patch} & \textbf{BW} & \textbf{AMAT} & \textbf{Max. BW bound} \\
   \hline
   Idle & 292 & 5.51 & 3932 \\
   \hline
@@ -266,7 +266,7 @@ In two words:
   \hline
   Balk Acid & 1427 & 6.38 & 3469 \\
   \hline
-   \end{tabular}
+  \end{tabular}
 }
 
 
