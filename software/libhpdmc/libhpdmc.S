@@ -125,13 +125,14 @@ autocalibrate_success_return:
 
 memtest_fail:
 	PRINT(testfailmsg)
-#ifdef FEAT_MANUAL_CALIBRATON
+#ifdef FEAT_MANUAL_CALIBRATION
 	bi	mancal /* does not return */
 #endif
 #ifdef FEAT_RETURN_STATUS
 	RETURN(LIBHPDMC_MEMTEST_FAILED)
 #endif
-	bi	memtest_fail
+memtest_fail_loop:
+	bi	memtest_fail_loop
 
 /* clobbers: r1, r2, r3 */
 send_init:
