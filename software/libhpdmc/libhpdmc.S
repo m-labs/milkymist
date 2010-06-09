@@ -206,7 +206,7 @@ send_init:
  */
 /* clobbers: r1, r2, r3, r4 */
 autocalibrate:
-	mvu	r24, 244 /* DQS phase, change this number for your board */
+	mvu	r24, 3 /* DQS phase, change this number for your board */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
 	xor	r2, r2, r2
