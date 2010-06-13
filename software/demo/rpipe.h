@@ -50,7 +50,6 @@ struct rpipe_frame {
 	int vecho_orientation;
 	float treb;
 	float time;
-	unsigned int framenr;
 	unsigned int nsamples; /* < audio samples */
 	short *samples;
 	rpipe_callback callback;

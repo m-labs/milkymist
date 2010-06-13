@@ -41,20 +41,24 @@ module tmu2_decay #(
 wire en;
 reg valid_1;
 reg valid_2;
+reg valid_3;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		valid_1 <= 1'b0;
 		valid_2 <= 1'b0;
+		valid_3 <= 1'b0;
 	end else if(en) begin
 		valid_1 <= pipe_stb_i & ((color != chroma_key) | ~chroma_key_en);
 		valid_2 <= valid_1;
+		valid_3 <= valid_2;
 	end
 end
 
-/* Pipeline operation on two stages. */
+/* Pipeline operation on three stages. */
 
 reg [fml_depth-1-1:0] dadr_1;
+reg [fml_depth-1-1:0] dadr_2;
 
 wire [4:0] r = color[15:11];
 wire [5:0] g = color[10:5];
@@ -68,10 +72,15 @@ reg [10:0] r_2;
 reg [11:0] g_2;
 reg [10:0] b_2;
 
+reg [4:0] r_3;
+reg [5:0] g_3;
+reg [4:0] b_3;
+
 always @(posedge sys_clk) begin
 	if(en) begin
 		dadr_1 <= dadr;
-		dadr_f <= dadr_1;
+		dadr_2 <= dadr_1;
+		dadr_f <= dadr_2;
 
 		r_1 <= ({1'b0, brightness} + 7'd1)*r;
 		g_1 <= ({1'b0, brightness} + 7'd1)*g;
@@ -80,18 +89,22 @@ always @(posedge sys_clk) begin
 		r_2 <= r_1;
 		g_2 <= g_1;
 		b_2 <= b_1;
+
+		r_3 <= r_2[10:6] + (r_2[5] & (|r_2[4:0] | r_2[6]));
+		g_3 <= g_2[11:6] + (g_2[5] & (|g_2[4:0] | g_2[6]));
+		b_3 <= b_2[10:6] + (b_2[5] & (|b_2[4:0] | b_2[6]));
 	end
 end
 
-assign color_d = {r_2[10:6], g_2[11:6], b_2[10:6]};
+assign color_d = {r_3, g_3, b_3};
 
 /* Pipeline management */
 
-assign busy = valid_1 | valid_2;
+assign busy = valid_1 | valid_2 | valid_3;
 
-assign pipe_ack_o = ~valid_2 | pipe_ack_i;
-assign en = ~valid_2 | pipe_ack_i;
+assign pipe_ack_o = ~valid_3 | pipe_ack_i;
+assign en = ~valid_3 | pipe_ack_i;
 
-assign pipe_stb_o = valid_2;
+assign pipe_stb_o = valid_3;
 
 endmodule

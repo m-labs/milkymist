@@ -97,6 +97,12 @@ reg [17:0] g_5;
 reg [16:0] b_5;
 reg [fml_depth-1-1:0] dadr_5;
 
+reg valid_6;
+reg [4:0] r_6;
+reg [5:0] g_6;
+reg [4:0] b_6;
+reg [fml_depth-1-1:0] dadr_6;
+
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		valid_1 <= 1'b0;
@@ -104,6 +110,7 @@ always @(posedge sys_clk) begin
 		valid_3 <= 1'b0;
 		valid_4 <= 1'b0;
 		valid_5 <= 1'b0;
+		valid_6 <= 1'b0;
 	end else if(pipe_en) begin
 		valid_1 <= pipe_stb_i;
 		dadr_1 <= dadr;
@@ -130,6 +137,12 @@ always @(posedge sys_clk) begin
 		g_5 <= ga_4 + gb_4 + gc_4 + gd_4;
 		b_5 <= ba_4 + bb_4 + bc_4 + bd_4;
 		dadr_5 <= dadr_4;
+
+		valid_6 <= valid_5;
+		r_6 <= r_5[16:12] + (r_5[11] & (|r_5[10:0] | r_5[12]));
+		g_6 <= g_5[17:12] + (g_5[11] & (|g_5[10:0] | g_5[12]));
+		b_6 <= b_5[16:12] + (b_5[11] & (|b_5[10:0] | b_5[12]));
+		dadr_6 <= dadr_5;
 	end
 end
 
@@ -249,13 +262,13 @@ tmu2_mult2 m_bd(
 
 /* Glue logic */
 
-assign pipe_stb_o = valid_5;
-assign dadr_f = dadr_5;
-assign color = {r_5[16:12], g_5[17:12], b_5[16:12]};
+assign pipe_stb_o = valid_6;
+assign dadr_f = dadr_6;
+assign color = {r_6, g_6, b_6};
 
-assign pipe_en = ~valid_5 | pipe_ack_i;
-assign pipe_ack_o = ~valid_5 | pipe_ack_i;
+assign pipe_en = ~valid_6 | pipe_ack_i;
+assign pipe_ack_o = ~valid_6 | pipe_ack_i;
 
-assign busy = valid_1 | valid_2 | valid_3 | valid_4 | valid_5;
+assign busy = valid_1 | valid_2 | valid_3 | valid_4 | valid_5 | valid_6;
 
 endmodule
