@@ -94,8 +94,11 @@ static void apipe_snd_callback(short *buffer, void *user)
 	run_analyzer_bottom_half = 1;
 }
 
+static float brightness_error;
+
 void apipe_start()
 {
+	brightness_error = 0.0;
 	snd_record_empty();
 	snd_record_refill(audiobuffer1);
 	snd_record_refill(audiobuffer2);
@@ -139,14 +142,15 @@ static void pvv_callback(struct pfpu_td *td)
 static void pfv_callback(struct pfpu_td *td)
 {
 	struct rpipe_frame *rpipe_frame;
-	int brightness64;
+	int ibrightness;
 
 	rpipe_frame = (struct rpipe_frame *)td->user;
 
-	brightness64 = 64.0*eval_read_pfv(pfv_decay) - 1.0;
-	if(brightness64 < 0) brightness64 = 0;
-	if(brightness64 > 63) brightness64 = 63;
-	rpipe_frame->brightness = brightness64;
+	brightness_error += eval_read_pfv(pfv_decay);
+	ibrightness = 64.0*brightness_error;
+	brightness_error -= (float)ibrightness/64.0;
+	if(ibrightness > 64) ibrightness = 64;
+	rpipe_frame->brightness = ibrightness - 1;
 
 	rpipe_frame->wave_mode = eval_read_pfv(pfv_wave_mode);
 	rpipe_frame->wave_scale = eval_read_pfv(pfv_wave_scale);
@@ -235,7 +239,7 @@ static void analyzer_bottom_half()
 	bass_att = 0.6f*bass_att + 0.4f*fbass;
 
 	time_get(&ts);
-	time = (float)ts.sec + (float)ts.usec/1000000.0f;
+	time = (float)ts.sec + (float)ts.usec/1000000.0;
 
 	eval_reinit_all_pfv();
 	
