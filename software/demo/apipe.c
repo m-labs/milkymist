@@ -30,7 +30,7 @@
 #include "apipe.h"
 
 /* Also used as frame rate limiter */
-#define NSAMPLES (48000/30)
+#define NSAMPLES (48000/25)
 
 static short audiobuffer1[NSAMPLES*2];
 static short audiobuffer2[NSAMPLES*2];
