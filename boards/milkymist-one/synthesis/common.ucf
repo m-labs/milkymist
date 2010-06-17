@@ -1,5 +1,8 @@
 # ==== Clock input ====
-NET "clk50" LOC = AB11;
+NET "clk50" LOC = AB11 | IOSTANDARD = LVCMOS33;
+
+NET "clk50" TNM_NET = "GRPclk50";
+TIMESPEC "TSclk50" = PERIOD "GRPclk50" 20 ns HIGH 50%;
 
 # ==== Flash ====
 NET "flash_adr(0)" LOC = L22;
@@ -43,24 +46,27 @@ NET "flash_d(13)" LOC = Y13;
 NET "flash_d(14)" LOC = AA12;
 NET "flash_d(15)" LOC = AB12;
 
-NET "flash_ce_n" LOC = M21;
-NET "flash_oe_n" LOC = M22;
-NET "flash_we_n" LOC = N20;
-NET "flash_rst_n" LOC = P22;
-NET "flash_sts" LOC = R20;
+NET "flash_adr(*)" IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "flash_d(*)" IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8 | PULLDOWN;
+
+NET "flash_ce_n" LOC = M21 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "flash_oe_n" LOC = M22 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "flash_we_n" LOC = N20 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "flash_rst_n" LOC = P22 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "flash_sts" LOC = R20 | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # ==== UART ====
-NET "uart_rx" LOC = K18;
-NET "uart_tx" LOC = L17;
+NET "uart_rx" LOC = K18 | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "uart_tx" LOC = L17 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 
 # ==== Pushbuttons ====
-NET "btn1" LOC = AB4;
-NET "btn2" LOC = AA4;
-NET "btn3" LOC = AB5;
+NET "btn1" LOC = AB4 | IOSTANDARD = LVCMOS33;
+NET "btn2" LOC = AA4 | IOSTANDARD = LVCMOS33;
+NET "btn3" LOC = AB5 | IOSTANDARD = LVCMOS33;
 
 # ==== LEDs ====
-NET "led1" LOC = B16;
-NET "led2" LOC = A16;
+NET "led1" LOC = B16 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 24;
+NET "led2" LOC = A16 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 24;
 
 # ==== DDR SDRAM ====
 NET "sdram_adr(0)" LOC = B1;
@@ -76,13 +82,21 @@ NET "sdram_adr(9)" LOC = C1;
 NET "sdram_adr(10)" LOC = C3;
 NET "sdram_adr(11)" LOC = D1;
 NET "sdram_adr(12)" LOC = D2;
+
 NET "sdram_ba(0)" LOC = A2;
 NET "sdram_ba(1)" LOC = E6;
-NET "sdram_cas_n" LOC = C4;
-NET "sdram_cke" LOC = G7;
-NET "sdram_cs_n" LOC = F7;
-NET "sdram_ras_n" LOC = E5;
-NET "sdram_we_n" LOC = D3;
+
+NET "sdram_adr(*)" IOSTANDARD = SSTL2_I;
+NET "sdram_ba(*)" IOSTANDARD = SSTL2_I;
+
+NET "sdram_cas_n" LOC = C4 | IOSTANDARD = SSTL2_I;
+NET "sdram_cke" LOC = G7 | IOSTANDARD = SSTL2_I;
+NET "sdram_cs_n" LOC = F7 | IOSTANDARD = SSTL2_I;
+NET "sdram_ras_n" LOC = E5 | IOSTANDARD = SSTL2_I;
+NET "sdram_we_n" LOC = D3 | IOSTANDARD = SSTL2_I;
+
+NET "sdram_clk_p" LOC = M3 | IOSTANDARD = SSTL2_I;
+NET "sdram_clk_n" LOC = L4 | IOSTANDARD = SSTL2_I;
 
 NET "sdram_dm(0)" LOC = E1;
 NET "sdram_dm(1)" LOC = E3;
@@ -93,9 +107,6 @@ NET "sdram_dqs(0)" LOC = F1;
 NET "sdram_dqs(1)" LOC = F2;
 NET "sdram_dqs(2)" LOC = H5;
 NET "sdram_dqs(3)" LOC = H6;
-
-NET "sdram_clk_p" LOC = M3;
-NET "sdram_clk_n" LOC = L4;
 
 NET "sdram_dq(0)" LOC = Y2;
 NET "sdram_dq(1)" LOC = W3;
@@ -130,6 +141,10 @@ NET "sdram_dq(29)" LOC = R1;
 NET "sdram_dq(30)" LOC = P2;
 NET "sdram_dq(31)" LOC = P1;
 
+NET "sdram_dqs(*)" IOSTANDARD = SSTL2_I;
+NET "sdram_dm(*)" IOSTANDARD = SSTL2_I;
+NET "sdram_dq(*)" IOSTANDARD = SSTL2_I;
+
 # ==== VGA ====
 NET "vga_b(0)" LOC = D11;
 NET "vga_b(1)" LOC = C12;
@@ -156,68 +171,96 @@ NET "vga_r(5)" LOC = B8;
 NET "vga_r(6)" LOC = A8;
 NET "vga_r(7)" LOC = D9;
 
-NET "vga_hsync_n" LOC = A14;
-NET "vga_vsync_n" LOC = C15;
-NET "vga_clk" LOC = A11;
-NET "vga_psave_n" LOC = B14;
+NET "vga_r(*)" IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "vga_g(*)" IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "vga_b(*)" IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
 
-NET "vga_sda" LOC = A15;
-NET "vga_sdc" LOC = D15;
+NET "vga_hsync_n" LOC = A14 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "vga_vsync_n" LOC = C15 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "vga_clk" LOC = A11 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+NET "vga_psave_n" LOC = B14 | IOSTANDARD = LVCMOS33 | SLEW = FAST | DRIVE = 8;
+
+NET "vga_sda" LOC = A15 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
+NET "vga_sdc" LOC = D15 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 
 # ==== Memory card ====
 NET "mc_d(0)" LOC = A18;
 NET "mc_d(1)" LOC = E16;
 NET "mc_d(2)" LOC = C17;
 NET "mc_d(3)" LOC = A17;
-NET "mc_cmd" LOC = B18;
-NET "mc_clk" LOC = A10;
+NET "mc_cmd" LOC = B18 | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "mc_clk" LOC = A10 | IOSTANDARD = LVCMOS33;
+NET "mc_d(*)" IOSTANDARD = LVCMOS33 | PULLUP;
 
 # ==== AC97 ====
-NET "ac97_clk" LOC = C11;
-NET "ac97_sin" LOC = C5;
-NET "ac97_sout" LOC = A4;
-NET "ac97_sync" LOC = A5;
-NET "ac97_rst_n" LOC = D6;
+NET "ac97_clk" LOC = C11 | IOSTANDARD = LVCMOS33;
+NET "ac97_sin" LOC = C5 | IOSTANDARD = LVCMOS33;
+NET "ac97_sout" LOC = A4 | IOSTANDARD = LVCMOS33;
+NET "ac97_sync" LOC = A5 | IOSTANDARD = LVCMOS33;
+NET "ac97_rst_n" LOC = D6 | IOSTANDARD = LVCMOS33;
 
 # ==== USB ====
-NET "usba_spd" LOC = Y5;
-NET "usba_oe_n" LOC = Y6;
-NET "usba_rcv" LOC = V5;
-NET "usba_vp" LOC = U6;
-NET "usba_vm" LOC = R7;
+NET "usba_spd" LOC = Y5 | IOSTANDARD = LVCMOS33;
+NET "usba_oe_n" LOC = Y6 | IOSTANDARD = LVCMOS33;
+NET "usba_rcv" LOC = V5 | IOSTANDARD = LVCMOS33;
+NET "usba_vp" LOC = U6 | IOSTANDARD = LVCMOS33;
+NET "usba_vm" LOC = R7 | IOSTANDARD = LVCMOS33;
 
-NET "usbb_spd" LOC = T7;
-NET "usbb_oe_n" LOC = R8;
-NET "usbb_rcv" LOC = R9;
-NET "usbb_vp" LOC = AB3;
-NET "usbb_vm" LOC = Y3;
+NET "usbb_spd" LOC = T7 | IOSTANDARD = LVCMOS33;
+NET "usbb_oe_n" LOC = R8 | IOSTANDARD = LVCMOS33;
+NET "usbb_rcv" LOC = R9 | IOSTANDARD = LVCMOS33;
+NET "usbb_vp" LOC = AB3 | IOSTANDARD = LVCMOS33;
+NET "usbb_vm" LOC = Y3 | IOSTANDARD = LVCMOS33;
 
 # ==== Ethernet ====
-NET "phy_irq_n" LOC = L19;
-NET "phy_rst_n" LOC = R22;
-NET "phy_mii_clk" LOC = J20;
-NET "phy_mii_data" LOC = J22;
+NET "phy_irq_n" LOC = L19 | IOSTANDARD = LVCMOS33;
+NET "phy_rst_n" LOC = R22 | IOSTANDARD = LVCMOS33;
+NET "phy_mii_clk" LOC = J20 | IOSTANDARD = LVCMOS33;
+NET "phy_mii_data" LOC = J22 | IOSTANDARD = LVCMOS33;
 
-NET "phy_dv" LOC = V21;
-NET "phy_rx_clk" LOC = H22;
-NET "phy_rx_er" LOC = V22;
+NET "phy_dv" LOC = V21 | IOSTANDARD = LVCMOS33;
+NET "phy_rx_clk" LOC = H22 | IOSTANDARD = LVCMOS33;
+NET "phy_rx_er" LOC = V22 | IOSTANDARD = LVCMOS33;
 NET "phy_rx_data(0)" LOC = U22;
 NET "phy_rx_data(1)" LOC = U20;
 NET "phy_rx_data(2)" LOC = T22;
 NET "phy_rx_data(3)" LOC = T21;
+NET "phy_rx_data(*)" IOSTANDARD = LVCMOS33;
 
-NET "phy_tx_en" LOC = N19;
-NET "phy_tx_clk" LOC = H21;
-NET "phy_tx_er" LOC = M19;
+NET "phy_tx_en" LOC = N19 | IOSTANDARD = LVCMOS33;
+NET "phy_tx_clk" LOC = H21 | IOSTANDARD = LVCMOS33;
+NET "phy_tx_er" LOC = M19 | IOSTANDARD = LVCMOS33;
 NET "phy_tx_data(0)" LOC = M16;
 NET "phy_tx_data(1)" LOC = L15;
 NET "phy_tx_data(2)" LOC = P19;
 NET "phy_tx_data(3)" LOC = P20;
+NET "phy_tx_data(*)" IOSTANDARD = LVCMOS33;
 
-NET "phy_col" LOC = W20;
-NET "phy_crs" LOC = W22;
+NET "phy_col" LOC = W20 | IOSTANDARD = LVCMOS33;
+NET "phy_crs" LOC = W22 | IOSTANDARD = LVCMOS33;
 
-NET "phy_clk" LOC = M20;
+NET "phy_clk" LOC = M20 | IOSTANDARD = LVCMOS33;
+
+# Timing
+NET "phy_rx_clk" TNM_NET = "GRPphy_rx_clk";
+NET "phy_tx_clk" TNM_NET = "GRPphy_tx_clk";
+TIMESPEC "TSphy_tx_clk" = FROM "GRPphy_tx_clk" TO "PADS" 10 ns;
+TIMESPEC "TSphy_rx_clk" = FROM "PADS" TO "GRPphy_rx_clk" 6 ns;
+
+NET "phy_tx_clk" MAXSKEW = 1.0 ns;
+NET "phy_rx_clk" MAXSKEW = 1.0 ns;
+NET "phy_rx_clk" PERIOD = 40 ns HIGH 14 ns;
+NET "phy_tx_clk" PERIOD = 40 ns HIGH 14 ns;
+
+NET "phy_rx_data(0)" IOBDELAY = NONE;
+NET "phy_rx_data(1)" IOBDELAY = NONE;
+NET "phy_rx_data(2)" IOBDELAY = NONE;
+NET "phy_rx_data(3)" IOBDELAY = NONE;
+
+NET "phy_dv" IOBDELAY = NONE;
+NET "phy_rx_er" IOBDELAY = NONE;
+NET "phy_crs" IOBDELAY = NONE;
+NET "phy_col" IOBDELAY = NONE;
 
 # ==== Video input ====
 NET "videoin_p(0)" LOC = Y18;
@@ -228,43 +271,49 @@ NET "videoin_p(4)" LOC = U16;
 NET "videoin_p(5)" LOC = V19;
 NET "videoin_p(6)" LOC = V18;
 NET "videoin_p(7)" LOC = R16;
+NET "videoin_p(*)" IOSTANDARD = LVCMOS33;
 
-NET "videoin_hs" LOC = V17;
-NET "videoin_vs" LOC = Y17;
-NET "videoin_field" LOC = AB14;
-NET "videoin_llc" LOC = Y11;
+NET "videoin_hs" LOC = V17 | IOSTANDARD = LVCMOS33;
+NET "videoin_vs" LOC = Y17 | IOSTANDARD = LVCMOS33;
+NET "videoin_field" LOC = AB14 | IOSTANDARD = LVCMOS33;
+NET "videoin_llc" LOC = Y11 | IOSTANDARD = LVCMOS33;
 
-NET "videoin_irq_n" LOC = R15;
-NET "videoin_rst_n" LOC = W17;
-NET "videoin_sda" LOC = AB17;
-NET "videoin_sdc" LOC = AA14;
+NET "videoin_irq_n" LOC = R15 | IOSTANDARD = LVCMOS33;
+NET "videoin_rst_n" LOC = W17 | IOSTANDARD = LVCMOS33;
+NET "videoin_sda" LOC = AB17 | IOSTANDARD = LVCMOS33 | SLEW = SLOW | PULLUP;
+NET "videoin_sdc" LOC = AA14 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 
 # ==== MIDI ====
-NET "midi_tx" LOC = AA21;
-NET "midi_rx" LOC = AB21;
+NET "midi_tx" LOC = AA21 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
+NET "midi_rx" LOC = AB21 | IOSTANDARD = LVCMOS33;
 
 # ==== DMX ====
-NET "dmxa_r" LOC = AB20;
-NET "dmxa_de" LOC = T18;
-NET "dmxa_d" LOC = T17;
+NET "dmxa_r" LOC = AB20 | IOSTANDARD = LVCMOS33;
+NET "dmxa_de" LOC = T18 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
+NET "dmxa_d" LOC = T17 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 
-NET "dmxb_r" LOC = Y19;
-NET "dmxb_de" LOC = AB19;
-NET "dmxb_d" LOC = W18;
+NET "dmxb_r" LOC = Y19 | IOSTANDARD = LVCMOS33;
+NET "dmxb_de" LOC = AB19 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
+NET "dmxb_d" LOC = W18 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 
 # ==== IR ====
-NET "ir_rx" LOC = C16;
+NET "ir_rx" LOC = C16 | IOSTANDARD = LVCMOS33;
 
 # ==== Expansion connector ====
-NET "IO_L9N_1" LOC = G17;
-NET "IO_L9P_1" LOC = G16;
-NET "IO_L10N_1" LOC = F17;
-NET "IO_L10P_1" LOC = F16;
-NET "IO_L19N_1" LOC = B22;
-NET "IO_L19P_1" LOC = B21;
-NET "IO_L20N_1" LOC = A21;
-NET "IO_L20P_1" LOC = A20;
-NET "IO_L21N_1" LOC = J16;
-NET "IO_L21P_1" LOC = K16;
-NET "IO_L28N_VREF_1" LOC = H17;
-NET "IO_L28P_1" LOC = H16;
+NET "exp(0)" LOC = A20;
+NET "exp(1)" LOC = F16;
+NET "exp(2)" LOC = A21;
+NET "exp(3)" LOC = F17;
+NET "exp(4)" LOC = B21;
+NET "exp(5)" LOC = H16;
+NET "exp(6)" LOC = B22;
+NET "exp(7)" LOC = H17;
+NET "exp(8)" LOC = G16;
+NET "exp(9)" LOC = J16;
+NET "exp(10)" LOC = G17;
+NET "exp(11)" LOC = K16;
+
+NET "exp(*)" IOSTANDARD = LVCMOS33;
+
+# avoid floating signals
+NET "exp(*)" PULLDOWN;

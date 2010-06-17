@@ -3,7 +3,7 @@ run
 -top system
 -ifmt MIXED
 -opt_mode SPEED
--opt_level 1
+-opt_level 2
 -ofn system.ngc
 -p xc6slx45-fgg484-2
 -register_balancing yes

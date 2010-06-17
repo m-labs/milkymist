@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,28 +40,26 @@ module vga #(
 	output vga_psave_n,
 	output vga_hsync_n,
 	output vga_vsync_n,
-	output vga_sync_n,
-	output vga_blank_n,
 	output [7:0] vga_r,
 	output [7:0] vga_g,
 	output [7:0] vga_b,
-	output vga_clkout
+	output vga_clk
 );
 
-wire vga_clk_dcm;
-wire vga_clk_n_dcm;
-wire vga_clk;
-wire vga_clk_n;
+wire vga_iclk_dcm;
+wire vga_iclk_n_dcm;
+wire vga_iclk;
+wire vga_iclk_n;
 
 DCM_SP #(
 	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
-	.CLKFX_DIVIDE(8),		// 1 to 32
-	.CLKFX_MULTIPLY(2),		// 2 to 32
+	.CLKFX_DIVIDE(10),		// 1 to 32
+	.CLKFX_MULTIPLY(3),		// 2 to 32
 
 	.CLKIN_DIVIDE_BY_2("FALSE"),
 	.CLKIN_PERIOD(`CLOCK_PERIOD),
-	.CLKOUT_PHASE_SHIFT("VARIABLE"),
+	.CLKOUT_PHASE_SHIFT("NONE"),
 	.CLK_FEEDBACK("1X"),
 	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
 	.DFS_FREQUENCY_MODE("LOW"),
@@ -69,7 +67,7 @@ DCM_SP #(
 	.DUTY_CYCLE_CORRECTION("TRUE"),
 	.PHASE_SHIFT(0),
 	.STARTUP_WAIT("FALSE")
-) clkgen_dqs (
+) clkgen_vga (
 	.CLK0(),
 	.CLK90(),
 	.CLK180(),
@@ -79,22 +77,22 @@ DCM_SP #(
 	.CLK2X180(),
 
 	.CLKDV(),
-	.CLKFX(vga_clk_dcm),
-	.CLKFX180(vga_clk_n_dcm),
+	.CLKFX(vga_iclk_dcm),
+	.CLKFX180(vga_iclk_n_dcm),
 	.LOCKED(),
-	.CLKFB(vga_clk),
+	.CLKFB(vga_iclk),
 	.CLKIN(sys_clk),
 	.RST(sys_rst),
 
 	.PSEN(1'b0)
 );
 AUTOBUF b_p(
-	.I(vga_clk_dcm),
-	.O(vga_clk)
+	.I(vga_iclk_dcm),
+	.O(vga_iclk)
 );
 AUTOBUF b_n(
-	.I(vga_clk_n_dcm),
-	.O(vga_clk_n)
+	.I(vga_iclk_n_dcm),
+	.O(vga_iclk_n)
 );
 
 ODDR2 #(
@@ -102,9 +100,9 @@ ODDR2 #(
 	.INIT(1'b0),
 	.SRTYPE("SYNC")
 ) clock_forward (
-	.Q(vga_clkout),
-	.C0(vga_clk),
-	.C1(vga_clk_n),
+	.Q(vga_clk),
+	.C0(vga_iclk),
+	.C1(vga_iclk_n),
 	.CE(1'b1),
 	.D0(1'b1),
 	.D1(1'b0),
@@ -129,12 +127,10 @@ vgafb #(
 	.fml_ack(fml_ack),
 	.fml_di(fml_di),
 	
-	.vga_clk(vga_clk),
+	.vga_clk(vga_iclk),
 	.vga_psave_n(vga_psave_n),
 	.vga_hsync_n(vga_hsync_n),
 	.vga_vsync_n(vga_vsync_n),
-	.vga_sync_n(vga_sync_n),
-	.vga_blank_n(vga_blank_n),
 	.vga_r(vga_r),
 	.vga_g(vga_g),
 	.vga_b(vga_b)

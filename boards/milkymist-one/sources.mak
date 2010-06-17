@@ -56,8 +56,10 @@ TMU_SRC=						\
 	$(CORES_DIR)/tmu2/rtl/tmu2_texcache.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_vinterp.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_blend.v		\
-	$(CORES_DIR)/tmu2/rtl/tmu2_mult2_virtex4.v	\
+	$(CORES_DIR)/tmu2/rtl/tmu2_mult2.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_fdest.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_alpha.v
+ETHERNET_SRC=$(wildcard $(CORES_DIR)/minimac/rtl/*.v)
+FMLMETER_SRC=$(wildcard $(CORES_DIR)/fmlmeter/rtl/*.v)
 
-CORES_SRC=$(CONBUS_SRC) $(LM32_SRC) $(FMLARB_SRC) $(FMLBRG_SRC) $(CSRBRG_SRC) $(NORFLASH_SRC) $(UART_SRC) $(SYSCTL_SRC) $(HPDMC_SRC) $(VGAFB_SRC) $(AC97_SRC) $(PFPU_SRC) $(TMU_SRC)
+CORES_SRC=$(CONBUS_SRC) $(LM32_SRC) $(FMLARB_SRC) $(FMLBRG_SRC) $(CSRBRG_SRC) $(NORFLASH_SRC) $(UART_SRC) $(SYSCTL_SRC) $(HPDMC_SRC) $(VGAFB_SRC) $(AC97_SRC) $(PFPU_SRC) $(TMU_SRC) $(ETHERNET_SRC) $(FMLMETER_SRC)

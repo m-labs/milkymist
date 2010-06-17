@@ -18,24 +18,27 @@
 `include "setup.v"
 
 module system(
-	input clkin,
-	input resetin,
+	input clk50,
 	
 	// Boot ROM
-	output [20:0] flash_adr,
-	input [7:0] flash_d,
-	output flash_byte_n,
+	output [23:0] flash_adr,
+	input [15:0] flash_d,
 	output flash_oe_n,
 	output flash_we_n,
-	output flash_ce,
-	output flash_ac97_reset_n,
+	output flash_ce_n,
+	output flash_rst_n,
+	input flash_sts,
 
 	// UART
-	input uart_rxd,
-	output uart_txd,
+	input uart_rx,
+	output uart_tx,
 
-	// SD card
-	// TODO
+	// GPIO
+	input btn1,
+	input btn2,
+	input btn3,
+	output led1,
+	output led2,
 
 	// DDR SDRAM
 	output sdram_clk_p,
@@ -45,45 +48,93 @@ module system(
 	output sdram_we_n,
 	output sdram_cas_n,
 	output sdram_ras_n,
-	output [3:0] sdram_dqm,
+	output [3:0] sdram_dm,
 	output [12:0] sdram_adr,
 	output [1:0] sdram_ba,
 	inout [31:0] sdram_dq,
 	inout [3:0] sdram_dqs,
-	
-	// GPIO
-	output [3:0] led,    // 2 GPIO OUT (2 LEDs for UART activity)
-	input [3:0] dipsw,   // 4 GPIO IN
 
 	// VGA
 	output vga_psave_n,
 	output vga_hsync_n,
 	output vga_vsync_n,
-	output vga_sync_n,
-	output vga_blank_n,
 	output [7:0] vga_r,
 	output [7:0] vga_g,
 	output [7:0] vga_b,
-	output vga_clkout,
+	output vga_clk,
+	inout vga_sda,
+	output vga_sdc,
+
+	// Memory card
+	inout [3:0] mc_d,
+	inout mc_cmd,
+	output mc_clk,
 	
 	// AC97
 	input ac97_clk,
 	input ac97_sin,
 	output ac97_sout,
-	output ac97_sync
+	output ac97_sync,
+	output ac97_rst_n,
 
-	// TODO
-	// ISP1362
+	// USB
+	output usba_spd,
+	output usba_oe_n,
+	input usba_rcv,
+	inout usba_vp,
+	inout usba_vm,
+
+	output usbb_spd,
+	output usbb_oe_n,
+	input usbb_rcv,
+	inout usbb_vp,
+	inout usbb_vm,
 
 	// Ethernet
+	output phy_rst_n,
+	input phy_tx_clk,
+	output [3:0] phy_tx_data,
+	output phy_tx_en,
+	output phy_tx_er,
+	input phy_rx_clk,
+	input [3:0] phy_rx_data,
+	input phy_dv,
+	input phy_rx_er,
+	input phy_col,
+	input phy_crs,
+	input phy_irq_n,
+	output phy_mii_clk,
+	inout phy_mii_data,
+	output phy_clk,
 
 	// Video Input
-
-	// DMX512
+	input [7:0] videoin_p,
+	input videoin_hs,
+	input videoin_vs,
+	input videoin_field,
+	input videoin_llc,
+	input videoin_irq_n,
+	input videoin_rst_n,
+	inout videoin_sda,
+	output videoin_sdc,
 
 	// MIDI
+	output midi_tx,
+	input midi_rx,
+
+	// DMX512
+	input dmxa_r,
+	output dmxa_de,
+	output dmxa_d,
+	input dmxb_r,
+	output dmxb_de,
+	output dmxb_d,
 
 	// IR
+	input ir_rx,
+
+	// Expansion connector
+	input [11:0] exp
 );
 
 //------------------------------------------------------------------
@@ -101,12 +152,12 @@ DCM_SP #(
 	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
 	.CLKFX_DIVIDE(3),		// 1 to 32
-	.CLKFX_MULTIPLY(2),		// 2 to 32
+	.CLKFX_MULTIPLY(5),		// 2 to 32
 
 	.CLKIN_DIVIDE_BY_2("FALSE"),
-	.CLKIN_PERIOD(`CLOCK_PERIOD),
+	.CLKIN_PERIOD(20.0),
 	.CLKOUT_PHASE_SHIFT("NONE"),
-	.CLK_FEEDBACK("1X"),
+	.CLK_FEEDBACK("NONE"),
 	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
 	.DFS_FREQUENCY_MODE("LOW"),
 	.DLL_FREQUENCY_MODE("LOW"),
@@ -114,20 +165,20 @@ DCM_SP #(
 	.PHASE_SHIFT(0),
 	.STARTUP_WAIT("TRUE")
 ) clkgen_sys (
-	.CLK0(sys_clk_dcm),
+	.CLK0(),
 	.CLK90(),
-	.CLK180(sys_clk_n_dcm),
+	.CLK180(),
 	.CLK270(),
 
 	.CLK2X(),
 	.CLK2X180(),
 
 	.CLKDV(),
-	.CLKFX(),
-	.CLKFX180(),
+	.CLKFX(sys_clk_dcm),
+	.CLKFX180(sys_clk_n_dcm),
 	.LOCKED(),
-	.CLKFB(sys_clk),
-	.CLKIN(clkin),
+	.CLKFB(),
+	.CLKIN(clk50),
 	.RST(1'b0),
 	.PSEN(1'b0)
 );
@@ -144,13 +195,6 @@ assign sys_clk = clkin;
 assign sys_clk_n = ~clkin;
 `endif
 
-`ifndef SIMULATION
-/* Synchronize the reset input */
-reg rst0;
-reg rst1;
-always @(posedge sys_clk) rst0 <= resetin;
-always @(posedge sys_clk) rst1 <= rst0;
-
 /* Debounce it (counter holds reset for 10.49ms),
  * and generate power-on reset.
  */
@@ -159,7 +203,7 @@ reg sys_rst;
 initial rst_debounce <= 20'hFFFFF;
 initial sys_rst <= 1'b1;
 always @(posedge sys_clk) begin
-	if(rst1 | hard_reset)
+	if(hard_reset)
 		rst_debounce <= 20'hFFFFF;
 	else if(rst_debounce != 20'd0)
 		rst_debounce <= rst_debounce - 20'd1;
@@ -181,21 +225,15 @@ end
 reg [7:0] flash_rstcounter;
 initial flash_rstcounter <= 8'd0;
 always @(posedge sys_clk) begin
-	if(~rst1 & ~sys_rst) /* ~sys_rst is for debouncing */
+	if(hard_reset)
 		flash_rstcounter <= 8'd0;
 	else if(~flash_rstcounter[7])
 		flash_rstcounter <= flash_rstcounter + 8'd1;
 end
 
-assign flash_ac97_reset_n = flash_rstcounter[7];
-
-wire ac97_rst_n;
+assign flash_rst_n = flash_rstcounter[7];
 assign ac97_rst_n = flash_rstcounter[7];
-
-`else
-wire sys_rst;
-assign sys_rst = ~resetin;
-`endif
+assign phy_rst_n = flash_rstcounter[7];
 
 //------------------------------------------------------------------
 // Wishbone master wires
@@ -395,7 +433,9 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_vga,
 		csr_dr_ac97,
 		csr_dr_pfpu,
-		csr_dr_tmu;
+		csr_dr_tmu,
+		csr_dr_ethernet,
+		csr_dr_fmlmeter;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -403,11 +443,13 @@ wire [31:0]	csr_dr_uart,
 wire [`SDRAM_DEPTH-1:0]	fml_brg_adr,
 			fml_vga_adr,
 			fml_tmur_adr,
+			fml_tmudr_adr,
 			fml_tmuw_adr;
 
 wire			fml_brg_stb,
 			fml_vga_stb,
 			fml_tmur_stb,
+			fml_tmudr_stb,
 			fml_tmuw_stb;
 
 wire			fml_brg_we;
@@ -415,6 +457,7 @@ wire			fml_brg_we;
 wire			fml_brg_ack,
 			fml_vga_ack,
 			fml_tmur_ack,
+			fml_tmudr_ack,
 			fml_tmuw_ack;
 
 wire [7:0]		fml_brg_sel,
@@ -425,7 +468,8 @@ wire [63:0]		fml_brg_dw,
 
 wire [63:0]		fml_brg_dr,
 			fml_vga_dr,
-			fml_tmur_dr;
+			fml_tmur_dr,
+			fml_tmudr_dr;
 
 //------------------------------------------------------------------
 // FML slave wires, to memory controller
@@ -446,7 +490,7 @@ fmlarb #(
 ) fmlarb (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	
+
 	/* VGA framebuffer (high priority) */
 	.m0_adr(fml_vga_adr),
 	.m0_stb(fml_vga_stb),
@@ -455,7 +499,7 @@ fmlarb #(
 	.m0_sel(8'bx),
 	.m0_di(64'bx),
 	.m0_do(fml_vga_dr),
-	
+
 	/* WISHBONE bridge */
 	.m1_adr(fml_brg_adr),
 	.m1_stb(fml_brg_stb),
@@ -464,8 +508,8 @@ fmlarb #(
 	.m1_sel(fml_brg_sel),
 	.m1_di(fml_brg_dw),
 	.m1_do(fml_brg_dr),
-	
-	/* TMU, pixel read DMA */
+
+	/* TMU, pixel read DMA (texture) */
 	.m2_adr(fml_tmur_adr),
 	.m2_stb(fml_tmur_stb),
 	.m2_we(1'b0),
@@ -473,7 +517,7 @@ fmlarb #(
 	.m2_sel(8'bx),
 	.m2_di(64'bx),
 	.m2_do(fml_tmur_dr),
-	
+
 	/* TMU, pixel write DMA */
 	.m3_adr(fml_tmuw_adr),
 	.m3_stb(fml_tmuw_stb),
@@ -482,7 +526,16 @@ fmlarb #(
 	.m3_sel(fml_tmuw_sel),
 	.m3_di(fml_tmuw_dw),
 	.m3_do(),
-	
+
+	/* TMU, pixel read DMA (destination) */
+	.m4_adr(fml_tmudr_adr),
+	.m4_stb(fml_tmudr_stb),
+	.m4_we(1'b0),
+	.m4_ack(fml_tmudr_ack),
+	.m4_sel(8'bx),
+	.m4_di(64'bx),
+	.m4_do(fml_tmudr_dr),
+
 	.s_adr(fml_adr),
 	.s_stb(fml_stb),
 	.s_we(fml_we),
@@ -519,6 +572,8 @@ csrbrg csrbrg(
 		|csr_dr_ac97
 		|csr_dr_pfpu
 		|csr_dr_tmu
+		|csr_dr_ethernet
+		|csr_dr_fmlmeter
 	)
 );
 
@@ -621,7 +676,7 @@ lm32_top cpu(
 // Boot ROM
 //---------------------------------------------------------------------------
 norflash8 #(
-	.adr_width(21)
+	.adr_width(24)
 ) norflash (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -634,13 +689,11 @@ norflash8 #(
 	
 	.flash_adr(flash_adr),
 	.flash_d(flash_d)
-
 );
 
-assign flash_byte_n = 1'b0;
 assign flash_oe_n = 1'b0;
 assign flash_we_n = 1'b1;
-assign flash_ce = 1'b1;
+assign flash_ce_n = 1'b0;
 
 //---------------------------------------------------------------------------
 // UART
@@ -661,35 +714,9 @@ uart #(
 	.rx_irq(uartrx_irq),
 	.tx_irq(uarttx_irq),
 	
-	.uart_rxd(uart_rxd),
-	.uart_txd(uart_txd)
+	.uart_rxd(uart_rx),
+	.uart_txd(uart_tx)
 );
-
-/* LED0 and LED1 are used as TX/RX indicators.
- * Generate long pulses so we have time to see them
- */
-reg [18:0] rxcounter;
-reg rxled;
-always @(posedge sys_clk) begin
-	if(~uart_rxd)
-		rxcounter <= {19{1'b1}};
-	else if(rxcounter != 19'd0)
-		rxcounter <= rxcounter - 19'd1;
-	rxled <= rxcounter != 19'd0;
-end
-
-reg [18:0] txcounter;
-reg txled;
-always @(posedge sys_clk) begin
-	if(~uart_txd)
-		txcounter <= {19{1'b1}};
-	else if(txcounter != 19'd0)
-		txcounter <= txcounter - 20'd1;
-	txled <= txcounter != 19'd0;
-end
-
-assign led[0] = txled;
-assign led[1] = rxled;
 
 //---------------------------------------------------------------------------
 // System Controller
@@ -699,7 +726,7 @@ wire [31:0] capabilities;
 
 sysctl #(
 	.csr_addr(4'h1),
-	.ninputs(4),
+	.ninputs(3),
 	.noutputs(2),
 	.systemid(32'h4D4F4E45) /* MONE */
 ) sysctl (
@@ -715,8 +742,8 @@ sysctl #(
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_sysctl),
 
-	.gpio_inputs(dipsw),
-	.gpio_outputs(led[3:2]), /* LED0 and LED1 are used as TX/RX indicators. */
+	.gpio_inputs({btn3, btn2, btn1}),
+	.gpio_outputs({led2, led1}),
 
 	.capabilities(capabilities),
 	.hard_reset(hard_reset)
@@ -756,7 +783,7 @@ ddram #(
 	.sdram_we_n(sdram_we_n),
 	.sdram_cas_n(sdram_cas_n),
 	.sdram_ras_n(sdram_ras_n),
-	.sdram_dqm(sdram_dqm),
+	.sdram_dqm(sdram_dm),
 	.sdram_adr(sdram_adr),
 	.sdram_ba(sdram_ba),
 	.sdram_dq(sdram_dq),
@@ -766,7 +793,6 @@ ddram #(
 //---------------------------------------------------------------------------
 // VGA
 //---------------------------------------------------------------------------
-`ifdef ENABLE_VGA
 vga #(
 	.csr_addr(4'h3),
 	.fml_depth(`SDRAM_DEPTH)
@@ -787,27 +813,11 @@ vga #(
 	.vga_psave_n(vga_psave_n),
 	.vga_hsync_n(vga_hsync_n),
 	.vga_vsync_n(vga_vsync_n),
-	.vga_sync_n(vga_sync_n),
-	.vga_blank_n(vga_blank_n),
 	.vga_r(vga_r),
 	.vga_g(vga_g),
 	.vga_b(vga_b),
-	.vga_clkout(vga_clkout)
+	.vga_clk(vga_clk)
 );
-`else
-assign csr_dr_vga = 32'd0;
-assign fml_vga_adr = {`SDRAM_DEPTH{1'bx}};
-assign fml_vga_stb = 1'b0;
-assign vga_psave_n = 1'b0;
-assign vga_hsync_n = 1'b0;
-assign vga_vsync_n = 1'b0;
-assign vga_sync_n = 1'b0;
-assign vga_blank_n = 1'b0;
-assign vga_r = 8'd0;
-assign vga_g = 8'd0;
-assign vga_b = 8'd0;
-assign vga_clkout = 1'b0;
-`endif
 
 //---------------------------------------------------------------------------
 // AC97
@@ -908,32 +918,37 @@ assign pfpubus_stb = 1'b0;
 // Texture Mapping Unit
 //---------------------------------------------------------------------------
 `ifdef ENABLE_TMU
-tmu #(
+tmu2 #(
 	.csr_addr(4'h6),
 	.fml_depth(`SDRAM_DEPTH)
 ) tmu (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	
+
 	.csr_a(csr_a),
 	.csr_we(csr_we),
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_tmu),
-	
+
 	.irq(tmu_irq),
-	
+
 	.wbm_adr_o(tmumbus_adr),
 	.wbm_cti_o(tmumbus_cti),
 	.wbm_cyc_o(tmumbus_cyc),
 	.wbm_stb_o(tmumbus_stb),
 	.wbm_ack_i(tmumbus_ack),
 	.wbm_dat_i(tmumbus_dat_r),
-	
+
 	.fmlr_adr(fml_tmur_adr),
 	.fmlr_stb(fml_tmur_stb),
 	.fmlr_ack(fml_tmur_ack),
 	.fmlr_di(fml_tmur_dr),
-	
+
+	.fmldr_adr(fml_tmudr_adr),
+	.fmldr_stb(fml_tmudr_stb),
+	.fmldr_ack(fml_tmudr_ack),
+	.fmldr_di(fml_tmudr_dr),
+
 	.fmlw_adr(fml_tmuw_adr),
 	.fmlw_stb(fml_tmuw_stb),
 	.fmlw_ack(fml_tmuw_ack),
@@ -954,10 +969,141 @@ assign tmumbus_stb = 1'b0;
 assign fml_tmur_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmur_stb = 1'b0;
 
+assign fml_tmudr_adr = {`SDRAM_DEPTH{1'bx}};
+assign fml_tmudr_stb = 1'b0;
+
 assign fml_tmuw_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmuw_stb = 1'b0;
 assign fml_tmuw_sel = 8'bx;
 assign fml_tmuw_dw = 64'bx;
 `endif
+
+//---------------------------------------------------------------------------
+// Ethernet
+//---------------------------------------------------------------------------
+`ifdef ENABLE_ETHERNET
+wire phy_tx_clk_b;
+AUTOBUF b_phy_tx_clk(
+	.I(phy_tx_clk),
+	.O(phy_tx_clk_b)
+);
+wire phy_rx_clk_b;
+AUTOBUF b_phy_rx_clk(
+	.I(phy_rx_clk),
+	.O(phy_rx_clk_b)
+);
+minimac #(
+	.csr_addr(4'h9)
+) ethernet (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_ethernet),
+
+	.wbrx_adr_o(ethernetrxbus_adr),
+	.wbrx_cti_o(ethernetrxbus_cti),
+	.wbrx_cyc_o(ethernetrxbus_cyc),
+	.wbrx_stb_o(ethernetrxbus_stb),
+	.wbrx_ack_i(ethernetrxbus_ack),
+	.wbrx_dat_o(ethernetrxbus_dat_w),
+
+	.wbtx_adr_o(ethernettxbus_adr),
+	.wbtx_cti_o(ethernettxbus_cti),
+	.wbtx_cyc_o(ethernettxbus_cyc),
+	.wbtx_stb_o(ethernettxbus_stb),
+	.wbtx_ack_i(ethernettxbus_ack),
+	.wbtx_dat_i(ethernettxbus_dat_r),
+
+	.irq_rx(ethernetrx_irq),
+	.irq_tx(ethernettx_irq),
+
+	.phy_tx_clk(phy_tx_clk_b),
+	.phy_tx_data(phy_tx_data),
+	.phy_tx_en(phy_tx_en),
+	.phy_tx_er(phy_tx_er),
+	.phy_rx_clk(phy_rx_clk),
+	.phy_rx_data(phy_rx_data_b),
+	.phy_dv(phy_dv),
+	.phy_rx_er(phy_rx_er),
+	.phy_col(phy_col),
+	.phy_crs(phy_crs),
+	.phy_mii_clk(phy_mii_clk),
+	.phy_mii_data(phy_mii_data)
+);
+`else
+assign csr_dr_ethernet = 32'd0;
+assign ethernetrxbus_adr = 32'bx;
+assign ethernetrxbus_cti = 3'bx;
+assign ethernetrxbus_cyc = 1'b0;
+assign ethernetrxbus_stb = 1'b0;
+assign ethernetrxbus_dat_w = 32'bx;
+assign ethernettxbus_adr = 32'bx;
+assign ethernettxbus_cti = 3'bx;
+assign ethernettxbus_cyc = 1'b0;
+assign ethernettxbus_stb = 1'b0;
+assign ethernettxbus_dat_r = 32'bx;
+assign ethernetrx_irq = 1'b0;
+assign ethernettx_irq = 1'b0;
+assign phy_tx_data = 4'b0;
+assign phy_tx_en = 1'b0;
+assign phy_tx_er = 1'b0;
+assign phy_mii_clk = 1'b0;
+assign phy_mii_data = 1'bz;
+`endif
+
+// TODO
+assign phy_clk = 1'b0;
+
+//---------------------------------------------------------------------------
+// FastMemoryLink usage and performance meter
+//---------------------------------------------------------------------------
+`ifdef ENABLE_FMLMETER
+fmlmeter #(
+	.csr_addr(4'ha)
+) fmlmeter (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_fmlmeter),
+
+	.fml_stb(fml_stb),
+	.fml_ack(fml_ack)
+);
+`else
+assign csr_dr_fmlmeter = 32'd0;
+`endif
+
+// TODO
+assign vga_sda = 1'b0;
+assign vga_sdc = 1'b0;
+
+assign mc_d[3:0] = 4'bz;
+assign mc_cmd = 1'bz;
+assign mc_clk = 1'b0;
+
+assign usba_spd = 1'b0;
+assign usba_oe_n = 1'b0;
+assign usba_vp = 1'bz;
+assign usba_vm = 1'bz;
+assign usbb_spd = 1'b0;
+assign usbb_oe_n = 1'b0;
+assign usbb_vp = 1'bz;
+assign usbb_vm = 1'bz;
+
+assign videoin_sda = 1'bz;
+assign videoin_sdc = 1'b0;
+
+assign midi_tx = 1'b0;
+
+assign dmxa_de = 1'b0;
+assign dmxa_d = 1'b0;
+assign dmxb_de = 1'b0;
+assign dmxb_d = 1'b0;
 
 endmodule

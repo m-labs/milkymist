@@ -21,27 +21,21 @@
  * but when working on a specific part, it's very useful to be
  * able to cut down synthesis times.
  */
-
-//`define ENABLE_ISP1362
-//`define ENABLE_CFCARD
-/*
- * FIXME: clocks in AC97 and VGA are not handled correctly
- * and cause failure of ISE 11.2.
- */
 //`define ENABLE_AC97
-//`define ENABLE_VGA
 //`define ENABLE_PFPU
 //`define ENABLE_TMU
+//`define ENABLE_ETHERNET
+`define ENABLE_FMLMETER
 
 /*
  * System clock frequency in Hz.
  */
-`define CLOCK_FREQUENCY 80000000
+`define CLOCK_FREQUENCY 83333333
 
 /*
  * System clock period in ns (must be in sync with CLOCK_FREQUENCY).
  */
-`define CLOCK_PERIOD 12.5
+`define CLOCK_PERIOD 12
 
 /*
  * Default baudrate for the debug UART.
@@ -52,9 +46,9 @@
  * SDRAM depth, in bytes (the number of bits you need to address the whole
  * array with byte granularity)
  */
-`define SDRAM_DEPTH 26
+`define SDRAM_DEPTH 27
 
 /*
  * SDRAM column depth (the number of column address bits)
  */
-`define SDRAM_COLUMNDEPTH 9
+`define SDRAM_COLUMNDEPTH 10
