@@ -40,25 +40,22 @@
 `define CFG_EBA_RESET 32'h0
 `define CFG_DEBA_RESET 32'h0
 
-`define CFG_PL_MULTIPLY_ENABLED
+// FIXME: temporarily using MC multiplier because PL does not meet timing
+`define CFG_MC_MULTIPLY_ENABLED
 `define CFG_PL_BARREL_SHIFT_ENABLED
 `define CFG_SIGN_EXTEND_ENABLED
 `define CFG_MC_DIVIDE_ENABLED
 
-// Bug in Xst:
-// CFG_ICACHE_ASSOCIATIVITY=2 => works in most cases (random crash on complex software)
-// CFG_ICACHE_ASSOCIATIVITY=1 => disaster, CPU will not work at all
-// Works 100% OK with expensive synthesizers.
 `define CFG_ICACHE_ENABLED
-`define CFG_ICACHE_ASSOCIATIVITY   2
-`define CFG_ICACHE_SETS            512
+`define CFG_ICACHE_ASSOCIATIVITY   1
+`define CFG_ICACHE_SETS            256
 `define CFG_ICACHE_BYTES_PER_LINE  16
 `define CFG_ICACHE_BASE_ADDRESS    32'h0
 `define CFG_ICACHE_LIMIT           32'h7fffffff
 
 `define CFG_DCACHE_ENABLED
-`define CFG_DCACHE_ASSOCIATIVITY   2
-`define CFG_DCACHE_SETS            512
+`define CFG_DCACHE_ASSOCIATIVITY   1
+`define CFG_DCACHE_SETS            256
 `define CFG_DCACHE_BYTES_PER_LINE  16
 `define CFG_DCACHE_BASE_ADDRESS    32'h0
 `define CFG_DCACHE_LIMIT           32'h7fffffff

@@ -317,3 +317,9 @@ NET "exp(*)" IOSTANDARD = LVCMOS33;
 
 # avoid floating signals
 NET "exp(*)" PULLDOWN;
+
+# ==== Timing fixes ====
+NET "sys_clk" TNM_NET = "GRPsys";
+NET "vga/vga_iclk" TNM_NET = "GRPvga";
+TIMESPEC "TSvga_async1" = FROM "GRPsys" TO "GRPvga" TIG;
+TIMESPEC "TSvga_async2" = FROM "GRPvga" TO "GRPsys" TIG;

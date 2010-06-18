@@ -89,11 +89,17 @@ module vgafb_asfifo
                          (pNextWordToWrite[ADDRESS_WIDTH-1] ~^ pNextWordToRead[ADDRESS_WIDTH-2]);
                          
     //'Status' latch logic:
-    always @ (Set_Status, Rst_Status, Clear_in) //D Latch w/ Asynchronous Clear & Preset.
+    /*always @ (Set_Status, Rst_Status, Clear_in) //D Latch w/ Asynchronous Clear & Preset.
         if (Rst_Status | Clear_in)
             Status = 0;  //Going 'Empty'.
         else if (Set_Status)
-            Status = 1;  //Going 'Full'.
+            Status = 1;  //Going 'Full'.*/
+   wire clear_status = Rst_Status | Clear_in;
+   always @(posedge clear_status, posedge Set_Status)
+      if(clear_status)
+         Status <= 1'b0;
+      else
+         Status <= 1'b1;
             
     //'Full_out' logic for the writing port:
     assign PresetFull = Status & EqualAddresses;  //'Full' Fifo.
