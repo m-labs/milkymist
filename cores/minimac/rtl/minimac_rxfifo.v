@@ -49,20 +49,21 @@ wire [8:0] fifo_in = {fifo_eof, fifo_hi, fifo_lo};
 reg fifo_we;
 wire full;
 
-minimac_asfifo #(
-	.DATA_WIDTH(9),
-	.ADDRESS_WIDTH(7)
+asfifo #(
+	.data_width(9),
+	.address_width(7)
 ) fifo (
-	.Data_out(fifo_out),
-	.Empty_out(empty),
-	.ReadEn_in(ack),
-	.RClk(sys_clk),
+	.data_out(fifo_out),
+	.empty(empty),
+	.read_en(ack),
+	.clk_read(sys_clk),
 
-	.Data_in(fifo_in),
-	.Full_out(full),
-	.WriteEn_in(fifo_we),
-	.WClk(phy_rx_clk),
-	.Clear_in(rx_rst)
+	.data_in(fifo_in),
+	.full(full),
+	.write_en(fifo_we),
+	.clk_write(phy_rx_clk),
+	
+	.rst(rx_rst)
 );
 
 /* we assume f(sys_clk) > f(phy_rx_clk) */

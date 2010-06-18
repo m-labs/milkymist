@@ -200,21 +200,21 @@ vgafb_pixelfeed #(
  */
 wire [17:0] fifo_do;
 
-vgafb_asfifo #(
-	.DATA_WIDTH(18),
-	.ADDRESS_WIDTH(6)
+asfifo #(
+	.data_width(18),
+	.address_width(6)
 ) fifo (
-	.Data_out(fifo_do),
-	.Empty_out(),
-	.ReadEn_in(1'b1),
-	.RClk(vga_clk),
+	.data_out(fifo_do),
+	.empty(),
+	.read_en(1'b1),
+	.clk_read(vga_clk),
 	
-	.Data_in({vsync_n, hsync_n, pixel}),
-	.Full_out(fifo_full),
-	.WriteEn_in(generate_en),
-	.WClk(sys_clk),
+	.data_in({vsync_n, hsync_n, pixel}),
+	.full(fifo_full),
+	.write_en(generate_en),
+	.clk_write(sys_clk),
 	
-	.Clear_in(vga_rst)
+	.rst(vga_rst)
 );
 
 /*

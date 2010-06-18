@@ -1,5 +1,6 @@
 BOARD_SRC=$(wildcard $(BOARD_DIR)/*.v) $(BOARD_DIR)/../../gen_capabilities.v
 
+ASFIFO_SRC=$(wildcard $(CORES_DIR)/asfifo/rtl/*.v)
 CONBUS_SRC=$(wildcard $(CORES_DIR)/conbus/rtl/*.v)
 LM32_SRC=						\
 	$(CORES_DIR)/lm32/rtl/lm32_cpu.v		\
@@ -25,8 +26,6 @@ UART_SRC=$(wildcard $(CORES_DIR)/uart/rtl/*.v)
 SYSCTL_SRC=$(wildcard $(CORES_DIR)/sysctl/rtl/*.v)
 HPDMC_SRC=$(wildcard $(CORES_DIR)/hpdmc_ddr32/rtl/*.v) $(wildcard $(CORES_DIR)/hpdmc_ddr32/rtl/spartan6/*.v)
 VGAFB_SRC=						\
-	$(CORES_DIR)/vgafb/rtl/vgafb_graycounter.v	\
-	$(CORES_DIR)/vgafb/rtl/vgafb_asfifo.v		\
 	$(CORES_DIR)/vgafb/rtl/vgafb_pixelfeed.v	\
 	$(CORES_DIR)/vgafb/rtl/vgafb_ctlif.v		\
 	$(CORES_DIR)/vgafb/rtl/vgafb_fifo64to16.v	\
@@ -62,4 +61,4 @@ TMU_SRC=						\
 ETHERNET_SRC=$(wildcard $(CORES_DIR)/minimac/rtl/*.v)
 FMLMETER_SRC=$(wildcard $(CORES_DIR)/fmlmeter/rtl/*.v)
 
-CORES_SRC=$(CONBUS_SRC) $(LM32_SRC) $(FMLARB_SRC) $(FMLBRG_SRC) $(CSRBRG_SRC) $(NORFLASH_SRC) $(UART_SRC) $(SYSCTL_SRC) $(HPDMC_SRC) $(VGAFB_SRC) $(AC97_SRC) $(PFPU_SRC) $(TMU_SRC) $(ETHERNET_SRC) $(FMLMETER_SRC)
+CORES_SRC=$(ASFIFO_SRC) $(CONBUS_SRC) $(LM32_SRC) $(FMLARB_SRC) $(FMLBRG_SRC) $(CSRBRG_SRC) $(NORFLASH_SRC) $(UART_SRC) $(SYSCTL_SRC) $(HPDMC_SRC) $(VGAFB_SRC) $(AC97_SRC) $(PFPU_SRC) $(TMU_SRC) $(ETHERNET_SRC) $(FMLMETER_SRC)

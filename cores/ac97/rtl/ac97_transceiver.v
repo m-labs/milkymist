@@ -47,21 +47,21 @@ reg ac97_syncfb_r;
 always @(negedge ac97_clk) ac97_syncfb_r <= ac97_sync;
 
 wire up_empty;
-ac97_asfifo #(
-	.DATA_WIDTH(2),
-	.ADDRESS_WIDTH(6)
+asfifo #(
+	.data_width(2),
+	.address_width(6)
 ) up_fifo (
-	.Data_out({up_sync, up_data}),
-	.Empty_out(up_empty),
-	.ReadEn_in(up_ack),
-	.RClk(sys_clk),
+	.data_out({up_sync, up_data}),
+	.empty(up_empty),
+	.read_en(up_ack),
+	.clk_read(sys_clk),
 	
-	.Data_in({ac97_syncfb_r, ac97_sin_r}),
-	.Full_out(),
-	.WriteEn_in(1'b1),
-	.WClk(~ac97_clk),
+	.data_in({ac97_syncfb_r, ac97_sin_r}),
+	.full(),
+	.write_en(1'b1),
+	.clk_write(~ac97_clk),
 	
-	.Clear_in(sys_rst)
+	.rst(sys_rst)
 );
 assign up_stb = ~up_empty;
 
@@ -85,21 +85,21 @@ always @(negedge ac97_rst_n, posedge ac97_clk) begin
 end
 
 wire down_full;
-ac97_asfifo #(
-	.DATA_WIDTH(2),
-	.ADDRESS_WIDTH(6)
+asfifo #(
+	.data_width(2),
+	.address_width(6)
 ) down_fifo (
-	.Data_out({ac97_sync_r, ac97_sout_r}),
-	.Empty_out(),
-	.ReadEn_in(1'b1),
-	.RClk(ac97_clk),
+	.data_out({ac97_sync_r, ac97_sout_r}),
+	.empty(),
+	.read_en(1'b1),
+	.clk_read(ac97_clk),
 	
-	.Data_in({down_sync, down_data}),
-	.Full_out(down_full),
-	.WriteEn_in(down_stb),
-	.WClk(sys_clk),
-	
-	.Clear_in(sys_rst)
+	.data_in({down_sync, down_data}),
+	.full(down_full),
+	.write_en(down_stb),
+	.clk_write(sys_clk),
+
+	.rst(sys_rst)
 );
 assign down_ready = ~down_full;
 

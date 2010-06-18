@@ -40,20 +40,21 @@ always @(posedge sys_clk) begin
 	empty <= empty2;
 end
 
-minimac_asfifo #(
-	.DATA_WIDTH(8),
-	.ADDRESS_WIDTH(7)
+asfifo #(
+	.data_width(8),
+	.address_width(7)
 ) fifo (
-	.Data_out(fifo_out),
-	.Empty_out(fifo_empty),
-	.ReadEn_in(fifo_read),
-	.RClk(phy_tx_clk),
+	.data_out(fifo_out),
+	.empty(fifo_empty),
+	.read_en(fifo_read),
+	.clk_read(phy_tx_clk),
 
-	.Data_in(data),
-	.Full_out(full),
-	.WriteEn_in(stb),
-	.WClk(sys_clk),
-	.Clear_in(tx_rst)
+	.data_in(data),
+	.full(full),
+	.write_en(stb),
+	.clk_write(sys_clk),
+
+	.rst(tx_rst)
 );
 
 reg can_tx1;
