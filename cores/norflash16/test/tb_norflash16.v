@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 `timescale 1ns / 1ps
 
-module tb_norflash8();
+module tb_norflash16();
 
 reg sys_clk;
 reg sys_rst;
@@ -32,11 +32,11 @@ wire [6:0] aceusb_a;
 wire [15:0] aceusb_d;
 
 wire [21:0] flash_adr;
-reg [7:0] flash_d;
+reg [15:0] flash_d;
 
-always @(flash_adr) #110 flash_d <= flash_adr[7:0] + 8'd1;
+always @(flash_adr) #110 flash_d <= flash_adr[15:0] + 8'd1;
 
-norflash8 dut(
+norflash16 dut(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 

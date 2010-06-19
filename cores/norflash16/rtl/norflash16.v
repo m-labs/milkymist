@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module norflash8 #(
+module norflash16 #(
 	parameter adr_width = 22,
-	parameter timing = 4'd12,
-	parameter swapbytes = 1'b0
+	parameter timing = 4'd12
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -30,31 +29,28 @@ module norflash8 #(
 	output reg wb_ack_o,
 	
 	output [adr_width-1:0] flash_adr,
-	input [7:0] flash_d
+	input [15:0] flash_d
 );
 
-reg [adr_width-1-2:0] flash_adr_msb;
-reg [1:0] flash_adr_lsb;
+reg [adr_width-1-1:0] flash_adr_msb;
+reg flash_adr_lsb;
 
-assign flash_adr = {flash_adr_msb, flash_adr_lsb[1], swapbytes ^ flash_adr_lsb[0]};
+assign flash_adr = {flash_adr_msb, flash_adr_lsb};
 
 reg load;
-reg reset_flash_adr_lsb;
 always @(posedge sys_clk) begin
 	/* Use IOB registers to prevent glitches on address lines */
 	if(wb_cyc_i & wb_stb_i) /* register only when needed to reduce EMI */
 		flash_adr_msb <= wb_adr_i[adr_width-1:2];
 	if(load) begin
-		case(flash_adr_lsb[1:0])
-			2'b00: wb_dat_o[31:24] <= flash_d;
-			2'b01: wb_dat_o[23:16] <= flash_d;
-			2'b10: wb_dat_o[15:8] <= flash_d;
-			2'b11: wb_dat_o[7:0] <= flash_d;
+		case(flash_adr_lsb)
+			1'b0: wb_dat_o[31:16] <= flash_d;
+			1'b1: wb_dat_o[15:0] <= flash_d;
 		endcase
-		flash_adr_lsb <= flash_adr_lsb + 2'd1;
+		flash_adr_lsb <= ~flash_adr_lsb;
 	end
-	if(reset_flash_adr_lsb)
-		flash_adr_lsb <= 2'd0;
+	if(sys_rst)
+		flash_adr_lsb <= 1'b0;
 end
 
 /*
@@ -85,14 +81,12 @@ end
 
 always @(*) begin
 	next_state = state;
-	reset_flash_adr_lsb = 1'b0;
 	counter_en = 1'b0;
 	load = 1'b0;
 	wb_ack_o = 1'b0;
 
 	case(state)
 		2'd0: begin
-			reset_flash_adr_lsb = 1'b1;
 			if(wb_cyc_i & wb_stb_i)
 				next_state = 2'd1;
 		end
@@ -101,7 +95,7 @@ always @(*) begin
 			counter_en = 1'b1;
 			if(counter_done) begin
 				load = 1'b1;
-				if(flash_adr_lsb == 2'b11)
+				if(flash_adr_lsb)
 					next_state = 2'd2;
 			end
 		end
