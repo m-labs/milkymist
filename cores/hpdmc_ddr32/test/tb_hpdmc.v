@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,7 +92,9 @@ wire [63:0] fml_do;
 
 hpdmc dut(
 	.sys_clk(clk),
+	.sys_clk_n(~clk),
 	.dqs_clk(dqs_clk),
+	.dqs_clk_n(~dqs_clk),
 	.sys_rst(rst),
 
 	.csr_a(csr_a),

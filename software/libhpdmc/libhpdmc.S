@@ -77,6 +77,7 @@ wait_pll:
 	lw	r2, (r1+0)
 	and	r2, r2, r3
 	bne	r2, r3, wait_pll
+#endif
 	
 	/* set IDELAY=0, wait for DQS generator ready */
 	mvu	r2, (HPDMC_IDELAY_RST)
@@ -87,7 +88,6 @@ wait_dqs_start:
 	be	r2, r0, wait_dqs_start
 	xor	r25, r25, r25
 	xor	r24, r24, r24
-#endif
 
 	/* send init sequence */
 	bi send_init
@@ -103,8 +103,7 @@ send_init_return:
 	bne	r2, r0, mancal
 #endif
 
-// HACK for Milkymist One
-	//bi	autocalibrate
+	bi	autocalibrate
 autocalibrate_fail_return:
 	PRINT(autocalfail)
 #ifdef FEAT_MANUAL_CALIBRATION
@@ -210,7 +209,7 @@ send_init:
  */
 /* clobbers: r1, r2, r3, r4 */
 autocalibrate:
-	mvu	r24, 244 /* DQS phase, change this number for your board */
+	mvu	r24, 58 /* DQS phase, change this number for your board */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
 	xor	r2, r2, r2
