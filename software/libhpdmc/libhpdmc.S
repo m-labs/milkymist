@@ -77,7 +77,6 @@ wait_pll:
 	lw	r2, (r1+0)
 	and	r2, r2, r3
 	bne	r2, r3, wait_pll
-#endif
 	
 	/* set IDELAY=0, wait for DQS generator ready */
 	mvu	r2, (HPDMC_IDELAY_RST)
@@ -86,6 +85,7 @@ wait_dqs_start:
 	lw	r2, (r1+0)
 	andi	r2, r2, (HPDMC_DQSDELAY_RDY)
 	be	r2, r0, wait_dqs_start
+#endif
 	xor	r25, r25, r25
 	xor	r24, r24, r24
 
