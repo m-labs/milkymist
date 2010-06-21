@@ -25,6 +25,7 @@ You will need:
  - Bourne Again Shell (bash),
  - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
+ - SRecord,
 For the host-side tools:
  - native Clang/LLVM toolchain,
  - libGD,

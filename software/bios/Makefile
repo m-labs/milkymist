@@ -11,7 +11,10 @@ all: bios_splash.bin
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@ write
 
-bios.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libhpdmc/libhpdmc.a $(MMDIR)/software/libbase/libbase-light.a $(MMDIR)/software/libnet/libnet.a
+bios.elf: linker.ld $(OBJECTS)
+	$(MAKE) -C $(MMDIR)/software/libhpdmc
+	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libnet
 	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lhpdmc -lbase-light -lnet
 	chmod -x $@
 
@@ -24,7 +27,7 @@ bios_padded.bin: bios.bin
 bios_splash.bin: bios_padded.bin splash.raw
 	cat bios_padded.bin splash.raw > bios_splash.bin
 
-.PHONY: clean depend
+.PHONY: clean depend bios.elf
 
 depend:
 	makedepend -Y -- $(CFLAGS) -- *.c

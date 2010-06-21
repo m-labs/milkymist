@@ -20,11 +20,15 @@ spam.h: spam.raw
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@
 
-boot.elf: linker.ld $(OBJECTS) $(MMDIR)/software/libbase/libbase.a $(MMDIR)/software/libmath/libmath.a $(MMDIR)/software/libhal/libhal.a $(MMDIR)/software/libfpvm/libfpvm.a
+boot.elf: linker.ld $(OBJECTS)
+	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libmath
+	$(MAKE) -C $(MMDIR)/software/libhal
+	$(MAKE) -C $(MMDIR)/software/libfpvm
 	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libmath -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libfpvm --start-group $(OBJECTS) -lbase -lmath -lhal -lfpvm --end-group
 	chmod -x $@
 
-.PHONY: clean depend
+.PHONY: clean depend boot.elf
 
 depend: bandfilters.h spam.h
 	makedepend -Y -- $(CFLAGS) -- *.c

@@ -67,6 +67,8 @@ _sdram_init:
 	PRINT(nl)
 	PRINT(nl)
 
+// HACK for Milkymist One
+#if 0
 	/* wait for the PLLs to lock */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
@@ -85,6 +87,7 @@ wait_dqs_start:
 	be	r2, r0, wait_dqs_start
 	xor	r25, r25, r25
 	xor	r24, r24, r24
+#endif
 
 	/* send init sequence */
 	bi send_init
@@ -100,7 +103,8 @@ send_init_return:
 	bne	r2, r0, mancal
 #endif
 
-	bi	autocalibrate
+// HACK for Milkymist One
+	//bi	autocalibrate
 autocalibrate_fail_return:
 	PRINT(autocalfail)
 #ifdef FEAT_MANUAL_CALIBRATION

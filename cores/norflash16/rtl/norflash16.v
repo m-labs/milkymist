@@ -44,8 +44,8 @@ always @(posedge sys_clk) begin
 		flash_adr_msb <= wb_adr_i[adr_width-1:2];
 	if(load) begin
 		case(flash_adr_lsb)
-			1'b0: wb_dat_o[31:16] <= flash_d;
-			1'b1: wb_dat_o[15:0] <= flash_d;
+			1'b0: wb_dat_o[31:16] <= {flash_d[7:0], flash_d[15:8]};
+			1'b1: wb_dat_o[15:0] <= {flash_d[7:0], flash_d[15:8]};
 		endcase
 		flash_adr_lsb <= ~flash_adr_lsb;
 	end
