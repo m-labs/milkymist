@@ -35,6 +35,12 @@ module vga #(
 	output fml_stb,
 	input fml_ack,
 	input [63:0] fml_di,
+
+	/* Direct Cache Bus */
+	output dcb_stb,
+	output [fml_depth-1:0] dcb_adr,
+	input [63:0] dcb_dat,
+	input dcb_hit,
 	
 	/* VGA pads */
 	output vga_psave_n,
@@ -126,6 +132,11 @@ vgafb #(
 	.fml_stb(fml_stb),
 	.fml_ack(fml_ack),
 	.fml_di(fml_di),
+
+	.dcb_stb(dcb_stb),
+	.dcb_adr(dcb_adr),
+	.dcb_dat(dcb_dat),
+	.dcb_hit(dcb_hit),
 	
 	.vga_clk(vga_iclk),
 	.vga_psave_n(vga_psave_n),

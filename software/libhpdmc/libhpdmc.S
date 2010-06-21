@@ -264,7 +264,7 @@ mancal_loop:
 	be	r1, r2, boot
 	bi mancal_loop
 inc_input_delay:
-	mvu	r1, 63
+	mvu	r1, 29
 	be	r25, r1, mancal_loop
 	addi	r25, r25, 1
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
