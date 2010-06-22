@@ -30,13 +30,10 @@
 #include <hal/snd.h>
 #include <hal/pfpu.h>
 #include <hal/tmu.h>
-#include <hal/slowout.h>
-#include <hal/hdlcd.h>
 
 #include "apipe.h"
 #include "rpipe.h"
 #include "renderer.h"
-#include "ui.h"
 #include "cpustats.h"
 #include "memstats.h"
 #include "shell.h"
@@ -68,9 +65,6 @@ int main()
 	renderer_init();
 	apipe_init();
 	rpipe_init();
-	slowout_init();
-	hdlcd_init();
-	ui_init();
 	shell_init();
 	
 	while(1) {
@@ -78,7 +72,6 @@ int main()
 			shell_input(readchar());
 		apipe_service();
 		rpipe_service();
-		ui_service();
 	}
 	
 	return 0;

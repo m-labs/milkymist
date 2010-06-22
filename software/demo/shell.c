@@ -44,7 +44,6 @@
 #include "cpustats.h"
 #include "memstats.h"
 #include "shell.h"
-#include "ui.h"
 #include "renderer.h"
 
 #define NUMBER_OF_BYTES_ON_A_LINE 16
@@ -167,7 +166,7 @@ static void render(const char *filename)
 		return;
 	}
 
-	ui_render_from_file(filename, 0);
+	/* TODO */
 }
 
 static void spam()
@@ -419,7 +418,6 @@ static unsigned short original[640*480*2] __attribute__((aligned(2)));
 static void tmudemo()
 {
 	int size;
-	unsigned int oldmask;
 	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
 	struct tmu_td td;
 	volatile int complete;
@@ -431,10 +429,6 @@ static void tmudemo()
 	cffat_done();
 
 	printf("done\n");
-	
-	/* Disable UI keys and slowout */
-	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_GPIO) & (~IRQ_TIMER1));
 	
 	speed = 0;
 	w = 512 << TMU_FIXEDPOINT_SHIFT;
@@ -528,8 +522,6 @@ static void tmudemo()
 		}
 		vga_swap_buffers();
 	}
-	irq_ack(IRQ_GPIO|IRQ_TIMER1);
-	irq_setmask(oldmask);
 }
 
 static void tmubench()
@@ -686,7 +678,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "irender") == 0) {
 			renderer_istart();
 			irender = 1;
-		} else if(strcmp(command, "stop") == 0) ui_render_stop();
+		} else if(strcmp(command, "stop") == 0) renderer_stop();
 		else if(strcmp(command, "spam") == 0) spam();
 		else if(strcmp(command, "stats") == 0) stats();
 		else if(strcmp(command, "reboot") == 0) reboot();

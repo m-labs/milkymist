@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=brd.o hdlcd.o mem.o pfpu.o slowout.o snd.o time.o tmu.o vga.o
+OBJECTS=brd.o mem.o pfpu.o snd.o time.o tmu.o vga.o
 
 all: libhal.a
 
@@ -22,15 +22,6 @@ clean:
 brd.o: ../../software/include/base/stdlib.h
 brd.o: ../../software/include/base/stdio.h
 brd.o: ../../software/include/base/board.h ../../software/include/hal/brd.h
-hdlcd.o: ../../software/include/base/stdlib.h
-hdlcd.o: ../../software/include/base/stdio.h
-hdlcd.o: ../../software/include/base/stdarg.h
-hdlcd.o: ../../software/include/base/board.h
-hdlcd.o: ../../software/include/hw/sysctl.h
-hdlcd.o: ../../software/include/hw/common.h ../../software/include/hw/gpio.h
-hdlcd.o: ../../software/include/hal/brd.h
-hdlcd.o: ../../software/include/hal/slowout.h
-hdlcd.o: ../../software/include/hal/hdlcd.h
 mem.o: ../../software/include/base/stdio.h
 mem.o: ../../software/include/base/stdlib.h
 mem.o: ../../software/include/base/malloc.h ../../software/include/hal/mem.h
@@ -40,13 +31,6 @@ pfpu.o: ../../software/include/base/irq.h
 pfpu.o: ../../software/include/hw/interrupts.h
 pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 pfpu.o: ../../software/include/hal/pfpu.h
-slowout.o: ../../software/include/base/stdio.h
-slowout.o: ../../software/include/base/stdlib.h
-slowout.o: ../../software/include/base/irq.h
-slowout.o: ../../software/include/hw/interrupts.h
-slowout.o: ../../software/include/hw/sysctl.h
-slowout.o: ../../software/include/hw/common.h
-slowout.o: ../../software/include/hal/slowout.h
 snd.o: ../../software/include/base/stdio.h
 snd.o: ../../software/include/base/stdlib.h ../../software/include/base/irq.h
 snd.o: ../../software/include/hw/ac97.h ../../software/include/hw/common.h

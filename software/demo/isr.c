@@ -20,12 +20,10 @@
 #include <uart.h>
 
 #include <hal/time.h>
-#include <hal/slowout.h>
 #include <hal/snd.h>
 #include <hal/pfpu.h>
 #include <hal/tmu.h>
 
-#include "ui.h"
 #include "cpustats.h"
 
 void isr()
@@ -43,8 +41,6 @@ void isr()
 
 	if(irqs & IRQ_TIMER0)
 		time_isr();
-	if(irqs & IRQ_TIMER1)
-		slowout_isr();
 
 	if(irqs & IRQ_AC97CRREQUEST)
 		snd_isr_crrequest();
@@ -60,11 +56,6 @@ void isr()
 
 	if(irqs & IRQ_TMU)
 		tmu_isr();
-
-	if(irqs & IRQ_GPIO) {
-		irq_ack(IRQ_GPIO);
-		ui_isr_key();
-	}
 
 	cpustats_leave();
 }
