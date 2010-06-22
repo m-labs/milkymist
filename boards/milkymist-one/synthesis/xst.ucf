@@ -1,6 +1,3 @@
-# LOC the DCMs related to SDRAM and the system clock
-# to prevent tools from randomly screwing up
-# the DDR timings when the design is changed.
 INST "clkgen_sys" LOC = DCM_X0Y1;
 INST "b1" LOC = BUFGMUX_X2Y3;
 INST "b2" LOC = BUFGMUX_X3Y5;

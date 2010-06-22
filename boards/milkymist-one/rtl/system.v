@@ -105,7 +105,7 @@ module system(
 	input phy_irq_n,
 	output phy_mii_clk,
 	inout phy_mii_data,
-	output phy_clk,
+	output reg phy_clk,
 
 	// Video Input
 	input [7:0] videoin_p,
@@ -195,9 +195,7 @@ assign sys_clk = clkin;
 assign sys_clk_n = ~clkin;
 `endif
 
-/* Debounce it (counter holds reset for 10.49ms),
- * and generate power-on reset.
- */
+/* Debounce it and generate power-on reset. */
 reg [19:0] rst_debounce;
 reg sys_rst;
 initial rst_debounce <= 20'hFFFFF;
@@ -210,6 +208,9 @@ always @(posedge sys_clk) begin
 	sys_rst <= rst_debounce != 20'd0;
 end
 
+assign ac97_rst_n = ~sys_rst;
+assign phy_rst_n = ~sys_rst;
+
 /*
  * We must release the Flash reset before the system reset
  * because the Flash needs some time to come out of reset
@@ -217,9 +218,6 @@ end
  * as soon as the system reset is released.
  * From datasheet, minimum reset pulse width is 100ns
  * and reset-to-read time is 150ns.
- * The reset is combined with the AC97 reset, which must be held for 1us.
- * Here we use a 7-bit counter that holds reset
- * for 1.28us and makes everybody happy.
  */
 
 reg [7:0] flash_rstcounter;
@@ -232,8 +230,6 @@ always @(posedge sys_clk) begin
 end
 
 assign flash_rst_n = flash_rstcounter[7];
-assign ac97_rst_n = flash_rstcounter[7];
-assign phy_rst_n = flash_rstcounter[7];
 
 //------------------------------------------------------------------
 // Wishbone master wires
@@ -242,12 +238,16 @@ wire [31:0]	cpuibus_adr,
 		cpudbus_adr,
 		ac97bus_adr,
 		pfpubus_adr,
-		tmumbus_adr;
+		tmumbus_adr,
+		ethernetrxbus_adr,
+		ethernettxbus_adr;
 
 wire [2:0]	cpuibus_cti,
 		cpudbus_cti,
 		ac97bus_cti,
-		tmumbus_cti;
+		tmumbus_cti,
+		ethernetrxbus_cti,
+		ethernettxbus_cti;
 
 wire [31:0]	cpuibus_dat_r,
 		cpudbus_dat_r,
@@ -255,7 +255,9 @@ wire [31:0]	cpuibus_dat_r,
 		ac97bus_dat_r,
 		ac97bus_dat_w,
 		pfpubus_dat_w,
-		tmumbus_dat_r;
+		tmumbus_dat_r,
+		ethernetrxbus_dat_w,
+		ethernettxbus_dat_r;
 
 wire [3:0]	cpudbus_sel;
 
@@ -266,19 +268,25 @@ wire		cpuibus_cyc,
 		cpudbus_cyc,
 		ac97bus_cyc,
 		pfpubus_cyc,
-		tmumbus_cyc;
+		tmumbus_cyc,
+		ethernetrxbus_cyc,
+		ethernettxbus_cyc;
 
 wire		cpuibus_stb,
 		cpudbus_stb,
 		ac97bus_stb,
 		pfpubus_stb,
-		tmumbus_stb;
+		tmumbus_stb,
+		ethernetrxbus_stb,
+		ethernettxbus_stb;
 
 wire		cpuibus_ack,
 		cpudbus_ack,
 		ac97bus_ack,
 		tmumbus_ack,
-		pfpubus_ack;
+		pfpubus_ack,
+		ethernetrxbus_ack,
+		ethernettxbus_ack;
 
 //------------------------------------------------------------------
 // Wishbone slave wires
@@ -376,6 +384,26 @@ conbus #(
 	.m4_cyc_i(tmumbus_cyc),
 	.m4_stb_i(tmumbus_stb),
 	.m4_ack_o(tmumbus_ack),
+	// Master 5
+	.m5_dat_i(ethernetrxbus_dat_w),
+	.m5_dat_o(),
+	.m5_adr_i(ethernetrxbus_adr),
+	.m5_cti_i(ethernetrxbus_cti),
+	.m5_we_i(1'b1),
+	.m5_sel_i(4'hf),
+	.m5_cyc_i(ethernetrxbus_cyc),
+	.m5_stb_i(ethernetrxbus_stb),
+	.m5_ack_o(ethernetrxbus_ack),
+	// Master 6
+	.m6_dat_i(),
+	.m6_dat_o(ethernettxbus_dat_r),
+	.m6_adr_i(ethernettxbus_adr),
+	.m6_cti_i(ethernettxbus_cti),
+	.m6_we_i(1'b0),
+	.m6_sel_i(4'hf),
+	.m6_cyc_i(ethernettxbus_cyc),
+	.m6_stb_i(ethernettxbus_stb),
+	.m6_ack_o(ethernettxbus_ack),
 
 	// Slave 0
 	.s0_dat_i(norflash_dat_r),
@@ -629,9 +657,15 @@ wire ac97dmar_irq;
 wire ac97dmaw_irq;
 wire pfpu_irq;
 wire tmu_irq;
+wire ethernetrx_irq;
+wire ethernettx_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {21'd0,
+assign cpu_interrupt = {17'd0,
+	ethernettx_irq,
+	ethernetrx_irq,
+	1'b0, /* was: mouse */
+	1'b0, /* was: keyboard */
 	tmu_irq,
 	pfpu_irq,
 	ac97dmaw_irq,
@@ -997,14 +1031,24 @@ assign fml_tmuw_dw = 64'bx;
 // Ethernet
 //---------------------------------------------------------------------------
 `ifdef ENABLE_ETHERNET
+wire phy_tx_clk_b0;
 wire phy_tx_clk_b;
-AUTOBUF b_phy_tx_clk(
+BUFIO2 b_phy_tx_clk0(
 	.I(phy_tx_clk),
+	.DIVCLK(phy_tx_clk_b0)
+);
+BUFG b_phy_tx_clk(
+	.I(phy_tx_clk_b0),
 	.O(phy_tx_clk_b)
 );
+wire phy_rx_clk_b0;
 wire phy_rx_clk_b;
-AUTOBUF b_phy_rx_clk(
+BUFIO2 b_phy_rx_clk0(
 	.I(phy_rx_clk),
+	.DIVCLK(phy_rx_clk_b0)
+);
+BUFG b_phy_rx_clk(
+	.I(phy_rx_clk_b0),
 	.O(phy_rx_clk_b)
 );
 minimac #(
@@ -1039,8 +1083,8 @@ minimac #(
 	.phy_tx_data(phy_tx_data),
 	.phy_tx_en(phy_tx_en),
 	.phy_tx_er(phy_tx_er),
-	.phy_rx_clk(phy_rx_clk),
-	.phy_rx_data(phy_rx_data_b),
+	.phy_rx_clk(phy_rx_clk_b),
+	.phy_rx_data(phy_rx_data),
 	.phy_dv(phy_dv),
 	.phy_rx_er(phy_rx_er),
 	.phy_col(phy_col),
@@ -1069,8 +1113,7 @@ assign phy_mii_clk = 1'b0;
 assign phy_mii_data = 1'bz;
 `endif
 
-// TODO
-assign phy_clk = 1'b0;
+always @(posedge clk50) phy_clk <= ~phy_clk;
 
 //---------------------------------------------------------------------------
 // FastMemoryLink usage and performance meter

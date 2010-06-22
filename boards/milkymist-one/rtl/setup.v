@@ -24,7 +24,7 @@
 //`define ENABLE_AC97
 //`define ENABLE_PFPU
 //`define ENABLE_TMU
-//`define ENABLE_ETHERNET
+`define ENABLE_ETHERNET
 `define ENABLE_FMLMETER
 
 /*

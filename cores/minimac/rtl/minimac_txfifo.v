@@ -42,7 +42,7 @@ end
 
 asfifo #(
 	.data_width(8),
-	.address_width(7)
+	.address_width(6)
 ) fifo (
 	.data_out(fifo_out),
 	.empty(fifo_empty),
