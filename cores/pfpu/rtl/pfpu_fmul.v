@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,19 +94,39 @@ always @(posedge sys_clk) begin
 	r2_mant <= r1_mant;
 end
 
+
 /* Stage 4 */
+reg		r3_zero;
+reg		r3_sign;
+reg [7:0]	r3_expn;
+reg [47:0]	r3_mant;
+
+reg r3_valid;
+
+always @(posedge sys_clk) begin
+	if(alu_rst)
+		r3_valid <= 1'b0;
+	else
+		r3_valid <= r2_valid;
+	r3_zero <= r2_zero;
+	r3_sign <= r2_sign;
+	r3_expn <= r2_expn;
+	r3_mant <= r2_mant;
+end
+
+/* Stage 5 */
 always @(posedge sys_clk) begin
 	if(alu_rst)
 		valid_o <= 1'b0;
 	else
-		valid_o <= r2_valid;
-	if(r2_zero)
+		valid_o <= r3_valid;
+	if(r3_zero)
 		r <= {1'bx, 8'd0, 23'bx};
 	else begin
-		if(~r2_mant[47])
-			r <= {r2_sign, r2_expn,      r2_mant[45:23]};
+		if(~r3_mant[47])
+			r <= {r3_sign, r3_expn,      r3_mant[45:23]};
 		else
-			r <= {r2_sign, r2_expn+8'd1, r2_mant[46:24]};
+			r <= {r3_sign, r3_expn+8'd1, r3_mant[46:24]};
 	end
 end
 
