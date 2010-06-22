@@ -2,6 +2,10 @@
 # to prevent tools from randomly screwing up
 # the DDR timings when the design is changed.
 INST "clkgen_sys" LOC = DCM_X0Y1;
+INST "b1" LOC = BUFGMUX_X2Y3;
+INST "b2" LOC = BUFGMUX_X3Y5;
 INST "ddram/clkgen_dqs" LOC = DCM_X0Y6;
+INST "ddram/b1" LOC = BUFGMUX_X2Y4;
+INST "ddram/b2" LOC = BUFGMUX_X2Y2;
 
 CONFIG STEPPING = "ES";
