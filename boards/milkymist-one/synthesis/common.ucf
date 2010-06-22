@@ -199,6 +199,9 @@ NET "ac97_sout" LOC = A4 | IOSTANDARD = LVCMOS33;
 NET "ac97_sync" LOC = A5 | IOSTANDARD = LVCMOS33;
 NET "ac97_rst_n" LOC = D6 | IOSTANDARD = LVCMOS33;
 
+NET "ac97_clk" TNM_NET = "GRPac97_clk";
+TIMESPEC "TSac97_clk" = PERIOD "GRPac97_clk" 80 HIGH 50%;
+
 # ==== USB ====
 NET "usba_spd" LOC = Y5 | IOSTANDARD = LVCMOS33;
 NET "usba_oe_n" LOC = Y6 | IOSTANDARD = LVCMOS33;
@@ -323,3 +326,6 @@ NET "sys_clk" TNM_NET = "GRPsys";
 NET "vga/vga_iclk" TNM_NET = "GRPvga";
 TIMESPEC "TSvga_async1" = FROM "GRPsys" TO "GRPvga" TIG;
 TIMESPEC "TSvga_async2" = FROM "GRPvga" TO "GRPsys" TIG;
+
+TIMESPEC "TSac97_async1" = FROM "GRPsys" TO "GRPac97_clk" TIG;
+TIMESPEC "TSac97_async2" = FROM "GRPac97_clk" TO "GRPsys" TIG;
