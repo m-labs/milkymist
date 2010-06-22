@@ -1,3 +1,7 @@
-# TODO: LOC the clocking elements related to the SDRAM and the system clock
+# LOC the DCMs related to SDRAM and the system clock
+# to prevent tools from randomly screwing up
+# the DDR timings when the design is changed.
+INST "clkgen_sys" LOC = DCM_X0Y1;
+INST "ddram/clkgen_dqs" LOC = DCM_X0Y6;
 
 CONFIG STEPPING = "ES";
