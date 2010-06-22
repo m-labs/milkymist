@@ -21,7 +21,7 @@
  * but when working on a specific part, it's very useful to be
  * able to cut down synthesis times.
  */
-//`define ENABLE_AC97
+`define ENABLE_AC97
 //`define ENABLE_PFPU
 //`define ENABLE_TMU
 `define ENABLE_ETHERNET
