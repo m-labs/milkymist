@@ -58,7 +58,7 @@
 
 #define PFPU_LATENCY_FADD	(4)
 #define PFPU_LATENCY_FSUB	(4)
-#define PFPU_LATENCY_FMUL	(6)
+#define PFPU_LATENCY_FMUL	(7)
 #define PFPU_LATENCY_FABS	(2)
 #define PFPU_LATENCY_F2I	(2)
 #define PFPU_LATENCY_I2F	(3)

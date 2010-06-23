@@ -94,7 +94,6 @@ always @(posedge sys_clk) begin
 	r2_mant <= r1_mant;
 end
 
-
 /* Stage 4 */
 reg		r3_zero;
 reg		r3_sign;
@@ -115,18 +114,37 @@ always @(posedge sys_clk) begin
 end
 
 /* Stage 5 */
+reg		r4_zero;
+reg		r4_sign;
+reg [7:0]	r4_expn;
+reg [47:0]	r4_mant;
+
+reg r4_valid;
+
+always @(posedge sys_clk) begin
+	if(alu_rst)
+		r4_valid <= 1'b0;
+	else
+		r4_valid <= r3_valid;
+	r4_zero <= r3_zero;
+	r4_sign <= r3_sign;
+	r4_expn <= r3_expn;
+	r4_mant <= r3_mant;
+end
+
+/* Stage 6 */
 always @(posedge sys_clk) begin
 	if(alu_rst)
 		valid_o <= 1'b0;
 	else
-		valid_o <= r3_valid;
-	if(r3_zero)
+		valid_o <= r4_valid;
+	if(r4_zero)
 		r <= {1'bx, 8'd0, 23'bx};
 	else begin
-		if(~r3_mant[47])
-			r <= {r3_sign, r3_expn,      r3_mant[45:23]};
+		if(~r4_mant[47])
+			r <= {r4_sign, r4_expn,      r4_mant[45:23]};
 		else
-			r <= {r3_sign, r3_expn+8'd1, r3_mant[46:24]};
+			r <= {r4_sign, r4_expn+8'd1, r4_mant[46:24]};
 	end
 end
 

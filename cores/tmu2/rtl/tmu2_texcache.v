@@ -228,7 +228,6 @@ wire hit_b = ignore_b_2 | (valid_b & (tag_b == tadrb8_2[fml_depth-1:cache_depth]
 wire hit_c = ignore_c_2 | (valid_c & (tag_c == tadrc8_2[fml_depth-1:cache_depth]));
 wire hit_d = ignore_d_2 | (valid_d & (tag_d == tadrd8_2[fml_depth-1:cache_depth]));
 
-`define VERIFY_TEXCACHE
 `ifdef VERIFY_TEXCACHE
 integer x, y;
 reg [15:0] expected;
