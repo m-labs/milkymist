@@ -49,59 +49,70 @@ reg [15:0] colorb_1;
 reg [15:0] colorc_1;
 reg [15:0] colord_1;
 reg [fml_depth-1-1:0] dadr_1;
+reg [5:0] x_frac_1;
+reg [5:0] y_frac_1;
+reg [6:0] ix_frac_1;
+reg [6:0] iy_frac_1;
 
 reg valid_2;
-wire [12:0] pa_2;
-wire [12:0] pb_2;
-wire [12:0] pc_2;
-wire [12:0] pd_2;
 reg [15:0] colora_2;
 reg [15:0] colorb_2;
 reg [15:0] colorc_2;
 reg [15:0] colord_2;
 reg [fml_depth-1-1:0] dadr_2;
-wire [4:0] ra_2 = colora_2[15:11];
-wire [5:0] ga_2 = colora_2[10:5];
-wire [4:0] ba_2 = colora_2[4:0];
-wire [4:0] rb_2 = colorb_2[15:11];
-wire [5:0] gb_2 = colorb_2[10:5];
-wire [4:0] bb_2 = colorb_2[4:0];
-wire [4:0] rc_2 = colorc_2[15:11];
-wire [5:0] gc_2 = colorc_2[10:5];
-wire [4:0] bc_2 = colorc_2[4:0];
-wire [4:0] rd_2 = colord_2[15:11];
-wire [5:0] gd_2 = colord_2[10:5];
-wire [4:0] bd_2 = colord_2[4:0];
 
 reg valid_3;
+wire [12:0] pa_3;
+wire [12:0] pb_3;
+wire [12:0] pc_3;
+wire [12:0] pd_3;
+reg [15:0] colora_3;
+reg [15:0] colorb_3;
+reg [15:0] colorc_3;
+reg [15:0] colord_3;
 reg [fml_depth-1-1:0] dadr_3;
+wire [4:0] ra_3 = colora_3[15:11];
+wire [5:0] ga_3 = colora_3[10:5];
+wire [4:0] ba_3 = colora_3[4:0];
+wire [4:0] rb_3 = colorb_3[15:11];
+wire [5:0] gb_3 = colorb_3[10:5];
+wire [4:0] bb_3 = colorb_3[4:0];
+wire [4:0] rc_3 = colorc_3[15:11];
+wire [5:0] gc_3 = colorc_3[10:5];
+wire [4:0] bc_3 = colorc_3[4:0];
+wire [4:0] rd_3 = colord_3[15:11];
+wire [5:0] gd_3 = colord_3[10:5];
+wire [4:0] bd_3 = colord_3[4:0];
 
 reg valid_4;
-wire [16:0] ra_4;
-wire [17:0] ga_4;
-wire [16:0] ba_4;
-wire [16:0] rb_4;
-wire [17:0] gb_4;
-wire [16:0] bb_4;
-wire [16:0] rc_4;
-wire [17:0] gc_4;
-wire [16:0] bc_4;
-wire [16:0] rd_4;
-wire [17:0] gd_4;
-wire [16:0] bd_4;
 reg [fml_depth-1-1:0] dadr_4;
 
 reg valid_5;
-reg [16:0] r_5;
-reg [17:0] g_5;
-reg [16:0] b_5;
+wire [16:0] ra_5;
+wire [17:0] ga_5;
+wire [16:0] ba_5;
+wire [16:0] rb_5;
+wire [17:0] gb_5;
+wire [16:0] bb_5;
+wire [16:0] rc_5;
+wire [17:0] gc_5;
+wire [16:0] bc_5;
+wire [16:0] rd_5;
+wire [17:0] gd_5;
+wire [16:0] bd_5;
 reg [fml_depth-1-1:0] dadr_5;
 
 reg valid_6;
-reg [4:0] r_6;
-reg [5:0] g_6;
-reg [4:0] b_6;
+reg [16:0] r_6;
+reg [17:0] g_6;
+reg [16:0] b_6;
 reg [fml_depth-1-1:0] dadr_6;
+
+reg valid_7;
+reg [4:0] r_7;
+reg [5:0] g_7;
+reg [4:0] b_7;
+reg [fml_depth-1-1:0] dadr_7;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
@@ -111,6 +122,7 @@ always @(posedge sys_clk) begin
 		valid_4 <= 1'b0;
 		valid_5 <= 1'b0;
 		valid_6 <= 1'b0;
+		valid_7 <= 1'b0;
 	end else if(pipe_en) begin
 		valid_1 <= pipe_stb_i;
 		dadr_1 <= dadr;
@@ -118,7 +130,11 @@ always @(posedge sys_clk) begin
 		colorb_1 <= colorb;
 		colorc_1 <= colorc;
 		colord_1 <= colord;
-
+		x_frac_1 <= x_frac;
+		y_frac_1 <= y_frac;
+		ix_frac_1 <= 7'd64 - x_frac;
+		iy_frac_1 <= 7'd64 - y_frac;
+	
 		valid_2 <= valid_1;
 		dadr_2 <= dadr_1;
 		colora_2 <= colora_1;
@@ -128,147 +144,154 @@ always @(posedge sys_clk) begin
 
 		valid_3 <= valid_2;
 		dadr_3 <= dadr_2;
+		colora_3 <= colora_2;
+		colorb_3 <= colorb_2;
+		colorc_3 <= colorc_2;
+		colord_3 <= colord_2;
 
 		valid_4 <= valid_3;
 		dadr_4 <= dadr_3;
 
 		valid_5 <= valid_4;
-		r_5 <= ra_4 + rb_4 + rc_4 + rd_4;
-		g_5 <= ga_4 + gb_4 + gc_4 + gd_4;
-		b_5 <= ba_4 + bb_4 + bc_4 + bd_4;
 		dadr_5 <= dadr_4;
 
 		valid_6 <= valid_5;
-		r_6 <= r_5[16:12] + (r_5[11] & (|r_5[10:0] | r_5[12]));
-		g_6 <= g_5[17:12] + (g_5[11] & (|g_5[10:0] | g_5[12]));
-		b_6 <= b_5[16:12] + (b_5[11] & (|b_5[10:0] | b_5[12]));
+		r_6 <= ra_5 + rb_5 + rc_5 + rd_5;
+		g_6 <= ga_5 + gb_5 + gc_5 + gd_5;
+		b_6 <= ba_5 + bb_5 + bc_5 + bd_5;
 		dadr_6 <= dadr_5;
+
+		valid_7 <= valid_6;
+		r_7 <= r_6[16:12] + (r_6[11] & (|r_6[10:0] | r_6[12]));
+		g_7 <= g_6[17:12] + (g_6[11] & (|g_6[10:0] | g_6[12]));
+		b_7 <= b_6[16:12] + (b_6[11] & (|b_6[10:0] | b_6[12]));
+		dadr_7 <= dadr_6;
 	end
 end
 
 tmu2_mult2 m_pa(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(7'd64 - x_frac),
-	.b(7'd64 - y_frac),
-	.p(pa_2)
+	.a(ix_frac_1),
+	.b(iy_frac_1),
+	.p(pa_3)
 );
 tmu2_mult2 m_pb(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(x_frac),
-	.b(7'd64 - y_frac),
-	.p(pb_2)
+	.a(x_frac_1),
+	.b(iy_frac_1),
+	.p(pb_3)
 );
 tmu2_mult2 m_pc(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(7'd64 - x_frac),
-	.b(y_frac),
-	.p(pc_2)
+	.a(ix_frac_1),
+	.b(y_frac_1),
+	.p(pc_3)
 );
 tmu2_mult2 m_pd(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(x_frac),
-	.b(y_frac),
-	.p(pd_2)
+	.a(x_frac_1),
+	.b(y_frac_1),
+	.p(pd_3)
 );
 
 tmu2_mult2 m_ra(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pa_2),
-	.b(ra_2),
-	.p(ra_4)
+	.a(pa_3),
+	.b(ra_3),
+	.p(ra_5)
 );
 tmu2_mult2 m_ga(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pa_2),
-	.b(ga_2),
-	.p(ga_4)
+	.a(pa_3),
+	.b(ga_3),
+	.p(ga_5)
 );
 tmu2_mult2 m_ba(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pa_2),
-	.b(ba_2),
-	.p(ba_4)
+	.a(pa_3),
+	.b(ba_3),
+	.p(ba_5)
 );
 tmu2_mult2 m_rb(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pb_2),
-	.b(rb_2),
-	.p(rb_4)
+	.a(pb_3),
+	.b(rb_3),
+	.p(rb_5)
 );
 tmu2_mult2 m_gb(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pb_2),
-	.b(gb_2),
-	.p(gb_4)
+	.a(pb_3),
+	.b(gb_3),
+	.p(gb_5)
 );
 tmu2_mult2 m_bb(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pb_2),
-	.b(bb_2),
-	.p(bb_4)
+	.a(pb_3),
+	.b(bb_3),
+	.p(bb_5)
 );
 tmu2_mult2 m_rc(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pc_2),
-	.b(rc_2),
-	.p(rc_4)
+	.a(pc_3),
+	.b(rc_3),
+	.p(rc_5)
 );
 tmu2_mult2 m_gc(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pc_2),
-	.b(gc_2),
-	.p(gc_4)
+	.a(pc_3),
+	.b(gc_3),
+	.p(gc_5)
 );
 tmu2_mult2 m_bc(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pc_2),
-	.b(bc_2),
-	.p(bc_4)
+	.a(pc_3),
+	.b(bc_3),
+	.p(bc_5)
 );
 tmu2_mult2 m_rd(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pd_2),
-	.b(rd_2),
-	.p(rd_4)
+	.a(pd_3),
+	.b(rd_3),
+	.p(rd_5)
 );
 tmu2_mult2 m_gd(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pd_2),
-	.b(gd_2),
-	.p(gd_4)
+	.a(pd_3),
+	.b(gd_3),
+	.p(gd_5)
 );
 tmu2_mult2 m_bd(
 	.sys_clk(sys_clk),
 	.ce(pipe_en),
-	.a(pd_2),
-	.b(bd_2),
-	.p(bd_4)
+	.a(pd_3),
+	.b(bd_3),
+	.p(bd_5)
 );
 
 /* Glue logic */
 
-assign pipe_stb_o = valid_6;
-assign dadr_f = dadr_6;
-assign color = {r_6, g_6, b_6};
+assign pipe_stb_o = valid_7;
+assign dadr_f = dadr_7;
+assign color = {r_7, g_7, b_7};
 
-assign pipe_en = ~valid_6 | pipe_ack_i;
-assign pipe_ack_o = ~valid_6 | pipe_ack_i;
+assign pipe_en = ~valid_7 | pipe_ack_i;
+assign pipe_ack_o = ~valid_7 | pipe_ack_i;
 
-assign busy = valid_1 | valid_2 | valid_3 | valid_4 | valid_5 | valid_6;
+assign busy = valid_1 | valid_2 | valid_3 | valid_4 | valid_5 | valid_6 | valid_7;
 
 endmodule

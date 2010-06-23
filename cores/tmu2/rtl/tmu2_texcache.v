@@ -28,10 +28,10 @@ module tmu2_texcache #(
 	input [63:0] fml_di,
 
 	input flush,
-	output busy,
+	output reg busy,
 
 	input pipe_stb_i,
-	output pipe_ack_o,
+	output reg pipe_ack_o,
 	input [fml_depth-1-1:0] dadr, /* in 16-bit words */
 	input [fml_depth-1-1:0] tadra,
 	input [fml_depth-1-1:0] tadrb,
@@ -40,24 +40,15 @@ module tmu2_texcache #(
 	input [5:0] x_frac,
 	input [5:0] y_frac,
 
-	output pipe_stb_o,
+	output reg pipe_stb_o,
 	input pipe_ack_i,
-	output reg [fml_depth-1-1:0] dadr_f, /* in 16-bit words */
+	output [fml_depth-1-1:0] dadr_f, /* in 16-bit words */
 	output [15:0] tcolora,
 	output [15:0] tcolorb,
 	output [15:0] tcolorc,
 	output [15:0] tcolord,
-	output reg [5:0] x_frac_f,
-	output reg [5:0] y_frac_f,
-
-	output reg [21:0] c_req_a,
-	output reg [21:0] c_hit_a,
-	output reg [21:0] c_req_b,
-	output reg [21:0] c_hit_b,
-	output reg [21:0] c_req_c,
-	output reg [21:0] c_hit_c,
-	output reg [21:0] c_req_d,
-	output reg [21:0] c_hit_d
+	output [5:0] x_frac_f,
+	output [5:0] y_frac_f
 );
 
 /*
@@ -74,28 +65,11 @@ module tmu2_texcache #(
  *
  */
 
-/* MEMORIES & HIT HANDLING */
-
-wire [fml_depth-1:0] tadra8 = {tadra, 1'b0};
-wire [fml_depth-1:0] tadrb8 = {tadrb, 1'b0};
-wire [fml_depth-1:0] tadrc8 = {tadrc, 1'b0};
-wire [fml_depth-1:0] tadrd8 = {tadrd, 1'b0};
-
-reg [fml_depth-1:0] tadra8_r;
-reg [fml_depth-1:0] tadrb8_r;
-reg [fml_depth-1:0] tadrc8_r;
-reg [fml_depth-1:0] tadrd8_r;
-
-always @(posedge sys_clk) begin
-	if(pipe_ack_o) begin
-		tadra8_r <= tadra8;
-		tadrb8_r <= tadrb8;
-		tadrc8_r <= tadrc8;
-		tadrd8_r <= tadrd8;
-	end
-end
-
-wire retry; /* < retry the old address after a miss */
+/* MEMORIES */
+reg [fml_depth-1:0] indexa;
+reg [fml_depth-1:0] indexb;
+reg [fml_depth-1:0] indexc;
+reg [fml_depth-1:0] indexd;
 
 wire [31:0] datamem_d1;
 wire [31:0] datamem_d2;
@@ -110,23 +84,19 @@ tmu2_qpram32 #(
 ) datamem (
 	.sys_clk(sys_clk),
 
-	.a1(retry ? tadra8_r[cache_depth-1:2] : tadra8[cache_depth-1:2]),
+	.a1(indexa[cache_depth-1:2]),
 	.d1(datamem_d1),
-	.a2(retry ? tadrb8_r[cache_depth-1:2] : tadrb8[cache_depth-1:2]),
+	.a2(indexb[cache_depth-1:2]),
 	.d2(datamem_d2),
-	.a3(retry ? tadrc8_r[cache_depth-1:2] : tadrc8[cache_depth-1:2]),
+	.a3(indexc[cache_depth-1:2]),
 	.d3(datamem_d3),
-	.a4(retry ? tadrd8_r[cache_depth-1:2] : tadrd8[cache_depth-1:2]),
+	.a4(indexd[cache_depth-1:2]),
 	.d4(datamem_d4),
 
 	.we(datamem_we),
 	.aw(datamem_aw),
 	.dw(fml_di)
 );
-assign tcolora = tadra8_r[1] ? datamem_d1[15:0] : datamem_d1[31:16];
-assign tcolorb = tadrb8_r[1] ? datamem_d2[15:0] : datamem_d2[31:16];
-assign tcolorc = tadrc8_r[1] ? datamem_d3[15:0] : datamem_d3[31:16];
-assign tcolord = tadrd8_r[1] ? datamem_d4[15:0] : datamem_d4[31:16];
 
 wire [1+fml_depth-cache_depth-1:0] tagmem_d1; /* < valid bit + tag */
 wire [1+fml_depth-cache_depth-1:0] tagmem_d2;
@@ -143,13 +113,13 @@ tmu2_qpram #(
 ) tagmem (
 	.sys_clk(sys_clk),
 
-	.a1(retry ? tadra8_r[cache_depth-1:5] : tadra8[cache_depth-1:5]),
+	.a1(indexa[cache_depth-1:5]),
 	.d1(tagmem_d1),
-	.a2(retry ? tadrb8_r[cache_depth-1:5] : tadrb8[cache_depth-1:5]),
+	.a2(indexb[cache_depth-1:5]),
 	.d2(tagmem_d2),
-	.a3(retry ? tadrc8_r[cache_depth-1:5] : tadrc8[cache_depth-1:5]),
+	.a3(indexc[cache_depth-1:5]),
 	.d3(tagmem_d3),
-	.a4(retry ? tadrd8_r[cache_depth-1:5] : tadrd8[cache_depth-1:5]),
+	.a4(indexd[cache_depth-1:5]),
 	.d4(tagmem_d4),
 
 	.we(tagmem_we),
@@ -157,36 +127,113 @@ tmu2_qpram #(
 	.dw(tagmem_dw)
 );
 
-/* HIT HANDLING */
+/* REQUEST TRACKER */
+reg invalidate_req;
+wire rqvalid_0 = pipe_stb_i & ~invalidate_req;
+wire [fml_depth-1-1:0] dadr_0 = dadr;
+wire [5:0] x_frac_0 = x_frac;
+wire [5:0] y_frac_0 = y_frac;
+wire [fml_depth-1:0] tadra8_0 = {tadra, 1'b0};
+wire [fml_depth-1:0] tadrb8_0 = {tadrb, 1'b0};
+wire [fml_depth-1:0] tadrc8_0 = {tadrc, 1'b0};
+wire [fml_depth-1:0] tadrd8_0 = {tadrd, 1'b0};
 
-reg flush_mode;
+reg rqvalid_1;
+reg [fml_depth-1-1:0] dadr_1;
+reg [5:0] x_frac_1;
+reg [5:0] y_frac_1;
+reg [fml_depth-1:0] tadra8_1;
+reg [fml_depth-1:0] tadrb8_1;
+reg [fml_depth-1:0] tadrc8_1;
+reg [fml_depth-1:0] tadrd8_1;
 
-reg access_requested;
+reg rqvalid_2;
+reg [fml_depth-1-1:0] dadr_2;
+reg [5:0] x_frac_2;
+reg [5:0] y_frac_2;
+reg ignore_b_2;
+reg ignore_c_2;
+reg ignore_d_2;
+reg [fml_depth-1:0] tadra8_2;
+reg [fml_depth-1:0] tadrb8_2;
+reg [fml_depth-1:0] tadrc8_2;
+reg [fml_depth-1:0] tadrd8_2;
+
+reg rqt_ce;
+
 always @(posedge sys_clk) begin
-	if(sys_rst)
-		access_requested <= 1'b0;
-	else if(pipe_ack_o)
-		access_requested <= pipe_stb_i;
-end
+	if(sys_rst) begin
+		rqvalid_1 <= 1'b0;
+		rqvalid_2 <= 1'b0;
+	end else begin
+		if(rqt_ce) begin
+			rqvalid_1 <= rqvalid_0;
+			dadr_1 <= dadr_0;
+			x_frac_1 <= x_frac_0;
+			y_frac_1 <= y_frac_0;
+			tadra8_1 <= tadra8_0;
+			tadrb8_1 <= tadrb8_0;
+			tadrc8_1 <= tadrc8_0;
+			tadrd8_1 <= tadrd8_0;
 
-/* The cycle after the tag memory has been written, data is invalid */
-reg tagmem_we_r;
-always @(posedge sys_clk) tagmem_we_r <= tagmem_we;
-
-/* If some coordinates are integer, B, C or D can be ignored
- * and safely assumed to be cache hits.
- */
-reg ignore_b;
-reg ignore_c;
-reg ignore_d;
-always @(posedge sys_clk) begin
-	if(pipe_ack_o) begin
-		ignore_b <= x_frac == 6'd0;
-		ignore_c <= y_frac == 6'd0;
-		ignore_d <= (x_frac == 6'd0) | (y_frac == 6'd0);
+			rqvalid_2 <= rqvalid_1;
+			dadr_2 <= dadr_1;
+			x_frac_2 <= x_frac_1;
+			y_frac_2 <= y_frac_1;
+			ignore_b_2 <= x_frac_1 == 6'd0;
+			ignore_c_2 <= y_frac_1 == 6'd0;
+			ignore_d_2 <= (x_frac_1 == 6'd0) | (y_frac_1 == 6'd0);
+			tadra8_2 <= tadra8_1;
+			tadrb8_2 <= tadrb8_1;
+			tadrc8_2 <= tadrc8_1;
+			tadrd8_2 <= tadrd8_1;
+		end
 	end
 end
 
+/* OUTPUT DATA GENERATOR */
+assign dadr_f = dadr_2;
+assign x_frac_f = x_frac_2;
+assign y_frac_f = y_frac_2;
+
+assign tcolora = tadra8_2[1] ? datamem_d1[15:0] : datamem_d1[31:16];
+assign tcolorb = tadrb8_2[1] ? datamem_d2[15:0] : datamem_d2[31:16];
+assign tcolorc = tadrc8_2[1] ? datamem_d3[15:0] : datamem_d3[31:16];
+assign tcolord = tadrd8_2[1] ? datamem_d4[15:0] : datamem_d4[31:16];
+
+/* INDEX GENERATOR */
+reg [1:0] index_sel;
+
+always @(*) begin
+	case(index_sel)
+		2'd0: begin
+			indexa = tadra8_0;
+			indexb = tadrb8_0;
+			indexc = tadrc8_0;
+			indexd = tadrd8_0;
+		end
+		2'd1: begin
+			indexa = tadra8_1;
+			indexb = tadrb8_1;
+			indexc = tadrc8_1;
+			indexd = tadrd8_1;
+		end
+		2'd2: begin
+			indexa = tadra8_2;
+			indexb = tadrb8_2;
+			indexc = tadrc8_2;
+			indexd = tadrd8_2;
+		end
+		default: begin
+			indexa = {fml_depth{1'bx}};
+			indexb = {fml_depth{1'bx}};
+			indexc = {fml_depth{1'bx}};
+			indexd = {fml_depth{1'bx}};
+		end
+	endcase
+end
+
+/* HIT DETECTION */
 wire valid_a = tagmem_d1[1+fml_depth-cache_depth-1];
 wire [fml_depth-1-cache_depth:0] tag_a = tagmem_d1[fml_depth-cache_depth-1:0];
 wire valid_b = tagmem_d2[1+fml_depth-cache_depth-1];
@@ -196,94 +243,44 @@ wire [fml_depth-1-cache_depth:0] tag_c = tagmem_d3[fml_depth-cache_depth-1:0];
 wire valid_d = tagmem_d4[1+fml_depth-cache_depth-1];
 wire [fml_depth-1-cache_depth:0] tag_d = tagmem_d4[fml_depth-cache_depth-1:0];
 
-wire hit_a = ~tagmem_we_r & valid_a & (tag_a == tadra8_r[fml_depth-1:cache_depth]);
-wire hit_b = ignore_b | (~tagmem_we_r & valid_b & (tag_b == tadrb8_r[fml_depth-1:cache_depth]));
-wire hit_c = ignore_c | (~tagmem_we_r & valid_c & (tag_c == tadrc8_r[fml_depth-1:cache_depth]));
-wire hit_d = ignore_d | (~tagmem_we_r & valid_d & (tag_d == tadrd8_r[fml_depth-1:cache_depth]));
-
-assign pipe_stb_o = access_requested & hit_a & hit_b & hit_c & hit_d;
-assign pipe_ack_o = ~flush_mode & ((pipe_ack_i & pipe_stb_o) | ~access_requested);
-
-assign retry = ~pipe_ack_o;
-
-/* STATISTICS COLLECTION */
-reg pipe_ack_o_r;
-
-always @(posedge sys_clk) begin
-	if(sys_rst)
-		pipe_ack_o_r <= 1'b0;
-	else
-		pipe_ack_o_r <= pipe_ack_o;
-end
-
-always @(posedge sys_clk) begin
-	if(sys_rst|flush) begin
-		c_req_a <= 22'd0;
-		c_hit_a <= 22'd0;
-		c_req_b <= 22'd0;
-		c_hit_b <= 22'd0;
-		c_req_c <= 22'd0;
-		c_hit_c <= 22'd0;
-		c_req_d <= 22'd0;
-		c_hit_d <= 22'd0;
-	end else begin
-		if(pipe_ack_o_r & access_requested) begin
-			c_req_a <= c_req_a + 22'd1;
-			if(hit_a)
-				c_hit_a <= c_hit_a + 22'd1;
-			if(~ignore_b) begin
-				c_req_b <= c_req_b + 22'd1;
-				if(hit_b)
-					c_hit_b <= c_hit_b + 22'd1;
-			end
-			if(~ignore_c) begin
-				c_req_c <= c_req_c + 22'd1;
-				if(hit_c)
-					c_hit_c <= c_hit_c + 22'd1;
-			end
-			if(~ignore_d) begin
-				c_req_d <= c_req_d + 22'd1;
-				if(hit_d)
-					c_hit_d <= c_hit_d + 22'd1;
-			end
-		end
-	end
-end
+wire hit_a = valid_a & (tag_a == tadra8_2[fml_depth-1:cache_depth]);
+wire hit_b = ignore_b_2 | (valid_b & (tag_b == tadrb8_2[fml_depth-1:cache_depth]));
+wire hit_c = ignore_c_2 | (valid_c & (tag_c == tadrc8_2[fml_depth-1:cache_depth]));
+wire hit_d = ignore_d_2 | (valid_d & (tag_d == tadrd8_2[fml_depth-1:cache_depth]));
 
 `ifdef VERIFY_TEXCACHE
-
 integer x, y;
 reg [15:0] expected;
 always @(posedge sys_clk) begin
 	if(pipe_stb_o & pipe_ack_i) begin
-		x = (tadra8_r/2) % 512;
-		y = (tadra8_r/2) / 512;
+		x = (tadra8_2/2) % 512;
+		y = (tadra8_2/2) / 512;
 		$image_get(x, y, expected);
 		if(tcolora != expected) begin
 			$display("CACHE TEST FAILED [A]! (%d, %d): expected %x, got %x", x, y, expected, tcolora);
 			$finish;
 		end
-		if(~ignore_b) begin
-			x = (tadrb8_r/2) % 512;
-			y = (tadrb8_r/2) / 512;
+		if(~ignore_b_2) begin
+			x = (tadrb8_2/2) % 512;
+			y = (tadrb8_2/2) / 512;
 			$image_get(x, y, expected);
 			if(tcolorb != expected) begin
 				$display("CACHE TEST FAILED [B]! (%d, %d): expected %x, got %x", x, y, expected, tcolorb);
 				$finish;
 			end
 		end
-		if(~ignore_c) begin
-			x = (tadrc8_r/2) % 512;
-			y = (tadrc8_r/2) / 512;
+		if(~ignore_c_2) begin
+			x = (tadrc8_2/2) % 512;
+			y = (tadrc8_2/2) / 512;
 			$image_get(x, y, expected);
 			if(tcolorc != expected) begin
 				$display("CACHE TEST FAILED [C]! (%d, %d): expected %x, got %x", x, y, expected, tcolorc);
 				$finish;
 			end
 		end
-		if(~ignore_d) begin
-			x = (tadrd8_r/2) % 512;
-			y = (tadrd8_r/2) / 512;
+		if(~ignore_d_2) begin
+			x = (tadrd8_2/2) % 512;
+			y = (tadrd8_2/2) / 512;
 			$image_get(x, y, expected);
 			if(tcolord != expected) begin
 				$display("CACHE TEST FAILED [D]! (%d, %d): expected %x, got %x", x, y, expected, tcolord);
@@ -292,42 +289,23 @@ always @(posedge sys_clk) begin
 		end
 	end
 end
-
 `endif
 
-/* FORWARDING */
-
-always @(posedge sys_clk) begin
-	if(pipe_ack_o & pipe_stb_i) begin
-		dadr_f <= dadr;
-		x_frac_f <= x_frac;
-		y_frac_f <= y_frac;
-	end
-end
-
-/* MISS HANDLING */
-
-reg fetch_needed;
+/* FLUSH & MISS HANDLING */
 reg [fml_depth-1:0] fetch_adr;
 
 always @(posedge sys_clk) begin
-	if(sys_rst)
-		fetch_needed <= 1'b0;
-	else begin
-		if(access_requested) begin
-			fetch_needed <= ~(hit_a & hit_b & hit_c & hit_d);
-			if(~hit_a)
-				fetch_adr <= tadra8_r;
-			else if(~hit_b)
-				fetch_adr <= tadrb8_r;
-			else if(~hit_c)
-				fetch_adr <= tadrc8_r;
-			else if(~hit_d)
-				fetch_adr <= tadrd8_r;
-		end
-	end
+	if(~hit_a)
+		fetch_adr <= tadra8_2;
+	else if(~hit_b)
+		fetch_adr <= tadrb8_2;
+	else if(~hit_c)
+		fetch_adr <= tadrc8_2;
+	else if(~hit_d)
+		fetch_adr <= tadrd8_2;
 end
 
+reg flush_mode;
 wire flush_done;
 reg [cache_depth-1-5:0] flush_counter;
 always @(posedge sys_clk) begin
@@ -342,31 +320,24 @@ reg write_valid;
 assign tagmem_aw = flush_mode ? flush_counter : fetch_adr[cache_depth-1:5];
 assign tagmem_dw = {write_valid, fetch_adr[fml_depth-1:cache_depth]};
 
-reg burst_count;
 reg [1:0] burst_counter;
-always @(posedge sys_clk) begin
-	if(burst_count)
-		burst_counter <= burst_counter + 2'd1;
-	else
-		burst_counter <= 2'd0;
-end
 assign datamem_aw = {fetch_adr[cache_depth-1:5], burst_counter};
 
 assign fml_adr = {fetch_adr[fml_depth-1:5], 5'd0};
 
-/* FSM controller */
+/* FSM-BASED CONTROLLER */
+reg [3:0] state;
+reg [3:0] next_state;
 
-reg [2:0] state;
-reg [2:0] next_state;
-
-parameter IDLE		= 3'd0;
-parameter DATA1		= 3'd1;
-parameter DATA2		= 3'd2;
-parameter DATA3		= 3'd3;
-parameter DATA4		= 3'd4;
-parameter WAIT		= 3'd5;
-parameter WAIT2		= 3'd6;
-parameter FLUSH		= 3'd7;
+parameter IDLE		= 4'd0;
+parameter DATA1		= 4'd1;
+parameter DATA2		= 4'd2;
+parameter DATA3		= 4'd3;
+parameter DATA4		= 4'd4;
+parameter HANDLED_MISS	= 4'd5;
+parameter CHECK_REPLAY0	= 4'd6;
+parameter CHECK_REPLAY	= 4'd7;
+parameter FLUSH		= 4'd8;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -375,7 +346,15 @@ always @(posedge sys_clk) begin
 		state <= next_state;
 end
 
-reg fsm_busy;
+reg replaying;
+reg next_replaying;
+
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		replaying <= 1'b0;
+	else
+		replaying <= next_replaying;
+end
 
 always @(*) begin
 	next_state = state;
@@ -384,47 +363,94 @@ always @(*) begin
 	write_valid = 1'b1;
 
 	datamem_we = 1'b0;
-	burst_count = 1'b0;
+	burst_counter = 2'bx;
 
 	flush_mode = 1'b0;
 
 	fml_stb = 1'b0;
 
-	fsm_busy = 1'b1;
+	busy = 1'b1;
+	pipe_stb_o = 1'b0;
+	pipe_ack_o = 1'b0;
+
+	invalidate_req = 1'b0;
+	rqt_ce = 1'b0;
+
+	index_sel = 2'd0;
+
+	next_replaying = replaying;
 
 	case(state)
 		IDLE: begin
-			fsm_busy = 1'b0;
-			if(fetch_needed)
+			busy = rqvalid_1|rqvalid_2;
+			pipe_stb_o = rqvalid_2 & hit_a & hit_b & hit_c & hit_d;
+			pipe_ack_o = ~rqvalid_2 | (hit_a & hit_b & hit_c & hit_d);
+			rqt_ce = ~rqvalid_2 | (hit_a & hit_b & hit_c & hit_d);
+			if(rqvalid_2 & (~hit_a | ~hit_b | ~hit_c | ~hit_d))
 				next_state = DATA1;
 			if(flush)
 				next_state = FLUSH;
 		end
 		DATA1: begin
+			index_sel = 2'd2;
 			fml_stb = 1'b1;
+			burst_counter = 2'd0;
 			datamem_we = 1'b1;
-			if(fml_ack) begin
-				burst_count = 1'b1;
+			tagmem_we = 1'b1;
+			if(fml_ack)
 				next_state = DATA2;
-			end
 		end
 		DATA2: begin
+			index_sel = 2'd2;
+			burst_counter = 2'd1;
 			datamem_we = 1'b1;
-			burst_count = 1'b1;
 			next_state = DATA3;
 		end
 		DATA3: begin
+			index_sel = 2'd2;
+			burst_counter = 2'd2;
 			datamem_we = 1'b1;
-			burst_count = 1'b1;
 			next_state = DATA4;
 		end
 		DATA4: begin
+			index_sel = 2'd2;
+			burst_counter = 2'd3;
 			datamem_we = 1'b1;
-			tagmem_we = 1'b1; /* write tag last as it may unlock the pipeline */
-			next_state = WAIT;
+			if(~hit_a | ~hit_b | ~hit_c | ~hit_d)
+				next_state = DATA1;
+			else
+				next_state = HANDLED_MISS;
 		end
-		WAIT: next_state = WAIT2; /* wait for fetch_needed to reflect the updated tag */
-		WAIT2: next_state = IDLE;
+		HANDLED_MISS: begin
+			index_sel = 2'd1;
+			pipe_stb_o = 1'b1;
+			if(pipe_ack_i) begin
+				rqt_ce = 1'b1;
+				if(replaying) begin
+					index_sel = 2'd0;
+					next_replaying = 1'b0;
+					next_state = IDLE;
+				end else begin
+					invalidate_req = 1'b1;
+					next_state = CHECK_REPLAY0;
+				end
+			end
+		end
+		CHECK_REPLAY0: begin
+			index_sel = 2'd2;
+			next_state = CHECK_REPLAY;
+		end
+		CHECK_REPLAY: begin
+			index_sel = 2'd2;
+			if(rqvalid_2 & (~hit_a | ~hit_b | ~hit_c | ~hit_d)) begin
+				next_replaying = 1'b1;
+				next_state = DATA1;
+			end else begin
+				index_sel = 2'd0;
+				rqt_ce = 1'b1;
+				next_state = IDLE;
+			end
+		end
 		FLUSH: begin
 			tagmem_we = 1'b1;
 			write_valid = 1'b0;
@@ -434,7 +460,5 @@ always @(*) begin
 		end
 	endcase
 end
-
-assign busy = fsm_busy | access_requested;
 
 endmodule

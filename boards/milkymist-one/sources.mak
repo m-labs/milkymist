@@ -35,6 +35,7 @@ PFPU_SRC=$(wildcard $(CORES_DIR)/pfpu/rtl/*.v)
 TMU_SRC=						\
 	$(CORES_DIR)/tmu2/rtl/tmu2_adrgen.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_clamp.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_dpram.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_dpram_sw.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_hdiv.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_burst.v		\
@@ -43,7 +44,7 @@ TMU_SRC=						\
 	$(CORES_DIR)/tmu2/rtl/tmu2_ctlif.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_fetchvertex.v	\
 	$(CORES_DIR)/tmu2/rtl/tmu2_hinterp.v		\
-	$(CORES_DIR)/tmu2/rtl/tmu2_qpram32_ss.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_qpram32.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_vdivops.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_decay.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_geninterp18.v	\
@@ -57,7 +58,8 @@ TMU_SRC=						\
 	$(CORES_DIR)/tmu2/rtl/tmu2_blend.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_mult2.v		\
 	$(CORES_DIR)/tmu2/rtl/tmu2_fdest.v		\
-	$(CORES_DIR)/tmu2/rtl/tmu2_alpha.v
+	$(CORES_DIR)/tmu2/rtl/tmu2_alpha.v		\
+	$(CORES_DIR)/tmu2/rtl/tmu2_buffer.v
 ETHERNET_SRC=$(wildcard $(CORES_DIR)/minimac/rtl/*.v)
 FMLMETER_SRC=$(wildcard $(CORES_DIR)/fmlmeter/rtl/*.v)
 

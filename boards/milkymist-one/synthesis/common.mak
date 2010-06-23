@@ -7,7 +7,7 @@ load: build/system.bit
 	cd build && impact -batch ../load.cmd
 
 build/system.ncd: build/system.ngd
-	cd build && map -w system.ngd
+	cd build && map -ol high -w system.ngd
 
 build/system-routed.ncd: build/system.ncd
 	cd build && par -ol high -w system.ncd system-routed.ncd

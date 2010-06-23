@@ -95,15 +95,6 @@ wire [10:0] dst_squareh;		/* < 44 height of each destination rectangle (positive
 wire alpha_en;
 wire [5:0] alpha;			/* < 48 opacity of the output 0-63 */
 
-wire [21:0] c_req_a;			/* < 50 texel cache requests on channel A */
-wire [21:0] c_hit_a;			/* < 54 texel cache hits on channel A */
-wire [21:0] c_req_b;			/* < 58 texel cache requests on channel B */
-wire [21:0] c_hit_b;			/* < 5C texel cache hits on channel B */
-wire [21:0] c_req_c;			/* < 60 texel cache requests on channel C */
-wire [21:0] c_hit_c;			/* < 64 texel cache hits on channel C */
-wire [21:0] c_req_d;			/* < 68 texel cache requests on channel D */
-wire [21:0] c_hit_d;			/* < 6C texel cache hits on channel D */
-
 tmu2_ctlif #(
 	.csr_addr(csr_addr),
 	.fml_depth(fml_depth)
@@ -140,16 +131,7 @@ tmu2_ctlif #(
 	.dst_squarew(dst_squarew),
 	.dst_squareh(dst_squareh),
 	.alpha_en(alpha_en),
-	.alpha(alpha),
-
-	.c_req_a(c_req_a),
-	.c_hit_a(c_hit_a),
-	.c_req_b(c_req_b),
-	.c_hit_b(c_hit_b),
-	.c_req_c(c_req_c),
-	.c_hit_c(c_hit_c),
-	.c_req_d(c_req_d),
-	.c_hit_d(c_hit_d)
+	.alpha(alpha)
 );
 
 /* Stage 1 - Fetch vertices */
@@ -616,7 +598,36 @@ tmu2_adrgen #(
 	.y_frac(y_frac)
 );
 
-/* Stage 11 - Texel cache */
+/* Stage 11a - Buffer */
+wire buffer1_busy;
+wire buffer1_pipe_stb;
+wire buffer1_pipe_ack;
+wire [fml_depth-1-1:0] dadr_buf;
+wire [fml_depth-1-1:0] tadra_buf;
+wire [fml_depth-1-1:0] tadrb_buf;
+wire [fml_depth-1-1:0] tadrc_buf;
+wire [fml_depth-1-1:0] tadrd_buf;
+wire [5:0] x_frac_buf;
+wire [5:0] y_frac_buf;
+
+tmu2_buffer #(
+	.width(5*(fml_depth-1)+6+6)
+) buffer1 (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(buffer1_busy),
+
+	.pipe_stb_i(adrgen_pipe_stb),
+	.pipe_ack_o(adrgen_pipe_ack),
+	.dat_i({dadr, tadra, tadrb, tadrc, tadrd, x_frac, y_frac}),
+
+	.pipe_stb_o(buffer1_pipe_stb),
+	.pipe_ack_i(buffer1_pipe_ack),
+	.dat_o({dadr_buf, tadra_buf, tadrb_buf, tadrc_buf, tadrd_buf, x_frac_buf, y_frac_buf})
+);
+
+/* Stage 11b - Texel cache */
 wire texcache_busy;
 wire texcache_pipe_stb;
 wire texcache_pipe_ack;
@@ -643,15 +654,15 @@ tmu2_texcache #(
 	.flush(start),
 	.busy(texcache_busy),
 
-	.pipe_stb_i(adrgen_pipe_stb),
-	.pipe_ack_o(adrgen_pipe_ack),
-	.dadr(dadr),
-	.tadra(tadra),
-	.tadrb(tadrb),
-	.tadrc(tadrc),
-	.tadrd(tadrd),
-	.x_frac(x_frac),
-	.y_frac(y_frac),
+	.pipe_stb_i(buffer1_pipe_stb),
+	.pipe_ack_o(buffer1_pipe_ack),
+	.dadr(dadr_buf),
+	.tadra(tadra_buf),
+	.tadrb(tadrb_buf),
+	.tadrc(tadrc_buf),
+	.tadrd(tadrd_buf),
+	.x_frac(x_frac_buf),
+	.y_frac(y_frac_buf),
 
 	.pipe_stb_o(texcache_pipe_stb),
 	.pipe_ack_i(texcache_pipe_ack),
@@ -661,16 +672,36 @@ tmu2_texcache #(
 	.tcolorc(tcolorc),
 	.tcolord(tcolord),
 	.x_frac_f(x_frac_f),
-	.y_frac_f(y_frac_f),
+	.y_frac_f(y_frac_f)
+);
 
-	.c_req_a(c_req_a),
-	.c_hit_a(c_hit_a),
-	.c_req_b(c_req_b),
-	.c_hit_b(c_hit_b),
-	.c_req_c(c_req_c),
-	.c_hit_c(c_hit_c),
-	.c_req_d(c_req_d),
-	.c_hit_d(c_hit_d)
+/* Stage 11c - Buffer */
+wire buffer2_busy;
+wire buffer2_pipe_stb;
+wire buffer2_pipe_ack;
+wire [fml_depth-1-1:0] dadr_f_buf;
+wire [15:0] tcolora_buf;
+wire [15:0] tcolorb_buf;
+wire [15:0] tcolorc_buf;
+wire [15:0] tcolord_buf;
+wire [5:0] x_frac_f_buf;
+wire [5:0] y_frac_f_buf;
+
+tmu2_buffer #(
+	.width(fml_depth-1+4*16+6+6)
+) buffer2 (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.busy(buffer2_busy),
+
+	.pipe_stb_i(texcache_pipe_stb),
+	.pipe_ack_o(texcache_pipe_ack),
+	.dat_i({dadr_f, tcolora, tcolorb, tcolorc, tcolord, x_frac_f, y_frac_f}),
+
+	.pipe_stb_o(buffer2_pipe_stb),
+	.pipe_ack_i(buffer2_pipe_ack),
+	.dat_o({dadr_f_buf, tcolora_buf, tcolorb_buf, tcolorc_buf, tcolord_buf, x_frac_f_buf, y_frac_f_buf})
 );
 
 /* Stage 11 - Blend neighbouring pixels for bilinear filtering */
@@ -687,15 +718,15 @@ tmu2_blend #(
 	.sys_rst(sys_rst),
 
 	.busy(blend_busy),
-	.pipe_stb_i(texcache_pipe_stb),
-	.pipe_ack_o(texcache_pipe_ack),
-	.dadr(dadr_f),
-	.colora(tcolora),
-	.colorb(tcolorb),
-	.colorc(tcolorc),
-	.colord(tcolord),
-	.x_frac(x_frac_f),
-	.y_frac(y_frac_f),
+	.pipe_stb_i(buffer2_pipe_stb),
+	.pipe_ack_o(buffer2_pipe_ack),
+	.dadr(dadr_f_buf),
+	.colora(tcolora_buf),
+	.colorb(tcolorb_buf),
+	.colorc(tcolorc_buf),
+	.colord(tcolord_buf),
+	.x_frac(x_frac_f_buf),
+	.y_frac(y_frac_f_buf),
 
 	.pipe_stb_o(blend_pipe_stb),
 	.pipe_ack_i(blend_pipe_ack),
@@ -870,7 +901,7 @@ wire pipeline_busy = fetchvertex_busy
 	|vdivops_busy|vdiv_busy|vinterp_busy
 	|hdivops_busy|hdiv_busy|hinterp_busy
 	|mask_busy|clamp_busy
-	|texcache_busy
+	|buffer1_busy|texcache_busy|buffer2_busy
 	|blend_busy|decay_busy
 `ifdef TMU_HAS_ALPHA
 	|fdest_busy|alpha_busy

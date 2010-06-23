@@ -36,16 +36,22 @@ module tmu2_dpram #(
 
 reg [width-1:0] ram[0:(1 << depth)-1];
 
+reg [width-1:0] do_tmp;
+
 always @(posedge sys_clk) begin
 	if(we)
 		ram[a] <= di;
-	do <= ram[a];
+	do_tmp <= ram[a];
+	do <= do_tmp;
 end
+
+reg [width-1:0] do2_tmp;
 
 always @(posedge sys_clk) begin
 	if(we2)
 		ram[a2] <= di2;
-	do2 <= ram[a2];
+	do2_tmp <= ram[a2];
+	do2 <= do2_tmp;
 end
 
 // synthesis translate_off

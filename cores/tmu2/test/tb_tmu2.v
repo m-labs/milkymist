@@ -207,7 +207,7 @@ always @(posedge sys_clk) begin
 			
 			handle_read(0, read_addr);
 
-			//$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
+			$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 			
 			fmlr_ack = 1'b1;
 		end
@@ -217,7 +217,7 @@ always @(posedge sys_clk) begin
 		
 		handle_read(0, read_addr);
 
-		//$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
+		$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 		
 		if(read_burstcount == 4)
 			read_burstcount = 0;

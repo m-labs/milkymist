@@ -29,6 +29,7 @@ SOURCES= \
 ../rtl/tmu2_vinterp.v \
 ../rtl/tmu2_fdest.v \
 ../rtl/tmu2_alpha.v \
+../rtl/tmu2_buffer.v \
 $(ARBSRC)
 
 SOURCES_VIRTEX4= \

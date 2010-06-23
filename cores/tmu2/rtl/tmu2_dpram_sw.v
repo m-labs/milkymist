@@ -34,11 +34,16 @@ module tmu2_dpram_sw #(
 
 reg [width-1:0] ram[0:(1 << depth)-1];
 
+reg [width-1:0] do_tmp;
+reg [width-1:0] do2_tmp;
+
 always @(posedge sys_clk) begin
 	if(we)
 		ram[a] <= di;
-	do <= ram[a];
-	do2 <= ram[a2];
+	do_tmp <= ram[a];
+	do2_tmp <= ram[a2];
+	do <= do_tmp;
+	do2 <= do2_tmp;
 end
 
 
