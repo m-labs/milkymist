@@ -20,6 +20,7 @@ module tmu2_qpram #(
 	parameter width = 8
 ) (
 	input sys_clk,
+	input ce,
 
 	/* Read port 1 */
 	input [depth-1:0] a1,
@@ -48,6 +49,7 @@ tmu2_dpram_sw #(
 	.width(width)
 ) ram1 (
 	.sys_clk(sys_clk),
+	.ce(ce),
 
 	.a(we ? aw : a1),
 	.we(we),
@@ -63,6 +65,7 @@ tmu2_dpram_sw #(
 	.width(width)
 ) ram2 (
 	.sys_clk(sys_clk),
+	.ce(ce),
 
 	.a(we ? aw : a3),
 	.we(we),

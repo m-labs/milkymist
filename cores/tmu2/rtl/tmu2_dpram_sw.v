@@ -22,6 +22,7 @@ module tmu2_dpram_sw #(
 	parameter width = 32
 ) (
 	input sys_clk,
+	input ce,
 
 	input [depth-1:0] a,
 	input we,
@@ -38,12 +39,14 @@ reg [width-1:0] do_tmp;
 reg [width-1:0] do2_tmp;
 
 always @(posedge sys_clk) begin
-	if(we)
-		ram[a] <= di;
-	do_tmp <= ram[a];
-	do2_tmp <= ram[a2];
-	do <= do_tmp;
-	do2 <= do2_tmp;
+	if(ce) begin
+		if(we)
+			ram[a] <= di;
+		do_tmp <= ram[a];
+		do2_tmp <= ram[a2];
+		do <= do_tmp;
+		do2 <= do2_tmp;
+	end
 end
 
 

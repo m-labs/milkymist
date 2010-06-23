@@ -66,10 +66,12 @@ module tmu2_texcache #(
  */
 
 /* MEMORIES */
-reg [fml_depth-1:0] indexa;
-reg [fml_depth-1:0] indexb;
-reg [fml_depth-1:0] indexc;
-reg [fml_depth-1:0] indexd;
+wire [fml_depth-1:0] indexa;
+wire [fml_depth-1:0] indexb;
+wire [fml_depth-1:0] indexc;
+wire [fml_depth-1:0] indexd;
+
+reg ram_ce;
 
 wire [31:0] datamem_d1;
 wire [31:0] datamem_d2;
@@ -83,7 +85,8 @@ tmu2_qpram32 #(
 	.depth(cache_depth-2)
 ) datamem (
 	.sys_clk(sys_clk),
-
+	.ce(ram_ce),
+	
 	.a1(indexa[cache_depth-1:2]),
 	.d1(datamem_d1),
 	.a2(indexb[cache_depth-1:2]),
@@ -112,6 +115,7 @@ tmu2_qpram #(
 	.width(1+fml_depth-cache_depth)
 ) tagmem (
 	.sys_clk(sys_clk),
+	.ce(ram_ce),
 
 	.a1(indexa[cache_depth-1:5]),
 	.d1(tagmem_d1),
@@ -159,7 +163,7 @@ reg [fml_depth-1:0] tadrb8_2;
 reg [fml_depth-1:0] tadrc8_2;
 reg [fml_depth-1:0] tadrd8_2;
 
-reg rqt_ce;
+wire rqt_ce;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
@@ -202,36 +206,12 @@ assign tcolorc = tadrc8_2[1] ? datamem_d3[15:0] : datamem_d3[31:16];
 assign tcolord = tadrd8_2[1] ? datamem_d4[15:0] : datamem_d4[31:16];
 
 /* INDEX GENERATOR */
-reg [1:0] index_sel;
+reg index_sel;
 
-always @(*) begin
-	case(index_sel)
-		2'd0: begin
-			indexa = tadra8_0;
-			indexb = tadrb8_0;
-			indexc = tadrc8_0;
-			indexd = tadrd8_0;
-		end
-		2'd1: begin
-			indexa = tadra8_1;
-			indexb = tadrb8_1;
-			indexc = tadrc8_1;
-			indexd = tadrd8_1;
-		end
-		2'd2: begin
-			indexa = tadra8_2;
-			indexb = tadrb8_2;
-			indexc = tadrc8_2;
-			indexd = tadrd8_2;
-		end
-		default: begin
-			indexa = {fml_depth{1'bx}};
-			indexb = {fml_depth{1'bx}};
-			indexc = {fml_depth{1'bx}};
-			indexd = {fml_depth{1'bx}};
-		end
-	endcase
-end
+assign indexa = index_sel ? tadra8_2 : tadra8_0;
+assign indexb = index_sel ? tadrb8_2 : tadrb8_0;
+assign indexc = index_sel ? tadrc8_2 : tadrc8_0;
+assign indexd = index_sel ? tadrd8_2 : tadrd8_0;
 
 /* HIT DETECTION */
 wire valid_a = tagmem_d1[1+fml_depth-cache_depth-1];
@@ -248,6 +228,7 @@ wire hit_b = ignore_b_2 | (valid_b & (tag_b == tadrb8_2[fml_depth-1:cache_depth]
 wire hit_c = ignore_c_2 | (valid_c & (tag_c == tadrc8_2[fml_depth-1:cache_depth]));
 wire hit_d = ignore_d_2 | (valid_d & (tag_d == tadrd8_2[fml_depth-1:cache_depth]));
 
+`define VERIFY_TEXCACHE
 `ifdef VERIFY_TEXCACHE
 integer x, y;
 reg [15:0] expected;
@@ -255,16 +236,16 @@ always @(posedge sys_clk) begin
 	if(pipe_stb_o & pipe_ack_i) begin
 		x = (tadra8_2/2) % 512;
 		y = (tadra8_2/2) / 512;
-		$image_get(x, y, expected);
-		if(tcolora != expected) begin
+		$image_get(0, x, y, expected);
+		if(tcolora !== expected) begin
 			$display("CACHE TEST FAILED [A]! (%d, %d): expected %x, got %x", x, y, expected, tcolora);
 			$finish;
 		end
 		if(~ignore_b_2) begin
 			x = (tadrb8_2/2) % 512;
 			y = (tadrb8_2/2) / 512;
-			$image_get(x, y, expected);
-			if(tcolorb != expected) begin
+			$image_get(0, x, y, expected);
+			if(tcolorb !== expected) begin
 				$display("CACHE TEST FAILED [B]! (%d, %d): expected %x, got %x", x, y, expected, tcolorb);
 				$finish;
 			end
@@ -272,8 +253,8 @@ always @(posedge sys_clk) begin
 		if(~ignore_c_2) begin
 			x = (tadrc8_2/2) % 512;
 			y = (tadrc8_2/2) / 512;
-			$image_get(x, y, expected);
-			if(tcolorc != expected) begin
+			$image_get(0, x, y, expected);
+			if(tcolorc !== expected) begin
 				$display("CACHE TEST FAILED [C]! (%d, %d): expected %x, got %x", x, y, expected, tcolorc);
 				$finish;
 			end
@@ -281,8 +262,8 @@ always @(posedge sys_clk) begin
 		if(~ignore_d_2) begin
 			x = (tadrd8_2/2) % 512;
 			y = (tadrd8_2/2) / 512;
-			$image_get(x, y, expected);
-			if(tcolord != expected) begin
+			$image_get(0, x, y, expected);
+			if(tcolord !== expected) begin
 				$display("CACHE TEST FAILED [D]! (%d, %d): expected %x, got %x", x, y, expected, tcolord);
 				$finish;
 			end
@@ -293,16 +274,19 @@ end
 
 /* FLUSH & MISS HANDLING */
 reg [fml_depth-1:0] fetch_adr;
+reg fetch_adr_ce;
 
 always @(posedge sys_clk) begin
-	if(~hit_a)
-		fetch_adr <= tadra8_2;
-	else if(~hit_b)
-		fetch_adr <= tadrb8_2;
-	else if(~hit_c)
-		fetch_adr <= tadrc8_2;
-	else if(~hit_d)
-		fetch_adr <= tadrd8_2;
+	if(fetch_adr_ce) begin
+		if(~hit_a)
+			fetch_adr <= tadra8_2;
+		else if(~hit_b)
+			fetch_adr <= tadrb8_2;
+		else if(~hit_c)
+			fetch_adr <= tadrc8_2;
+		else if(~hit_d)
+			fetch_adr <= tadrd8_2;
+	end
 end
 
 reg flush_mode;
@@ -334,10 +318,12 @@ parameter DATA1		= 4'd1;
 parameter DATA2		= 4'd2;
 parameter DATA3		= 4'd3;
 parameter DATA4		= 4'd4;
-parameter HANDLED_MISS	= 4'd5;
-parameter CHECK_REPLAY0	= 4'd6;
-parameter CHECK_REPLAY	= 4'd7;
-parameter FLUSH		= 4'd8;
+parameter HANDLED_MISS0	= 4'd5;
+parameter HANDLED_MISS1	= 4'd6;
+parameter HANDLED_MISS	= 4'd7;
+parameter FLUSHPIPE1	= 4'd8;
+parameter FLUSHPIPE2	= 4'd9;
+parameter FLUSH		= 4'd10;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -346,15 +332,7 @@ always @(posedge sys_clk) begin
 		state <= next_state;
 end
 
-reg replaying;
-reg next_replaying;
-
-always @(posedge sys_clk) begin
-	if(sys_rst)
-		replaying <= 1'b0;
-	else
-		replaying <= next_replaying;
-end
+assign rqt_ce = pipe_ack_o | invalidate_req;
 
 always @(*) begin
 	next_state = state;
@@ -374,25 +352,26 @@ always @(*) begin
 	pipe_ack_o = 1'b0;
 
 	invalidate_req = 1'b0;
-	rqt_ce = 1'b0;
+	fetch_adr_ce = 1'b0;
 
-	index_sel = 2'd0;
+	index_sel = 1'b0;
 
-	next_replaying = replaying;
+	ram_ce = 1'b1;
 
 	case(state)
 		IDLE: begin
 			busy = rqvalid_1|rqvalid_2;
 			pipe_stb_o = rqvalid_2 & hit_a & hit_b & hit_c & hit_d;
-			pipe_ack_o = ~rqvalid_2 | (hit_a & hit_b & hit_c & hit_d);
-			rqt_ce = ~rqvalid_2 | (hit_a & hit_b & hit_c & hit_d);
-			if(rqvalid_2 & (~hit_a | ~hit_b | ~hit_c | ~hit_d))
+			pipe_ack_o = ~rqvalid_2 | ((hit_a & hit_b & hit_c & hit_d) & pipe_ack_i);
+			ram_ce = ~rqvalid_2 | ((hit_a & hit_b & hit_c & hit_d) & pipe_ack_i);
+			fetch_adr_ce = 1'b1;
+			if(rqvalid_2 & (~hit_a | ~hit_b | ~hit_c | ~hit_d)) begin
 				next_state = DATA1;
-			if(flush)
+			end else if(flush)
 				next_state = FLUSH;
 		end
 		DATA1: begin
-			index_sel = 2'd2;
+			index_sel = 1'b1;
 			fml_stb = 1'b1;
 			burst_counter = 2'd0;
 			datamem_we = 1'b1;
@@ -401,55 +380,51 @@ always @(*) begin
 				next_state = DATA2;
 		end
 		DATA2: begin
-			index_sel = 2'd2;
+			index_sel = 1'b1;
 			burst_counter = 2'd1;
 			datamem_we = 1'b1;
 			next_state = DATA3;
 		end
 		DATA3: begin
-			index_sel = 2'd2;
+			index_sel = 1'b1;
 			burst_counter = 2'd2;
 			datamem_we = 1'b1;
 			next_state = DATA4;
 		end
 		DATA4: begin
-			index_sel = 2'd2;
+			index_sel = 1'b1;
 			burst_counter = 2'd3;
 			datamem_we = 1'b1;
+			fetch_adr_ce = 1'b1;
 			if(~hit_a | ~hit_b | ~hit_c | ~hit_d)
 				next_state = DATA1;
 			else
-				next_state = HANDLED_MISS;
+				next_state = HANDLED_MISS0;
+		end
+		/* wait for the written data to make its way through the pipelined RAM */
+		HANDLED_MISS0: begin
+			index_sel = 1'b1;
+			next_state = HANDLED_MISS1;
+		end
+		HANDLED_MISS1: begin
+			index_sel = 1'b1;
+			next_state = HANDLED_MISS;
 		end
 		HANDLED_MISS: begin
-			index_sel = 2'd1;
+			index_sel = 1'b1;
 			pipe_stb_o = 1'b1;
 			if(pipe_ack_i) begin
-				rqt_ce = 1'b1;
-				if(replaying) begin
-					index_sel = 2'd0;
-					next_replaying = 1'b0;
-					next_state = IDLE;
-				end else begin
-					invalidate_req = 1'b1;
-					next_state = CHECK_REPLAY0;
-				end
+				invalidate_req = 1'b1;
+				next_state = FLUSHPIPE1;
 			end
 		end
-		CHECK_REPLAY0: begin
-			index_sel = 2'd2;
-			next_state = CHECK_REPLAY;
+		FLUSHPIPE1: begin
+			index_sel = 1'b1;
+			next_state = FLUSHPIPE2;
 		end
-		CHECK_REPLAY: begin
-			index_sel = 2'd2;
-			if(rqvalid_2 & (~hit_a | ~hit_b | ~hit_c | ~hit_d)) begin
-				next_replaying = 1'b1;
-				next_state = DATA1;
-			end else begin
-				index_sel = 2'd0;
-				rqt_ce = 1'b1;
-				next_state = IDLE;
-			end
+		FLUSHPIPE2: begin
+			index_sel = 1'b1;
+			next_state = IDLE;
 		end
 		FLUSH: begin
 			tagmem_we = 1'b1;

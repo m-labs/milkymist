@@ -161,7 +161,7 @@ always @(posedge sys_clk) begin
 			wbm_dat_i = (x*16-256)*67 - (y*16-256)*28 + 256*64;
 `endif
 
-		//$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
+		$display("Vertex read: %d,%d (y:%b)", x, y, wbm_adr_o[2]);
 		wbm_ack_i = 1'b1;
 	end else
 		wbm_ack_i = 1'b0;
@@ -207,7 +207,7 @@ always @(posedge sys_clk) begin
 			
 			handle_read(0, read_addr);
 
-			$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
+			//$display("Starting   FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 			
 			fmlr_ack = 1'b1;
 		end
@@ -217,7 +217,7 @@ always @(posedge sys_clk) begin
 		
 		handle_read(0, read_addr);
 
-		$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
+		//$display("Continuing FML burst READ at address %x, data=%x", read_addr, fmlr_di);
 		
 		if(read_burstcount == 4)
 			read_burstcount = 0;
@@ -237,7 +237,7 @@ always @(posedge sys_clk) begin
 
 			handle_read(1, dread_addr);
 
-			$display("Starting   FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
+			//$display("Starting   FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
 
 			fmldr_ack = 1'b1;
 		end
@@ -247,7 +247,7 @@ always @(posedge sys_clk) begin
 
 		handle_read(1, dread_addr);
 
-		$display("Continuing FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
+		//$display("Continuing FML burst read at address %x, data=%x [dest]", dread_addr, fmldr_di);
 
 		if(dread_burstcount == 4)
 			dread_burstcount = 0;
@@ -302,16 +302,6 @@ always @(posedge sys_clk) begin
 	end
 end
 
-integer c_req_a;
-integer c_hit_a;
-integer c_req_b;
-integer c_hit_b;
-integer c_req_c;
-integer c_hit_c;
-integer c_req_d;
-integer c_hit_d;
-integer c_req_global;
-integer c_hit_global;
 always begin
 	$display("Opening input picture...");
 	$image_open;
@@ -361,33 +351,6 @@ always begin
 
 	@(posedge irq);
 	$display("Received DONE IRQ from TMU!");
-
-	$display("Gathering texel cache statistics...");
-	csrread(32'h50);
-	c_req_a = csr_do;
-	csrread(32'h54);
-	c_hit_a = csr_do;
-	csrread(32'h58);
-	c_req_b = csr_do;
-	csrread(32'h5C);
-	c_hit_b = csr_do;
-	csrread(32'h60);
-	c_req_c = csr_do;
-	csrread(32'h64);
-	c_hit_c = csr_do;
-	csrread(32'h68);
-	c_req_d = csr_do;
-	csrread(32'h6C);
-	c_hit_d = csr_do;
-
-	c_req_global = c_req_a + c_req_b + c_req_c + c_req_d;
-	c_hit_global = c_hit_a + c_hit_b + c_hit_c + c_hit_d;
-
-	$display("Channel A: %d / %d hits (%f %%)", c_hit_a, c_req_a, 100.0*c_hit_a/(1.0*c_req_a));
-	$display("Channel B: %d / %d hits (%f %%)", c_hit_b, c_req_b, 100.0*c_hit_b/(1.0*c_req_b));
-	$display("Channel C: %d / %d hits (%f %%)", c_hit_c, c_req_c, 100.0*c_hit_c/(1.0*c_req_c));
-	$display("Channel D: %d / %d hits (%f %%)", c_hit_d, c_req_d, 100.0*c_hit_d/(1.0*c_req_d));
-	$display("GLOBAL   : %d / %d hits (%f %%)", c_hit_global, c_req_global, 100.0*c_hit_global/(1.0*c_req_global));
 
 	$display("Writing output picture...");
 	$image_close;

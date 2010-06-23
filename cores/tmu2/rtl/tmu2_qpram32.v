@@ -19,6 +19,7 @@ module tmu2_qpram32 #(
 	parameter depth = 11 /* < log2 of the capacity in 32-bit words */
 ) (
 	input sys_clk,
+	input ce,
 
 	/* 32-bit read port 1 */
 	input [depth-1:0] a1,
@@ -47,6 +48,7 @@ tmu2_dpram #(
 	.width(32)
 ) ram1 (
 	.sys_clk(sys_clk),
+	.ce(ce),
 
 	.a(we ? {aw, 1'b0} : a1),
 	.we(we),
@@ -64,6 +66,7 @@ tmu2_dpram #(
 	.width(32)
 ) ram2 (
 	.sys_clk(sys_clk),
+	.ce(ce),
 
 	.a(we ? {aw, 1'b0} : a3),
 	.we(we),

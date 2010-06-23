@@ -22,6 +22,7 @@ module tmu2_dpram #(
 	parameter width = 32
 ) (
 	input sys_clk,
+	input ce,
 
 	input [depth-1:0] a,
 	input we,
@@ -39,19 +40,23 @@ reg [width-1:0] ram[0:(1 << depth)-1];
 reg [width-1:0] do_tmp;
 
 always @(posedge sys_clk) begin
-	if(we)
-		ram[a] <= di;
-	do_tmp <= ram[a];
-	do <= do_tmp;
+	if(ce) begin
+		if(we)
+			ram[a] <= di;
+		do_tmp <= ram[a];
+		do <= do_tmp;
+	end
 end
 
 reg [width-1:0] do2_tmp;
 
 always @(posedge sys_clk) begin
-	if(we2)
-		ram[a2] <= di2;
-	do2_tmp <= ram[a2];
-	do2 <= do2_tmp;
+	if(ce) begin
+		if(we2)
+			ram[a2] <= di2;
+		do2_tmp <= ram[a2];
+		do2 <= do2_tmp;
+	end
 end
 
 // synthesis translate_off

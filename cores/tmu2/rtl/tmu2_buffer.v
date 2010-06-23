@@ -39,31 +39,35 @@ reg produce;
 reg consume;
 reg [1:0] level;
 
+wire inc = pipe_stb_i & pipe_ack_o;
+wire dec = pipe_stb_o & pipe_ack_i;
+
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		produce <= 1'b0;
 		consume <= 1'b0;
 	end else begin
-		if(pipe_stb_i & pipe_ack_o)
+		if(inc)
 			produce <= ~produce;
-		if(pipe_stb_o & pipe_ack_i)
+		if(dec)
 			consume <= ~consume;
 	end
 end
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
-		level = 2'd0;
+		level <= 2'd0;
 	else begin
-		if(pipe_stb_i & pipe_ack_o)
-			level = level + 2'd1;
-		if(pipe_stb_o & pipe_ack_i)
-			level = level - 2'd1;
+		case({inc, dec})
+			2'b10: level <= level + 2'd1;
+			2'b01: level <= level - 2'd1;
+			default:;
+		endcase
 	end
 end
 
 always @(posedge sys_clk) begin
-	if(pipe_stb_i & pipe_ack_o) begin
+	if(inc) begin
 		if(produce)
 			storage2 <= dat_i;
 		else
