@@ -20,7 +20,6 @@
 #include <uart.h>
 #include <system.h>
 #include <board.h>
-#include <cffat.h>
 #include <crc.h>
 #include <sfl.h>
 
@@ -260,63 +259,7 @@ void netboot()
 	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
 }
 
-static int tryload(char *filename, unsigned int address)
-{
-	int devsize, realsize;
-	
-	devsize = cffat_load(filename, (char *)address, 16*1024*1024, &realsize);
-	if(devsize <= 0)
-		return -1;
-	if(realsize > devsize) {
-		printf("E: File size larger than the blocks read (corrupted FS or IO error ?)\n");
-		cffat_done();
-		return -1;
-	}
-	printf("I: Read a %d byte image from %s\n", realsize, filename);
-	
-	return realsize;
-}
-
-
 void cardboot(int alt)
 {
-	int size;
-	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
-
-	if(brd_desc->memory_card == MEMCARD_NONE) {
-		printf("E: No memory card on this board\n");
-		return;
-	}
-	
-	printf("I: Booting from CF card...\n");
-	if(!cffat_init()) {
-		printf("E: Unable to initialize filesystem\n");
-		return;
-	}
-
-	if(tryload(alt ? "ALTBOOT.BIN" : "BOOT.BIN", SDRAM_BASE) <= 0) {
-		printf("E: Firmware image not found\n");
-		return;
-	}
-
-	cmdline_adr = SDRAM_BASE+0x1000000;
-	size = tryload("CMDLINE.TXT", cmdline_adr);
-	if(size <= 0) {
-		printf("I: No command line parameters found (CMDLINE.TXT)\n");
-		cmdline_adr = 0;
-	} else
-		*((char *)(cmdline_adr+size)) = 0x00;
-
-	initrdstart_adr = SDRAM_BASE+0x1002000;
-	size = tryload("INITRD.BIN", initrdstart_adr);
-	if(size <= 0) {
-		printf("I: No initial ramdisk found (INITRD.BIN)\n");
-		initrdstart_adr = 0;
-		initrdend_adr = 0;
-	} else
-		initrdend_adr = initrdstart_adr + size - 1;
-
-	cffat_done();
-	printf("I: Booting...\n");
-	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
+	printf("FIXME: memory card boot is not implemented\n");
 }

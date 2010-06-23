@@ -18,7 +18,6 @@ cd $BASEDIR/software/libnet && make clean
 cd $BASEDIR/software/bios && make clean
 cd $BASEDIR/software/demo && make clean
 
-cd $BASEDIR/boards/xilinx-ml401/synthesis && make -f common.mak clean
 cd $BASEDIR/boards/milkymist-one/synthesis && make -f common.mak clean
 cd $BASEDIR/boards/milkymist-one/flash && make clean
 
@@ -32,4 +31,4 @@ cd $BASEDIR/cores/pfpu
 
 cd $BASEDIR
 
-rm -f tools.log software.log synthesis.log doc.log load.log biosflash.log bitflash.log
+rm -f tools.log software.log synthesis.log doc.log load.log

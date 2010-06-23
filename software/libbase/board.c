@@ -19,27 +19,12 @@
 #include <stdlib.h>
 #include <board.h>
 
-static const struct board_desc boards[3] = {
-	{
-		.id = 0x58343031, /* X401 */
-		.name = "Xilinx ML401 development board",
-		.clk_frequency = 100000000,
-		.sdram_size = 64,
-		.ddr_clkphase = 0,
-		.ddr_idelay = 0,
-		.ddr_dqsdelay = 244,
-		.memory_card = MEMCARD_SYSTEMACE,
-		.ethernet_phyadr = 0
-	},
+static const struct board_desc boards[1] = {
 	{
 		.id = 0x4D4F4E45, /* MONE */
 		.name = "Milkymist One",
 		.clk_frequency = 83333333,
-		.sdram_size = 64,
-		.ddr_clkphase = 0,
-		.ddr_idelay = 0,
-		.ddr_dqsdelay = 244,
-		.memory_card = MEMCARD_MICROSD,
+		.sdram_size = 128,
 		.ethernet_phyadr = 1
 	},
 };

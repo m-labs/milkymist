@@ -95,11 +95,11 @@ send_init_return:
 	PRINT(seqcomplete)
 
 #ifdef FEAT_PBC_MANUAL_CALIBRATION
-	/* if PBC is pushed, go into debug/manual mode */
+	/* if BTN3 is pushed, go into debug/manual mode */
 	mvhi	r1, hi(CSR_GPIO_IN)
 	ori	r1, r1, lo(CSR_GPIO_IN)
 	lw	r2, (r1+0)
-	andi	r2, r2, (GPIO_PBC)
+	andi	r2, r2, (GPIO_BTN3)
 	bne	r2, r0, mancal
 #endif
 

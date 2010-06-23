@@ -1,9 +1,0 @@
-run
--ifn system.prj
--top system
--ifmt MIXED
--opt_mode SPEED
--opt_level 2
--ofn system.ngc
--p xc4vlx25-ff668-10
--register_balancing yes

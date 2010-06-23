@@ -2,7 +2,7 @@ all: flash.mcs
 
 flash.mcs:
 	make -C ../../../software/bios
-	srec_cat -Output flash.mcs -Intel ../../../software/bios/bios.bin -Binary
+	srec_cat -Output flash.mcs -Intel ../../../software/bios/bios_splash.bin -Binary
 
 # Run the Xilinx crapware in a separate directory that we can simply rm -rf
 # to get rid of the garbage it puts all over the filesystem.

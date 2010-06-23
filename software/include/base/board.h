@@ -20,21 +20,11 @@
 
 #define BOARD_NAME_LEN 32
 
-enum {
-	MEMCARD_NONE,
-	MEMCARD_SYSTEMACE,
-	MEMCARD_MICROSD
-};
-
 struct board_desc {
 	unsigned int id;
 	char name[BOARD_NAME_LEN];
 	unsigned int clk_frequency;
 	unsigned int sdram_size;
-	unsigned int ddr_clkphase;
-	unsigned int ddr_idelay;
-	unsigned int ddr_dqsdelay;
-	unsigned int memory_card;
 	unsigned int ethernet_phyadr;
 };
 

@@ -661,11 +661,9 @@ wire ethernetrx_irq;
 wire ethernettx_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {17'd0,
+assign cpu_interrupt = {19'd0,
 	ethernettx_irq,
 	ethernetrx_irq,
-	1'b0, /* was: mouse */
-	1'b0, /* was: keyboard */
 	tmu_irq,
 	pfpu_irq,
 	ac97dmaw_irq,

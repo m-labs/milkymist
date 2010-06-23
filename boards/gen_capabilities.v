@@ -21,31 +21,27 @@ module gen_capabilities(
 	output [31:0] capabilities
 );
 
-wire systemace;
+wire memorycard;
 wire ac97;
 wire pfpu;
 wire tmu;
-wire ps2_keyboard;
-wire ps2_mouse;
 wire ethernet;
 wire fmlmeter;
 
 assign capabilities = {
-	24'd0,
+	26'd0,
 	fmlmeter,
 	ethernet,
-	ps2_mouse,
-	ps2_keyboard,
 	tmu,
 	pfpu,
 	ac97,
- systemace
+	memorycard
 };
 
-`ifdef ENABLE_ACEUSB
-assign systemace = 1'b1;
+`ifdef ENABLE_MEMORYCARD
+assign memorycard = 1'b1;
 `else
-assign systemace = 1'b0;
+assign memorycard = 1'b0;
 `endif
 
 `ifdef ENABLE_AC97
@@ -64,18 +60,6 @@ assign pfpu = 1'b0;
 assign tmu = 1'b1;
 `else
 assign tmu = 1'b0;
-`endif
-
-`ifdef ENABLE_PS2_KEYBOARD
-assign ps2_keyboard = 1'b1;
-`else
-assign ps2_keyboard = 1'b0;
-`endif
-
-`ifdef ENABLE_PS2_MOUSE
-assign ps2_mouse = 1'b1;
-`else
-assign ps2_mouse = 1'b0;
 `endif
 
 `ifdef ENABLE_ETHERNET

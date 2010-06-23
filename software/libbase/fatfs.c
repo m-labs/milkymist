@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,12 @@
 #include <string.h>
 #include <ctype.h>
 #include <endian.h>
-#include <cfcard.h>
 #include <console.h>
-#include <cffat.h>
+#include <fatfs.h>
 
 //#define DEBUG
+
+#define BLOCK_SIZE 512
 
 struct partition_descriptor {
 	unsigned char flags;
@@ -102,40 +103,40 @@ struct directory_entry_lfn {
 #define PARTITION_TYPE_FAT16		0x06
 #define PARTITION_TYPE_FAT32		0x0b
 
-static int cffat_partition_start_sector;	/* Sector# of the beginning of the FAT16 partition */
+static int fatfs_partition_start_sector;	/* Sector# of the beginning of the FAT16 partition */
 
-static int cffat_sectors_per_cluster;
-static int cffat_fat_sector;			/* Sector of the first FAT */
-static int cffat_fat_entries;			/* Number of entries in the FAT */
-static int cffat_max_root_entries;
-static int cffat_root_table_sector;		/* Sector# of the beginning of the root table */
+static int fatfs_sectors_per_cluster;
+static int fatfs_fat_sector;			/* Sector of the first FAT */
+static int fatfs_fat_entries;			/* Number of entries in the FAT */
+static int fatfs_max_root_entries;
+static int fatfs_root_table_sector;		/* Sector# of the beginning of the root table */
 
-static int cffat_fat_cached_sector;
-static unsigned short int cffat_fat_sector_cache[CF_BLOCK_SIZE/2];
+static int fatfs_fat_cached_sector;
+static unsigned short int fatfs_fat_sector_cache[BLOCK_SIZE/2];
 
-static int cffat_dir_cached_sector;
-static struct directory_entry cffat_dir_sector_cache[CF_BLOCK_SIZE/sizeof(struct directory_entry)];
+static int fatfs_dir_cached_sector;
+static struct directory_entry fatfs_dir_sector_cache[BLOCK_SIZE/sizeof(struct directory_entry)];
 
-static int cffat_data_start_sector;
+static int fatfs_data_start_sector;
 
-int cffat_init()
+int fatfs_init()
 {
 	struct firstsector s0;
 	struct fat16_firstsector s;
 	int i;
 
-	if(!cf_init()) {
-		printf("E: Unable to initialize CF card driver\n");
+	if(/* !cf_init() */ 1) {
+		printf("E: Unable to initialize memory card driver\n");
 		return 0;
 	}
 	
 	/* Read sector 0, with partition table */
-	if(!cf_readblock(0, (void *)&s0)) {
+	if(/* !cf_readblock(0, (void *)&s0) */ 1) {
 		printf("E: Unable to read block 0\n");
 		return 0;
 	}
 
-	cffat_partition_start_sector = -1;
+	fatfs_partition_start_sector = -1;
 	for(i=0;i<4;i++)
 		if((s0.partitions[i].type == PARTITION_TYPE_FAT16)
 		 ||(s0.partitions[i].type == PARTITION_TYPE_FAT32)) {
@@ -143,16 +144,16 @@ int cffat_init()
 			printf("I: Using partition #%d: start sector %08x, end sector %08x\n", i,
 				le32toh(s0.partitions[i].start_sector), le32toh(s0.partitions[i].end_sector));
 #endif
-			cffat_partition_start_sector = le32toh(s0.partitions[i].start_sector);
+			fatfs_partition_start_sector = le32toh(s0.partitions[i].start_sector);
 			break;
 		}
-	if(cffat_partition_start_sector == -1) {
+	if(fatfs_partition_start_sector == -1) {
 		printf("E: No FAT partition was found\n");
 		return 0;
 	}
 	
 	/* Read first FAT16 sector */
-	if(!cf_readblock(cffat_partition_start_sector, (void *)&s)) {
+	if(/* !cf_readblock(fatfs_partition_start_sector, (void *)&s) */ 1) {
 		printf("E: Unable to read first FAT sector\n");
 		return 0;
 	}
@@ -170,23 +171,23 @@ int cffat_init()
 	}
 #endif
 	
-	if(le16toh(s.bytes_per_sector) != CF_BLOCK_SIZE) {
+	if(le16toh(s.bytes_per_sector) != BLOCK_SIZE) {
 		printf("E: Unexpected number of bytes per sector\n");
 		return 0;
 	}
-	cffat_sectors_per_cluster = s.sectors_per_cluster;
+	fatfs_sectors_per_cluster = s.sectors_per_cluster;
 	
-	cffat_fat_entries = (le16toh(s.sectors_per_fat)*CF_BLOCK_SIZE)/2;
-	cffat_fat_sector = cffat_partition_start_sector + 1;
-	cffat_fat_cached_sector = -1;
+	fatfs_fat_entries = (le16toh(s.sectors_per_fat)*BLOCK_SIZE)/2;
+	fatfs_fat_sector = fatfs_partition_start_sector + 1;
+	fatfs_fat_cached_sector = -1;
 	
-	cffat_max_root_entries = le16toh(s.max_root_entries);
-	cffat_root_table_sector = cffat_fat_sector + s.number_of_fat*le16toh(s.sectors_per_fat);
-	cffat_dir_cached_sector = -1;
+	fatfs_max_root_entries = le16toh(s.max_root_entries);
+	fatfs_root_table_sector = fatfs_fat_sector + s.number_of_fat*le16toh(s.sectors_per_fat);
+	fatfs_dir_cached_sector = -1;
 	
-	cffat_data_start_sector = cffat_root_table_sector + (cffat_max_root_entries*sizeof(struct directory_entry))/CF_BLOCK_SIZE;
+	fatfs_data_start_sector = fatfs_root_table_sector + (fatfs_max_root_entries*sizeof(struct directory_entry))/BLOCK_SIZE;
 
-	if(cffat_max_root_entries == 0) {
+	if(fatfs_max_root_entries == 0) {
 		printf("E: Your memory card uses FAT32, which is not supported.\n");
 		printf("E: Please reformat your card using FAT16, e.g. use mkdosfs -F 16\n");
 		printf("E: FAT32 support would be an appreciated contribution.\n");
@@ -195,49 +196,49 @@ int cffat_init()
 	
 #ifdef DEBUG
 	printf("I: Cluster is %d sectors, FAT has %d entries, FAT 1 is at sector %d,\nI: root table is at sector %d (max %d), data is at sector %d\n",
-		cffat_sectors_per_cluster, cffat_fat_entries, cffat_fat_sector,
-		cffat_root_table_sector, cffat_max_root_entries,
-		cffat_data_start_sector);
+		fatfs_sectors_per_cluster, fatfs_fat_entries, fatfs_fat_sector,
+		fatfs_root_table_sector, fatfs_max_root_entries,
+		fatfs_data_start_sector);
 #endif
 	return 1;
 }
 
-static int cffat_read_fat(int offset)
+static int fatfs_read_fat(int offset)
 {
 	int wanted_sector;
 	
-	if((offset < 0) || (offset >= cffat_fat_entries))
+	if((offset < 0) || (offset >= fatfs_fat_entries))
 		return -1;
 		
-	wanted_sector = cffat_fat_sector + (offset*2)/CF_BLOCK_SIZE;
-	if(wanted_sector != cffat_fat_cached_sector) {
-		if(!cf_readblock(wanted_sector, (void *)&cffat_fat_sector_cache)) {
-			printf("E: CF failed (FAT), sector %d\n", wanted_sector);
+	wanted_sector = fatfs_fat_sector + (offset*2)/BLOCK_SIZE;
+	if(wanted_sector != fatfs_fat_cached_sector) {
+		if(/* !cf_readblock(wanted_sector, (void *)&fatfs_fat_sector_cache) */ 1) {
+			printf("E: Memory card failed (FAT), sector %d\n", wanted_sector);
 			return -1;
 		}
-		cffat_fat_cached_sector = wanted_sector;
+		fatfs_fat_cached_sector = wanted_sector;
 	}
 	
-	return le16toh(cffat_fat_sector_cache[offset % (CF_BLOCK_SIZE/2)]);
+	return le16toh(fatfs_fat_sector_cache[offset % (BLOCK_SIZE/2)]);
 }
 
-static const struct directory_entry *cffat_read_root_directory(int offset)
+static const struct directory_entry *fatfs_read_root_directory(int offset)
 {
 	int wanted_sector;
 	
-	if((offset < 0) || (offset >= cffat_max_root_entries))
+	if((offset < 0) || (offset >= fatfs_max_root_entries))
 		return NULL;
 
-	wanted_sector = cffat_root_table_sector + (offset*sizeof(struct directory_entry))/CF_BLOCK_SIZE;
+	wanted_sector = fatfs_root_table_sector + (offset*sizeof(struct directory_entry))/BLOCK_SIZE;
 
-	if(wanted_sector != cffat_dir_cached_sector) {
-		if(!cf_readblock(wanted_sector, (void *)&cffat_dir_sector_cache)) {
-			printf("E: CF failed (Rootdir), sector %d\n", wanted_sector);
+	if(wanted_sector != fatfs_dir_cached_sector) {
+		if(/* !cf_readblock(wanted_sector, (void *)&fatfs_dir_sector_cache) */ 1) {
+			printf("E: Memory card failed (Rootdir), sector %d\n", wanted_sector);
 			return NULL;
 		}
-		cffat_dir_cached_sector = wanted_sector;
+		fatfs_dir_cached_sector = wanted_sector;
 	}
-	return &cffat_dir_sector_cache[offset % (CF_BLOCK_SIZE/sizeof(struct directory_entry))];
+	return &fatfs_dir_sector_cache[offset % (BLOCK_SIZE/sizeof(struct directory_entry))];
 }
 
 static void lfn_to_ascii(const struct directory_entry_lfn *entry, char *name, int terminate)
@@ -274,14 +275,14 @@ static void lfn_to_ascii(const struct directory_entry_lfn *entry, char *name, in
 		*name = 0;
 }
 
-static int cffat_is_regular(const struct directory_entry *entry)
+static int fatfs_is_regular(const struct directory_entry *entry)
 {
 	return ((entry->attributes & 0x10) == 0)
 		&& ((entry->attributes & 0x08) == 0)
 		&& (entry->filename[0] != 0xe5);
 }
 
-int cffat_list_files(cffat_dir_callback cb, void *param)
+int fatfs_list_files(fatfs_dir_callback cb, void *param)
 {
 	const struct directory_entry *entry;
 	char fmtbuf[8+1+3+1];
@@ -291,8 +292,8 @@ int cffat_list_files(cffat_dir_callback cb, void *param)
 
 	has_longname = 0;
 	longname[sizeof(longname)-1] = 0; /* avoid crashing when reading a corrupt FS */
-	for(k=0;k<cffat_max_root_entries;k++) {
-		entry = cffat_read_root_directory(k);
+	for(k=0;k<fatfs_max_root_entries;k++) {
+		entry = fatfs_read_root_directory(k);
 #ifdef DEBUG
 		printf("I: Read entry with attribute %02x\n", entry->attributes);
 #endif
@@ -310,7 +311,7 @@ int cffat_list_files(cffat_dir_callback cb, void *param)
 			}
 			continue;
 		} else {
-			if(!cffat_is_regular(entry)) {
+			if(!fatfs_is_regular(entry)) {
 				has_longname = 0;
 				continue;
 			}
@@ -337,7 +338,7 @@ int cffat_list_files(cffat_dir_callback cb, void *param)
 	return 1;
 }
 
-static const struct directory_entry *cffat_find_file_by_name(const char *filename)
+static const struct directory_entry *fatfs_find_file_by_name(const char *filename)
 {
 	char searched_filename[8];
 	char searched_extension[3];
@@ -360,11 +361,11 @@ static const struct directory_entry *cffat_find_file_by_name(const char *filenam
 	for(c=dot+1;*c!=0;c++)
 		searched_extension[i++] = toupper(*c);
 		
-	for(i=0;i<cffat_max_root_entries;i++) {
-		entry = cffat_read_root_directory(i);
+	for(i=0;i<fatfs_max_root_entries;i++) {
+		entry = fatfs_read_root_directory(i);
 		if(entry == NULL) break;
 		if(entry->filename[0] == 0) break;
-		if(!cffat_is_regular(entry)) continue;
+		if(!fatfs_is_regular(entry)) continue;
 		if(!memcmp(searched_filename, entry->filename, 8)
 		 &&!memcmp(searched_extension, entry->extension, 3))
 		 	return entry;
@@ -372,37 +373,37 @@ static const struct directory_entry *cffat_find_file_by_name(const char *filenam
 	return NULL;
 }
 
-static int cffat_load_cluster(int clustern, char *buffer, int maxsectors)
+static int fatfs_load_cluster(int clustern, char *buffer, int maxsectors)
 {
 	int startsector;
 	int i;
 	int toread;
 	
 	clustern = clustern - 2;
-	startsector = cffat_data_start_sector + clustern*cffat_sectors_per_cluster;
-	if(maxsectors < cffat_sectors_per_cluster)
+	startsector = fatfs_data_start_sector + clustern*fatfs_sectors_per_cluster;
+	if(maxsectors < fatfs_sectors_per_cluster)
 		toread = maxsectors;
 	else
-		toread = cffat_sectors_per_cluster;
+		toread = fatfs_sectors_per_cluster;
 	for(i=0;i<toread;i++)
-		if(!cf_readblock(startsector+i, (unsigned char *)buffer+i*CF_BLOCK_SIZE)) {
-			printf("E: CF failed (Cluster), sector %d\n", startsector+i);
+		if(/* !cf_readblock(startsector+i, (unsigned char *)buffer+i*CF_BLOCK_SIZE) */ 1) {
+			printf("E: Memory card failed (Cluster), sector %d\n", startsector+i);
 			return 0;
 		}
 	return 1;
 }
 
-int cffat_load(const char *filename, char *buffer, int size, int *realsize)
+int fatfs_load(const char *filename, char *buffer, int size, int *realsize)
 {
 	const struct directory_entry *entry;
 	int cluster_size;
 	int cluster;
 	int n;
 	
-	cluster_size = cffat_sectors_per_cluster*CF_BLOCK_SIZE;
-	size /= CF_BLOCK_SIZE;
+	cluster_size = fatfs_sectors_per_cluster*BLOCK_SIZE;
+	size /= BLOCK_SIZE;
 	
-	entry = cffat_find_file_by_name(filename);
+	entry = fatfs_find_file_by_name(filename);
 	if(entry == NULL) {
 		printf("E: File not found: %s\n", filename);
 		return 0;
@@ -413,11 +414,11 @@ int cffat_load(const char *filename, char *buffer, int size, int *realsize)
 	n = 0;
 	cluster = le16toh(entry->first_cluster);
 	while(size > 0) {
-		if(!cffat_load_cluster(cluster, buffer+n*cluster_size, size))
+		if(!fatfs_load_cluster(cluster, buffer+n*cluster_size, size))
 			return 0;
-		size -= cffat_sectors_per_cluster;
+		size -= fatfs_sectors_per_cluster;
 		n++;
-		cluster = cffat_read_fat(cluster);
+		cluster = fatfs_read_fat(cluster);
 		if(cluster >= 0xFFF8) break;
 		if(cluster == -1) return 0;
 	}
@@ -426,7 +427,7 @@ int cffat_load(const char *filename, char *buffer, int size, int *realsize)
 	return n*cluster_size;
 }
 
-void cffat_done()
+void fatfs_done()
 {
-	cf_done();
+	/* cf_done(); */
 }

@@ -110,7 +110,7 @@ shell.o: ../../software/include/base/stdlib.h
 shell.o: ../../software/include/base/string.h
 shell.o: ../../software/include/base/console.h
 shell.o: ../../software/include/base/uart.h
-shell.o: ../../software/include/base/cffat.h
+shell.o: ../../software/include/base/fatfs.h
 shell.o: ../../software/include/base/system.h
 shell.o: ../../software/include/base/math.h ../../software/include/base/irq.h
 shell.o: ../../software/include/base/board.h ../../software/include/hw/pfpu.h

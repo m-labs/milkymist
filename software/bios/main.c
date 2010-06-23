@@ -19,7 +19,7 @@
 #include <console.h>
 #include <string.h>
 #include <uart.h>
-#include <cffat.h>
+#include <fatfs.h>
 #include <crc.h>
 #include <system.h>
 #include <board.h>
@@ -209,24 +209,15 @@ static int lscb(const char *filename, const char *longname, void *param)
 
 static void ls()
 {
-	if(brd_desc->memory_card == MEMCARD_NONE) {
-		printf("E: No memory card on this board\n");
-		return;
-	}
-	cffat_init();
-	cffat_list_files(lscb, NULL);
-	cffat_done();
+	fatfs_init();
+	fatfs_list_files(lscb, NULL);
+	fatfs_done();
 }
 
 static void load(char *filename, char *addr)
 {
 	char *c;
 	unsigned int *addr2;
-
-	if(brd_desc->memory_card == MEMCARD_NONE) {
-		printf("E: No memory card on this board\n");
-		return;
-	}
 
 	if((*filename == 0) || (*addr == 0)) {
 		printf("load <filename> <address>\n");
@@ -237,9 +228,9 @@ static void load(char *filename, char *addr)
 		printf("incorrect address\n");
 		return;
 	}
-	cffat_init();
-	cffat_load(filename, (char *)addr2, 16*1024*1024, NULL);
-	cffat_done();
+	fatfs_init();
+	fatfs_load(filename, (char *)addr2, 16*1024*1024, NULL);
+	fatfs_done();
 }
 
 static void mdior(char *reg)
@@ -413,12 +404,10 @@ static void display_capabilities()
 	unsigned int cap;
 
 	cap = CSR_CAPABILITIES;
-	display_capability("SystemACE ", cap & CAP_SYSTEMACE);
+	display_capability("Mem. card ", cap & CAP_MEMORYCARD);
 	display_capability("AC'97     ", cap & CAP_AC97);
 	display_capability("PFPU      ", cap & CAP_PFPU);
 	display_capability("TMU       ", cap & CAP_TMU);
-	display_capability("PS/2 Kbd  ", cap & CAP_PS2_KEYBOARD);
-	display_capability("PS/2 Mouse", cap & CAP_PS2_MOUSE);
 	display_capability("Ethernet  ", cap & CAP_ETHERNET);
 	display_capability("FML Meter ", cap & CAP_FMLMETER);
 }
@@ -436,12 +425,10 @@ static void boot_sequence()
 	if(test_user_abort()) {
 		serialboot(1);
 		netboot();
-		if(brd_desc->memory_card != MEMCARD_NONE) {
-			if(CSR_GPIO_IN & GPIO_DIP1)
-				cardboot(1);
-			else
-				cardboot(0);
-		}
+		if(CSR_GPIO_IN & GPIO_BTN1)
+			cardboot(1);
+		else
+			cardboot(0);
 		printf("E: No boot medium found\n");
 	}
 }
@@ -454,7 +441,7 @@ int main(int i, char **c)
 
 	/* Check for double baud rate */
 	if(brd_desc != NULL) {
-		if(CSR_GPIO_IN & GPIO_DIP2)
+		if(CSR_GPIO_IN & GPIO_BTN2)
 			CSR_UART_DIVISOR = brd_desc->clk_frequency/230400/16;
 	}
 

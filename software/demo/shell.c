@@ -20,7 +20,7 @@
 #include <string.h>
 #include <console.h>
 #include <uart.h>
-#include <cffat.h>
+#include <fatfs.h>
 #include <system.h>
 #include <math.h>
 #include <irq.h>
@@ -154,9 +154,9 @@ static int lscb(const char *filename, const char *longname, void *param)
 
 static void ls()
 {
-	cffat_init();
-	cffat_list_files(lscb, NULL);
-	cffat_done();
+	fatfs_init();
+	fatfs_list_files(lscb, NULL);
+	fatfs_done();
 }
 
 static void render(const char *filename)
@@ -257,9 +257,9 @@ static void loadpic(const char *filename)
 		return;
 	}
 
-	if(!cffat_init()) return;
-	if(!cffat_load(filename, (void *)vga_backbuffer, vga_hres*vga_vres*2, &size)) return;
-	cffat_done();
+	if(!fatfs_init()) return;
+	if(!fatfs_load(filename, (void *)vga_backbuffer, vga_hres*vga_vres*2, &size)) return;
+	fatfs_done();
 
 	vga_swap_buffers();
 }
@@ -411,117 +411,6 @@ static void tmutest()
 	tmu_submit_task(&td);
 	while(!complete);
 	vga_swap_buffers();
-}
-
-static unsigned short original[640*480*2] __attribute__((aligned(2)));
-
-static void tmudemo()
-{
-	int size;
-	static struct tmu_vertex srcmesh[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
-	struct tmu_td td;
-	volatile int complete;
-	int w, speed;
-	int mindelta, xdelta, ydelta;
-
-	if(!cffat_init()) return;
-	if(!cffat_load("lena.raw", (void *)original, vga_hres*vga_vres*2, &size)) return;
-	cffat_done();
-
-	printf("done\n");
-	
-	speed = 0;
-	w = 512 << TMU_FIXEDPOINT_SHIFT;
-
-	xdelta = 0;
-	ydelta = 0;
-	while(1) {
-		srcmesh[0][0].x = xdelta;
-		srcmesh[0][0].y = ydelta;
-		srcmesh[0][1].x = w+xdelta;
-		srcmesh[0][1].y = ydelta;
-		srcmesh[1][0].x = xdelta;
-		srcmesh[1][0].y = w+ydelta;
-		srcmesh[1][1].x = w+xdelta;
-		srcmesh[1][1].y = w+ydelta;
-
-		if(CSR_GPIO_IN & GPIO_DIP6) {
-			if(CSR_GPIO_IN & GPIO_PBN)
-				ydelta += 16;
-			if(CSR_GPIO_IN & GPIO_PBS)
-				ydelta -= 16;
-			if(CSR_GPIO_IN & GPIO_PBE)
-				xdelta += 16;
-			if(CSR_GPIO_IN & GPIO_PBW)
-				xdelta -= 16;
-		} else {
-			if(CSR_GPIO_IN & GPIO_PBN)
-				speed += 2;
-			if(CSR_GPIO_IN & GPIO_PBS)
-				speed -= 2;
-		}
-		w += speed;
-		if(w < 1) {
-			w = 1;
-			speed = 0;
-		}
-		if(xdelta > ydelta)
-			mindelta = ydelta;
-		else
-			mindelta = xdelta;
-		if(w > ((TMU_MASK_FULL >> 1)+mindelta)) {
-			w = (TMU_MASK_FULL >> 1)+mindelta;
-			speed = 0;
-		}
-		if(speed > 0) speed--;
-		if(speed < 0) speed++;
-		
-
-		td.flags = 0;
-		td.hmeshlast = 1;
-		td.vmeshlast = 1;
-		td.brightness = TMU_BRIGHTNESS_MAX;
-		td.chromakey = 0;
-		td.vertices = &srcmesh[0][0];
-		td.texfbuf = original;
-		td.texhres = vga_hres;
-		td.texvres = vga_vres;
-		td.texhmask = CSR_GPIO_IN & GPIO_DIP7 ? 0x7FFF : TMU_MASK_FULL;
-		td.texvmask = CSR_GPIO_IN & GPIO_DIP8 ? 0x7FFF : TMU_MASK_FULL;
-		td.dstfbuf = vga_backbuffer;
-		td.dsthres = vga_hres;
-		td.dstvres = vga_vres;
-		td.dsthoffset = 0;
-		td.dstvoffset = 0;
-		td.dstsquarew = vga_hres;
-		td.dstsquareh = vga_vres;
-		td.alpha = TMU_ALPHA_MAX;
-
-		td.callback = tmutest_callback;
-		td.user = (void *)&complete;
-
-		complete = 0;
-		flush_bridge_cache();
-		CSR_TIMER1_CONTROL = 0;
-		CSR_TIMER1_COUNTER = 0;
-		CSR_TIMER1_COMPARE = 0xffffffff;
-		CSR_TIMER1_CONTROL = TIMER_ENABLE;
-		tmu_submit_task(&td);
-		while(!complete);
-		CSR_TIMER1_CONTROL = 0;
-
-		if(readchar_nonblock()) {
-			char c;
-			c = readchar();
-			if(c == 'q') break;
-			if(c == 's') {
-				unsigned int t;
-				t = CSR_TIMER1_COUNTER;
-				printf("Processing cycles: %d (%d Mpixels/s)\n", t, 640*480*100/t);
-			}
-		}
-		vga_swap_buffers();
-	}
 }
 
 static void tmubench()
@@ -690,7 +579,6 @@ static void do_command(char *c)
 		else if(strcmp(command, "checker") == 0) checker();
 		else if(strcmp(command, "pfputest") == 0) pfputest();
 		else if(strcmp(command, "tmutest") == 0) tmutest();
-		else if(strcmp(command, "tmudemo") == 0) tmudemo();
 		else if(strcmp(command, "tmubench") == 0) tmubench();
 		else if(strcmp(command, "echo") == 0) echo();
 
