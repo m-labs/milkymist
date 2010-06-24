@@ -4,7 +4,7 @@ include $(MMDIR)/software/include.mak
 OBJECTS=crt0.o main.o boot.o splash.o
 SEGMENTS=-j .text -j .data -j .rodata
 
-all: bios_splash.bin
+all: bios.bin
 
 %.bin: %.elf
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
@@ -18,22 +18,13 @@ bios.elf: linker.ld $(OBJECTS)
 	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lhpdmc -lbase-light -lnet
 	chmod -x $@
 
-splash.raw: splash.png
-	$(MMDIR)/tools/makeraw splash.png
-
-bios_padded.bin: bios.bin
-	dd if=bios.bin of=bios_padded.bin bs=65536 conv=sync
-
-bios_splash.bin: bios_padded.bin splash.raw
-	cat bios_padded.bin splash.raw > bios_splash.bin
-
 .PHONY: clean depend bios.elf
 
 depend:
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f *.o bios.elf bios.bin bios_padded.bin splash.raw bios_splash.bin .*~ *~ Makefile.bak
+	rm -f *.o bios.elf bios.bin .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 
@@ -64,4 +55,4 @@ main.o: ../../software/include/hw/hpdmc.h boot.h splash.h
 splash.o: ../../software/include/base/stdio.h
 splash.o: ../../software/include/base/stdlib.h
 splash.o: ../../software/include/hw/vga.h ../../software/include/hw/common.h
-splash.o: splash.h
+splash.o: ../../software/include/hw/flash.h splash.h

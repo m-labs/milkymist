@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <hw/vga.h>
+#include <hw/flash.h>
 
 #include "splash.h"
 
@@ -27,7 +28,7 @@ static unsigned short splash_fb[640*480] __attribute__((aligned(32)));;
 void splash_display()
 {
 	int i;
-	unsigned short *splash_src = (unsigned short *)65536;
+	unsigned short *splash_src = (unsigned short *)FLASH_OFFSET_SPLASH;
 	
 	printf("I: Displaying splash screen...");
 

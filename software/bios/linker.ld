@@ -4,8 +4,8 @@ ENTRY(_start)
 __DYNAMIC = 0;
 
 MEMORY {
-	flash : ORIGIN = 0x00000000, LENGTH = 0x800000   /* 8M */
-	sdram : ORIGIN = 0x42000000, LENGTH = 0x2000000  /* use the upper 32M of the SDRAM */
+	flash : ORIGIN = 0x00180000, LENGTH = 0x20000    /* 128K */
+	sdram : ORIGIN = 0x42000000, LENGTH = 0x2000000
 }
 
 SECTIONS

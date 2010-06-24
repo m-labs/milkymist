@@ -37,8 +37,8 @@
 // Common configuration options
 //
 
-`define CFG_EBA_RESET 32'h0
-`define CFG_DEBA_RESET 32'h0
+`define CFG_EBA_RESET 32'h00180000
+`define CFG_DEBA_RESET 32'h00180000
 
 `define CFG_PL_MULTIPLY_ENABLED
 `define CFG_PL_BARREL_SHIFT_ENABLED
