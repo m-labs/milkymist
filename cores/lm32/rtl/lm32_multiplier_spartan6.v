@@ -141,7 +141,7 @@ DSP48A1 #(
 );
 
 wire [47:0] r_full;
-assign result[31:17] = r_full[31:17];
+assign result[31:17] = r_full[16:0];
 
 DSP48A1 #(
 	.A0REG(1),
