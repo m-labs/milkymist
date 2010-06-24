@@ -409,7 +409,12 @@ static void display_capabilities()
 	display_capability("PFPU      ", cap & CAP_PFPU);
 	display_capability("TMU       ", cap & CAP_TMU);
 	display_capability("Ethernet  ", cap & CAP_ETHERNET);
-	display_capability("FML Meter ", cap & CAP_FMLMETER);
+	display_capability("FML meter ", cap & CAP_FMLMETER);
+	display_capability("Video in  ", cap & CAP_VIDEOIN);
+	display_capability("MIDI      ", cap & CAP_MIDI);
+	display_capability("DMX       ", cap & CAP_DMX);
+	display_capability("IR        ", cap & CAP_IR);
+	display_capability("USB       ", cap & CAP_USB);
 }
 
 static const char banner[] =

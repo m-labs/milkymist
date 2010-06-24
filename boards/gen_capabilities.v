@@ -27,9 +27,19 @@ wire pfpu;
 wire tmu;
 wire ethernet;
 wire fmlmeter;
+wire videoin;
+wire midi;
+wire dmx;
+wire ir;
+wire usb;
 
 assign capabilities = {
-	26'd0,
+	21'd0,
+	usb,
+	ir,
+	dmx,
+	midi,
+	videoin,
 	fmlmeter,
 	ethernet,
 	tmu,
@@ -72,6 +82,36 @@ assign ethernet = 1'b0;
 assign fmlmeter = 1'b1;
 `else
 assign fmlmeter = 1'b0;
+`endif
+
+`ifdef ENABLE_VIDEOIN
+assign videoin = 1'b1;
+`else
+assign videoin = 1'b0;
+`endif
+
+`ifdef ENABLE_MIDI
+assign midi = 1'b1;
+`else
+assign midi = 1'b0;
+`endif
+
+`ifdef ENABLE_DMX
+assign dmx = 1'b1;
+`else
+assign dmx = 1'b0;
+`endif
+
+`ifdef ENABLE_IR
+assign ir = 1'b1;
+`else
+assign ir = 1'b0;
+`endif
+
+`ifdef ENABLE_USB
+assign usb = 1'b1;
+`else
+assign usb = 1'b0;
 `endif
 
 endmodule

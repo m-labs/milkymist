@@ -26,6 +26,11 @@
 `define ENABLE_TMU
 `define ENABLE_ETHERNET
 `define ENABLE_FMLMETER
+//`define ENABLE_VIDEOIN
+//`define ENABLE_MIDI
+//`define ENABLE_DMX
+//`define ENABLE_IR
+//`define ENABLE_USB
 
 /*
  * System clock frequency in Hz.

@@ -24,5 +24,10 @@
 #define CAP_TMU			(0x00000008)
 #define CAP_ETHERNET		(0x00000010)
 #define CAP_FMLMETER		(0x00000020)
+#define CAP_VIDEOIN		(0x00000040)
+#define CAP_MIDI		(0x00000080)
+#define CAP_DMX			(0x00000100)
+#define CAP_IR			(0x00000200)
+#define CAP_USB			(0x00000200)
 
 #endif /* __HW_CAPABILITIES */
