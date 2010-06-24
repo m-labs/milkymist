@@ -143,6 +143,7 @@ module system(
 wire sys_clk;
 wire sys_clk_n;
 wire hard_reset;
+wire reset_button = btn1 & btn2 & btn3;
 
 `ifndef SIMULATION
 wire sys_clk_dcm;
@@ -201,7 +202,7 @@ reg sys_rst;
 initial rst_debounce <= 20'hFFFFF;
 initial sys_rst <= 1'b1;
 always @(posedge sys_clk) begin
-	if(hard_reset)
+	if(hard_reset|reset_button)
 		rst_debounce <= 20'hFFFFF;
 	else if(rst_debounce != 20'd0)
 		rst_debounce <= rst_debounce - 20'd1;
@@ -223,7 +224,7 @@ assign phy_rst_n = ~sys_rst;
 reg [7:0] flash_rstcounter;
 initial flash_rstcounter <= 8'd0;
 always @(posedge sys_clk) begin
-	if(hard_reset)
+	if(hard_reset|reset_button)
 		flash_rstcounter <= 8'd0;
 	else if(~flash_rstcounter[7])
 		flash_rstcounter <= flash_rstcounter + 8'd1;
