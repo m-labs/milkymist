@@ -133,11 +133,11 @@ DCM_SP #(
 	.PSDONE(psdone),
 	.PSCLK(sys_clk)
 );
-AUTOBUF b1(
+BUFG b1(
 	.I(dqs_clk_dcm),
 	.O(dqs_clk)
 );
-AUTOBUF b2(
+BUFG b2(
 	.I(dqs_clk_n_dcm),
 	.O(dqs_clk_n)
 );

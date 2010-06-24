@@ -92,11 +92,11 @@ DCM_SP #(
 
 	.PSEN(1'b0)
 );
-AUTOBUF b_p(
+BUFG b_p(
 	.I(vga_iclk_dcm),
 	.O(vga_iclk)
 );
-AUTOBUF b_n(
+BUFG b_n(
 	.I(vga_iclk_n_dcm),
 	.O(vga_iclk_n)
 );

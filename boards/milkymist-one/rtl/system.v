@@ -182,11 +182,11 @@ DCM_SP #(
 	.RST(1'b0),
 	.PSEN(1'b0)
 );
-AUTOBUF b1(
+BUFG b1(
 	.I(sys_clk_dcm),
 	.O(sys_clk)
 );
-AUTOBUF b2(
+BUFG b2(
 	.I(sys_clk_n_dcm),
 	.O(sys_clk_n)
 );

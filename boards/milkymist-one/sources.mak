@@ -2,21 +2,21 @@ BOARD_SRC=$(wildcard $(BOARD_DIR)/*.v) $(BOARD_DIR)/../../gen_capabilities.v
 
 ASFIFO_SRC=$(wildcard $(CORES_DIR)/asfifo/rtl/*.v)
 CONBUS_SRC=$(wildcard $(CORES_DIR)/conbus/rtl/*.v)
-LM32_SRC=						\
-	$(CORES_DIR)/lm32/rtl/lm32_cpu.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_instruction_unit.v	\
-	$(CORES_DIR)/lm32/rtl/lm32_decoder.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_load_store_unit.v	\
-	$(CORES_DIR)/lm32/rtl/lm32_adder.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_addsub.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_logic_op.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_shifter.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_multiplier.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_mc_arithmetic.v	\
-	$(CORES_DIR)/lm32/rtl/lm32_interrupt.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_ram.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_icache.v		\
-	$(CORES_DIR)/lm32/rtl/lm32_dcache.v		\
+LM32_SRC=							\
+	$(CORES_DIR)/lm32/rtl/lm32_cpu.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_instruction_unit.v		\
+	$(CORES_DIR)/lm32/rtl/lm32_decoder.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_load_store_unit.v		\
+	$(CORES_DIR)/lm32/rtl/lm32_adder.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_addsub.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_logic_op.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_shifter.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_multiplier_spartan6.v	\
+	$(CORES_DIR)/lm32/rtl/lm32_mc_arithmetic.v		\
+	$(CORES_DIR)/lm32/rtl/lm32_interrupt.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_ram.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_icache.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_dcache.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_top.v
 FMLARB_SRC=$(wildcard $(CORES_DIR)/fmlarb/rtl/*.v)
 FMLBRG_SRC=$(wildcard $(CORES_DIR)/fmlbrg/rtl/*.v)

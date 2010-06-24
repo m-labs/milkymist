@@ -40,8 +40,7 @@
 `define CFG_EBA_RESET 32'h0
 `define CFG_DEBA_RESET 32'h0
 
-// FIXME: temporarily using MC multiplier because PL does not meet timing
-`define CFG_MC_MULTIPLY_ENABLED
+`define CFG_PL_MULTIPLY_ENABLED
 `define CFG_PL_BARREL_SHIFT_ENABLED
 `define CFG_SIGN_EXTEND_ENABLED
 `define CFG_MC_DIVIDE_ENABLED
