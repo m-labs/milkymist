@@ -18,7 +18,7 @@
 module tmu2 #(
 	parameter csr_addr = 4'h0,
 	parameter fml_depth = 26,
-	parameter texel_cache_depth = 14 /* 16kB cache */
+	parameter texel_cache_depth = 15 /* 32kB cache */
 ) (
 	/* Global clock and reset signals */
 	input sys_clk,
