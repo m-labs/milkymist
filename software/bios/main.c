@@ -19,6 +19,7 @@
 #include <console.h>
 #include <string.h>
 #include <uart.h>
+#include <blockdev.h>
 #include <fatfs.h>
 #include <crc.h>
 #include <system.h>
@@ -210,7 +211,7 @@ static int lscb(const char *filename, const char *longname, void *param)
 
 static void ls()
 {
-	fatfs_init();
+	fatfs_init(BLOCKDEV_FLASH, 0);
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
@@ -229,7 +230,7 @@ static void load(char *filename, char *addr)
 		printf("incorrect address\n");
 		return;
 	}
-	fatfs_init();
+	fatfs_init(BLOCKDEV_FLASH, 0);
 	fatfs_load(filename, (char *)addr2, 16*1024*1024, NULL);
 	fatfs_done();
 }
@@ -289,11 +290,11 @@ static void help()
 	puts("mw         - write address space");
 	puts("mc         - copy address space");
 	puts("crc        - compute CRC32 of a part of the address space");
-	puts("ls         - list files on the memory card");
-	puts("load       - load a file from the memory card");
-	puts("serialboot - attempt SFL boot");
+	puts("ls         - list files on the filesystem");
+	puts("load       - load a file from the filesystem");
+	puts("serialboot - boot via SFL");
 	puts("netboot    - boot via TFTP");
-	puts("cardboot   - attempt booting from memory card");
+	puts("fsboot     - boot from the filesystem");
 	puts("mdior      - read MDIO register");
 	puts("mdiow      - write MDIO register");
 	puts("reboot     - system reset");
@@ -333,7 +334,7 @@ static void do_command(char *c)
 	
 	else if(strcmp(token, "serialboot") == 0) serialboot();
 	else if(strcmp(token, "netboot") == 0) netboot();
-	else if(strcmp(token, "cardboot") == 0) cardboot(0);
+	else if(strcmp(token, "fsboot") == 0) fsboot();
 
 	else if(strcmp(token, "mdior") == 0) mdior(get_token(&c));
 	else if(strcmp(token, "mdiow") == 0) mdiow(get_token(&c), get_token(&c));
@@ -352,7 +353,7 @@ static int test_user_abort()
 	char c;
 	
 	puts("I: Press Q to abort boot");
-	for(i=0;i<4000000;i++) {
+	for(i=0;i<3500000;i++) {
 		if(readchar_nonblock()) {
 			c = readchar();
 			if(c == 'Q') {
@@ -429,12 +430,9 @@ static void boot_sequence()
 {
 	splash_display();
 	if(test_user_abort()) {
-		serialboot(1);
+		serialboot();
+		fsboot();
 		netboot();
-		if(CSR_GPIO_IN & GPIO_BTN1)
-			cardboot(1);
-		else
-			cardboot(0);
 		printf("E: No boot medium found\n");
 	}
 }

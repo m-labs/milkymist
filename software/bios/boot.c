@@ -22,6 +22,8 @@
 #include <board.h>
 #include <crc.h>
 #include <sfl.h>
+#include <blockdev.h>
+#include <fatfs.h>
 
 #include <net/microudp.h>
 #include <net/tftp.h>
@@ -58,7 +60,7 @@ static int check_ack()
 	int recognized;
 	static const char str[SFL_MAGIC_LEN] = SFL_MAGIC_ACK;
 	
-	timeout = 4500000;
+	timeout = 2000000;
 	recognized = 0;
 	while(timeout > 0) {
 		if(readchar_nonblock()) {
@@ -259,7 +261,57 @@ void netboot()
 	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
 }
 
-void cardboot(int alt)
+static int tryload(char *filename, unsigned int address)
 {
-	printf("FIXME: memory card boot is not implemented\n");
+	int devsize, realsize;
+
+	devsize = fatfs_load(filename, (char *)address, 16*1024*1024, &realsize);
+	if(devsize <= 0)
+		return -1;
+	if(realsize > devsize) {
+		printf("E: File size larger than the blocks read (corrupted FS or IO error ?)\n");
+		return -1;
+	}
+	printf("I: Read a %d byte image from %s\n", realsize, filename);
+
+	return realsize;
+}
+
+void fsboot()
+{
+	int size;
+	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
+
+	printf("I: Booting from filesystem...\n");
+	if(!fatfs_init(BLOCKDEV_FLASH, 0)) {
+		printf("E: Unable to initialize filesystem\n");
+		return;
+	}
+
+	if(tryload("BOOT.BIN", SDRAM_BASE) <= 0) {
+		printf("E: Firmware image not found\n");
+		fatfs_done();
+		return;
+	}
+
+	cmdline_adr = SDRAM_BASE+0x1000000;
+	size = tryload("CMDLINE.TXT", cmdline_adr);
+	if(size <= 0) {
+		printf("I: No command line parameters found (CMDLINE.TXT)\n");
+		cmdline_adr = 0;
+	} else
+		*((char *)(cmdline_adr+size)) = 0x00;
+
+	initrdstart_adr = SDRAM_BASE+0x1002000;
+	size = tryload("INITRD.BIN", initrdstart_adr);
+	if(size <= 0) {
+		printf("I: No initial ramdisk found (INITRD.BIN)\n");
+		initrdstart_adr = 0;
+		initrdend_adr = 0;
+	} else
+		initrdend_adr = initrdstart_adr + size - 1;
+
+	fatfs_done();
+	printf("I: Booting...\n");
+	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
 }
