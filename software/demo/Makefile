@@ -10,12 +10,14 @@ bandfilters.h: bandfilters.sce
 	scilab -nw -nwni -nogui -nb -f bandfilters.sce
 
 spam.raw: spam.png
+	$(MAKE) -C $(MMDIR)/tools
 	$(MMDIR)/tools/makeraw spam.png
 
 spam.h: spam.raw
 	xxd -i spam.raw spam.h
 
 %.bin: %.elf
+	$(MAKE) -C $(MMDIR)/tools
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@

@@ -6,10 +6,10 @@ bitstream.mcs:
 
 bios.mcs:
 	make -C ../../../software/bios
-	promgen -w -p mcs -o bios.mcs -s 32768 -b -data_file up 0x000C0000 ../../../software/bios/bios.bin -bpi_dc parallel -data_width 16
+	srec_cat -Output bios.mcs -Intel ../../../software/bios/bios.bin -Binary -offset 0x00180000
 
 splash.mcs: splash.raw
-	promgen -w -p mcs -o splash.mcs -s 32768 -b -data_file up 0x000D0000 splash.raw -bpi_dc parallel -data_width 16
+	srec_cat -Output splash.mcs -Intel splash.raw -Binary -offset 0x001C0000
 
 splash.raw: splash.png
 	$(MMDIR)/tools/makeraw splash.png
@@ -23,7 +23,7 @@ flash: all
 clean:
 	rm -rf impact_sucks
 	rm -f bitstream.mcs bitstream.prm bitstream.cfi
-	rm -f bios.mcs bios.prm bios.cfi
-	rm -f splash.raw splash.mcs splash.prm splash.cfi
+	rm -f bios.mcs
+	rm -f splash.raw splash.mcs
 
 .PHONY: flash clean

@@ -7,6 +7,7 @@ SEGMENTS=-j .text -j .data -j .rodata
 all: bios.bin
 
 %.bin: %.elf
+	$(MAKE) -C $(MMDIR)/tools
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	chmod -x $@
 	$(MMDIR)/tools/crc32 $@ write

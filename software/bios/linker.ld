@@ -5,7 +5,7 @@ __DYNAMIC = 0;
 
 MEMORY {
 	flash : ORIGIN = 0x00180000, LENGTH = 0x20000    /* 128K */
-	sdram : ORIGIN = 0x42000000, LENGTH = 0x2000000
+	sdram : ORIGIN = 0x42000000, LENGTH = 0x2000000  /* (FIXME: should be) upper 64M of SDRAM */
 }
 
 SECTIONS

@@ -196,13 +196,14 @@ assign sys_clk = clkin;
 assign sys_clk_n = ~clkin;
 `endif
 
-/* Debounce it and generate power-on reset. */
+reg trigger_reset;
+always @(posedge sys_clk) trigger_reset <= hard_reset|reset_button;
 reg [19:0] rst_debounce;
 reg sys_rst;
 initial rst_debounce <= 20'hFFFFF;
 initial sys_rst <= 1'b1;
 always @(posedge sys_clk) begin
-	if(hard_reset|reset_button)
+	if(trigger_reset)
 		rst_debounce <= 20'hFFFFF;
 	else if(rst_debounce != 20'd0)
 		rst_debounce <= rst_debounce - 20'd1;
@@ -224,7 +225,7 @@ assign phy_rst_n = ~sys_rst;
 reg [7:0] flash_rstcounter;
 initial flash_rstcounter <= 8'd0;
 always @(posedge sys_clk) begin
-	if(hard_reset|reset_button)
+	if(trigger_reset)
 		flash_rstcounter <= 8'd0;
 	else if(~flash_rstcounter[7])
 		flash_rstcounter <= flash_rstcounter + 8'd1;

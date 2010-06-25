@@ -6,7 +6,7 @@ attachflash -position 1 -bpi "28F256J3F"
 assignfiletoattachedflash -position 1 -file "../bitstream.mcs"
 program -p 1 -dataWidth 16 -rs1 NONE -rs0 NONE -bpionly -e
 assignfiletoattachedflash -position 1 -file "../bios.mcs"
-program -p 1 -dataWidth 16 -rs1 NONE -rs0 NONE -bpionly
+program -p 1 -dataWidth 16 -rs1 NONE -rs0 NONE -bpionly -e
 assignfiletoattachedflash -position 1 -file "../splash.mcs"
-program -p 1 -dataWidth 16 -rs1 NONE -rs0 NONE -bpionly
+program -p 1 -dataWidth 16 -rs1 NONE -rs0 NONE -bpionly -e
 quit

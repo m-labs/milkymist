@@ -1,4 +1,4 @@
-[> Milkymist(tm) system-on-chip
+[> Milkymist(tm) System-on-Chip
 -------------------------------
 
 This is the complete core source code and documentation for the opensource
@@ -13,7 +13,6 @@ For the latest releases, binary distributions and more:
  /boards/     Top-level design files, constraint files and Makefiles
               for supported FPGA boards.
  /software/   Software for the SoC.
- /std/        Definitions for Milkymist protocols and formats.
  /doc/        System documentation.
  /tools/      Small tools for developers.
  /patches/    Example patches.
@@ -26,6 +25,7 @@ You will need:
  - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
  - SRecord,
+ - xxd,
 For the host-side tools:
  - native Clang/LLVM toolchain,
  - libGD,
@@ -42,41 +42,17 @@ NB. Before switching synthesis tools, don't forget to run "make clean" in the
 synthesis directory.
 
 
-[> Scripts
-[>> Building
+[> Output files
  /boards/xxx/synthesis/build/system.bit build_bitstream.sh FPGA bitstream.
- /software/bios/bios_splash.bin         build_bios.sh      BIOS image.
+ /software/bios/bios.bin                build_bios.sh      BIOS image.
  /software/demo/boot.bin                build_demo.sh      Demonstration firmware image.
+ /boards/xxx/flash/yyy.mcs                                 Flash images.
  /doc/xxx.pdf                           build_doc.sh       System-wide documentation.
  /cores/xxx/doc/xxx.pdf                 build_doc.sh       Core-specific documentation.
 
-[>> Loading
- - load_bitstream.sh  : loads bitstream in volatile memory.
- - flash_bitstream.sh : loads bitstream in non-volatile memory.
- - flash_bios.sh      : loads BIOS into NOR flash (currently no way of storing it
-                        in volatile memory).
- - load_demo.sh       : runs a SFL server and terminal program that downloads the
-                        demo firmware at device boot.
-
-
-[> Quickstart
-1- connect serial and JTAG cables
-2- connect VGA monitor
-3- build & load:
-./build_bitstream.sh
-./build_bios.sh
-./build_demo.sh
-./flash_bios.sh
-./load_demo.sh # will stay attached to display system debug messages
-./load_bitstream.sh # from another terminal
-
-# if you like it
-./flash_bitstream.sh
-cp software/demo/image.bin /memory_card/
-
 
 [> Development
-For Verilog simulations, the scripts (usually Makefiles) shipped with the test benches 
+For Verilog simulations, the scripts (usually Makefiles) shipped with the test benches
 take care of running the simulator.
 
 Depending on the IP core, one or more of these free simulators are supported:

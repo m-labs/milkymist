@@ -32,6 +32,7 @@
 #include <hw/gpio.h>
 #include <hw/uart.h>
 #include <hw/hpdmc.h>
+#include <hw/flash.h>
 
 #include "boot.h"
 #include "splash.h"
@@ -378,8 +379,8 @@ static void crcbios()
 	 * of our code.
 	 */
 	expected_crc = _edata;
-	length = (unsigned int)&_edata;
-	actual_crc = crc32((unsigned char *)0, length);
+	length = (unsigned int)&_edata - FLASH_OFFSET_BIOS;
+	actual_crc = crc32((unsigned char *)FLASH_OFFSET_BIOS, length);
 	if(expected_crc == actual_crc)
 		printf("I: BIOS CRC passed (%08x)\n", actual_crc);
 	else {

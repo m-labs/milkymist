@@ -374,7 +374,7 @@ getkey:
 memtest:
 	/* 1. fill with pattern */
 	mvhi	r5, 0x4000	/* r5 - current address */
-	mvhi	r3, 0x100	/* r3 - remaining words */
+	mvhi	r3, 0x200	/* r3 - remaining words */
 	mv	r4, r3		/* r4 - number of words to test */
 	mv	r6, r2		/* r6 - current value of the PRNG */
 	mvhi	r7, hi(22695477)
