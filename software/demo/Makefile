@@ -112,6 +112,7 @@ shell.o: ../../software/include/base/stdlib.h
 shell.o: ../../software/include/base/string.h
 shell.o: ../../software/include/base/console.h
 shell.o: ../../software/include/base/uart.h
+shell.o: ../../software/include/base/blockdev.h
 shell.o: ../../software/include/base/fatfs.h
 shell.o: ../../software/include/base/system.h
 shell.o: ../../software/include/base/math.h ../../software/include/base/irq.h

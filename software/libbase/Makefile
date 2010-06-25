@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS_ALL=divsi3.o libc.o crc16.o crc32.o console.o fatfs.o system.o board.o irq.o
+OBJECTS_ALL=divsi3.o libc.o crc16.o crc32.o console.o blockdev.o fatfs.o system.o board.o irq.o
 OBJECTS=$(OBJECTS_ALL) softfloat.o softfloat-glue.o vsnprintf.o atof.o malloc.o uart-async.o
 OBJECTS_LIGHT=$(OBJECTS_ALL) vsnprintf-nofloat.o uart.o
 
@@ -27,6 +27,10 @@ clean:
 
 atof.o: ../../software/include/base/stdlib.h
 atof.o: ../../software/include/base/ctype.h
+blockdev.o: ../../software/include/hw/flash.h
+blockdev.o: ../../software/include/base/string.h
+blockdev.o: ../../software/include/base/stdlib.h
+blockdev.o: ../../software/include/base/blockdev.h
 board.o: ../../software/include/hw/sysctl.h
 board.o: ../../software/include/hw/common.h
 board.o: ../../software/include/base/stdlib.h
@@ -44,6 +48,7 @@ fatfs.o: ../../software/include/base/string.h
 fatfs.o: ../../software/include/base/ctype.h
 fatfs.o: ../../software/include/base/endian.h
 fatfs.o: ../../software/include/base/console.h
+fatfs.o: ../../software/include/base/blockdev.h
 fatfs.o: ../../software/include/base/fatfs.h
 libc.o: ../../software/include/base/ctype.h
 libc.o: ../../software/include/base/stdio.h

@@ -52,7 +52,8 @@ main.o: ../../software/include/hw/common.h ../../software/include/hw/fmlbrg.h
 main.o: ../../software/include/hw/sysctl.h
 main.o: ../../software/include/hw/capabilities.h
 main.o: ../../software/include/hw/gpio.h ../../software/include/hw/uart.h
-main.o: ../../software/include/hw/hpdmc.h boot.h splash.h
+main.o: ../../software/include/hw/hpdmc.h ../../software/include/hw/flash.h
+main.o: boot.h splash.h
 splash.o: ../../software/include/base/stdio.h
 splash.o: ../../software/include/base/stdlib.h
 splash.o: ../../software/include/hw/vga.h ../../software/include/hw/common.h

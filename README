@@ -26,10 +26,9 @@ You will need:
  - LatticeMico32 toolchain for building the SoC software,
  - SRecord,
  - xxd,
-For the host-side tools:
+ - mtools,
  - native Clang/LLVM toolchain,
  - libGD,
-For the demonstration firmware:
  - RE2C,
  - Lemon parser generator,
  - Scilab.

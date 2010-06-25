@@ -15,14 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __FATFS_H
-#define __FATFS_H
+#include <hw/flash.h>
+#include <string.h>
 
-typedef int (*fatfs_dir_callback)(const char *, const char *, void *);
+#include <blockdev.h>
 
-int fatfs_init(int devnr, int has_part_table);
-int fatfs_list_files(fatfs_dir_callback cb, void *param);
-int fatfs_load(const char *filename, char *buffer, int size, int *realsize);
-void fatfs_done();
+int bd_init(int devnr)
+{
+	/* Only flash is supported for now */
+	if(devnr != BLOCKDEV_FLASH) return 0;
+	return 1;
+}
 
-#endif /* __FATFS_H */
+int bd_readblock(int block, void *buffer)
+{
+	memcpy(buffer, (char *)(FLASH_OFFSET_USERFS + block*512), 512);
+	return 1;
+}
+
+void bd_done()
+{
+}

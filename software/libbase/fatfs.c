@@ -21,6 +21,8 @@
 #include <ctype.h>
 #include <endian.h>
 #include <console.h>
+#include <blockdev.h>
+
 #include <fatfs.h>
 
 //#define DEBUG
@@ -119,41 +121,44 @@ static struct directory_entry fatfs_dir_sector_cache[BLOCK_SIZE/sizeof(struct di
 
 static int fatfs_data_start_sector;
 
-int fatfs_init()
+int fatfs_init(int devnr, int has_part_table)
 {
 	struct firstsector s0;
 	struct fat16_firstsector s;
 	int i;
 
-	if(/* !cf_init() */ 1) {
+	if(!bd_init(devnr)) {
 		printf("E: Unable to initialize memory card driver\n");
 		return 0;
 	}
-	
-	/* Read sector 0, with partition table */
-	if(/* !cf_readblock(0, (void *)&s0) */ 1) {
-		printf("E: Unable to read block 0\n");
-		return 0;
-	}
 
-	fatfs_partition_start_sector = -1;
-	for(i=0;i<4;i++)
-		if((s0.partitions[i].type == PARTITION_TYPE_FAT16)
-		 ||(s0.partitions[i].type == PARTITION_TYPE_FAT32)) {
-#ifdef DEBUG
-			printf("I: Using partition #%d: start sector %08x, end sector %08x\n", i,
-				le32toh(s0.partitions[i].start_sector), le32toh(s0.partitions[i].end_sector));
-#endif
-			fatfs_partition_start_sector = le32toh(s0.partitions[i].start_sector);
-			break;
+	if(has_part_table) {
+		/* Read sector 0, with partition table */
+		if(!bd_readblock(0, (void *)&s0)) {
+			printf("E: Unable to read block 0\n");
+			return 0;
 		}
-	if(fatfs_partition_start_sector == -1) {
-		printf("E: No FAT partition was found\n");
-		return 0;
-	}
+
+		fatfs_partition_start_sector = -1;
+		for(i=0;i<4;i++)
+			if((s0.partitions[i].type == PARTITION_TYPE_FAT16)
+			||(s0.partitions[i].type == PARTITION_TYPE_FAT32)) {
+#ifdef DEBUG
+				printf("I: Using partition #%d: start sector %08x, end sector %08x\n", i,
+					le32toh(s0.partitions[i].start_sector), le32toh(s0.partitions[i].end_sector));
+#endif
+				fatfs_partition_start_sector = le32toh(s0.partitions[i].start_sector);
+				break;
+			}
+		if(fatfs_partition_start_sector == -1) {
+			printf("E: No FAT partition was found\n");
+			return 0;
+		}
+	} else
+		fatfs_partition_start_sector = 0;
 	
 	/* Read first FAT16 sector */
-	if(/* !cf_readblock(fatfs_partition_start_sector, (void *)&s) */ 1) {
+	if(!bd_readblock(fatfs_partition_start_sector, (void *)&s)) {
 		printf("E: Unable to read first FAT sector\n");
 		return 0;
 	}
@@ -207,12 +212,14 @@ static int fatfs_read_fat(int offset)
 {
 	int wanted_sector;
 	
-	if((offset < 0) || (offset >= fatfs_fat_entries))
+	if((offset < 0) || (offset >= fatfs_fat_entries)) {
+		printf("E: Incorrect offset %d in fatfs_read_fat\n", offset);
 		return -1;
+	}
 		
 	wanted_sector = fatfs_fat_sector + (offset*2)/BLOCK_SIZE;
 	if(wanted_sector != fatfs_fat_cached_sector) {
-		if(/* !cf_readblock(wanted_sector, (void *)&fatfs_fat_sector_cache) */ 1) {
+		if(!bd_readblock(wanted_sector, (void *)&fatfs_fat_sector_cache)) {
 			printf("E: Memory card failed (FAT), sector %d\n", wanted_sector);
 			return -1;
 		}
@@ -232,7 +239,7 @@ static const struct directory_entry *fatfs_read_root_directory(int offset)
 	wanted_sector = fatfs_root_table_sector + (offset*sizeof(struct directory_entry))/BLOCK_SIZE;
 
 	if(wanted_sector != fatfs_dir_cached_sector) {
-		if(/* !cf_readblock(wanted_sector, (void *)&fatfs_dir_sector_cache) */ 1) {
+		if(!bd_readblock(wanted_sector, (void *)&fatfs_dir_sector_cache)) {
 			printf("E: Memory card failed (Rootdir), sector %d\n", wanted_sector);
 			return NULL;
 		}
@@ -386,7 +393,7 @@ static int fatfs_load_cluster(int clustern, char *buffer, int maxsectors)
 	else
 		toread = fatfs_sectors_per_cluster;
 	for(i=0;i<toread;i++)
-		if(/* !cf_readblock(startsector+i, (unsigned char *)buffer+i*CF_BLOCK_SIZE) */ 1) {
+		if(!bd_readblock(startsector+i, (unsigned char *)buffer+i*BLOCK_SIZE)) {
 			printf("E: Memory card failed (Cluster), sector %d\n", startsector+i);
 			return 0;
 		}
@@ -429,5 +436,5 @@ int fatfs_load(const char *filename, char *buffer, int size, int *realsize)
 
 void fatfs_done()
 {
-	/* cf_done(); */
+	bd_done();
 }

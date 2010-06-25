@@ -20,6 +20,7 @@
 #include <string.h>
 #include <console.h>
 #include <uart.h>
+#include <blockdev.h>
 #include <fatfs.h>
 #include <system.h>
 #include <math.h>
@@ -154,19 +155,27 @@ static int lscb(const char *filename, const char *longname, void *param)
 
 static void ls()
 {
-	fatfs_init();
+	if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
 
 static void render(const char *filename)
 {
+	char buffer[8192];
+	int size;
+
 	if(*filename == 0) {
 		printf("render <filename>\n");
 		return;
 	}
 
-	/* TODO */
+	if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
+	if(!fatfs_load(filename, buffer, sizeof(buffer), &size)) return;
+	fatfs_done();
+	buffer[size] = 0;
+
+	renderer_start(buffer);
 }
 
 static void spam()
@@ -257,7 +266,7 @@ static void loadpic(const char *filename)
 		return;
 	}
 
-	if(!fatfs_init()) return;
+	if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
 	if(!fatfs_load(filename, (void *)vga_backbuffer, vga_hres*vga_vres*2, &size)) return;
 	fatfs_done();
 

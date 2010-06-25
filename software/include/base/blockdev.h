@@ -15,14 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __FATFS_H
-#define __FATFS_H
+#ifndef __BLOCKDEV_H
+#define __BLOCKDEV_H
 
-typedef int (*fatfs_dir_callback)(const char *, const char *, void *);
+enum {
+	BLOCKDEV_FLASH,
+	BLOCKDEV_MEMORY_CARD
+};
 
-int fatfs_init(int devnr, int has_part_table);
-int fatfs_list_files(fatfs_dir_callback cb, void *param);
-int fatfs_load(const char *filename, char *buffer, int size, int *realsize);
-void fatfs_done();
+int bd_init(int devnr);
+int bd_readblock(int block, void *buffer);
+void bd_done();
 
-#endif /* __FATFS_H */
+#endif /* __BLOCKDEV_H */
