@@ -28,23 +28,6 @@ struct tff_file_hdr {
 	unsigned int img_h;       /* height of font image */
 };
 
-void font_init_context(struct font_context *ctx, unsigned char *font, unsigned short *fb, int fb_w, int fb_h)
-{
-	ctx->font = font;
-	ctx->fb = fb;
-	ctx->fb_w = fb_w;
-	ctx->fb_h = fb_h;
-}
-
-static void draw_pixel(struct font_context *ctx, int x, int y, unsigned char i)
-{
-	if(x < 0) return;
-	if(x >= ctx->fb_w) return;
-	if(y < 0) return;
-	if(y >= ctx->fb_h) return;
-	ctx->fb[x+y*ctx->fb_w] = MAKERGB565(i >> 3, i >> 2, i >> 3);
-}
-
 static unsigned int i2u32(unsigned int *src)
 {
 	unsigned char *a = ((unsigned char *)src);
@@ -55,7 +38,32 @@ static unsigned int i2u32(unsigned int *src)
 	    + (((unsigned int)(*c))<<16) + (((unsigned int)(*d))<<24);
 }
 
-int font_draw_char(struct font_context *ctx, int x, int y, unsigned char c)
+void font_init_context(struct font_context *ctx, unsigned char *font, unsigned short *fb, int fb_w, int fb_h)
+{
+	ctx->font = font;
+	ctx->fb = fb;
+	ctx->fb_w = fb_w;
+	ctx->fb_h = fb_h;
+}
+
+int font_get_height(struct font_context *ctx)
+{
+	struct tff_file_hdr *tff = (struct tff_file_hdr *)ctx->font;
+	return i2u32(&tff->img_h);
+}
+
+static void draw_pixel(struct font_context *ctx, int x, int y, int r, unsigned char i)
+{
+	/*if(x < 0) return;
+	if(x >= ctx->fb_w) return;
+	if(y < 0) return;
+	if(y >= ctx->fb_h) return;*/
+	if(r)
+		i = 255-i;
+	ctx->fb[x+y*ctx->fb_w] = MAKERGB565(i >> 3, i >> 2, i >> 3);
+}
+
+int font_draw_char(struct font_context *ctx, int x, int y, int r, unsigned char c)
 {
 	struct tff_file_hdr *tff = (struct tff_file_hdr *)ctx->font;
 	unsigned char *font_img = ctx->font + sizeof(struct tff_file_hdr);
@@ -71,14 +79,14 @@ int font_draw_char(struct font_context *ctx, int x, int y, unsigned char c)
 
 	for(dy=0;dy<h;dy++)
 		for(dx=0;dx<w;dx++)
-			draw_pixel(ctx, x+dx, y+dy, font_img[dx+dy*fw]);
+			draw_pixel(ctx, x+dx, y+dy, r, font_img[dx+dy*fw]);
 	return w;
 }
 
-void font_draw_string(struct font_context *ctx, int x, int y, char *str)
+void font_draw_string(struct font_context *ctx, int x, int y, int r, char *str)
 {
 	while(*str) {
-		x += font_draw_char(ctx, x, y, (unsigned char)(*str));
+		x += font_draw_char(ctx, x, y, r, (unsigned char)(*str));
 		str++;
 	}
 }

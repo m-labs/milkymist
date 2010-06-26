@@ -29,6 +29,7 @@
 #include "cpustats.h"
 #include "color.h"
 #include "line.h"
+#include "osd.h"
 #include "rpipe.h"
 
 #define RPIPE_FRAMEQ_SIZE 4 /* < must be a power of 2 */

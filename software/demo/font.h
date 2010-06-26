@@ -27,8 +27,9 @@ struct font_context {
 };
 
 void font_init_context(struct font_context *ctx, unsigned char *font, unsigned short *fb, int fb_w, int fb_h);
-int font_draw_char(struct font_context *ctx, int x, int y, unsigned char c);
-void font_draw_string(struct font_context *ctx, int x, int y, char *str);
+int font_get_height(struct font_context *ctx);
+int font_draw_char(struct font_context *ctx, int x, int y, int r, unsigned char c);
+void font_draw_string(struct font_context *ctx, int x, int y, int r, char *str);
 
 #endif /* __FONT_H */
 

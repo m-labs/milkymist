@@ -22,5 +22,6 @@
 
 void osd_init();
 int osd_fill_blit_td(struct tmu_td *td, tmu_callback callback, void *user);
+void osd_service();
 
 #endif /* __OSD_H */

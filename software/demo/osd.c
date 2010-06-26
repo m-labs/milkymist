@@ -17,13 +17,18 @@
 
 #include <hal/vga.h>
 #include <hal/tmu.h>
-#include <math.h>
 #include <hw/sysctl.h>
 #include <hw/gpio.h>
+#include <math.h>
+#include <system.h>
+#include <string.h>
+#include <fatfs.h>
+#include <blockdev.h>
 
-#include "osd.h"
 #include "font.h"
 #include "logo.h"
+#include "renderer.h"
+#include "osd.h"
 
 int osd_x;
 int osd_y;
@@ -67,11 +72,7 @@ static void logo()
 			osd_fb[(x+OSD_W-LOGO_W-OSD_CORNER)+OSD_W*(y+OSD_CORNER)] = ((unsigned short *)logo_raw)[x+LOGO_W*y];
 }
 
-static int previous_keys;
-static int osd_alpha;
-static int osd_timer;
-
-#define OSD_MAX_ALPHA 40
+static void init_ui();
 
 void osd_init()
 {
@@ -90,19 +91,149 @@ void osd_init()
 	round_corners();
 	logo();
 
-	previous_keys = 0;
-	osd_alpha = OSD_MAX_ALPHA;
-	osd_timer = 125;
+	init_ui();
+}
 
-	font_init_context(&osd_font, vera20_tff, osd_fb, OSD_W, OSD_H);
-	font_draw_string(&osd_font, OSD_CORNER, OSD_CORNER, "Rovastar - Touchdown on Mars");
+static int previous_keys;
+static int osd_alpha;
+static int osd_timer;
+
+#define OSD_DURATION 90
+#define OSD_MAX_ALPHA 40
+
+#define OSD_MAX_USER_X (OSD_W-OSD_CORNER-LOGO_W)
+
+#define MAX_PATCH_TITLE 45
+#define MAX_PATCHES 128
+static char current_patch[MAX_PATCH_TITLE+1];
+static char patchlist_filenames[MAX_PATCHES][13];
+static char patchlist_titles[MAX_PATCHES][MAX_PATCH_TITLE+1];
+static int patchlist_n;
+static int patchlist_sel;
+static int patchlist_page;
+
+static int patchlist_maxpage;
+static int patchlist_maxsel;
+
+static int patchlist_pending;
+
+static void clear_user_area()
+{
+	int x, y;
+	
+	for(y=OSD_CORNER;y<(OSD_H-OSD_CORNER);y++)
+		for(x=OSD_CORNER;x<OSD_MAX_USER_X;x++)
+			osd_fb[x+y*OSD_W] = 0;
+}
+
+static void draw_user_area()
+{
+	int i;
+	int h;
+	int nel;
+	
+	clear_user_area();
+	h = font_get_height(&osd_font);
+	font_draw_string(&osd_font, OSD_CORNER, OSD_CORNER, 0, current_patch);
+	nel = patchlist_page < patchlist_maxpage ? 4 : patchlist_maxsel;
+	for(i=0;i<nel;i++)
+		font_draw_string(&osd_font, OSD_CORNER+20, OSD_CORNER+(i+1)*h, i == patchlist_sel, patchlist_titles[patchlist_page*4+i]);
+	flush_bridge_cache();
+}
+
+static void start_patch_from_list(int n)
+{
+	strcpy(current_patch, patchlist_titles[n]);
+	patchlist_pending = n;
 }
 
 static void process_keys(unsigned int keys)
 {
+	if(keys & GPIO_BTN1) {
+		if(patchlist_sel > 0)
+			patchlist_sel--;
+		else if(patchlist_page > 0) {
+			patchlist_page--;
+			patchlist_sel = 3;
+		}
+	}
+	if(keys & GPIO_BTN3) {
+		if(patchlist_page < patchlist_maxpage) {
+			if(patchlist_sel < 3)
+				patchlist_sel++;
+			else {
+				patchlist_page++;
+				patchlist_sel = 0;
+			}
+		} else if(patchlist_sel < (patchlist_maxsel-1))
+			patchlist_sel++;
+	}
+	if(keys & GPIO_BTN2)
+		start_patch_from_list(patchlist_page*4+patchlist_sel);
+
+	draw_user_area();
 }
 
-static void osd_service()
+static int lscb(const char *filename, const char *longname, void *param)
+{
+	char *c;
+
+	if(strlen(longname) < 5) return 1;
+	c = (char *)longname + strlen(longname) - 5;
+	if(strcmp(c, ".milk") != 0) return 1;
+	strcpy(patchlist_filenames[patchlist_n], filename);
+	strncpy(patchlist_titles[patchlist_n], longname, MAX_PATCH_TITLE);
+	patchlist_titles[patchlist_n][MAX_PATCH_TITLE] = 0;
+	c = patchlist_titles[patchlist_n] + strlen(patchlist_titles[patchlist_n]) - 5;
+	if(strcmp(c, ".milk") == 0) *c = 0;
+	patchlist_n++;
+	return patchlist_n < MAX_PATCHES;
+}
+
+static void init_ui()
+{
+	previous_keys = 0;
+	osd_alpha = 0;
+	osd_timer = OSD_DURATION;
+
+	patchlist_n = 0;
+	patchlist_sel = 0;
+	patchlist_page = 0;
+	patchlist_pending = -1;
+
+	if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
+	fatfs_list_files(lscb, NULL);
+	fatfs_done();
+
+	patchlist_maxpage = (patchlist_n+3)/4 - 1;
+	patchlist_maxsel = patchlist_n % 4;
+	
+	if(patchlist_n > 0)
+		start_patch_from_list(0);
+
+	font_init_context(&osd_font, vera20_tff, osd_fb, OSD_W, OSD_H);
+	draw_user_area();
+}
+
+void osd_service()
+{
+	if(patchlist_pending != -1) {
+		char buffer[8192];
+		int size;
+		int n;
+
+		n = patchlist_pending;
+		patchlist_pending = -1;
+		if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
+		if(!fatfs_load(patchlist_filenames[n], buffer, sizeof(buffer), &size)) return;
+		fatfs_done();
+		buffer[size] = 0;
+
+		renderer_start(buffer);
+	}
+}
+
+int osd_fill_blit_td(struct tmu_td *td, tmu_callback callback, void *user)
 {
 	unsigned int keys;
 	unsigned int new_keys;
@@ -112,7 +243,7 @@ static void osd_service()
 	previous_keys = keys;
 
 	if(new_keys) {
-		osd_timer = 125;
+		osd_timer = OSD_DURATION;
 		if(osd_alpha != 0)
 			process_keys(new_keys);
 	}
@@ -127,11 +258,6 @@ static void osd_service()
 		if(osd_alpha < 0)
 			osd_alpha = 0;
 	}
-}
-
-int osd_fill_blit_td(struct tmu_td *td, tmu_callback callback, void *user)
-{
-	osd_service();
 
 	td->flags = TMU_CTL_CHROMAKEY;
 	td->hmeshlast = 1;
@@ -157,3 +283,4 @@ int osd_fill_blit_td(struct tmu_td *td, tmu_callback callback, void *user)
 
 	return osd_alpha != 0;
 }
+

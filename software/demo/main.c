@@ -74,6 +74,7 @@ int main()
 			shell_input(readchar());
 		apipe_service();
 		rpipe_service();
+		osd_service();
 	}
 	
 	return 0;

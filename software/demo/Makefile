@@ -84,11 +84,20 @@ main.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
 main.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
 main.o: ../../software/include/hw/pfpu.h ../../software/include/hal/tmu.h
 main.o: ../../software/include/hw/tmu.h apipe.h rpipe.h renderer.h cpustats.h
-main.o: memstats.h shell.h
+main.o: memstats.h osd.h shell.h
 memstats.o: ../../software/include/base/board.h
 memstats.o: ../../software/include/hal/brd.h
 memstats.o: ../../software/include/hw/fmlmeter.h
 memstats.o: ../../software/include/hw/common.h
+osd.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
+osd.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
+osd.o: ../../software/include/hw/sysctl.h ../../software/include/hw/gpio.h
+osd.o: ../../software/include/base/math.h
+osd.o: ../../software/include/base/system.h
+osd.o: ../../software/include/base/string.h
+osd.o: ../../software/include/base/stdlib.h
+osd.o: ../../software/include/base/fatfs.h
+osd.o: ../../software/include/base/blockdev.h font.h logo.h renderer.h osd.h
 renderer.o: ../../software/include/base/stdio.h
 renderer.o: ../../software/include/base/stdlib.h
 renderer.o: ../../software/include/base/string.h
@@ -107,7 +116,7 @@ rpipe.o: ../../software/include/base/math.h
 rpipe.o: ../../software/include/hw/interrupts.h
 rpipe.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
 rpipe.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
-rpipe.o: renderer.h wave.h cpustats.h color.h line.h rpipe.h spam.h
+rpipe.o: renderer.h wave.h cpustats.h color.h line.h osd.h rpipe.h
 shell.o: ../../software/include/base/stdio.h
 shell.o: ../../software/include/base/stdlib.h
 shell.o: ../../software/include/base/string.h
