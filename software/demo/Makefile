@@ -97,7 +97,8 @@ osd.o: ../../software/include/base/system.h
 osd.o: ../../software/include/base/string.h
 osd.o: ../../software/include/base/stdlib.h
 osd.o: ../../software/include/base/fatfs.h
-osd.o: ../../software/include/base/blockdev.h font.h logo.h renderer.h osd.h
+osd.o: ../../software/include/base/blockdev.h font.h logo.h renderer.h
+osd.o: ../../software/include/base/version.h osd.h
 renderer.o: ../../software/include/base/stdio.h
 renderer.o: ../../software/include/base/stdlib.h
 renderer.o: ../../software/include/base/string.h

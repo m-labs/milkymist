@@ -28,6 +28,7 @@
 #include "font.h"
 #include "logo.h"
 #include "renderer.h"
+#include "version.h"
 #include "osd.h"
 
 int osd_x;
@@ -70,6 +71,7 @@ static void logo()
 	for(y=0;y<LOGO_H;y++)
 		for(x=0;x<LOGO_W;x++)
 			osd_fb[(x+OSD_W-LOGO_W-OSD_CORNER)+OSD_W*(y+OSD_CORNER)] = ((unsigned short *)logo_raw)[x+LOGO_W*y];
+	font_draw_string(&osd_font, OSD_W-LOGO_W-OSD_CORNER, OSD_H-font_get_height(&osd_font), 0, VERSION);
 }
 
 static void init_ui();
@@ -88,6 +90,7 @@ void osd_init()
 	osd_vertices[1][1].x = OSD_W << TMU_FIXEDPOINT_SHIFT;
 	osd_vertices[1][1].y = OSD_H << TMU_FIXEDPOINT_SHIFT;
 
+	font_init_context(&osd_font, vera20_tff, osd_fb, OSD_W, OSD_H);
 	round_corners();
 	logo();
 
@@ -211,7 +214,6 @@ static void init_ui()
 	if(patchlist_n > 0)
 		start_patch_from_list(0);
 
-	font_init_context(&osd_font, vera20_tff, osd_fb, OSD_W, OSD_H);
 	draw_user_area();
 }
 
