@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o vera20_tff.o font.o main.o
+OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o vera20_tff.o font.o osd.o main.o
 SEGMENTS=-j .text -j .data -j .rodata
 
 all: boot.bin
@@ -9,12 +9,12 @@ all: boot.bin
 bandfilters.h: bandfilters.sce
 	scilab -nw -nwni -nogui -nb -f bandfilters.sce
 
-spam.raw: spam.png
+logo.raw: logo.png
 	$(MAKE) -C $(MMDIR)/tools
-	$(MMDIR)/tools/makeraw spam.png
+	$(MMDIR)/tools/makeraw logo.png
 
-spam.h: spam.raw
-	xxd -i spam.raw spam.h
+logo.h: logo.raw
+	xxd -i logo.raw logo.h
 
 %.bin: %.elf
 	$(MAKE) -C $(MMDIR)/tools
@@ -32,11 +32,11 @@ boot.elf: linker.ld $(OBJECTS)
 
 .PHONY: clean depend boot.elf
 
-depend: bandfilters.h spam.h
+depend: bandfilters.h logo.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f $(OBJECTS) bandfilters.h spam.raw spam.h boot.elf boot.bin .*~ *~ Makefile.bak
+	rm -f $(OBJECTS) bandfilters.h logo.raw logo.h boot.elf boot.bin .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 

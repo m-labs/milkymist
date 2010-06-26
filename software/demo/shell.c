@@ -178,15 +178,6 @@ static void render(const char *filename)
 	renderer_start(buffer);
 }
 
-static void spam()
-{
-	spam_enabled = !spam_enabled;
-	if(spam_enabled)
-		printf("Advertising enabled\n");
-	else
-		printf("Advertising disabled\n");
-}
-
 static void stats()
 {
 	int hours, mins, secs;
@@ -223,7 +214,6 @@ static void help()
 	puts("render     - start rendering a patch");
 	puts("irender    - input patch equations interactively");
 	puts("stop       - stop renderer");
-	puts("spam       - start/stop advertising");
 	puts("stats      - print system stats");
 	puts("reboot     - system reset");
 }
@@ -577,7 +567,6 @@ static void do_command(char *c)
 			renderer_istart();
 			irender = 1;
 		} else if(strcmp(command, "stop") == 0) renderer_stop();
-		else if(strcmp(command, "spam") == 0) spam();
 		else if(strcmp(command, "stats") == 0) stats();
 		else if(strcmp(command, "reboot") == 0) reboot();
 		else if(strcmp(command, "help") == 0) help();

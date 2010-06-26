@@ -36,6 +36,7 @@
 #include "renderer.h"
 #include "cpustats.h"
 #include "memstats.h"
+#include "osd.h"
 #include "shell.h"
 
 static void banner()
@@ -65,6 +66,7 @@ int main()
 	renderer_init();
 	apipe_init();
 	rpipe_init();
+	osd_init();
 	shell_init();
 
 	while(1) {

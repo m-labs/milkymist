@@ -31,8 +31,6 @@
 #include "line.h"
 #include "rpipe.h"
 
-#include "spam.h"
-
 #define RPIPE_FRAMEQ_SIZE 4 /* < must be a power of 2 */
 #define RPIPE_FRAMEQ_MASK (RPIPE_FRAMEQ_SIZE-1)
 
@@ -48,8 +46,6 @@ static int run_swap_bottom_half;
 
 static unsigned int frames;
 static unsigned int fps;
-static unsigned int spam_counter;
-int spam_enabled;
 
 static unsigned short texbufferA[512*512];
 static unsigned short texbufferB[512*512];
@@ -57,14 +53,6 @@ static unsigned short *tex_frontbuffer;
 static unsigned short *tex_backbuffer;
 
 static struct tmu_vertex scale_tex_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
-
-#define SPAM_W		75
-#define SPAM_H		75
-#define SPAM_X		545
-#define SPAM_Y		30
-#define SPAM_CHROMAKEY	0x001f
-
-static struct tmu_vertex spam_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
 
 void rpipe_init()
 {
@@ -75,8 +63,6 @@ void rpipe_init()
 
 	frames = 0;
 	fps = 0;
-	spam_counter = 0;
-	spam_enabled = 1;
 
 	run_wave_bottom_half = 0;
 	run_swap_bottom_half = 0;
@@ -89,15 +75,6 @@ void rpipe_init()
 	scale_tex_vertices[1][0].y = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
 	scale_tex_vertices[1][1].x = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
 	scale_tex_vertices[1][1].y = renderer_texsize << TMU_FIXEDPOINT_SHIFT;
-
-	spam_vertices[0][0].x = 0;
-	spam_vertices[0][0].y = 0;
-	spam_vertices[0][1].x = SPAM_W << TMU_FIXEDPOINT_SHIFT;
-	spam_vertices[0][1].y = 0;
-	spam_vertices[1][0].x = 0;
-	spam_vertices[1][0].y = SPAM_H << TMU_FIXEDPOINT_SHIFT;
-	spam_vertices[1][1].x = SPAM_W << TMU_FIXEDPOINT_SHIFT;
-	spam_vertices[1][1].y = SPAM_H << TMU_FIXEDPOINT_SHIFT;
 
 	tex_frontbuffer = texbufferA;
 	tex_backbuffer = texbufferB;
@@ -498,12 +475,15 @@ static void rpipe_compose_screen()
 {
 	int vecho_alpha;
 	int vecho_enabled;
+	int osd_enabled;
 
 	vecho_alpha = 64.0*bh_frame->vecho_alpha;
 	vecho_enabled = vecho_alpha > 0;
 	vecho_alpha--;
 	if(vecho_alpha > TMU_ALPHA_MAX)
 		vecho_alpha = TMU_ALPHA_MAX;
+
+	osd_enabled = osd_fill_blit_td(&tmu_task1, rpipe_tmu_copydone, NULL);
 
 	/* 1. Draw texture */
 	tmu_task3.flags = 0;
@@ -525,7 +505,7 @@ static void rpipe_compose_screen()
 	tmu_task3.dstsquarew = vga_hres;
 	tmu_task3.dstsquareh = vga_vres;
 	tmu_task3.alpha = TMU_ALPHA_MAX;
-	if(spam_enabled || vecho_enabled)
+	if(osd_enabled || vecho_enabled)
 		tmu_task3.callback = NULL;
 	else
 		tmu_task3.callback = rpipe_tmu_copydone;
@@ -554,7 +534,7 @@ static void rpipe_compose_screen()
 		tmu_task2.dstsquarew = vga_hres;
 		tmu_task2.dstsquareh = vga_vres;
 		tmu_task2.alpha = vecho_alpha;
-		if(spam_enabled)
+		if(osd_enabled)
 			tmu_task2.callback = NULL;
 		else
 			tmu_task2.callback = rpipe_tmu_copydone;
@@ -562,31 +542,9 @@ static void rpipe_compose_screen()
 		tmu_submit_task(&tmu_task2);
 	}
 
-	/* 3. Draw spam */
-	if(spam_enabled) {
-		tmu_task1.flags = TMU_CTL_CHROMAKEY;
-		tmu_task1.hmeshlast = 1;
-		tmu_task1.vmeshlast = 1;
-		tmu_task1.brightness = TMU_BRIGHTNESS_MAX;
-		tmu_task1.chromakey = SPAM_CHROMAKEY;
-		tmu_task1.vertices = &spam_vertices[0][0];
-		tmu_task1.texfbuf = (unsigned short *)spam_raw;
-		tmu_task1.texhres = SPAM_W;
-		tmu_task1.texvres = SPAM_H;
-		tmu_task1.texhmask = TMU_MASK_FULL;
-		tmu_task1.texvmask = TMU_MASK_FULL;
-		tmu_task1.dstfbuf = vga_backbuffer;
-		tmu_task1.dsthres = vga_hres;
-		tmu_task1.dstvres = vga_vres;
-		tmu_task1.dsthoffset = SPAM_X;
-		tmu_task1.dstvoffset = SPAM_Y;
-		tmu_task1.dstsquarew = SPAM_W;
-		tmu_task1.dstsquareh = SPAM_H;
-		tmu_task1.alpha = 20;
-		tmu_task1.callback = rpipe_tmu_copydone;
-		tmu_task1.user = NULL;
+	/* 3. Draw OSD */
+	if(osd_enabled)
 		tmu_submit_task(&tmu_task1);
-	}
 }
 
 static void rpipe_wave_bottom_half()
