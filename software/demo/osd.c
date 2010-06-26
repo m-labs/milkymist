@@ -90,6 +90,7 @@ void osd_init()
 	osd_vertices[1][1].x = OSD_W << TMU_FIXEDPOINT_SHIFT;
 	osd_vertices[1][1].y = OSD_H << TMU_FIXEDPOINT_SHIFT;
 
+	memset(osd_fb, 0, sizeof(osd_fb));
 	font_init_context(&osd_font, vera20_tff, osd_fb, OSD_W, OSD_H);
 	round_corners();
 	logo();
@@ -210,6 +211,8 @@ static void init_ui()
 
 	patchlist_maxpage = (patchlist_n+3)/4 - 1;
 	patchlist_maxsel = patchlist_n % 4;
+	if(patchlist_maxsel == 0)
+		patchlist_maxsel = 4;
 	
 	if(patchlist_n > 0)
 		start_patch_from_list(0);
