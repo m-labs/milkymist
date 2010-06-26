@@ -71,9 +71,9 @@ static void free_rpipe_frame(struct rpipe_frame *rpipe_frame)
 void apipe_init()
 {
 	run_analyzer_bottom_half = 0;
-	peak_bass = 1740164;
-	peak_mid = 1062625;
-	peak_treb = 928140;
+	peak_bass = 1200000/5;
+	peak_mid =  1000000/5;
+	peak_treb =  900000/5;
 	bass_att = 0.0;
 	mid_att = 0.0;
 	treb_att = 0.0;
@@ -227,12 +227,9 @@ static void analyzer_bottom_half()
 	mid = analyzer_get_mid(&analyzer);
 	treb = analyzer_get_treb(&analyzer);
 	// TODO: appropriate scaling
-	if(bass > peak_bass) peak_bass = bass;
-	if(mid > peak_mid) peak_mid = mid;
-	if(treb > peak_treb) peak_treb = treb;
-	fbass = 5.0f*(float)bass/(float)peak_bass;
-	fmid = 5.0f*(float)mid/(float)peak_mid;
-	ftreb = 5.0f*(float)treb/(float)peak_treb;
+	fbass = (float)bass/(float)peak_bass;
+	fmid = (float)mid/(float)peak_mid;
+	ftreb = (float)treb/(float)peak_treb;
 
 	treb_att = 0.6f*treb_att + 0.4f*ftreb;
 	mid_att = 0.6f*mid_att + 0.4f*fmid;
