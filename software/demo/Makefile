@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o main.o
+OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o vera20_tff.o font.o main.o
 SEGMENTS=-j .text -j .data -j .rodata
 
 all: boot.bin
@@ -61,6 +61,7 @@ eval.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
 eval.o: ../../software/include/hal/pfpu.h ../../software/include/fpvm/fpvm.h
 eval.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/gfpus.h
 eval.o: ../../software/include/fpvm/pfpu.h eval.h renderer.h
+font.o: color.h font.h
 isr.o: ../../software/include/hw/interrupts.h
 isr.o: ../../software/include/base/irq.h ../../software/include/base/uart.h
 isr.o: ../../software/include/hal/time.h ../../software/include/hal/snd.h

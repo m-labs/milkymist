@@ -66,7 +66,7 @@ int main()
 	apipe_init();
 	rpipe_init();
 	shell_init();
-	
+
 	while(1) {
 		if(readchar_nonblock())
 			shell_input(readchar());
