@@ -23,7 +23,8 @@ module bt656cap_dma #(
 
 	/* To/from control interface */
 	input [1:0] field_filter,
-	output [fml_depth-1-1:0] fml_adr_base,
+	output reg in_frame,
+	input [fml_depth-1-5:0] fml_adr_base,
 	output start_of_frame,
 	output reg next_burst,
 	input last_burst,
@@ -111,6 +112,7 @@ end
 always @(*) begin
 	v_ack = 1'b0;
 	fml_stb = 1'b0;
+	in_frame = 1'b1;
 	next_burst = 1'b0;
 
 	data_en = 1'b0;
@@ -121,6 +123,7 @@ always @(*) begin
 
 	case(state)
 		WAIT_SOF: begin
+			in_frame = 1'b0;
 			v_ack = 1'b1;
 			data_en = start_of_frame;
 			if(start_of_frame)
