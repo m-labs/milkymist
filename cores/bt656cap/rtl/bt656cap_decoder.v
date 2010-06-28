@@ -66,9 +66,9 @@ always @(posedge vid_clk) begin
 		/* just transferred a new 32-bit word */
 		if(inreg[31:8] == 24'hff0000) begin
 			/* timing code */
-			in_hblank <= in_reg[4];
-			in_vblank <= in_reg[5];
-			in_field <= in_reg[6];
+			in_hblank <= inreg[4];
+			in_vblank <= inreg[5];
+			in_field <= inreg[6];
 		end else begin
 			/* data */
 			if(~in_hblank && ~in_vblank) begin

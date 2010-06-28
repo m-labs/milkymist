@@ -30,9 +30,9 @@ module bt656cap #(
 	output irq,
 
 	output [fml_depth-1:0] fml_adr,
-	output reg fml_stb,
+	output fml_stb,
 	input fml_ack,
-	output [63:0] fml_do
+	output [63:0] fml_do,
 
 	input vid_clk,
 	input [7:0] p,

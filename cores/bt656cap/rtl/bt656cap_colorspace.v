@@ -48,7 +48,7 @@ always @(*) begin
 end
 
 reg [16:0] mult_result;
-reg [8:0] mult_result_t = mult_result[16:8];
+wire [8:0] mult_result_t = mult_result[16:8];
 always @(posedge vid_clk) mult_result <= mult_opa*mult_opb;
 
 reg [8:0] int_r0;
@@ -64,24 +64,24 @@ reg sub_g;
 reg add_b;
 always @(posedge vid_clk) begin
 	if(load_y) begin
-		r0 <= y0;
-		g0 <= y0;
-		b0 <= y0;
-		r1 <= y1;
-		g1 <= y1;
-		b1 <= y1;
+		int_r0 <= y0;
+		int_g0 <= y0;
+		int_b0 <= y0;
+		int_r1 <= y1;
+		int_g1 <= y1;
+		int_b1 <= y1;
 	end
 	if(add_r) begin
-		r0 <= r0 + mult_result_t;
-		r1 <= r1 + mult_result_t;
+		int_r0 <= int_r0 + mult_result_t;
+		int_r1 <= int_r1 + mult_result_t;
 	end
 	if(sub_g) begin
-		g0 <= g0 - mult_result_t;
-		g1 <= g1 - mult_result_t;
+		int_g0 <= int_g0 - mult_result_t;
+		int_g1 <= int_g1 - mult_result_t;
 	end
 	if(add_b) begin
-		b0 <= b0 + mult_result_t;
-		b1 <= b1 + mult_result_t;
+		int_b0 <= int_b0 + mult_result_t;
+		int_b1 <= int_b1 + mult_result_t;
 	end
 end
 
@@ -176,14 +176,14 @@ always @(*) begin
 			next_state = S5;
 		end
 		S5: begin
-			fml_stb = 1'b1;
+			fsm_stb = 1'b1;
 			load_y = 1'b1;
 			mult_sela = 1'b1; // 1.402*Cr
 			mult_selb = 2'd0;
 			if(stb_i)
 				next_state = S2;
 			else
-				next_state = S0;
+				next_state = S1;
 		end
 	endcase
 end

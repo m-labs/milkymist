@@ -16,7 +16,7 @@
  */
 
 module bt656cap_dma #(
-	input fml_depth = 27
+	parameter fml_depth = 27
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -35,7 +35,7 @@ module bt656cap_dma #(
 	input v_field,
 	input [31:0] v_rgb565,
 
-	/* FML interface. fml_we=1 is assumed. */
+	/* FML interface. fml_we=1 and fml_sel=ff are assumed. */
 	output [fml_depth-1:0] fml_adr,
 	output reg fml_stb,
 	input fml_ack,
@@ -69,7 +69,7 @@ bt656cap_burstmem burstmem(
 );
 
 /* FML address generator */
-reg [fml_adr-1-5:0] fml_adr_b;
+reg [fml_depth-1-5:0] fml_adr_b;
 
 always @(posedge sys_clk) begin
 	if(start_of_frame)
@@ -106,7 +106,7 @@ always @(posedge sys_clk) begin
 	if(sys_rst)
 		state <= WAIT_SOF;
 	else
-		stats <= next_state;
+		state <= next_state;
 end
 
 always @(*) begin

@@ -37,7 +37,7 @@ module bt656cap_ctlif #(
 	output reg last_burst,
 
 	inout sda,
-	output sdc
+	output reg sdc
 );
 
 /* I2C */
@@ -64,8 +64,13 @@ always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		csr_do <= 32'd0;
 
+		field_filter <= 2'd0;
+		fml_adr_base <= {fml_depth-5{1'b0}};
+		max_bursts <= 15'd13824;
+
 		sda_oe <= 1'b0;
 		sda_o <= 1'b0;
+		sdc <= 1'b0;
 	end else begin
 		csr_do <= 32'd0;
 
@@ -75,6 +80,7 @@ always @(posedge sys_clk) begin
 					3'd0: begin
 						sda_o <= csr_di[1];
 						sda_oe <= csr_di[2];
+						sdc <= csr_di[3];
 					end
 					3'd1: field_filter <= csr_di[1:0];
 					3'd2: fml_adr_base <= csr_di[fml_depth-1:5];
@@ -83,7 +89,7 @@ always @(posedge sys_clk) begin
 			end
 
 			case(csr_a[2:0])
-				3'd0: csr_do <= {sda_oe, sda_o, sda_2};
+				3'd0: csr_do <= {sdc, sda_oe, sda_o, sda_2};
 				3'd1: csr_do <= {in_frame, field_filter};
 				3'd2: csr_do <= {fml_adr_base, 5'd0};
 				3'd3: csr_do <= max_bursts;
