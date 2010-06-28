@@ -24,8 +24,7 @@ module bt656cap_colorspace(
 
 	output reg stb_o,
 	output reg field_o,
-	output [15:0] rgb565_0,
-	output [15:0] rgb565_1
+	output [31:0] rgb565
 );
 
 /* Datapath */
@@ -115,8 +114,8 @@ always @(posedge vid_clk) begin
 	end
 end
 
-assign rgb565_0 = {out_r0[7:3], out_g0[7:2], out_b0[7:3]};
-assign rgb565_1 = {out_r1[7:3], out_g1[7:2], out_b1[7:3]};
+assign rgb565 = {out_r0[7:3], out_g0[7:2], out_b0[7:3],
+	out_r1[7:3], out_g1[7:2], out_b1[7:3]};
 
 /* Forward field */
 always @(posedge vid_clk) begin
