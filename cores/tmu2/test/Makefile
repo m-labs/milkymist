@@ -46,4 +46,4 @@ vpi_images.o: vpi_images.c
 clean:
 	rm -f verilog.log vpi_images.o vpi_images.so out.png
 
-.PHONY: clean sim sim_virtex4
+.PHONY: clean sim
