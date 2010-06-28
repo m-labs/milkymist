@@ -46,7 +46,7 @@ static int open_calltf(char *user_data)
 	fclose(fd);
 	
 	dst = gdImageCreateTrueColor(src->sx, src->sy);
-	if(src == NULL) {
+	if(dst == NULL) {
 		fprintf(stderr, "Unable to create output picture\n");
 		exit(1);
 	}
@@ -118,7 +118,7 @@ static int get_calltf(char *user_data)
  * Set a RGB565 pixel.
  *
  * Use from Verilog:
- * $image_get(img, x, y, color);
+ * $image_set(img, x, y, color);
  * img = 0/1 (source/dest)
  * Parameters are not modified.
  */
