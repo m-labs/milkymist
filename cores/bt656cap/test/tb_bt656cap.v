@@ -51,16 +51,17 @@ initial field = 1'b0;
 initial inc = 20'd0;
 always @(posedge vid_clk) begin
 	inc <= inc + 20'd1;
-	p <= inc[7:0];
-	if(inc == 20'd442368) begin
+	p <= {inc[7:1], 1'b0};
+	if(inc == 20'd414720) begin
 		field <= ~field;
 		p <= 8'hff;
 	end
-	if(inc == 20'd442369) p <= 8'h00;
-	if(inc == 20'd442370) p <= 8'h00;
-	if(inc == 20'd442371) begin
+	if(inc == 20'd414721) p <= 8'h00;
+	if(inc == 20'd414722) p <= 8'h00;
+	if(inc == 20'd414723) begin
 		p <= {1'b1, field, 6'b00_0000};
 		inc <= 20'd0;
+		$display("** end of frame");
 	end
 end
 
@@ -127,12 +128,13 @@ integer x;
 integer y;
 begin
 	write_addr2 = write_addr[20:0]/2;
-	x = write_addr2 % 512;
-	y = write_addr2 / 512;
-	$image_set(1, x + 0, y, fml_do[63:48]);
-	$image_set(1, x + 1, y, fml_do[47:32]);
-	$image_set(1, x + 2, y, fml_do[31:16]);
-	$image_set(1, x + 3, y, fml_do[15:0]);
+	x = write_addr2 % 720;
+	y = write_addr2 / 720;
+	$display("W: %d %d", x, y);
+	$image_set(x + 0, y, fml_do[63:48]);
+	$image_set(x + 1, y, fml_do[47:32]);
+	$image_set(x + 2, y, fml_do[31:16]);
+	$image_set(x + 3, y, fml_do[15:0]);
 end
 endtask
 
@@ -183,19 +185,9 @@ always begin
 	$display("Configuring DUT...");
 	csrwrite(32'h04, 32'h03);
 	csrread(32'h04);
+	@(posedge irq);
 	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
-	csrread(32'h04);
+	@(posedge irq);
 	csrread(32'h04);
 	@(posedge irq);
 

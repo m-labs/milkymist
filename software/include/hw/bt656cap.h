@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HW_PS2_H
-#define __HW_PS2_H
+#ifndef __HW_BT656CAP_H
+#define __HW_BT656CAP_H
 
 #include <hw/common.h>
 
-#define CSR_PS2_KEYBOARD_DATA	MMPTR(0x80007000)
-#define CSR_PS2_KEYBOARD_STATUS	MMPTR(0x80007004)
-#define CSR_PS2_MOUSE_DATA	MMPTR(0x80008000)
-#define CSR_PS2_MOUSE_STATUS	MMPTR(0x80008004)
+#define CSR_BT656CAP_I2C		MMPTR(0x8000b000)
+#define CSR_BT656CAP_FILTERSTATUS	MMPTR(0x8000b004)
+#define CSR_BT656CAP_BASE		MMPTR(0x8000b008)
+#define CSR_BT656CAP_MAXBURSTS		MMPTR(0x8000b00C)
+#define CSR_BT656CAP_DONEBURSTS		MMPTR(0x8000b010)
 
-#define PS2_BUSY		(0x1)
+#define BT656CAP_I2C_SDAIN		(0x1)
+#define BT656CAP_I2C_SDAOUT		(0x2)
+#define BT656CAP_I2C_SDAOE		(0x4)
+#define BT656CAP_I2C_SDC		(0x8)
 
-#endif /* __HW_PS2_H */
+#define BT656CAP_FILTERSTATUS_FIELD1	(0x1)
+#define BT656CAP_FILTERSTATUS_FIELD2	(0x2)
+#define BT656CAP_FILTERSTATUS_INFRAME	(0x4)
+
+#endif /* __HW_BT656CAP_H */

@@ -286,6 +286,9 @@ NET "videoin_rst_n" LOC = W17 | IOSTANDARD = LVCMOS33;
 NET "videoin_sda" LOC = AB17 | IOSTANDARD = LVCMOS33 | SLEW = SLOW | PULLUP;
 NET "videoin_sdc" LOC = AA14 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 
+NET "videoin_llc" TNM_NET = "GRPvideoin";
+TIMESPEC "TSvideoin" = PERIOD "GRPvideoin" 35 ns HIGH 50%;
+
 # ==== MIDI ====
 NET "midi_tx" LOC = AA21 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 NET "midi_rx" LOC = AB21 | IOSTANDARD = LVCMOS33;
@@ -329,3 +332,6 @@ TIMESPEC "TSvga_async2" = FROM "GRPvga" TO "GRPsys" TIG;
 
 TIMESPEC "TSac97_async1" = FROM "GRPsys" TO "GRPac97_clk" TIG;
 TIMESPEC "TSac97_async2" = FROM "GRPac97_clk" TO "GRPsys" TIG;
+
+TIMESPEC "TSvideoin_async1" = FROM "GRPsys" TO "GRPvideoin" TIG;
+TIMESPEC "TSvideoin_async2" = FROM "GRPvideoin" TO "GRPsys" TIG;

@@ -17,6 +17,7 @@
 
 module bt656cap_input(
 	input sys_clk,
+	input sys_rst,
 	input vid_clk,
 
 	input [7:0] p,
@@ -69,7 +70,7 @@ asfifo #(
 	.write_en(colorspace_stb),
 	.clk_write(vid_clk),
 
-	.rst(1'b0)
+	.rst(sys_rst)
 );
 assign stb = ~empty;
 

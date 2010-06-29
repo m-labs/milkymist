@@ -32,6 +32,7 @@
 #include <hw/gpio.h>
 #include <hw/interrupts.h>
 #include <hw/minimac.h>
+#include <hw/bt656cap.h>
 
 #include <hal/vga.h>
 #include <hal/snd.h>
@@ -144,7 +145,7 @@ static void mw(char *addr, char *value, char *count)
 			return;
 		}
 	}
-	for (i=0;i<count2;i++) *addr2++ = value2;
+	for(i=0;i<count2;i++) *addr2++ = value2;
 }
 
 static int lscb(const char *filename, const char *longname, void *param)
@@ -524,6 +525,221 @@ static void echo()
 	}
 }
 
+static short vbuffer[720*288] __attribute__((aligned(32)));
+
+static int i2c_init()
+{
+	unsigned timeout;
+
+	CSR_BT656CAP_I2C = BT656CAP_I2C_SDC;
+	/* Check the I2C bus is ready */
+	timeout = 1000;
+	while ((timeout > 0) && (!(CSR_BT656CAP_I2C & BT656CAP_I2C_SDAIN))) timeout--;
+
+	return timeout;
+}
+
+static void i2c_delay()
+{
+	unsigned i;
+
+	for(i=0;i<10000;i++) __asm__("nop");
+}
+
+/* I2C bit-banging functions from http://en.wikipedia.org/wiki/I2c */
+unsigned i2c_read_bit()
+{
+	unsigned bit;
+
+	/* Let the slave drive data */
+	CSR_BT656CAP_I2C = 0;
+	i2c_delay();
+	CSR_BT656CAP_I2C = BT656CAP_I2C_SDC;
+	i2c_delay();
+	bit = CSR_BT656CAP_I2C & BT656CAP_I2C_SDAIN;
+	i2c_delay();
+	CSR_BT656CAP_I2C = 0;
+	return bit;
+}
+
+void i2c_write_bit(unsigned bit)
+{
+	if(bit) {
+		CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE|BT656CAP_I2C_SDAOUT;
+	} else {
+		CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE;
+	}
+	i2c_delay();
+	/* Clock stretching */
+	CSR_BT656CAP_I2C |= BT656CAP_I2C_SDC;
+	i2c_delay();
+	CSR_BT656CAP_I2C &= ~BT656CAP_I2C_SDC;
+}
+
+static int i2c_start;
+void i2c_start_cond(void)
+{
+	if (i2c_start) {
+		/* set SDA to 1 */
+		CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE|BT656CAP_I2C_SDAOUT;
+		i2c_delay();
+		CSR_BT656CAP_I2C |= BT656CAP_I2C_SDC;
+	}
+	/* SCL is high, set SDA from 1 to 0 */
+	CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE|BT656CAP_I2C_SDC;
+	i2c_delay();
+	CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE;
+	i2c_start = 1;
+}
+
+void i2c_stop_cond(void)
+{
+	/* set SDA to 0 */
+	CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE;
+	i2c_delay();
+	/* Clock stretching */
+	CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE|BT656CAP_I2C_SDC;
+	/* SCL is high, set SDA from 0 to 1 */
+	CSR_BT656CAP_I2C = BT656CAP_I2C_SDC;
+	i2c_delay();
+	i2c_start = 0;
+}
+
+unsigned i2c_write(unsigned char byte)
+{
+	unsigned bit;
+	unsigned ack;
+
+	for(bit = 0; bit < 8; bit++) {
+		i2c_write_bit(byte & 0x80);
+		byte <<= 1;
+	}
+	ack = !i2c_read_bit();
+	return ack;
+}
+
+unsigned char i2c_read(int ack)
+{
+	unsigned char byte = 0;
+	unsigned bit;
+
+	for(bit = 0; bit < 8; bit++) {
+		byte <<= 1;
+		byte |= i2c_read_bit();
+	}
+	i2c_write_bit(!ack);
+	return byte;
+}
+
+static unsigned char vin_read_reg(unsigned char addr)
+{
+	unsigned char r;
+	
+	i2c_start_cond();
+	i2c_write(0x40);
+	i2c_write(addr);
+	i2c_start_cond();
+	i2c_write(0x41);
+	r = i2c_read(0);
+	i2c_stop_cond();
+
+	return r;
+}
+
+static void vin_write_reg(unsigned char addr, unsigned char val)
+{
+	unsigned char r;
+
+	i2c_start_cond();
+	i2c_write(0x40);
+	i2c_write(addr);
+	i2c_write(val);
+	i2c_stop_cond();
+}
+
+static void readv(char *addr)
+{
+	unsigned char a;
+	char *c;
+
+	if(*addr == 0) {
+		printf("readv <address>\n");
+		return;
+	}
+	a = strtoul(addr, &c, 0);
+	if(*c != 0) {
+		printf("incorrect address\n");
+		return;
+	}
+
+	printf("I2C init: %d\n", i2c_init());
+	i2c_delay();
+
+	printf("r: %02x\n", vin_read_reg(a));
+}
+
+static void writev(char *addr, char *value)
+{
+	unsigned char a, v;
+	char *c;
+
+	if((*addr == 0)||(*value == 0)) {
+		printf("writev <address> <value>\n");
+		return;
+	}
+	a = strtoul(addr, &c, 0);
+	if(*c != 0) {
+		printf("incorrect address\n");
+		return;
+	}
+	v = strtoul(value, &c, 0);
+	if(*c != 0) {
+		printf("incorrect value\n");
+		return;
+	}
+
+	printf("I2C init: %d\n", i2c_init());
+	i2c_delay();
+
+	vin_write_reg(a, v);
+}
+
+static const char vreg_addr[] = {
+0x15, 0x17, 0x1D, 0x0F, 0x3A, 0x3D, 0x3F, 0x50, 0xC3, 0xC4, 0x0E, 0x50, 0x52, 0x58, 0x77, 0x7C, 0x7D, 0x90, 0x91, 0x92, 0x93, 0x94, 0xCF, 0xD0, 0xD6, 0xE5, 0xD5, 0xD7, 0xE4, 0xEA, 0xE9, 0x0E
+};
+
+static const char vreg_dat[] = {
+0x00, 0x41, 0x40, 0x40, 0x16, 0xC3, 0xE4, 0x04, 0x05, 0x80, 0x80, 0x20, 0x18, 0xED, 0xC5, 0x93, 0x00, 0xC9, 0x40, 0x3C, 0xCA, 0xD5, 0x50, 0x4E, 0xDD, 0x51, 0xA0, 0xEA, 0x3E, 0x0F, 0x3E, 0x00
+};
+
+static void vtest()
+{
+	int i;
+
+	i2c_init();
+	for(i=0;i<sizeof(vreg_addr);i++)
+		vin_write_reg(vreg_addr[i], vreg_dat[i]);
+	
+	/*int x, y;
+	
+	irq_ack(IRQ_VIDEOIN);
+	CSR_BT656CAP_BASE = (unsigned int)vbuffer;
+	CSR_BT656CAP_FILTERSTATUS = BT656CAP_FILTERSTATUS_FIELD1;
+	printf("wait1\n");
+	while(!irq_pending() && IRQ_VIDEOIN);
+	irq_ack(IRQ_VIDEOIN);
+	printf("wait2\n");
+	while(!irq_pending() && IRQ_VIDEOIN);
+	irq_ack(IRQ_VIDEOIN);
+	CSR_BT656CAP_FILTERSTATUS = 0;
+	printf("wait3\n");
+	while(CSR_BT656CAP_FILTERSTATUS & BT656CAP_FILTERSTATUS_INFRAME);
+	printf("done\n");
+	for(y=0;y<288;y++)
+		for(x=0;x<720;x++)
+			vga_frontbuffer[640*y+x] = vbuffer[720*y+x];*/
+}
+
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -579,6 +795,9 @@ static void do_command(char *c)
 		else if(strcmp(command, "tmutest") == 0) tmutest();
 		else if(strcmp(command, "tmubench") == 0) tmubench();
 		else if(strcmp(command, "echo") == 0) echo();
+		else if(strcmp(command, "vtest") == 0) vtest();
+		else if(strcmp(command, "readv") == 0) readv(param1);
+		else if(strcmp(command, "writev") == 0) writev(param1, param2);
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}

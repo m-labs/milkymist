@@ -66,7 +66,7 @@ always @(posedge sys_clk) begin
 
 		field_filter <= 2'd0;
 		fml_adr_base <= {fml_depth-5{1'b0}};
-		max_bursts <= 15'd13824;
+		max_bursts <= 15'd12960;
 
 		sda_oe <= 1'b0;
 		sda_o <= 1'b0;

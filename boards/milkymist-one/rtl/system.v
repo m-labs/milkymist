@@ -114,7 +114,7 @@ module system(
 	input videoin_field,
 	input videoin_llc,
 	input videoin_irq_n,
-	input videoin_rst_n,
+	output videoin_rst_n,
 	inout videoin_sda,
 	output videoin_sdc,
 
@@ -212,6 +212,7 @@ end
 
 assign ac97_rst_n = ~sys_rst;
 assign phy_rst_n = ~sys_rst;
+assign videoin_rst_n = ~sys_rst;
 
 /*
  * We must release the Flash reset before the system reset
@@ -465,7 +466,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_pfpu,
 		csr_dr_tmu,
 		csr_dr_ethernet,
-		csr_dr_fmlmeter;
+		csr_dr_fmlmeter,
+		csr_dr_videoin;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -474,13 +476,15 @@ wire [`SDRAM_DEPTH-1:0]	fml_brg_adr,
 			fml_vga_adr,
 			fml_tmur_adr,
 			fml_tmudr_adr,
-			fml_tmuw_adr;
+			fml_tmuw_adr,
+			fml_videoin_adr;
 
 wire			fml_brg_stb,
 			fml_vga_stb,
 			fml_tmur_stb,
 			fml_tmudr_stb,
-			fml_tmuw_stb;
+			fml_tmuw_stb,
+			fml_videoin_stb;
 
 wire			fml_brg_we;
 
@@ -488,13 +492,15 @@ wire			fml_brg_ack,
 			fml_vga_ack,
 			fml_tmur_ack,
 			fml_tmudr_ack,
-			fml_tmuw_ack;
+			fml_tmuw_ack,
+			fml_videoin_ack;
 
 wire [7:0]		fml_brg_sel,
 			fml_tmuw_sel;
 
 wire [63:0]		fml_brg_dw,
-			fml_tmuw_dw;
+			fml_tmuw_dw,
+			fml_videoin_dw;
 
 wire [63:0]		fml_brg_dr,
 			fml_vga_dr,
@@ -566,6 +572,15 @@ fmlarb #(
 	.m4_di(64'bx),
 	.m4_do(fml_tmudr_dr),
 
+	/* Video in */
+	.m5_adr(fml_videoin_adr),
+	.m5_stb(fml_videoin_stb),
+	.m5_we(1'b1),
+	.m5_ack(fml_videoin_ack),
+	.m5_sel(8'hff),
+	.m5_di(fml_videoin_dw),
+	.m5_do(),
+
 	.s_adr(fml_adr),
 	.s_stb(fml_stb),
 	.s_we(fml_we),
@@ -604,6 +619,7 @@ csrbrg csrbrg(
 		|csr_dr_tmu
 		|csr_dr_ethernet
 		|csr_dr_fmlmeter
+		|csr_dr_videoin
 	)
 );
 
@@ -661,9 +677,11 @@ wire pfpu_irq;
 wire tmu_irq;
 wire ethernetrx_irq;
 wire ethernettx_irq;
+wire videoin_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {19'd0,
+assign cpu_interrupt = {18'd0,
+	videoin_irq,
 	ethernettx_irq,
 	ethernetrx_irq,
 	tmu_irq,
@@ -1137,6 +1155,46 @@ fmlmeter #(
 assign csr_dr_fmlmeter = 32'd0;
 `endif
 
+//---------------------------------------------------------------------------
+// Video Input
+//---------------------------------------------------------------------------
+`ifdef ENABLE_VIDEOIN
+bt656cap #(
+	.csr_addr(4'hb),
+	.fml_depth(`SDRAM_DEPTH)
+) videoin (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_videoin),
+
+	.irq(videoin_irq),
+
+	.fml_adr(fml_videoin_adr),
+	.fml_stb(fml_videoin_stb),
+	.fml_ack(fml_videoin_ack),
+	.fml_do(fml_videoin_dw),
+
+	.vid_clk(videoin_llc),
+	.p(videoin_p),
+	.sda(videoin_sda),
+	.sdc(videoin_sdc)
+);
+`else
+assign csr_dr_videoin = 32'd0;
+assign videoin_irq = 1'b0;
+
+assign fml_videoin_adr = {`SDRAM_DEPTH{1'bx}};
+assign fml_videoin_stb = 1'b0;
+assign fml_videoin_dw = 64'bx;
+
+assign videoin_sda = 1'bz;
+assign videoin_sdc = 1'b0;
+`endif
+
 // TODO
 assign vga_sda = 1'b0;
 assign vga_sdc = 1'b0;
@@ -1153,9 +1211,6 @@ assign usbb_spd = 1'b0;
 assign usbb_oe_n = 1'b0;
 assign usbb_vp = 1'bz;
 assign usbb_vm = 1'bz;
-
-assign videoin_sda = 1'bz;
-assign videoin_sdc = 1'b0;
 
 assign midi_tx = 1'b0;
 

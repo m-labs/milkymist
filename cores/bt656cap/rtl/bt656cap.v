@@ -46,6 +46,7 @@ wire v_field;
 wire [31:0] v_rgb565;
 bt656cap_input in(
 	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
 	.vid_clk(vid_clk),
 
 	.p(p),

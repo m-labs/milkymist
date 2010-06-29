@@ -61,6 +61,14 @@ module fmlarb #(
 	input [7:0] m4_sel,
 	input [63:0] m4_di,
 	output [63:0] m4_do,
+
+	input [fml_depth-1:0] m5_adr,
+	input m5_stb,
+	input m5_we,
+	output m5_ack,
+	input [7:0] m5_sel,
+	input [63:0] m5_di,
+	output [63:0] m5_do,
 	
 	output reg [fml_depth-1:0] s_adr,
 	output reg s_stb,
@@ -76,6 +84,7 @@ assign m1_do = s_di;
 assign m2_do = s_di;
 assign m3_do = s_di;
 assign m4_do = s_di;
+assign m5_do = s_di;
 
 reg [2:0] master;
 reg [2:0] next_master;
@@ -98,30 +107,42 @@ always @(*) begin
 			else if(m2_stb) next_master = 3'd2;
 			else if(m3_stb) next_master = 3'd3;
 			else if(m4_stb) next_master = 3'd4;
+			else if(m5_stb) next_master = 3'd5;
 		end
 		3'd1: if(~m1_stb | s_ack) begin
 			if(m0_stb) next_master = 3'd0;
 			else if(m3_stb) next_master = 3'd3;
 			else if(m4_stb) next_master = 3'd4;
+			else if(m5_stb) next_master = 3'd5;
 			else if(m2_stb) next_master = 3'd2;
 		end
 		3'd2: if(~m2_stb | s_ack) begin
 			if(m0_stb) next_master = 3'd0;
 			else if(m3_stb) next_master = 3'd3;
 			else if(m4_stb) next_master = 3'd4;
+			else if(m5_stb) next_master = 3'd5;
 			else if(m1_stb) next_master = 3'd1;
 		end
 		3'd3: if(~m3_stb | s_ack) begin
 			if(m0_stb) next_master = 3'd0;
 			else if(m4_stb) next_master = 3'd4;
+			else if(m5_stb) next_master = 3'd5;
 			else if(m1_stb) next_master = 3'd1;
 			else if(m2_stb) next_master = 3'd2;
 		end
-		default: if(~m4_stb | s_ack) begin // 3'd4
+		3'd4: if(~m4_stb | s_ack) begin
+			if(m0_stb) next_master = 3'd0;
+			else if(m5_stb) next_master = 3'd5;
+			else if(m1_stb) next_master = 3'd1;
+			else if(m2_stb) next_master = 3'd2;
+			else if(m3_stb) next_master = 3'd3;
+		end
+		default: if(~m5_stb | s_ack) begin // 3'd5
 			if(m0_stb) next_master = 3'd0;
 			else if(m1_stb) next_master = 3'd1;
 			else if(m2_stb) next_master = 3'd2;
 			else if(m3_stb) next_master = 3'd3;
+			else if(m4_stb) next_master = 3'd4;
 		end
 	endcase
 end
@@ -132,6 +153,7 @@ assign m1_ack = (master == 3'd1) & s_ack;
 assign m2_ack = (master == 3'd2) & s_ack;
 assign m3_ack = (master == 3'd3) & s_ack;
 assign m4_ack = (master == 3'd4) & s_ack;
+assign m5_ack = (master == 3'd5) & s_ack;
 
 /* Mux control signals */
 always @(*) begin
@@ -156,10 +178,15 @@ always @(*) begin
 			s_stb = m3_stb;
 			s_we = m3_we;
 		end
-		default: begin // 3'd4
+		3'd4: begin
 			s_adr = m4_adr;
 			s_stb = m4_stb;
 			s_we = m4_we;
+		end
+		default: begin // 3'd5
+			s_adr = m5_adr;
+			s_stb = m5_stb;
+			s_we = m5_we;
 		end
 	endcase
 end
@@ -203,9 +230,13 @@ always @(*) begin
 			s_do = m3_di;
 			s_sel = m3_sel;
 		end
-		default: begin // 3'd4
+		3'd4: begin
 			s_do = m4_di;
 			s_sel = m4_sel;
+		end
+		default: begin // 3'd5
+			s_do = m5_di;
+			s_sel = m5_sel;
 		end
 	endcase
 end

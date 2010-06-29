@@ -40,6 +40,10 @@ always @(posedge vid_clk) ioreg <= p;
 
 reg [1:0] byten;
 reg [31:0] inreg;
+initial begin
+	byten <= 2'd0;
+	inreg <= 32'd0;
+end
 always @(posedge vid_clk) begin
 	if(&ioreg) begin
 		/* sync word */
@@ -60,6 +64,12 @@ reg in_field;
 reg in_hblank;
 reg in_vblank;
 
+initial begin
+	in_field <= 1'b0;
+	in_hblank <= 1'b0;
+	in_vblank <= 1'b0;
+	stb <= 1'b0;
+end
 always @(posedge vid_clk) begin
 	stb <= 1'b0;
 	if(byten == 2'd0) begin

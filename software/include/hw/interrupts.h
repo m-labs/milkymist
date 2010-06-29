@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __INTERRUPTS_H
-#define __INTERRUPTS_H
+#ifndef __HW_INTERRUPTS_H
+#define __HW_INTERRUPTS_H
 
 #define IRQ_GPIO		(0x00000001) /* 0 */
 #define IRQ_TIMER0		(0x00000002) /* 1 */
@@ -31,5 +31,6 @@
 #define IRQ_TMU			(0x00000400) /* 10 */
 #define IRQ_ETHRX		(0x00000800) /* 13 */
 #define IRQ_ETHTX		(0x00001000) /* 14 */
+#define IRQ_VIDEOIN		(0x00002000) /* 15 */
 
-#endif /* __INTERRUPTS_H */
+#endif /* __HW_INTERRUPTS_H */

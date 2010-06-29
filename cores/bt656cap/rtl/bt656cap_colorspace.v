@@ -133,8 +133,11 @@ parameter S3 = 3'd2;
 parameter S4 = 3'd3;
 parameter S5 = 3'd4;
 
-always @(posedge vid_clk)
+initial state = S1;
+always @(posedge vid_clk) begin
 	state <= next_state;
+	//$display("state: %d->%d (%d)", state, next_state, stb_i);
+end
 
 always @(*) begin
 	mult_sela = 1'bx;
