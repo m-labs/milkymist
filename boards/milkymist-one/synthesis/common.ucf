@@ -283,6 +283,7 @@ NET "videoin_llc" LOC = Y11 | IOSTANDARD = LVCMOS33;
 
 NET "videoin_irq_n" LOC = R15 | IOSTANDARD = LVCMOS33;
 NET "videoin_rst_n" LOC = W17 | IOSTANDARD = LVCMOS33;
+# IOSTANDARD = I2C does not work
 NET "videoin_sda" LOC = AB17 | IOSTANDARD = LVCMOS33 | SLEW = SLOW | PULLUP;
 NET "videoin_sdc" LOC = AA14 | IOSTANDARD = LVCMOS33 | SLEW = SLOW;
 

@@ -5,10 +5,10 @@ INST "ddram/clkgen_dqs" LOC = DCM_X0Y6;
 INST "ddram/b1" LOC = BUFGMUX_X2Y4;
 INST "ddram/b2" LOC = BUFGMUX_X2Y2;
 
-#INST "b_phy_tx_clk0" LOC = BUFIO2_X3Y10;
-#INST "b_phy_tx_clk" LOC = BUFGMUX_X3Y7;
-#INST "b_phy_rx_clk0" LOC = BUFIO2_X3Y11;
-#INST "b_phy_rx_clk" LOC = BUFGMUX_X3Y8;
+INST "b_phy_tx_clk0" LOC = BUFIO2_X3Y10;
+INST "b_phy_tx_clk" LOC = BUFGMUX_X3Y7;
+INST "b_phy_rx_clk0" LOC = BUFIO2_X3Y11;
+INST "b_phy_rx_clk" LOC = BUFGMUX_X3Y8;
 
 NET "ac97_clk" CLOCK_DEDICATED_ROUTE = FALSE;
 

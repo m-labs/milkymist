@@ -398,7 +398,7 @@ conbus #(
 	.m5_stb_i(ethernetrxbus_stb),
 	.m5_ack_o(ethernetrxbus_ack),
 	// Master 6
-	.m6_dat_i(),
+	.m6_dat_i(32'bx),
 	.m6_dat_o(ethernettxbus_dat_r),
 	.m6_adr_i(ethernettxbus_adr),
 	.m6_cti_i(ethernettxbus_cti),

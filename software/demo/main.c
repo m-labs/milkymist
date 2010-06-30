@@ -30,6 +30,7 @@
 #include <hal/snd.h>
 #include <hal/pfpu.h>
 #include <hal/tmu.h>
+#include <hal/vin.h>
 
 #include "apipe.h"
 #include "rpipe.h"
@@ -60,13 +61,14 @@ int main()
 	time_init();
 	mem_init();
 	vga_init();
-	//snd_init();
+	snd_init();
+	vin_init();
 	pfpu_init();
 	tmu_init();
 	renderer_init();
 	apipe_init();
 	rpipe_init();
-	//osd_init();
+	osd_init();
 	shell_init();
 
 	while(1) {

@@ -154,7 +154,6 @@ always @(*) begin
 			next_state = TRANSFER4;
 		end
 		TRANSFER4: begin
-			$display("LAST BURST: %b", last_burst);
 			if(last_burst)
 				next_state = WAIT_SOF;
 			else

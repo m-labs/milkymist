@@ -51,7 +51,7 @@ always @(posedge sys_clk) begin
 	sda_2 <= sda_1;
 end
 
-assign sda = sda_oe ? sda_o : 1'bz;
+assign sda = (sda_oe & ~sda_o) ? 1'b0 : 1'bz;
 
 /* CSR IF */
 

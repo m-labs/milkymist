@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=brd.o mem.o pfpu.o snd.o time.o tmu.o vga.o
+OBJECTS=brd.o mem.o pfpu.o snd.o time.o tmu.o vga.o vin.o
 
 all: libhal.a
 
@@ -51,3 +51,5 @@ tmu.o: ../../software/include/hal/tmu.h
 vga.o: ../../software/include/base/stdio.h
 vga.o: ../../software/include/base/stdlib.h ../../software/include/hw/vga.h
 vga.o: ../../software/include/hw/common.h ../../software/include/hal/vga.h
+vin.o: ../../software/include/hw/bt656cap.h
+vin.o: ../../software/include/hw/common.h

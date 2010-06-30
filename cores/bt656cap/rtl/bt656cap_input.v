@@ -58,7 +58,7 @@ bt656cap_colorspace colorspace(
 wire empty;
 asfifo #(
 	.data_width(33),
-	.address_width(5)
+	.address_width(6)
 ) fifo (
 	.data_out({field, rgb565}),
 	.empty(empty),
