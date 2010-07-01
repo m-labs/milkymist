@@ -69,7 +69,7 @@ static void i2c_write_bit(unsigned int bit)
 	CSR_BT656CAP_I2C &= ~BT656CAP_I2C_SDC;
 }
 
-static void i2c_start_cond(void)
+static void i2c_start_cond()
 {
 	if(i2c_started) {
 		/* set SDA to 1 */
@@ -84,7 +84,7 @@ static void i2c_start_cond(void)
 	i2c_started = 1;
 }
 
-static void i2c_stop_cond(void)
+static void i2c_stop_cond()
 {
 	/* set SDA to 0 */
 	CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE;

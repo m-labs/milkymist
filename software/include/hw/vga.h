@@ -39,4 +39,11 @@
 
 #define CSR_VGA_BURST_COUNT	MMPTR(0x8000302C)
 
+#define CSR_VGA_DDC		MMPTR(0x80003030)
+
+#define VGA_DDC_SDAIN		(0x1)
+#define VGA_DDC_SDAOUT		(0x2)
+#define VGA_DDC_SDAOE		(0x4)
+#define VGA_DDC_SDC		(0x8)
+
 #endif /* __HW_VGA_H */

@@ -44,8 +44,24 @@ module vgafb_ctlif #(
 	
 	output reg [17:0] nbursts,
 
-	output reg [1:0] vga_clk_sel
+	inout vga_sda,
+	output reg vga_sdc
 );
+
+/* I2C */
+reg sda_1;
+reg sda_2;
+reg sda_oe;
+reg sda_o;
+
+always @(posedge sys_clk) begin
+	sda_1 <= vga_sda;
+	sda_2 <= sda_1;
+end
+
+assign vga_sda = (sda_oe & ~sda_o) ? 1'b0 : 1'bz;
+
+/* */
 
 reg [fml_depth-1:0] baseaddress_act;
 
@@ -77,7 +93,10 @@ always @(posedge sys_clk) begin
 		baseaddress <= {fml_depth{1'b0}};
 		
 		nbursts <= 18'd19200;
-		vga_clk_sel <= 2'b00;
+
+		sda_oe <= 1'b0;
+		sda_o <= 1'b0;
+		vga_sdc <= 1'b0;
 	end else begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin
@@ -95,7 +114,11 @@ always @(posedge sys_clk) begin
 					4'd9: baseaddress <= csr_di[fml_depth-1:0];
 					// 10: baseaddress_act is read-only for Wishbone
 					4'd11: nbursts <= csr_di[17:0];
-					4'd12: vga_clk_sel <= csr_di[1:0];
+					4'd12: begin
+						sda_o <= csr_di[1];
+						sda_oe <= csr_di[2];
+						vga_sdc <= csr_di[3];
+					end
 				endcase
 			end
 			
@@ -112,7 +135,7 @@ always @(posedge sys_clk) begin
 				4'd9: csr_do <= baseaddress;
 				4'd10: csr_do <= baseaddress_act;
 				4'd11: csr_do <= nbursts;
-				4'd12: csr_do <= vga_clk_sel;
+				4'd12: csr_do <= {vga_sdc, sda_oe, sda_o, sda_2};
 			endcase
 		end
 	end

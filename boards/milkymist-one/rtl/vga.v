@@ -49,7 +49,11 @@ module vga #(
 	output [7:0] vga_r,
 	output [7:0] vga_g,
 	output [7:0] vga_b,
-	output vga_clk
+	output vga_clk,
+
+	/* DDC */
+	inout vga_sda,
+	output vga_sdc
 );
 
 wire vga_iclk_dcm;
@@ -144,7 +148,10 @@ vgafb #(
 	.vga_vsync_n(vga_vsync_n),
 	.vga_r(vga_r),
 	.vga_g(vga_g),
-	.vga_b(vga_b)
+	.vga_b(vga_b),
+
+	.vga_sda(vga_sda),
+	.vga_sdc(vga_sdc)
 );
 
 endmodule

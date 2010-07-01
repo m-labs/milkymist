@@ -52,7 +52,9 @@ module vgafb #(
 	output reg [7:0] vga_r,
 	output reg [7:0] vga_g,
 	output reg [7:0] vga_b,
-	output [1:0] vga_clk_sel
+
+	inout vga_sda,
+	output vga_sdc
 );
 
 /*
@@ -104,7 +106,8 @@ vgafb_ctlif #(
 	
 	.nbursts(nbursts),
 
-	.vga_clk_sel(vga_clk_sel)
+	.vga_sda(vga_sda),
+	.vga_sdc(vga_sdc)
 );
 
 /*

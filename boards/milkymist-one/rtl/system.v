@@ -883,7 +883,10 @@ vga #(
 	.vga_r(vga_r),
 	.vga_g(vga_g),
 	.vga_b(vga_b),
-	.vga_clk(vga_clk)
+	.vga_clk(vga_clk),
+
+	.vga_sda(vga_sda),
+	.vga_sdc(vga_sdc)
 );
 
 //---------------------------------------------------------------------------
@@ -1196,9 +1199,6 @@ assign videoin_sdc = 1'b0;
 `endif
 
 // TODO
-assign vga_sda = 1'b0;
-assign vga_sdc = 1'b0;
-
 assign mc_d[3:0] = 4'bz;
 assign mc_cmd = 1'bz;
 assign mc_clk = 1'b0;

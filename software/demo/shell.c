@@ -162,6 +162,17 @@ static void ls()
 	fatfs_done();
 }
 
+static void edid()
+{
+	char buf[256];
+
+	if(!vga_read_edid(buf)) {
+		printf("Failed to read EDID\n");
+		return;
+	}
+	dump_bytes((unsigned int *)buf, 256, 0);
+}
+
 static void render(const char *filename)
 {
 	char buffer[8192];
@@ -633,6 +644,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "mw") == 0) mw(param1, param2, param3);
 		else if(strcmp(command, "ls") == 0) ls();
 		else if(strcmp(command, "flush") == 0) flush_bridge_cache();
+		else if(strcmp(command, "edid") == 0) edid();
 		else if(strcmp(command, "render") == 0) render(param1);
 		else if(strcmp(command, "irender") == 0) {
 			renderer_istart();

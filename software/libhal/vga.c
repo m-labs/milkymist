@@ -39,6 +39,8 @@ unsigned short int *vga_frontbuffer; /* < buffer currently displayed (or request
 unsigned short int *vga_backbuffer;  /* < buffer currently drawn to, never read by HW */
 unsigned short int *vga_lastbuffer;  /* < buffer displayed just before (or HW finishing last scan) */
 
+static int i2c_init();
+
 void vga_init()
 {
 	vga_hres = 640;
@@ -56,6 +58,10 @@ void vga_init()
 	printf("VGA: initialized at resolution %dx%d\n", vga_hres, vga_vres);
 	printf("VGA: framebuffers at 0x%08x 0x%08x 0x%08x\n",
 		(unsigned int)&framebufferA, (unsigned int)&framebufferB, (unsigned int)&framebufferC);
+	if(i2c_init())
+		printf("VGA: DDC I2C bus initialized\n");
+	else
+		printf("VGA: DDC I2C bus initialization problem\n");
 }
 
 void vga_disable()
@@ -81,4 +87,138 @@ void vga_swap_buffers()
 	vga_lastbuffer = p;
 	
 	CSR_VGA_BASEADDRESS = (unsigned int)vga_frontbuffer;
+}
+
+/* DDC */
+int i2c_started;
+
+static int i2c_init()
+{
+	unsigned int timeout;
+
+	i2c_started = 0;
+	CSR_VGA_DDC = VGA_DDC_SDC;
+	/* Check the I2C bus is ready */
+	timeout = 1000;
+	while((timeout > 0) && (!(CSR_VGA_DDC & VGA_DDC_SDAIN))) timeout--;
+
+	return timeout;
+}
+
+static void i2c_delay()
+{
+	unsigned int i;
+
+	for(i=0;i<1000;i++) __asm__("nop");
+}
+
+/* I2C bit-banging functions from http://en.wikipedia.org/wiki/I2c */
+static unsigned int i2c_read_bit()
+{
+	unsigned int bit;
+
+	/* Let the slave drive data */
+	CSR_VGA_DDC = 0;
+	i2c_delay();
+	CSR_VGA_DDC = VGA_DDC_SDC;
+	i2c_delay();
+	bit = CSR_VGA_DDC & VGA_DDC_SDAIN;
+	i2c_delay();
+	CSR_VGA_DDC = 0;
+	return bit;
+}
+
+static void i2c_write_bit(unsigned int bit)
+{
+	if(bit) {
+		CSR_VGA_DDC = VGA_DDC_SDAOE|VGA_DDC_SDAOUT;
+	} else {
+		CSR_VGA_DDC = VGA_DDC_SDAOE;
+	}
+	i2c_delay();
+	/* Clock stretching */
+	CSR_VGA_DDC |= VGA_DDC_SDC;
+	i2c_delay();
+	CSR_VGA_DDC &= ~VGA_DDC_SDC;
+}
+
+static void i2c_start_cond()
+{
+	if(i2c_started) {
+		/* set SDA to 1 */
+		CSR_VGA_DDC = VGA_DDC_SDAOE|VGA_DDC_SDAOUT;
+		i2c_delay();
+		CSR_VGA_DDC |= VGA_DDC_SDC;
+	}
+	/* SCL is high, set SDA from 1 to 0 */
+	CSR_VGA_DDC = VGA_DDC_SDAOE|VGA_DDC_SDC;
+	i2c_delay();
+	CSR_VGA_DDC = VGA_DDC_SDAOE;
+	i2c_started = 1;
+}
+
+static void i2c_stop_cond()
+{
+	/* set SDA to 0 */
+	CSR_VGA_DDC = VGA_DDC_SDAOE;
+	i2c_delay();
+	/* Clock stretching */
+	CSR_VGA_DDC = VGA_DDC_SDAOE|VGA_DDC_SDC;
+	/* SCL is high, set SDA from 0 to 1 */
+	CSR_VGA_DDC = VGA_DDC_SDC;
+	i2c_delay();
+	i2c_started = 0;
+}
+
+static unsigned int i2c_write(unsigned char byte)
+{
+	unsigned int bit;
+	unsigned int ack;
+
+	for(bit = 0; bit < 8; bit++) {
+		i2c_write_bit(byte & 0x80);
+		byte <<= 1;
+	}
+	ack = !i2c_read_bit();
+	return ack;
+}
+
+static unsigned char i2c_read(int ack)
+{
+	unsigned char byte = 0;
+	unsigned int bit;
+
+	for(bit = 0; bit < 8; bit++) {
+		byte <<= 1;
+		byte |= i2c_read_bit();
+	}
+	i2c_write_bit(!ack);
+	return byte;
+}
+
+int vga_read_edid(char *buffer)
+{
+	int i;
+
+	i2c_start_cond();
+	if(!i2c_write(0xA0)) {
+		printf("VGA: No ack for 0xA0 address\n");
+		return 0;
+	}
+	if(!i2c_write(0x00)) {
+		printf("VGA: No ack for EDID offset\n");
+		return 0;
+	}
+	i2c_start_cond();
+	if(!i2c_write(0xA1)) {
+		printf("VGA: No ack for 0xA1 address\n");
+		return 0;
+	}
+	
+	for(i=0;i<255;i++)
+		buffer[i] = i2c_read(1);
+	buffer[255] = i2c_read(0);
+	i2c_stop_cond();
+
+	return 1;
 }
