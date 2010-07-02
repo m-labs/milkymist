@@ -19,6 +19,9 @@
 #include <hal/tmu.h>
 #include <hw/sysctl.h>
 #include <hw/gpio.h>
+#include <hw/rc5.h>
+#include <hw/interrupts.h>
+#include <irq.h>
 #include <math.h>
 #include <system.h>
 #include <string.h>
@@ -99,6 +102,11 @@ void osd_init()
 }
 
 static int previous_keys;
+static int up1_last_toggle;
+static int up2_last_toggle;
+static int down1_last_toggle;
+static int down2_last_toggle;
+static int ok_last_toggle;
 static int osd_alpha;
 static int osd_timer;
 
@@ -153,6 +161,8 @@ static void start_patch_from_list(int n)
 
 static void process_keys(unsigned int keys)
 {
+	osd_timer = OSD_DURATION;
+
 	if(keys & GPIO_BTN1) {
 		if(patchlist_sel > 0)
 			patchlist_sel--;
@@ -197,6 +207,11 @@ static int lscb(const char *filename, const char *longname, void *param)
 static void init_ui()
 {
 	previous_keys = 0;
+	up1_last_toggle = 2;
+	up2_last_toggle = 2;
+	down1_last_toggle = 2;
+	down2_last_toggle = 2;
+	ok_last_toggle = 2;
 	osd_alpha = 0;
 	osd_timer = OSD_DURATION;
 
@@ -243,14 +258,58 @@ int osd_fill_blit_td(struct tmu_td *td, tmu_callback callback, void *user)
 	unsigned int keys;
 	unsigned int new_keys;
 
+	/* handle pushbuttons */
 	keys = CSR_GPIO_IN & (GPIO_BTN1|GPIO_BTN2|GPIO_BTN3);
 	new_keys = keys & ~previous_keys;
 	previous_keys = keys;
 
 	if(new_keys) {
-		osd_timer = OSD_DURATION;
 		if(osd_alpha != 0)
 			process_keys(new_keys);
+	}
+
+	/* handle IR remote */
+	if(irq_pending() & IRQ_IR) {
+		unsigned int r;
+		int toggle;
+		int cmd;
+
+		r = CSR_RC5_RX;
+		irq_ack(IRQ_IR);
+		toggle = (r & 0x0800) >> 11;
+		cmd = r & 0x003f;
+		switch(cmd) {
+			case 16:
+				if(up1_last_toggle != toggle) {
+					up1_last_toggle = toggle;
+					process_keys(GPIO_BTN1);
+				}
+				break;
+			case 32:
+				if(up2_last_toggle != toggle) {
+					up2_last_toggle = toggle;
+					process_keys(GPIO_BTN1);
+				}
+				break;
+			case 17:
+				if(down1_last_toggle != toggle) {
+					down1_last_toggle = toggle;
+					process_keys(GPIO_BTN3);
+				}
+				break;
+			case 33:
+				if(down2_last_toggle != toggle) {
+					down2_last_toggle = toggle;
+					process_keys(GPIO_BTN3);
+				}
+				break;
+			case 12:
+				if(ok_last_toggle != toggle) {
+					ok_last_toggle = toggle;
+					process_keys(GPIO_BTN2);
+				}
+				break;
+		}
 	}
 
 	osd_timer--;

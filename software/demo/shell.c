@@ -617,10 +617,10 @@ static void irtest()
 			r = CSR_RC5_RX;
 			irq_ack(IRQ_IR);
 			printf("%04x - fld:%d ctl:%d sys:%d cmd:%d\n", r,
-			       (r & 0x1000) >> 12,
-			       (r & 0x0800) >> 11,
-			       (r & 0x07c0) >> 6,
-			       r & 0x003f);
+				(r & 0x1000) >> 12,
+				(r & 0x0800) >> 11,
+				(r & 0x07c0) >> 6,
+				r & 0x003f);
 			
 		}
 	}
