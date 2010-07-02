@@ -162,6 +162,8 @@ static void start_patch_from_list(int n)
 static void process_keys(unsigned int keys)
 {
 	osd_timer = OSD_DURATION;
+	if(osd_alpha == 0)
+		return;
 
 	if(keys & GPIO_BTN1) {
 		if(patchlist_sel > 0)
@@ -263,10 +265,8 @@ int osd_fill_blit_td(struct tmu_td *td, tmu_callback callback, void *user)
 	new_keys = keys & ~previous_keys;
 	previous_keys = keys;
 
-	if(new_keys) {
-		if(osd_alpha != 0)
-			process_keys(new_keys);
-	}
+	if(new_keys)
+		process_keys(new_keys);
 
 	/* handle IR remote */
 	if(irq_pending() & IRQ_IR) {
