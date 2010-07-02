@@ -33,6 +33,7 @@
 #include <hw/interrupts.h>
 #include <hw/minimac.h>
 #include <hw/bt656cap.h>
+#include <hw/rc5.h>
 
 #include <hal/vga.h>
 #include <hal/snd.h>
@@ -606,6 +607,25 @@ static void testv()
 	flush_bridge_cache();
 }
 
+static void irtest()
+{
+	unsigned int r;
+	
+	irq_ack(IRQ_IR);
+	while(!readchar_nonblock()) {
+		if(irq_pending() & IRQ_IR) {
+			r = CSR_RC5_RX;
+			irq_ack(IRQ_IR);
+			printf("%04x - fld:%d ctl:%d sys:%d cmd:%d\n", r,
+			       (r & 0x1000) >> 12,
+			       (r & 0x0800) >> 11,
+			       (r & 0x07c0) >> 6,
+			       r & 0x003f);
+			
+		}
+	}
+}
+
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -665,6 +685,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "testv") == 0) testv();
 		else if(strcmp(command, "readv") == 0) readv(param1);
 		else if(strcmp(command, "writev") == 0) writev(param1, param2);
+		else if(strcmp(command, "irtest") == 0) irtest();
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}

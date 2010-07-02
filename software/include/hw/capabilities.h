@@ -28,6 +28,6 @@
 #define CAP_MIDI		(0x00000080)
 #define CAP_DMX			(0x00000100)
 #define CAP_IR			(0x00000200)
-#define CAP_USB			(0x00000200)
+#define CAP_USB			(0x00000400)
 
 #endif /* __HW_CAPABILITIES */

@@ -329,7 +329,7 @@ wire		brg_ack,
 conbus #(
 	.s_addr_w(3),
 	.s0_addr(3'b000),	// norflash	0x00000000
-	.s1_addr(3'b001),	// free		0x20000000
+	.s1_addr(3'b001),	// USB?		0x20000000
 	.s2_addr(3'b010),	// FML bridge	0x40000000
 	.s3_addr(3'b100),	// CSR bridge	0x80000000
 	.s4_addr(3'b101)	// free		0xa0000000
@@ -467,7 +467,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_tmu,
 		csr_dr_ethernet,
 		csr_dr_fmlmeter,
-		csr_dr_videoin;
+		csr_dr_videoin,
+		csr_dr_ir;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -620,6 +621,7 @@ csrbrg csrbrg(
 		|csr_dr_ethernet
 		|csr_dr_fmlmeter
 		|csr_dr_videoin
+		|csr_dr_ir
 	)
 );
 
@@ -678,9 +680,11 @@ wire tmu_irq;
 wire ethernetrx_irq;
 wire ethernettx_irq;
 wire videoin_irq;
+wire ir_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {18'd0,
+assign cpu_interrupt = {17'd0,
+	ir_irq,
 	videoin_irq,
 	ethernettx_irq,
 	ethernetrx_irq,
@@ -888,6 +892,17 @@ vga #(
 	.vga_sda(vga_sda),
 	.vga_sdc(vga_sdc)
 );
+
+//---------------------------------------------------------------------------
+// Memory card
+//---------------------------------------------------------------------------
+`ifdef ENABLE_MEMORYCARD
+// TODO
+`else
+assign mc_d[3:0] = 4'bz;
+assign mc_cmd = 1'bz;
+assign mc_clk = 1'b0;
+`endif
 
 //---------------------------------------------------------------------------
 // AC97
@@ -1198,11 +1213,58 @@ assign videoin_sda = 1'bz;
 assign videoin_sdc = 1'b0;
 `endif
 
+//---------------------------------------------------------------------------
+// MIDI
+//---------------------------------------------------------------------------
+`ifdef ENABLE_MIDI
 // TODO
-assign mc_d[3:0] = 4'bz;
-assign mc_cmd = 1'bz;
-assign mc_clk = 1'b0;
+`else
+assign midi_tx = 1'b0;
+`endif
 
+//---------------------------------------------------------------------------
+// DMX
+//---------------------------------------------------------------------------
+`ifdef ENABLE_DMX
+// TODO
+`else
+assign dmxa_de = 1'b0;
+assign dmxa_d = 1'b0;
+assign dmxb_de = 1'b0;
+assign dmxb_d = 1'b0;
+`endif
+
+//---------------------------------------------------------------------------
+// IR
+//---------------------------------------------------------------------------
+`ifdef ENABLE_IR
+rc5 #(
+	.csr_addr(4'hc),
+	.clk_freq(`CLOCK_FREQUENCY),
+) ir (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_ir),
+
+	.rx_irq(ir_irq),
+
+	.rx(~ir_rx)
+);
+`else
+assign csr_dr_ir = 32'd0;
+assign ir_irq = 1'b0;
+`endif
+
+//---------------------------------------------------------------------------
+// USB
+//---------------------------------------------------------------------------
+`ifdef ENABLE_USB
+// TODO
+`else
 assign usba_spd = 1'b0;
 assign usba_oe_n = 1'b0;
 assign usba_vp = 1'bz;
@@ -1211,12 +1273,6 @@ assign usbb_spd = 1'b0;
 assign usbb_oe_n = 1'b0;
 assign usbb_vp = 1'bz;
 assign usbb_vm = 1'bz;
-
-assign midi_tx = 1'b0;
-
-assign dmxa_de = 1'b0;
-assign dmxa_d = 1'b0;
-assign dmxb_de = 1'b0;
-assign dmxb_d = 1'b0;
+`endif
 
 endmodule
