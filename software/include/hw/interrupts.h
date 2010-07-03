@@ -33,5 +33,7 @@
 #define IRQ_ETHTX		(0x00001000) /* 14 */
 #define IRQ_VIDEOIN		(0x00002000) /* 15 */
 #define IRQ_IR			(0x00004000) /* 16 */
+#define IRQ_MIDIRX		(0x00008000) /* 17 */
+#define IRQ_MIDITX		(0x00010000) /* 18 */
 
 #endif /* __HW_INTERRUPTS_H */

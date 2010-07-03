@@ -92,7 +92,8 @@ memstats.o: ../../software/include/hw/common.h
 osd.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
 osd.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
 osd.o: ../../software/include/hw/sysctl.h ../../software/include/hw/gpio.h
-osd.o: ../../software/include/base/math.h
+osd.o: ../../software/include/hw/rc5.h ../../software/include/hw/interrupts.h
+osd.o: ../../software/include/base/irq.h ../../software/include/base/math.h
 osd.o: ../../software/include/base/system.h
 osd.o: ../../software/include/base/string.h
 osd.o: ../../software/include/base/stdlib.h
@@ -132,12 +133,12 @@ shell.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
 shell.o: ../../software/include/hw/sysctl.h ../../software/include/hw/gpio.h
 shell.o: ../../software/include/hw/interrupts.h
 shell.o: ../../software/include/hw/minimac.h
-shell.o: ../../software/include/hw/bt656cap.h
-shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
-shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
-shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
-shell.o: ../../software/include/hal/vin.h line.h wave.h rpipe.h cpustats.h
-shell.o: memstats.h shell.h renderer.h
+shell.o: ../../software/include/hw/bt656cap.h ../../software/include/hw/rc5.h
+shell.o: ../../software/include/hw/midi.h ../../software/include/hal/vga.h
+shell.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
+shell.o: ../../software/include/hal/tmu.h ../../software/include/hal/time.h
+shell.o: ../../software/include/hal/brd.h ../../software/include/hal/vin.h
+shell.o: line.h wave.h rpipe.h cpustats.h memstats.h shell.h renderer.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h memstats.h

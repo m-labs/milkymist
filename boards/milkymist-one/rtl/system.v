@@ -468,7 +468,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_ethernet,
 		csr_dr_fmlmeter,
 		csr_dr_videoin,
-		csr_dr_ir;
+		csr_dr_ir,
+		csr_dr_midi;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -622,6 +623,7 @@ csrbrg csrbrg(
 		|csr_dr_fmlmeter
 		|csr_dr_videoin
 		|csr_dr_ir
+		|csr_dr_midi
 	)
 );
 
@@ -683,7 +685,9 @@ wire videoin_irq;
 wire ir_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {17'd0,
+assign cpu_interrupt = {15'd0,
+	miditx_irq,
+	midirx_irq,
 	ir_irq,
 	videoin_irq,
 	ethernettx_irq,
@@ -1217,9 +1221,31 @@ assign videoin_sdc = 1'b0;
 // MIDI
 //---------------------------------------------------------------------------
 `ifdef ENABLE_MIDI
-// TODO
+wire midi_tx_n;
+uart #(
+	.csr_addr(4'hd),
+	.clk_freq(`CLOCK_FREQUENCY),
+	.baud(31250)
+) midi (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_midi),
+
+	.rx_irq(midirx_irq),
+	.tx_irq(miditx_irq),
+
+	.uart_rxd(midi_rx),
+	.uart_txd(midi_tx)
+);
 `else
-assign midi_tx = 1'b0;
+assign csr_dr_midi = 32'd0;
+assign midirx_irq = 1'b0;
+assign miditx_irq = 1'b0;
+assign midi_tx = 1'b1;
 `endif
 
 //---------------------------------------------------------------------------

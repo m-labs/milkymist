@@ -34,6 +34,7 @@
 #include <hw/minimac.h>
 #include <hw/bt656cap.h>
 #include <hw/rc5.h>
+#include <hw/midi.h>
 
 #include <hal/vga.h>
 #include <hal/snd.h>
@@ -626,6 +627,52 @@ static void irtest()
 	}
 }
 
+static void midiprint()
+{
+	unsigned int r;
+	if(irq_pending() & IRQ_MIDIRX) {
+		r = CSR_MIDI_RXTX;
+		irq_ack(IRQ_MIDIRX);
+		printf("RX: %02x\n", r);
+	}
+}
+
+static void midirx()
+{
+	irq_ack(IRQ_MIDIRX);
+	while(!readchar_nonblock()) midiprint();
+}
+
+static void midisend(int c)
+{
+	printf("TX: %02x\n", c);
+	CSR_MIDI_RXTX = c;
+	while(!(irq_pending() & IRQ_MIDITX));
+	printf("TX done\n");
+	irq_ack(IRQ_MIDITX);
+	midiprint();
+}
+
+static void miditx(char *note)
+{
+	int note2;
+	char *c;
+	
+	if(*note == 0) {
+		printf("miditx <note>\n");
+		return;
+	}
+	note2 = (unsigned *)strtoul(note, &c, 0);
+	if(*c != 0) {
+		printf("incorrect note\n");
+		return;
+	}
+	
+	//midisend(0x90);
+	midisend(note2);
+	//midisend(0x22);
+}
+
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -686,6 +733,8 @@ static void do_command(char *c)
 		else if(strcmp(command, "readv") == 0) readv(param1);
 		else if(strcmp(command, "writev") == 0) writev(param1, param2);
 		else if(strcmp(command, "irtest") == 0) irtest();
+		else if(strcmp(command, "midirx") == 0) midirx();
+		else if(strcmp(command, "miditx") == 0) miditx(param1);
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}
