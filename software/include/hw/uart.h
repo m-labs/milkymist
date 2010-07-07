@@ -20,7 +20,7 @@
 
 #include <hw/common.h>
 
-#define CSR_UART_RXTX 		MMPTR(0x80000000)
-#define CSR_UART_DIVISOR	MMPTR(0x80000004)
+#define CSR_UART_RXTX 		MMPTR(0xe0000000)
+#define CSR_UART_DIVISOR	MMPTR(0xe0000004)
 
 #endif /* __HW_UART_H */

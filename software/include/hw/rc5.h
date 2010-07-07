@@ -20,6 +20,6 @@
 
 #include <hw/common.h>
 
-#define CSR_RC5_RX		MMPTR(0x8000c000)
+#define CSR_RC5_RX		MMPTR(0xe000c000)
 
 #endif /* __HW_RC5_H */

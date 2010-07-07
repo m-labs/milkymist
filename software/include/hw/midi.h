@@ -20,7 +20,7 @@
 
 #include <hw/common.h>
 
-#define CSR_MIDI_RXTX 		MMPTR(0x8000d000)
-#define CSR_MIDI_DIVISOR	MMPTR(0x8000d004)
+#define CSR_MIDI_RXTX 		MMPTR(0xe000d000)
+#define CSR_MIDI_DIVISOR	MMPTR(0xe000d004)
 
 #endif /* __HW_MIDI_H */
