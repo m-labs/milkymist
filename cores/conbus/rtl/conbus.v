@@ -256,10 +256,10 @@ conbus_arb conbus_arb(
 	.gnt(gnt)
 );
 
-assign slave_sel[0] = (i_bus_m[`mbusw_ls-1 : `mbusw_ls-s_addr_w] == s0_addr);
-assign slave_sel[1] = (i_bus_m[`mbusw_ls-1 : `mbusw_ls-s_addr_w] == s1_addr);
-assign slave_sel[2] = (i_bus_m[`mbusw_ls-1 : `mbusw_ls-s_addr_w] == s2_addr);
-assign slave_sel[3] = (i_bus_m[`mbusw_ls-1 : `mbusw_ls-s_addr_w] == s3_addr);
-assign slave_sel[4] = (i_bus_m[`mbusw_ls-1 : `mbusw_ls-s_addr_w] == s4_addr);
+assign slave_sel[0] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-s_addr_w-1] == s0_addr);
+assign slave_sel[1] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-s_addr_w-1] == s1_addr);
+assign slave_sel[2] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-s_addr_w-1] == s2_addr);
+assign slave_sel[3] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-s_addr_w-1] == s3_addr);
+assign slave_sel[4] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-s_addr_w-1] == s4_addr);
 
 endmodule

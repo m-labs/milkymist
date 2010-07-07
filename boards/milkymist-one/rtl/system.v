@@ -330,12 +330,12 @@ wire		brg_ack,
 // Wishbone switch
 //---------------------------------------------------------------------------
 conbus #(
-	.s_addr_w(3),
-	.s0_addr(3'b000),	// norflash	0x00000000
-	.s1_addr(3'b001),	// USB?		0x20000000
-	.s2_addr(3'b010),	// FML bridge	0x40000000
-	.s3_addr(3'b100),	// CSR bridge	0x80000000
-	.s4_addr(3'b101)	// free		0xa0000000
+	/* MSB (Bit 31) is ignored by conbus */
+	.s_addr_w(2),
+	.s0_addr(2'b00),	// norflash     0x00000000 (shadow @0x80000000)
+	.s1_addr(2'b01),	// USB?         0x20000000 (shadow @0xa0000000)
+	.s2_addr(2'b10),	// FML bridge   0x40000000 (shadow @0xc0000000)
+	.s3_addr(2'b11),	// CSR bridge   0x60000000 (shadow @0xe0000000)
 ) conbus (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
