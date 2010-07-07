@@ -22,7 +22,7 @@ module system(
 	
 	// Boot ROM
 	output [23:0] flash_adr,
-	input [15:0] flash_d,
+	inout [15:0] flash_d,
 	output flash_oe_n,
 	output flash_we_n,
 	output flash_ce_n,
@@ -303,13 +303,16 @@ wire [2:0]	brg_cti;
 wire [31:0]	brg_dat_r,
 		brg_dat_w,
 		norflash_dat_r,
+		norflash_dat_w,
 		csrbrg_dat_r,
 		csrbrg_dat_w;
 
-wire [3:0]	brg_sel;
+wire [3:0]	brg_sel,
+		norflash_sel;
 
 wire		brg_we,
-		csrbrg_we;
+		csrbrg_we,
+		norflash_we;
 
 wire		brg_cyc,
 		norflash_cyc,
@@ -410,7 +413,10 @@ conbus #(
 
 	// Slave 0
 	.s0_dat_i(norflash_dat_r),
+	.s0_dat_o(norflash_dat_w),
 	.s0_adr_o(norflash_adr),
+	.s0_sel_o(norflash_sel),
+	.s0_we_o(norflash_we),
 	.s0_cyc_o(norflash_cyc),
 	.s0_stb_o(norflash_stb),
 	.s0_ack_i(norflash_ack),
@@ -753,16 +759,19 @@ norflash16 #(
 
 	.wb_adr_i(norflash_adr),
 	.wb_dat_o(norflash_dat_r),
+	.wb_dat_i(norflash_dat_w),
+	.wb_sel_i(norflash_sel),
 	.wb_stb_i(norflash_stb),
 	.wb_cyc_i(norflash_cyc),
 	.wb_ack_o(norflash_ack),
+	.wb_we_i(norflash_we),
 	
 	.flash_adr(flash_adr),
-	.flash_d(flash_d)
+	.flash_d(flash_d),
+	.flash_oe_n(flash_oe_n),
+	.flash_we_n(flash_we_n)
 );
 
-assign flash_oe_n = 1'b0;
-assign flash_we_n = 1'b1;
 assign flash_ce_n = 1'b0;
 
 //---------------------------------------------------------------------------

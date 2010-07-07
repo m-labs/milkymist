@@ -17,48 +17,85 @@
 
 module norflash16 #(
 	parameter adr_width = 22,
-	parameter timing = 4'd12
+	parameter rd_timing = 4'd12,
+	parameter wr_timing = 4'd6
 ) (
 	input sys_clk,
 	input sys_rst,
 
 	input [31:0] wb_adr_i,
 	output reg [31:0] wb_dat_o,
+	input [31:0] wb_dat_i,
+	input [3:0] wb_sel_i,
 	input wb_stb_i,
 	input wb_cyc_i,
 	output reg wb_ack_o,
+	input wb_we_i,
 	
 	output [adr_width-1:0] flash_adr,
-	input [15:0] flash_d
+	inout [15:0] flash_d,
+	output reg flash_oe_n,
+	output reg flash_we_n
 );
 
-reg [adr_width-1-1:0] flash_adr_msb;
-reg flash_adr_lsb;
+reg [adr_width-1:0] flash_adr_r;
+reg [15:0] flash_do;
+reg lsb;
 
-assign flash_adr = {flash_adr_msb, flash_adr_lsb};
+assign flash_adr = {flash_adr_r[adr_width-1:1], flash_adr_r[0] ^ lsb};
+assign flash_d = flash_oe_n ? flash_do : 16'bz;
 
 reg load;
+reg store;
+assign two_cycle_transfer = (wb_sel_i == 4'b1111);
+
 always @(posedge sys_clk) begin
+	flash_oe_n <= 1'b1;
+	flash_we_n <= 1'b1;
+
 	/* Use IOB registers to prevent glitches on address lines */
-	if(wb_cyc_i & wb_stb_i) /* register only when needed to reduce EMI */
-		flash_adr_msb <= wb_adr_i[adr_width-1:2];
-	if(load) begin
-		case(flash_adr_lsb)
-			1'b0: wb_dat_o[31:16] <= {flash_d[7:0], flash_d[15:8]};
-			1'b1: wb_dat_o[15:0] <= {flash_d[7:0], flash_d[15:8]};
-		endcase
-		flash_adr_lsb <= ~flash_adr_lsb;
+	/* register only when needed to reduce EMI */
+	if(wb_cyc_i & wb_stb_i) begin
+		flash_adr_r <= wb_adr_i[adr_width:1];
+		if (wb_we_i)
+			case (wb_sel_i)
+				4'b0011: flash_do <= wb_dat_i[15:0];
+				4'b1100: flash_do <= wb_dat_i[31:16];
+				default: flash_do <= 16'hxxxx;
+			endcase
+		else
+			flash_oe_n <= 0;
 	end
+	if(load) begin
+		casex ({wb_sel_i, lsb})
+			5'b0001x: wb_dat_o[7:0]   <= flash_d[7:0];
+			5'b0010x: wb_dat_o[15:8]  <= flash_d[15:8];
+			5'b0100x: wb_dat_o[23:16] <= flash_d[7:0];
+			5'b1000x: wb_dat_o[31:24] <= flash_d[15:8];
+			5'b0011x: wb_dat_o[15:0]  <= flash_d;
+			5'b1100x: wb_dat_o[31:16] <= flash_d;
+			5'b11110: begin wb_dat_o[31:16] <= flash_d; lsb <= ~lsb; end
+			5'b11111: begin wb_dat_o[15:0]  <= flash_d; lsb <= ~lsb; end
+			default:  wb_dat_o[31:0] <= 32'hxxxxxxxx;
+		endcase
+	end
+	if(store)
+		flash_we_n <= 0;
 	if(sys_rst)
-		flash_adr_lsb <= 1'b0;
+		lsb <= 1'b0;
 end
 
 /*
- * Timing of the flash chips is typically 110ns.
+ * Timing of the flash chips:
+ *   - typically 110ns address to output
+ *   - 50ns write pulse width
  */
 reg [3:0] counter;
 reg counter_en;
-wire counter_done = (counter == timing);
+reg counter_wr_mode;
+wire counter_done = counter_wr_mode
+		? (counter == wr_timing)
+		: (counter == rd_timing);
 always @(posedge sys_clk) begin
 	if(sys_rst)
 		counter <= 4'd0;
@@ -79,28 +116,47 @@ always @(posedge sys_clk) begin
 		state <= next_state;
 end
 
+parameter IDLE		= 2'd0;
+parameter DELAYRD	= 2'd1;
+parameter DELAYWR	= 2'd2;
+parameter ACK		= 2'd3;
+
 always @(*) begin
 	next_state = state;
 	counter_en = 1'b0;
+	counter_wr_mode = 1'b0;
 	load = 1'b0;
+	store = 1'b0;
 	wb_ack_o = 1'b0;
 
 	case(state)
-		2'd0: begin
-			if(wb_cyc_i & wb_stb_i)
-				next_state = 2'd1;
-		end
-
-		2'd1: begin
-			counter_en = 1'b1;
-			if(counter_done) begin
-				load = 1'b1;
-				if(flash_adr_lsb)
-					next_state = 2'd2;
+		IDLE: begin
+			if(wb_cyc_i & wb_stb_i) begin
+				if (wb_we_i)
+					next_state = DELAYWR;
+				else
+					next_state = DELAYRD;
 			end
 		end
 
-		2'd2: begin
+		DELAYRD: begin
+			counter_en = 1'b1;
+			if(counter_done) begin
+				load = 1'b1;
+				if(~two_cycle_transfer | lsb)
+					next_state = ACK;
+			end
+		end
+
+		DELAYWR: begin
+			counter_wr_mode = 1'b1;
+			counter_en = 1'b1;
+			store = 1'b1;
+			if(counter_done)
+				next_state = ACK;
+		end
+
+		ACK: begin
 			wb_ack_o = 1'b1;
 			next_state = 2'd0;
 		end
