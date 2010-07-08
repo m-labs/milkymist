@@ -333,9 +333,9 @@ conbus #(
 	/* MSB (Bit 31) is ignored by conbus */
 	.s_addr_w(2),
 	.s0_addr(2'b00),	// norflash     0x00000000 (shadow @0x80000000)
-	.s1_addr(2'b01),	// USB?         0x20000000 (shadow @0xa0000000)
+	.s1_addr(2'b01),	// USB          0x20000000 (shadow @0xa0000000)
 	.s2_addr(2'b10),	// FML bridge   0x40000000 (shadow @0xc0000000)
-	.s3_addr(2'b11),	// CSR bridge   0x60000000 (shadow @0xe0000000)
+	.s3_addr(2'b11)		// CSR bridge   0x60000000 (shadow @0xe0000000)
 ) conbus (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -447,15 +447,7 @@ conbus #(
 	.s3_we_o(csrbrg_we),
 	.s3_cyc_o(csrbrg_cyc),
 	.s3_stb_o(csrbrg_stb),
-	.s3_ack_i(csrbrg_ack),
-	// Slave 4
-	.s4_dat_i(32'bx),
-	.s4_dat_o(),
-	.s4_adr_o(),
-	.s4_we_o(),
-	.s4_cyc_o(),
-	.s4_stb_o(),
-	.s4_ack_i(1'b0)
+	.s3_ack_i(csrbrg_ack)
 );
 
 //------------------------------------------------------------------
