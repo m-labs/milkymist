@@ -57,8 +57,8 @@ always @(posedge sys_clk) begin
 	/* register only when needed to reduce EMI */
 	if(wb_cyc_i & wb_stb_i) begin
 		flash_adr_r <= wb_adr_i[adr_width:1];
-		if (wb_we_i)
-			case (wb_sel_i)
+		if(wb_we_i)
+			case(wb_sel_i)
 				4'b0011: flash_do <= wb_dat_i[15:0];
 				4'b1100: flash_do <= wb_dat_i[31:16];
 				default: flash_do <= 16'hxxxx;
@@ -67,7 +67,7 @@ always @(posedge sys_clk) begin
 			flash_oe_n <= 0;
 	end
 	if(load) begin
-		casex ({wb_sel_i, lsb})
+		casex({wb_sel_i, lsb})
 			5'b0001x: wb_dat_o[7:0]   <= flash_d[7:0];
 			5'b0010x: wb_dat_o[15:8]  <= flash_d[15:8];
 			5'b0100x: wb_dat_o[23:16] <= flash_d[7:0];
@@ -80,7 +80,7 @@ always @(posedge sys_clk) begin
 		endcase
 	end
 	if(store)
-		flash_we_n <= 0;
+		flash_we_n <= 1'b0;
 	if(sys_rst)
 		lsb <= 1'b0;
 end
@@ -132,7 +132,7 @@ always @(*) begin
 	case(state)
 		IDLE: begin
 			if(wb_cyc_i & wb_stb_i) begin
-				if (wb_we_i)
+				if(wb_we_i)
 					next_state = DELAYWR;
 				else
 					next_state = DELAYRD;

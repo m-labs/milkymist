@@ -8,13 +8,13 @@ bitstream.mcs:
 
 bios.mcs:
 	$(MAKE) -C $(MMDIR)/software/bios
-	srec_cat -Output bios.mcs -Intel $(MMDIR)/software/bios/bios.bin -Binary -offset 0x00180000
+	srec_cat -Output bios.mcs -Intel $(MMDIR)/software/bios/bios.bin -Binary -offset 0x00180000 --byte-swap 2
 
 splash.mcs: splash.raw
-	srec_cat -Output splash.mcs -Intel splash.raw -Binary -offset 0x001C0000
+	srec_cat -Output splash.mcs -Intel splash.raw -Binary -offset 0x001C0000 --byte-swap 2
 
 userfs.mcs: userfs.bin
-	srec_cat -Output userfs.mcs -Intel userfs.bin -Binary -offset 0x00260000
+	srec_cat -Output userfs.mcs -Intel userfs.bin -Binary -offset 0x00260000 --byte-swap 2
 
 splash.raw: splash.png
 	$(MMDIR)/tools/makeraw splash.png
@@ -22,7 +22,7 @@ splash.raw: splash.png
 userfs.bin:
 	$(MAKE) -C $(MMDIR)/software/demo
 	srec_cat -Output userfs.bin -Binary /dev/null -Binary -fill 0xFF 0x000000 0x300000
-	/sbin/mkdosfs -F 16 -s 1 userfs.bin
+	/sbin/mkdosfs -F 16 -s 1 userfs.bin --byte-swap 2
 	mcopy -i userfs.bin $(MMDIR)/patches/* $(MMDIR)/software/demo/boot.bin ::
 
 # Run the Xilinx crapware in a separate directory that we can simply rm -rf
