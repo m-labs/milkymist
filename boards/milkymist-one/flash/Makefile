@@ -22,7 +22,7 @@ splash.raw: splash.png
 userfs.bin:
 	$(MAKE) -C $(MMDIR)/software/demo
 	srec_cat -Output userfs.bin -Binary /dev/null -Binary -fill 0xFF 0x000000 0x300000
-	/sbin/mkdosfs -F 16 -s 1 userfs.bin --byte-swap 2
+	/sbin/mkdosfs -F 16 -s 1 userfs.bin
 	mcopy -i userfs.bin $(MMDIR)/patches/* $(MMDIR)/software/demo/boot.bin ::
 
 # Run the Xilinx crapware in a separate directory that we can simply rm -rf
