@@ -591,10 +591,10 @@ static void testv()
 	CSR_BT656CAP_BASE = (unsigned int)vbuffer;
 	CSR_BT656CAP_FILTERSTATUS = BT656CAP_FILTERSTATUS_FIELD1;
 	printf("wait1 %d\n", CSR_TIMER0_COUNTER);
-	while(!irq_pending() && IRQ_VIDEOIN);
+	while(!(irq_pending() & IRQ_VIDEOIN));
 	irq_ack(IRQ_VIDEOIN);
 	printf("wait2 %d\n", CSR_TIMER0_COUNTER);
-	while(!irq_pending() && IRQ_VIDEOIN);
+	while(!(irq_pending() & IRQ_VIDEOIN));
 	irq_ack(IRQ_VIDEOIN);
 	CSR_BT656CAP_FILTERSTATUS = 0;
 	printf("wait3 %d\n", CSR_TIMER0_COUNTER);

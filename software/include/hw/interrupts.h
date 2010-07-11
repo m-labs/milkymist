@@ -29,11 +29,11 @@
 #define IRQ_AC97DMAW		(0x00000100) /* 8 */
 #define IRQ_PFPU		(0x00000200) /* 9 */
 #define IRQ_TMU			(0x00000400) /* 10 */
-#define IRQ_ETHRX		(0x00000800) /* 13 */
-#define IRQ_ETHTX		(0x00001000) /* 14 */
-#define IRQ_VIDEOIN		(0x00002000) /* 15 */
-#define IRQ_IR			(0x00004000) /* 16 */
-#define IRQ_MIDIRX		(0x00008000) /* 17 */
-#define IRQ_MIDITX		(0x00010000) /* 18 */
+#define IRQ_ETHRX		(0x00000800) /* 11 */
+#define IRQ_ETHTX		(0x00001000) /* 12 */
+#define IRQ_VIDEOIN		(0x00002000) /* 13 */
+#define IRQ_IR			(0x00004000) /* 14 */
+#define IRQ_MIDIRX		(0x00008000) /* 15 */
+#define IRQ_MIDITX		(0x00010000) /* 16 */
 
 #endif /* __HW_INTERRUPTS_H */
