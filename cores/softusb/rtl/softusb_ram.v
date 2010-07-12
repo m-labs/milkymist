@@ -21,6 +21,7 @@ module softusb_ram(
 	input sys_rst,
 
 	input usb_clk,
+	input usb_rst,
 
 	input [31:0] wb_adr_i,
 	output [31:0] wb_dat_o,
@@ -49,6 +50,18 @@ always @(posedge sys_clk) begin
 	end
 end
 
+reg zpu_ack;
+always @(posedge usb_clk) begin
+	if(usb_rst)
+		zpu_ack <= 1'b0;
+	else begin
+		if(zpu_we & ~zpu_ack)
+			zpu_ack <= 1'b1;
+		else
+			zpu_ack <= 1'b0;
+	end
+end
+
 parameter depth = 14; /* in bytes */
 
 softusb_dpram #(
@@ -59,12 +72,12 @@ softusb_dpram #(
 	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[0]),
+	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[0] & ~wb_ack_o),
 	.di(wb_dat_i[7:0]),
 	.do(wb_dat_o[7:0]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[0]),
+	.we2(zpu_we & zpu_sel[0] & ~zpu_ack),
 	.di2(zpu_dat_i[7:0]),
 	.do2(zpu_dat_o[7:0])
 );
@@ -77,12 +90,12 @@ softusb_dpram #(
 	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[1]),
+	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[1] & ~wb_ack_o),
 	.di(wb_dat_i[15:8]),
 	.do(wb_dat_o[15:8]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[1]),
+	.we2(zpu_we & zpu_sel[1] & ~zpu_ack),
 	.di2(zpu_dat_i[15:8]),
 	.do2(zpu_dat_o[15:8])
 );
@@ -95,12 +108,12 @@ softusb_dpram #(
 	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[2]),
+	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[2] & ~wb_ack_o),
 	.di(wb_dat_i[23:16]),
 	.do(wb_dat_o[23:16]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[2]),
+	.we2(zpu_we & zpu_sel[2] & ~zpu_ack),
 	.di2(zpu_dat_i[23:16]),
 	.do2(zpu_dat_o[23:16])
 );
@@ -113,12 +126,12 @@ softusb_dpram #(
 	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[3]),
+	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[3] & ~wb_ack_o),
 	.di(wb_dat_i[31:24]),
 	.do(wb_dat_o[31:24]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[3]),
+	.we2(zpu_we & zpu_sel[3] & ~zpu_ack),
 	.di2(zpu_dat_i[31:24]),
 	.do2(zpu_dat_o[31:24])
 );

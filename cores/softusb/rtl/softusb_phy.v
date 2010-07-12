@@ -113,7 +113,7 @@ wire		rst;
 // TX Phy
 //
 
-usb_tx_phy i_tx_phy(
+softusb_tx_phy i_tx_phy(
 	.clk(		clk		),
 	.rst(		rst		),
 	.fs_ce(		fs_ce		),
@@ -135,7 +135,7 @@ usb_tx_phy i_tx_phy(
 // RX Phy and DPLL
 //
 
-usb_rx_phy i_rx_phy(
+softusb_rx_phy i_rx_phy(
 	.clk(		clk		),
 	.rst(		rst		),
 	.fs_ce(		fs_ce		),
