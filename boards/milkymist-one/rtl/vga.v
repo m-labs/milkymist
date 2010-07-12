@@ -70,7 +70,7 @@ DCM_SP #(
 	.CLKIN_DIVIDE_BY_2("FALSE"),
 	.CLKIN_PERIOD(`CLOCK_PERIOD),
 	.CLKOUT_PHASE_SHIFT("NONE"),
-	.CLK_FEEDBACK("1X"),
+	.CLK_FEEDBACK("NONE"),
 	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
 	.DFS_FREQUENCY_MODE("LOW"),
 	.DLL_FREQUENCY_MODE("LOW"),
@@ -90,7 +90,7 @@ DCM_SP #(
 	.CLKFX(vga_iclk_dcm),
 	.CLKFX180(vga_iclk_n_dcm),
 	.LOCKED(),
-	.CLKFB(vga_iclk),
+	.CLKFB(),
 	.CLKIN(sys_clk),
 	.RST(sys_rst),
 

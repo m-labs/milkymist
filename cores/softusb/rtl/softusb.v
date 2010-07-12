@@ -58,6 +58,7 @@ module softusb #(
 );
 
 wire zpu_we;
+wire [3:0] zpu_sel;
 wire [31:0] zpu_a;
 wire [31:0] zpu_w;
 reg [31:0] zpu_r;
@@ -97,6 +98,7 @@ softusb_ram ram(
 	.wb_we_i(wb_we_i),
 
 	.zpu_we(sel_ram & zpu_we),
+	.zpu_sel(zpu_sel),
 	.zpu_a(zpu_a),
 	.zpu_dat_i(zpu_w),
 	.zpu_dat_o(zpu_r_ram)
@@ -152,6 +154,23 @@ softusb_sie sie(
 	.usbb_rcv(usbb_rcv),
 	.usbb_vp(usbb_vp),
 	.usbb_vm(usbb_vm)
+);
+
+wire zpu_re;
+
+softusb_zpu_core zpu(
+	.interrupt(1'b0),
+
+	.clk(usb_clk),
+	.reset(usb_rst),
+	
+	.mem_read(zpu_re),
+	.mem_write(zpu_we),
+	.mem_done(zpu_re|zpu_we),
+	.mem_addr(zpu_a),
+	.mem_data_read(zpu_r),
+	.mem_data_write(zpu_w),
+	.byte_select(zpu_sel)
 );
 
 endmodule

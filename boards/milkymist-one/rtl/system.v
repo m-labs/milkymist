@@ -296,7 +296,8 @@ wire		cpuibus_ack,
 //------------------------------------------------------------------
 wire [31:0]	brg_adr,
 		norflash_adr,
-		csrbrg_adr;
+		csrbrg_adr,
+		usb_adr;
 
 wire [2:0]	brg_cti;
 
@@ -305,26 +306,33 @@ wire [31:0]	brg_dat_r,
 		norflash_dat_r,
 		norflash_dat_w,
 		csrbrg_dat_r,
-		csrbrg_dat_w;
+		csrbrg_dat_w,
+		usb_dat_r,
+		usb_dat_w;
 
 wire [3:0]	brg_sel,
-		norflash_sel;
+		norflash_sel,
+		usb_sel;
 
 wire		brg_we,
 		csrbrg_we,
-		norflash_we;
+		norflash_we,
+		usb_we;
 
 wire		brg_cyc,
 		norflash_cyc,
-		csrbrg_cyc;
+		csrbrg_cyc,
+		usb_cyc;
 
 wire		brg_stb,
 		norflash_stb,
-		csrbrg_stb;
+		csrbrg_stb,
+		usb_stb;
 
 wire		brg_ack,
 		norflash_ack,
-		csrbrg_ack;
+		csrbrg_ack,
+		usb_ack;
 
 //---------------------------------------------------------------------------
 // Wishbone switch
@@ -421,15 +429,15 @@ conbus #(
 	.s0_stb_o(norflash_stb),
 	.s0_ack_i(norflash_ack),
 	// Slave 1
-	.s1_dat_i(32'bx),
-	.s1_dat_o(),
-	.s1_adr_o(),
+	.s1_dat_i(usb_dat_r),
+	.s1_dat_o(usb_dat_w),
+	.s1_adr_o(usb_adr),
 	.s1_cti_o(),
-	.s1_sel_o(),
-	.s1_we_o(),
-	.s1_cyc_o(),
-	.s1_stb_o(),
-	.s1_ack_i(1'b0),
+	.s1_sel_o(usb_sel),
+	.s1_we_o(usb_we),
+	.s1_cyc_o(usb_cyc),
+	.s1_stb_o(usb_stb),
+	.s1_ack_i(usb_ack),
 	// Slave 2
 	.s2_dat_i(brg_dat_r),
 	.s2_dat_o(brg_dat_w),
@@ -467,7 +475,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_fmlmeter,
 		csr_dr_videoin,
 		csr_dr_ir,
-		csr_dr_midi;
+		csr_dr_midi,
+		csr_dr_usb;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -622,6 +631,7 @@ csrbrg csrbrg(
 		|csr_dr_videoin
 		|csr_dr_ir
 		|csr_dr_midi
+		|csr_dr_usb
 	)
 );
 
@@ -681,9 +691,11 @@ wire ethernetrx_irq;
 wire ethernettx_irq;
 wire videoin_irq;
 wire ir_irq;
+wire usb_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {15'd0,
+assign cpu_interrupt = {14'd0,
+	usb_irq,
 	miditx_irq,
 	midirx_irq,
 	ir_irq,
@@ -1290,12 +1302,103 @@ assign ir_irq = 1'b0;
 // USB
 //---------------------------------------------------------------------------
 `ifdef ENABLE_USB
-// TODO
+wire usb_clk_dcm;
+wire usb_clk_n_dcm;
+wire usb_clk;
+wire usb_clk_n;
+DCM_SP #(
+	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
+
+	.CLKFX_DIVIDE(25),		// 1 to 32
+	.CLKFX_MULTIPLY(24),		// 2 to 32
+
+	.CLKIN_DIVIDE_BY_2("FALSE"),
+	.CLKIN_PERIOD(20.0),
+	.CLKOUT_PHASE_SHIFT("NONE"),
+	.CLK_FEEDBACK("NONE"),
+	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
+	.DFS_FREQUENCY_MODE("LOW"),
+	.DLL_FREQUENCY_MODE("LOW"),
+	.DUTY_CYCLE_CORRECTION("TRUE"),
+	.PHASE_SHIFT(0),
+	.STARTUP_WAIT("FALSE")
+) clkgen_usb (
+	.CLK0(),
+	.CLK90(),
+	.CLK180(),
+	.CLK270(),
+
+	.CLK2X(),
+	.CLK2X180(),
+
+	.CLKDV(),
+	.CLKFX(usb_clk_dcm),
+	.CLKFX180(usb_clk_n_dcm),
+	.LOCKED(),
+	.CLKFB(),
+	.CLKIN(clk50),
+	.RST(1'b0),
+
+	.PSEN(1'b0)
+);
+BUFG usb_b_p(
+	.I(usb_clk_dcm),
+	.O(usb_clk)
+);
+BUFG usb_b_n(
+	.I(usb_clk_n_dcm),
+	.O(usb_clk_n)
+);
+
+softusb #(
+	.csr_addr(4'hd)
+) usb (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.usb_clk(usb_clk),
+	.usb_clk_n(usb_clk_n),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_usb),
+
+	.irq(usb_irq),
+
+	.wb_adr_i(usb_adr),
+	.wb_dat_o(usb_dat_r),
+	.wb_dat_i(usb_dat_w),
+	.wb_sel_i(usb_sel),
+	.wb_stb_i(usb_stb),
+	.wb_cyc_i(usb_cyc),
+	.wb_ack_o(usb_ack),
+	.wb_we_i(usb_we),
+
+	.usba_spd(usba_spd),
+	.usba_oe_n(usba_oe_n),
+	.usba_rcv(usba_rcv),
+	.usba_vp(usba_vp),
+	.usba_vm(usba_vm),
+
+	.usbb_spd(usbb_spd),
+	.usbb_oe_n(usbb_oe_n),
+	.usbb_rcv(usbb_rcv),
+	.usbb_vp(usbb_vp),
+	.usbb_vm(usbb_vm)
+);
 `else
+assign csr_dr_usb = 32'd0;
+assign usb_irq = 1'b0;
+
+assign usb_dat_r = 32'bx;
+assign usb_ack = 1'b0;
+
 assign usba_spd = 1'b0;
 assign usba_oe_n = 1'b0;
 assign usba_vp = 1'bz;
 assign usba_vm = 1'bz;
+
 assign usbb_spd = 1'b0;
 assign usbb_oe_n = 1'b0;
 assign usbb_vp = 1'bz;

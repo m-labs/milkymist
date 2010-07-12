@@ -27,7 +27,7 @@ module softusb_hostif #(
 	input [13:0] csr_a,
 	input csr_we,
 	input [31:0] csr_di,
-	output [31:0] csr_do,
+	output reg [31:0] csr_do,
 
 	output irq,
 
@@ -47,7 +47,7 @@ always @(posedge sys_clk) begin
 		if(csr_selected) begin
 			if(csr_we)
 				usb_rst0 <= csr_di[0];
-			csr_di <= usb_rst0;
+			csr_do <= usb_rst0;
 		end
 	end
 end
@@ -66,7 +66,7 @@ reg irq_flip;
 always @(posedge usb_clk) begin
 	if(usb_rst)
 		irq_flip <= 1'b0;
-	end else if(zpu_we)
+	else if(zpu_we)
 		irq_flip <= ~irq_flip;
 end
 

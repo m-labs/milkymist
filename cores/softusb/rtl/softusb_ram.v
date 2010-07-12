@@ -32,6 +32,7 @@ module softusb_ram(
 	input wb_we_i,
 
 	input zpu_we,
+	input [3:0] zpu_sel,
 	input [31:0] zpu_a,
 	input [31:0] zpu_dat_i,
 	output [31:0] zpu_dat_o
@@ -63,7 +64,7 @@ softusb_dpram #(
 	.do(wb_dat_o[7:0]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we),
+	.we2(zpu_we & zpu_sel[0]),
 	.di2(zpu_dat_i[7:0]),
 	.do2(zpu_dat_o[7:0])
 );
@@ -81,7 +82,7 @@ softusb_dpram #(
 	.do(wb_dat_o[15:8]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we),
+	.we2(zpu_we & zpu_sel[1]),
 	.di2(zpu_dat_i[15:8]),
 	.do2(zpu_dat_o[15:8])
 );
@@ -99,7 +100,7 @@ softusb_dpram #(
 	.do(wb_dat_o[23:16]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we),
+	.we2(zpu_we & zpu_sel[2]),
 	.di2(zpu_dat_i[23:16]),
 	.do2(zpu_dat_o[23:16])
 );
@@ -117,7 +118,7 @@ softusb_dpram #(
 	.do(wb_dat_o[31:24]),
 
 	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we),
+	.we2(zpu_we & zpu_sel[3]),
 	.di2(zpu_dat_i[31:24]),
 	.do2(zpu_dat_o[31:24])
 );

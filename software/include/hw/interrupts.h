@@ -35,5 +35,6 @@
 #define IRQ_IR			(0x00004000) /* 14 */
 #define IRQ_MIDIRX		(0x00008000) /* 15 */
 #define IRQ_MIDITX		(0x00010000) /* 16 */
+#define IRQ_USB			(0x00020000) /* 17 */
 
 #endif /* __HW_INTERRUPTS_H */

@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "zpu_core_defines.v"
+`include "softusb_zpu_core_defines.v"
 
 /*      MODULE: zpu_core_rom
         DESCRIPTION: Contains microcode program
