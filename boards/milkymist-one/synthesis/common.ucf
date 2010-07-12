@@ -338,8 +338,5 @@ TIMESPEC "TSvideoin_async1" = FROM "GRPsys" TO "GRPvideoin" TIG;
 TIMESPEC "TSvideoin_async2" = FROM "GRPvideoin" TO "GRPsys" TIG;
 
 NET "usb_clk" TNM_NET = "GRPusb";
-NET "usb_clk_n" TNM_NET = "GRPusb_n";
 TIMESPEC "TSusb_async1" = FROM "GRPsys" TO "GRPusb" TIG;
 TIMESPEC "TSusb_async2" = FROM "GRPusb" TO "GRPsys" TIG;
-TIMESPEC "TSusb_async3" = FROM "GRPsys" TO "GRPusb_n" TIG;
-TIMESPEC "TSusb_async4" = FROM "GRPusb_n" TO "GRPsys" TIG;

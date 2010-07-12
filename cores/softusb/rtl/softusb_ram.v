@@ -20,7 +20,7 @@ module softusb_ram(
 	input sys_clk,
 	input sys_rst,
 
-	input usb_clk_n,
+	input usb_clk,
 
 	input [31:0] wb_adr_i,
 	output [31:0] wb_dat_o,
@@ -56,7 +56,7 @@ softusb_dpram #(
 	.width(8)
 ) ram0 (
 	.clk(sys_clk),
-	.clk2(usb_clk_n),
+	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
 	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[0]),
@@ -74,7 +74,7 @@ softusb_dpram #(
 	.width(8)
 ) ram1 (
 	.clk(sys_clk),
-	.clk2(usb_clk_n),
+	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
 	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[1]),
@@ -92,7 +92,7 @@ softusb_dpram #(
 	.width(8)
 ) ram2 (
 	.clk(sys_clk),
-	.clk2(usb_clk_n),
+	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
 	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[2]),
@@ -110,7 +110,7 @@ softusb_dpram #(
 	.width(8)
 ) ram3 (
 	.clk(sys_clk),
-	.clk2(usb_clk_n),
+	.clk2(usb_clk),
 
 	.a(wb_adr_i[depth-1:2]),
 	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[3]),

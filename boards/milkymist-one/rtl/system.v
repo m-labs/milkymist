@@ -1303,9 +1303,7 @@ assign ir_irq = 1'b0;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_USB
 wire usb_clk_dcm;
-wire usb_clk_n_dcm;
 wire usb_clk;
-wire usb_clk_n;
 DCM_SP #(
 	.CLKDV_DIVIDE(1.5),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
@@ -1333,7 +1331,7 @@ DCM_SP #(
 
 	.CLKDV(),
 	.CLKFX(usb_clk_dcm),
-	.CLKFX180(usb_clk_n_dcm),
+	.CLKFX180(),
 	.LOCKED(),
 	.CLKFB(),
 	.CLKIN(clk50),
@@ -1345,10 +1343,6 @@ BUFG usb_b_p(
 	.I(usb_clk_dcm),
 	.O(usb_clk)
 );
-BUFG usb_b_n(
-	.I(usb_clk_n_dcm),
-	.O(usb_clk_n)
-);
 
 softusb #(
 	.csr_addr(4'hd)
@@ -1357,7 +1351,6 @@ softusb #(
 	.sys_rst(sys_rst),
 
 	.usb_clk(usb_clk),
-	.usb_clk_n(usb_clk_n),
 
 	.csr_a(csr_a),
 	.csr_we(csr_we),

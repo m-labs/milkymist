@@ -22,7 +22,6 @@ module softusb #(
 	input sys_rst,
 
 	input usb_clk,
-	input usb_clk_n,
 
 	/* CSR interface */
 	input [13:0] csr_a,
@@ -73,8 +72,12 @@ wire [31:0] zpu_r_timer;
 wire [31:0] zpu_r_hostif;
 wire [31:0] zpu_r_sie;
 
+reg [1:0] zpu_a_r;
+always @(posedge usb_clk)
+	zpu_a_r <= zpu_a[31:30];
+
 always @(*) begin
-	case(zpu_a[31:30])
+	case(zpu_a_r)
 		2'b00: zpu_r = zpu_r_ram;
 		2'b01: zpu_r = zpu_r_timer;
 		2'b10: zpu_r = zpu_r_hostif;
@@ -86,7 +89,7 @@ softusb_ram ram(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
-	.usb_clk_n(usb_clk_n),
+	.usb_clk(usb_clk),
 
 	.wb_adr_i(wb_adr_i),
 	.wb_dat_o(wb_dat_o),
@@ -157,6 +160,7 @@ softusb_sie sie(
 );
 
 wire zpu_re;
+reg zpu_ack;
 
 softusb_zpu_core zpu(
 	.interrupt(1'b0),
@@ -166,12 +170,23 @@ softusb_zpu_core zpu(
 	
 	.mem_read(zpu_re),
 	.mem_write(zpu_we),
-	.mem_done(zpu_re|zpu_we),
+	.mem_done(zpu_ack),
 	.mem_addr(zpu_a),
 	.mem_data_read(zpu_r),
 	.mem_data_write(zpu_w),
 	.byte_select(zpu_sel)
 );
+
+always @(posedge usb_clk) begin
+	if(usb_rst)
+		zpu_ack <= 1'b0;
+	else begin
+		if((zpu_re|zpu_we) & ~zpu_ack)
+			zpu_ack <= 1'b1;
+		else
+			zpu_ack <= 1'b0;
+	end
+end
 
 endmodule
 

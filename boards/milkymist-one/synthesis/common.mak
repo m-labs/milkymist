@@ -19,7 +19,7 @@ build/system-routed.xdl: build/system-routed.ncd
 	cd build && xdl -ncd2xdl system-routed.ncd system-routed.xdl
 
 build/system-routed.twr: build/system-routed.ncd
-	cd build && trce -v 10 system-routed.ncd system.pcf
+	cd build && trce -e 10 system-routed.ncd system.pcf
 
 clean:
 	rm -rf build/*
