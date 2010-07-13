@@ -109,7 +109,7 @@ SOFTWARE.*/
    05 ..  .. .. ..
 
    ---------------------------------------------------- */
-`define SP_START			32'h10	// after reset change in startup code
+`define SP_START		32'h10	// after reset change in startup code
 `define EMULATION_VECTOR	32'h10	// table of emulated opcodes (interrupt & exception vectors plus up to 5 emulated opcodes)
 `define RESET_VECTOR		32'h20	// reset entry point (can be moved up to 0x3c as per emulation table needs)
 
