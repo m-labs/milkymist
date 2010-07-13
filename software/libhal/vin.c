@@ -162,8 +162,6 @@ unsigned char vin_read_reg(unsigned char addr)
 
 void vin_write_reg(unsigned char addr, unsigned char val)
 {
-	unsigned char r;
-
 	i2c_start_cond();
 	i2c_write(0x40);
 	i2c_write(addr);
