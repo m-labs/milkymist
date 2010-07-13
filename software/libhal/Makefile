@@ -9,12 +9,16 @@ libhal.a: $(OBJECTS)
 	$(AR) clr libhal.a $(OBJECTS)
 	$(RANLIB) libhal.a
 
+$(MMDIR)/softusb-ohci/softusb-ohci.bin:
+	$(MAKE) -C $(MMDIR)/softusb-ohci
+
 softusb-ohci.h: $(MMDIR)/softusb-ohci/softusb-ohci.bin
+	$(MAKE) -C $(MMDIR)/softusb-ohci
 	cat $(MMDIR)/softusb-ohci/softusb-ohci.bin | xxd -i - softusb-ohci.h
 
 .PHONY: clean depend
 
-depend:
+depend: softusb-ohci.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
@@ -53,7 +57,7 @@ tmu.o: ../../software/include/hw/common.h ../../software/include/hal/brd.h
 tmu.o: ../../software/include/hal/tmu.h
 usb.o: ../../software/include/hw/softusb.h ../../software/include/hw/common.h
 usb.o: ../../software/include/base/stdio.h
-usb.o: ../../software/include/base/stdlib.h
+usb.o: ../../software/include/base/stdlib.h softusb-ohci.h
 vga.o: ../../software/include/base/stdio.h
 vga.o: ../../software/include/base/stdlib.h ../../software/include/hw/vga.h
 vga.o: ../../software/include/hw/common.h ../../software/include/hal/vga.h

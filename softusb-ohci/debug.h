@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC (Software)
+ * Milkymist VJ SoC (OHCI firmware)
  * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HAL_USB_H
-#define __HAL_USB_H
+#ifndef _DEBUG_H
+#define _DEBUG_H
 
-void usb_init();
-void usb_service();
+void print_char(char c);
+void print_string(char *s);
 
-#endif /* __HAL_USB_H */
+#endif

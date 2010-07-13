@@ -22,6 +22,9 @@ static const unsigned char ohci_firmware[] = {
 #include "softusb-ohci.h"
 };
 
+static char hc_debug_buffer[256];
+static int hc_debug_buffer_len;
+
 void usb_init()
 {
 	int nwords;
@@ -38,4 +41,33 @@ void usb_init()
 			|((unsigned int)(ohci_firmware[4*i+3]) << 24);
 	printf("USB: starting host controller\n");
 	CSR_SOFTUSB_CONTROL = 0;
+
+	hc_debug_buffer_len = 0;
+}
+
+#define HCREG_DEBUG *((volatile char *)(SOFTUSB_RAM_BASE))
+
+static void flush_debug_buffer()
+{
+	hc_debug_buffer[hc_debug_buffer_len] = 0;
+	printf("USB: HC: %s\n", hc_debug_buffer);
+	hc_debug_buffer_len = 0;
+}
+
+void usb_service()
+{
+	char c;
+	
+	c = HCREG_DEBUG;
+	if(c != 0x00) {
+		if(c == '\n')
+			flush_debug_buffer();
+		else {
+			hc_debug_buffer[hc_debug_buffer_len] = c;
+			hc_debug_buffer_len++;
+			if(hc_debug_buffer_len == (sizeof(hc_debug_buffer)-1))
+				flush_debug_buffer();
+		}
+		HCREG_DEBUG = 0;
+	}
 }

@@ -15,9 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "debug.h"
+
 int main()
 {
-	*((int *)3) = 4;
+	print_string("Hello World!\n");
 	while(1);
 	return 0;
 }

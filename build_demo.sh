@@ -26,10 +26,20 @@ else
         echo "OK"
 fi
 
+echo -n "Building OHCI firmware..."
+cd $BASEDIR/softusb-ohci
+echo >> $LOGFILEHOST
+make >> $LOGFILEHOST 2>&1
+if [ "$?" != 0 ] ; then
+        echo "FAILED"
+	exit 1
+else
+        echo "OK"
+fi
+
 echo "Building embedded software:"
 echo -n "  Base library..."
 echo >> $LOGFILE
-date >> $LOGFILE
 cd $BASEDIR/software/libbase && make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
