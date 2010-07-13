@@ -924,7 +924,11 @@ memory[473] = 0; 														// reserved and empty for correct cpu startup
 memory[474] = `MC_CLEAR_IDIM |`MC_SEL_ALU_MC_CONST | `MC_ALU_NOP_B | 	// sp = @SP_START
 		(`SP_START << `P_ADDR) | `MC_W_SP;
 memory[475] = `MC_SEL_ALU_MC_CONST | `MC_ALU_NOP_B | `MC_W_PC |			// pc = @RESET
-		(`RESET_VECTOR << `P_ADDR) | `MC_EXIT_INTERRUPT;				// enable interrupts on reset
+		(`RESET_VECTOR << `P_ADDR)
+`ifdef ENABLE_CPU_INTERRUPTS
+		| `MC_EXIT_INTERRUPT 				// enable interrupts on reset
+`endif
+		;
 // fall throught fetch/decode
 
 // FETCH / DECODE   -------------------------------------
@@ -940,13 +944,16 @@ memory[477] = `MC_DECODE;												// decode jump to microcode
 memory[480] = `MC_PC_PLUS_1;											// pc = pc + 1
 memory[481] = `MC_FETCH;												// pc_cached ? decode else fetch,decode
 
+
 // INTERRUPT REQUEST   -------------------------------------
 //	sp = sp - 1
 //	mem[sp] = pc
 //	pc = mem[EMULATED_VECTORS + 0]
+`ifdef ENABLE_CPU_INTERRUPTS
 memory[484] = `MC_ALU_NOP_B | `MC_SEL_ALU_MC_CONST | (0 << `P_ADDR) |	// b = 0 (#0 in emulate table) || disable interrupts
 		`MC_W_B | `MC_ENTER_INTERRUPT;
 memory[485] = `MC_EMULATE;												// emulate #0 (interrupt)
+`endif
 
 // ---------------- OPCODES WITH PARAMETER IN OPCODE ----------------
 

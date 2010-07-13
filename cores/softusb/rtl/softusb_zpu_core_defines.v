@@ -119,14 +119,14 @@ SOFTWARE.*/
 `define	ASSERT_NON_ALIGNMENT	/* abort cpu in case of non-aligned memory access (only simulation) */
 
 `define ENABLE_BYTE_SELECT		/* allow byte / halfword memory accesses */
-`define ENABLE_CPU_INTERRUPTS	/* enable interrupts to cpu */
+//`define ENABLE_CPU_INTERRUPTS	/* enable interrupts to cpu */
 //`define ENABLE_PC_INCREMENT	/* gain 1 clk per opcode but requires microcode changes ** not done at the moment ** */
 //`define ENABLE_A_SHIFT		/* 1 bit arithmetic shift (right) mutual exclusive with barrel shift */
 `define ENABLE_XOR			/* 1 cycle x-or */
 //`define ENABLE_MULT			/* 32 bit pipelined (3 stages) multiplier */
 //`define ENABLE_DIV			/* 32 bit, up to 32 cycles serial divider */
 `define ENABLE_BARREL			/* n bit logical & arithmetic shift mutual exclusive with 1 bit shift */
-`define ENABLE_CMP				/* enable ALU_CMP_SIGNED and ALU_CMP_UNSIGNED */
+`define ENABLE_CMP			/* enable ALU_CMP_SIGNED and ALU_CMP_UNSIGNED */
 
 // ------- microcode zpu core datapath selectors --------
 `define SEL_READ_DATA		0

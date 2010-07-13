@@ -90,6 +90,7 @@ softusb_ram ram(
 	.sys_rst(sys_rst),
 
 	.usb_clk(usb_clk),
+	.usb_rst(usb_rst),
 
 	.wb_adr_i(wb_adr_i),
 	.wb_dat_o(wb_dat_o),
@@ -163,8 +164,6 @@ wire zpu_re;
 reg zpu_ack;
 
 softusb_zpu_core zpu(
-	.interrupt(1'b0),
-
 	.clk(usb_clk),
 	.reset(usb_rst),
 	
