@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=brd.o mem.o pfpu.o snd.o time.o tmu.o vga.o vin.o
+OBJECTS=brd.o mem.o pfpu.o snd.o time.o tmu.o vga.o vin.o usb.o
 
 all: libhal.a
 
@@ -9,13 +9,16 @@ libhal.a: $(OBJECTS)
 	$(AR) clr libhal.a $(OBJECTS)
 	$(RANLIB) libhal.a
 
+softusb-ohci.h: $(MMDIR)/softusb-ohci/softusb-ohci.bin
+	cat $(MMDIR)/softusb-ohci/softusb-ohci.bin | xxd -i - softusb-ohci.h
+
 .PHONY: clean depend
 
 depend:
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f *.o libhal.a .*~ *~ Makefile.bak
+	rm -f *.o libhal.a .*~ *~ Makefile.bak softusb-ohci.h
 
 # DO NOT DELETE
 
@@ -48,8 +51,13 @@ tmu.o: ../../software/include/base/board.h
 tmu.o: ../../software/include/hw/interrupts.h ../../software/include/hw/tmu.h
 tmu.o: ../../software/include/hw/common.h ../../software/include/hal/brd.h
 tmu.o: ../../software/include/hal/tmu.h
+usb.o: ../../software/include/hw/softusb.h ../../software/include/hw/common.h
+usb.o: ../../software/include/base/stdio.h
+usb.o: ../../software/include/base/stdlib.h
 vga.o: ../../software/include/base/stdio.h
 vga.o: ../../software/include/base/stdlib.h ../../software/include/hw/vga.h
 vga.o: ../../software/include/hw/common.h ../../software/include/hal/vga.h
+vin.o: ../../software/include/base/stdio.h
+vin.o: ../../software/include/base/stdlib.h ../../software/include/hal/vin.h
 vin.o: ../../software/include/hw/bt656cap.h
 vin.o: ../../software/include/hw/common.h

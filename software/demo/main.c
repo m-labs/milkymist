@@ -31,6 +31,7 @@
 #include <hal/pfpu.h>
 #include <hal/tmu.h>
 #include <hal/vin.h>
+#include <hal/usb.h>
 
 #include "apipe.h"
 #include "rpipe.h"
@@ -69,6 +70,7 @@ int main()
 	apipe_init();
 	rpipe_init();
 	osd_init();
+	usb_init();
 	shell_init();
 
 	while(1) {
