@@ -28,8 +28,8 @@ fi
 
 echo -n "Building OHCI firmware..."
 cd $BASEDIR/softusb-ohci
-echo >> $LOGFILEHOST
-make >> $LOGFILEHOST 2>&1
+echo >> $LOGFILE
+make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then
         echo "FAILED"
 	exit 1

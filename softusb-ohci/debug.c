@@ -17,10 +17,22 @@
 
 #define REG_DEBUG *((volatile char *)0x3)
 
+static char debug_buffer[256];
+static unsigned char debug_consume;
+static unsigned char debug_produce;
+
+void debug_service()
+{
+	if((debug_consume != debug_produce) && (REG_DEBUG == 0x00)) {
+		REG_DEBUG = debug_buffer[debug_consume];
+		debug_consume++;
+	}
+}
+
 void print_char(char c)
 {
-	while(REG_DEBUG != 0x00);
-	REG_DEBUG = c;
+	debug_buffer[debug_produce] = c;
+	debug_produce++;
 }
 
 void print_string(char *s)
@@ -29,4 +41,13 @@ void print_string(char *s)
 		print_char(*s);
 		s++;
 	}
+}
+
+static const char hextab[] = "0123456789ABCDEF";
+
+void print_hex(unsigned char h)
+{
+	print_string("0x");
+	print_char(hextab[(h & 0xf0) >> 4]);
+	print_char(hextab[h & 0x0f]);
 }

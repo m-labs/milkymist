@@ -18,7 +18,9 @@
 #ifndef _DEBUG_H
 #define _DEBUG_H
 
+void debug_service();
 void print_char(char c);
 void print_string(char *s);
+void print_hex(unsigned char h);
 
 #endif

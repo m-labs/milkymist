@@ -15,11 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../software/include/base/version.h"
 #include "debug.h"
 
 int main()
 {
-	print_string("Hello World!\n");
-	while(1);
+	print_string("softusb-ohci v"VERSION"\n");
+	while(1) debug_service();
 	return 0;
 }
