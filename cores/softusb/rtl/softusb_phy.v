@@ -1,16 +1,5 @@
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
-////  USB 1.1 PHY                                                ////
-////                                                             ////
-////                                                             ////
-////  Author: Rudolf Usselmann                                   ////
-////          rudi@asics.ws                                      ////
-////                                                             ////
-////                                                             ////
-////  Downloaded from: http://www.opencores.org/cores/usb_phy/   ////
-////                                                             ////
-/////////////////////////////////////////////////////////////////////
-////                                                             ////
 //// Copyright (C) 2000-2002 Rudolf Usselmann                    ////
 ////                         www.asics.ws                        ////
 ////                         rudi@asics.ws                       ////
@@ -36,142 +25,76 @@
 ////                                                             ////
 /////////////////////////////////////////////////////////////////////
 
-//  CVS Log
-//
-//  $Id: usb_phy.v,v 1.4 2003-10-21 05:58:40 rudi Exp $
-//
-//  $Date: 2003-10-21 05:58:40 $
-//  $Revision: 1.4 $
-//  $Author: rudi $
-//  $Locker:  $
-//  $State: Exp $
-//
-// Change History:
-//               $Log: not supported by cvs2svn $
-//               Revision 1.3  2003/10/19 17:40:13  rudi
-//               - Made core more robust against line noise
-//               - Added Error Checking and Reporting
-//               (See README.txt for more info)
-//
-//               Revision 1.2  2002/09/16 16:06:37  rudi
-//               Changed top level name to be consistent ...
-//
-//               Revision 1.1.1.1  2002/09/16 14:26:59  rudi
-//               Created Directory Structure
-//
-//
-//
-//
-//
-//
-//
-//
-
-module softusb_phy(clk, rst, phy_tx_mode, usb_rst,
+module softusb_phy(
+	input usb_clk,
+	input usb_rst,
 	
-		// Transciever Interface
-		txdp, txdn, txoe,	
-		rxd, rxdp, rxdn,
+	output reg usb_discon,
+	output txdp,
+	output txdn,
+	output txoe_n,
+	input rxd,
+	input rxdp,
+	input rxdn,
 
-		// UTMI Interface
-		DataOut_i, TxValid_i, TxReady_o, RxValid_o,
-		RxActive_o, RxError_o, DataIn_o, LineState_o
-		);
+	input [7:0] DataOut_i,
+	input TxValid_i,
+	output TxReady_o,
+	output [7:0] DataIn_o,
+	output RxValid_o,
+	output RxActive_o,
+	output RxError_o,
+	output [1:0] LineState_o
+);
 
-input		clk;
-input		rst;
-input		phy_tx_mode;
-output		usb_rst;
-output		txdp, txdn, txoe;
-input		rxd, rxdp, rxdn;
-input	[7:0]	DataOut_i;
-input		TxValid_i;
-output		TxReady_o;
-output	[7:0]	DataIn_o;
-output		RxValid_o;
-output		RxActive_o;
-output		RxError_o;
-output	[1:0]	LineState_o;
+wire fs_ce;
 
-///////////////////////////////////////////////////////////////////
-//
-// Local Wires and Registers
-//
+softusb_tx_phy tx_phy(
+	.usb_clk(usb_clk),
+	.usb_rst(usb_rst),
 
-reg	[4:0]	rst_cnt;
-reg		usb_rst;
-wire		fs_ce;
-wire		rst;
+	.fs_ce(fs_ce),
 
-///////////////////////////////////////////////////////////////////
-//
-// Misc Logic
-//
+	.txdp(txdp),
+	.txdn(txdn),
+	.txoe_n(txoe_n),
 
-///////////////////////////////////////////////////////////////////
-//
-// TX Phy
-//
+	.DataOut_i(DataOut_i),
+	.TxValid_i(TxValid_i),
+	.TxReady_o(TxReady_o)
+);
 
-softusb_tx_phy i_tx_phy(
-	.clk(		clk		),
-	.rst(		rst		),
-	.fs_ce(		fs_ce		),
-	.phy_mode(	phy_tx_mode	),
+softusb_rx_phy rx_phy(
+	.usb_clk(usb_clk),
+	.usb_rst(usb_rst),
+	.fs_ce(fs_ce),
 
-	// Transciever Interface
-	.txdp(		txdp		),
-	.txdn(		txdn		),
-	.txoe(		txoe		),
+	.rxd(rxd),
+	.rxdp(rxdp),
+	.rxdn(rxdn),
 
-	// UTMI Interface
-	.DataOut_i(	DataOut_i	),
-	.TxValid_i(	TxValid_i	),
-	.TxReady_o(	TxReady_o	)
-	);
+	.DataIn_o(DataIn_o),
+	.RxValid_o(RxValid_o),
+	.RxActive_o(RxActive_o),
+	.RxError_o(RxError_o),
+	.RxEn_i(txoe_n),
+	.LineState(LineState_o)
+);
 
-///////////////////////////////////////////////////////////////////
-//
-// RX Phy and DPLL
-//
+/* Generate an USB Disconnect if we see SE0 for at least 2.5uS */
 
-softusb_rx_phy i_rx_phy(
-	.clk(		clk		),
-	.rst(		rst		),
-	.fs_ce(		fs_ce		),
-
-	// Transciever Interface
-	.rxd(		rxd		),
-	.rxdp(		rxdp		),
-	.rxdn(		rxdn		),
-
-	// UTMI Interface
-	.DataIn_o(	DataIn_o	),
-	.RxValid_o(	RxValid_o	),
-	.RxActive_o(	RxActive_o	),
-	.RxError_o(	RxError_o	),
-	.RxEn_i(	txoe		),
-	.LineState(	LineState_o	)
-	);
-
-///////////////////////////////////////////////////////////////////
-//
-// Generate an USB Reset is we see SE0 for at least 2.5uS
-//
-
-`ifdef USB_ASYNC_REST
-always @(posedge clk or negedge rst)
-`else
-always @(posedge clk)
-`endif
-	if(!rst)			rst_cnt <= 5'h0;
-	else
-	if(LineState_o != 2'h0)		rst_cnt <= 5'h0;
-	else	
-	if(!usb_rst && fs_ce)		rst_cnt <= rst_cnt + 5'h1;
-
-always @(posedge clk)
-	usb_rst <= (rst_cnt == 5'h1f);
+reg [4:0] usb_discon_cnt;
+always @(posedge usb_clk) begin
+	if(usb_rst) begin
+		usb_discon_cnt <= 5'h0;
+		usb_discon <= 1'b0;
+	end else begin
+		if(LineState_o != 2'h0)
+			usb_discon_cnt <= 5'h0;
+		else if(!usb_discon && fs_ce)
+			usb_discon_cnt <= usb_discon_cnt + 5'h1;
+		usb_discon <= (usb_discon_cnt == 5'h1f);
+	end
+end
 
 endmodule
-
