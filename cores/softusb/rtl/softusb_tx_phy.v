@@ -1,3 +1,20 @@
+/*
+ * Milkymist VJ SoC
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
 //// Copyright (C) 2000-2002 Rudolf Usselmann                    ////
@@ -31,13 +48,13 @@ module softusb_tx_phy(
 
 	input fs_ce,
 
-	output txdp,
-	output txdn,
-	output reg txoe_n,
+	output reg txdp,
+	output reg txdn,
+	output reg txoe,
 	
-	input [7:0] DataOut_i,
-	input TxValid_i,
-	output reg TxReady_o
+	input [7:0] utmi_data_out,
+	input utmi_tx_valid,
+	output reg utmi_tx_ready
 );
 
 parameter	IDLE	= 3'd0,
@@ -75,14 +92,13 @@ reg append_eop_sync1;
 reg append_eop_sync2;
 reg append_eop_sync3;
 reg append_eop_sync4;
-reg txdp, txdn;
 reg txoe_r1, txoe_r2;
 
 always @(posedge usb_clk)
 	if(usb_rst)
-		TxReady_o <= 1'b0;
+		utmi_tx_ready <= 1'b0;
 	else
-		TxReady_o <= tx_ready_d & TxValid_i;
+		utmi_tx_ready <= tx_ready_d & utmi_tx_valid;
 
 always @(posedge usb_clk) ld_data <= ld_data_d;
 
@@ -111,9 +127,9 @@ always @(posedge usb_clk)
 always @(posedge usb_clk)
 	if(usb_rst)
 		data_done <= 1'b0;
-	else if(TxValid_i && ! tx_ip)
+	else if(utmi_tx_valid && ! tx_ip)
 		data_done <= 1'b1;
-	else if(!TxValid_i)
+	else if(!utmi_tx_valid)
 		data_done <= 1'b0;
 
 /* Shift Register */
@@ -158,7 +174,7 @@ always @(posedge usb_clk)
 	if(ld_sop_d)
 		hold_reg <= 8'h80;
 	else if(ld_data)
-		hold_reg <= DataOut_i;
+		hold_reg <= utmi_data_out;
 
 always @(posedge usb_clk) hold_reg_d <= hold_reg;
 
@@ -247,9 +263,9 @@ always @(posedge usb_clk)
 
 always @(posedge usb_clk)
 	if(usb_rst)
-		txoe_n <= 1'b1;
+		txoe <= 1'b0;
 	else if(fs_ce)
-		txoe_n <= !(txoe_r1 | txoe_r2);
+		txoe <= txoe_r1 | txoe_r2;
 
 /* Output Registers */
 
@@ -282,7 +298,7 @@ always @(*) begin
 	ld_eop_d = 1'b0;
 
 	case(state)
-		IDLE: if(TxValid_i) begin
+		IDLE: if(utmi_tx_valid) begin
 				ld_sop_d = 1'b1;
 				next_state = SOP;
 			end

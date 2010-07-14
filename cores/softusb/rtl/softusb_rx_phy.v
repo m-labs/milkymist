@@ -1,3 +1,20 @@
+/*
+ * Milkymist VJ SoC
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
 //// Copyright (C) 2000-2002 Rudolf Usselmann                    ////
@@ -29,23 +46,19 @@ module softusb_rx_phy(
 	input usb_clk,
 	input usb_rst,
 	
-	output fs_ce,
+	output reg fs_ce,
 	
-	input rxd,
-	input rxdp,
-	input rxdn,
+	input rxd_s,
+	input rxdp_s,
+	input rxdn_s,
 	
-	output [7:0] DataIn_o,
-	output RxValid_o,
-	output RxActive_o,
-	output RxError_o,
-	input RxEn_i,
-	output [1:0] LineState
+	output [7:0] utmi_data_in,
+	output utmi_rx_valid,
+	output utmi_rx_active,
+	output utmi_rx_error,
+	input utmi_rx_en
 );
 
-reg rxd_s0, rxd_s1,  rxd_s;
-reg rxdp_s0, rxdp_s1, rxdp_s, rxdp_s_r;
-reg rxdn_s0, rxdn_s1, rxdn_s, rxdn_s_r;
 reg synced_d;
 wire k, j, se0;
 reg rxd_r;
@@ -62,7 +75,6 @@ reg [2:0] one_cnt;
 
 reg [1:0] dpll_state, dpll_next_state;
 reg fs_ce_d;
-reg fs_ce;
 wire change;
 wire lock_en;
 reg [2:0] fs_state, fs_next_state;
@@ -72,42 +84,13 @@ reg bit_stuff_err;
 reg se0_r, byte_err;
 reg se0_s;
 
-assign RxActive_o = rx_active;
-assign RxValid_o = rx_valid;
-assign RxError_o = sync_err | bit_stuff_err | byte_err;
-assign DataIn_o = hold_reg;
-assign LineState = {rxdn_s, rxdp_s};
+assign utmi_rx_active = rx_active;
+assign utmi_rx_valid = rx_valid;
+assign utmi_rx_error = sync_err | bit_stuff_err | byte_err;
+assign utmi_data_in = hold_reg;
 
-always @(posedge usb_clk) rx_en <= RxEn_i;
+always @(posedge usb_clk) rx_en <= utmi_rx_en;
 always @(posedge usb_clk) sync_err <= !rx_active & sync_err_d;
-
-
-/* Synchronize Inputs */
-
-/*
- * First synchronize to the local system clock to
- * avoid metastability outside the sync block (*_s0).
- * Then make sure we see the signal for at least two
- * clock cycles stable to avoid glitches and noise
- */
-
-always @(posedge usb_clk) rxd_s0  <= rxd;
-always @(posedge usb_clk) rxd_s1  <= rxd_s0;
-always @(posedge usb_clk) // Avoid detecting Line Glitches and noise
-	if(rxd_s0 && rxd_s1)
-		rxd_s <= 1'b1;
-	else if(!rxd_s0 && !rxd_s1)
-		rxd_s <= 1'b0;
-
-always @(posedge usb_clk) rxdp_s0  <= rxdp;
-always @(posedge usb_clk) rxdp_s1  <= rxdp_s0;
-always @(posedge usb_clk) rxdp_s_r <= rxdp_s0 & rxdp_s1;
-always @(posedge usb_clk) rxdp_s   <= (rxdp_s0 & rxdp_s1) | rxdp_s_r; // Avoid detecting Line Glitches and noise
-
-always @(posedge usb_clk) rxdn_s0  <= rxdn;
-always @(posedge usb_clk) rxdn_s1  <= rxdn_s0;
-always @(posedge usb_clk) rxdn_s_r <= rxdn_s0 & rxdn_s1;
-always @(posedge usb_clk) rxdn_s   <= (rxdn_s0 & rxdn_s1) | rxdn_s_r; // Avoid detecting Line Glitches and noise
 
 assign k = !rxdp_s &  rxdn_s;
 assign j =  rxdp_s & !rxdn_s;
@@ -131,7 +114,7 @@ always @(posedge usb_clk)
  */
 
 /* Allow lockinf only when we are receiving */
-assign	lock_en = rx_en;
+assign lock_en = rx_en;
 
 always @(posedge usb_clk) rxd_r <= rxd_s;
 
