@@ -85,6 +85,8 @@ always @(*) begin
 	endcase
 end
 
+wire usb_rst;
+
 softusb_ram ram(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -107,8 +109,6 @@ softusb_ram ram(
 	.zpu_dat_i(zpu_w),
 	.zpu_dat_o(zpu_r_ram)
 );
-
-wire usb_rst;
 
 softusb_timer timer(
 	.usb_clk(usb_clk),
