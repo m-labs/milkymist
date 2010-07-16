@@ -92,6 +92,10 @@ assign utmi_data_in = hold_reg;
 always @(posedge usb_clk) rx_en <= utmi_rx_en;
 always @(posedge usb_clk) sync_err <= !rx_active & sync_err_d;
 
+/* FIXME: wouldn't it be more advisable to use rxd_s for k and j? */
+// assign k = ~rxd_s;
+// assign j = rxd_s;
+// TODO: invert in low speed
 assign k = !rxdp_s &  rxdn_s;
 assign j =  rxdp_s & !rxdn_s;
 assign se0 = !rxdp_s & !rxdn_s;
@@ -191,7 +195,8 @@ always @(*) begin
 	if(fs_ce && !rx_active && !se0 && !se0_s) begin
 		case(fs_state)
 			FS_IDLE: begin
-				if(k && rx_en)	fs_next_state = K1;
+				if(k && rx_en)
+					fs_next_state = K1;
 			end
 			K1: begin
 				if(j && rx_en)
@@ -229,7 +234,7 @@ always @(*) begin
 				if(j && rx_en)
 					fs_next_state = J3;
 				else if(k && rx_en) begin
-					fs_next_state = FS_IDLE;	// Allow missing fiusb_rst K-J
+					fs_next_state = FS_IDLE;	// Allow missing first K-J
 					synced_d = 1'b1;
 				end else begin
 					sync_err_d = 1'b1;

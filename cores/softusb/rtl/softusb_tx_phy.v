@@ -54,7 +54,7 @@ module softusb_tx_phy(
 	
 	input [7:0] utmi_data_out,
 	input utmi_tx_valid,
-	output reg utmi_tx_ready
+	output utmi_tx_ready
 );
 
 parameter	IDLE	= 3'd0,
@@ -94,11 +94,7 @@ reg append_eop_sync3;
 reg append_eop_sync4;
 reg txoe_r1, txoe_r2;
 
-always @(posedge usb_clk)
-	if(usb_rst)
-		utmi_tx_ready <= 1'b0;
-	else
-		utmi_tx_ready <= tx_ready_d & utmi_tx_valid;
+assign utmi_tx_ready = tx_ready_d & utmi_tx_valid;
 
 always @(posedge usb_clk) ld_data <= ld_data_d;
 

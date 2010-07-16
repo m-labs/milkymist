@@ -56,6 +56,7 @@ module softusb #(
 	inout usbb_vm
 );
 
+wire zpu_re;
 wire zpu_we;
 wire [3:0] zpu_sel;
 wire [31:0] zpu_a;
@@ -142,6 +143,7 @@ softusb_sie sie(
 	.usb_clk(usb_clk),
 	.usb_rst(usb_rst),
 
+	.zpu_re(sel_sie & zpu_re),
 	.zpu_we(sel_sie & zpu_we),
 	.zpu_a(zpu_a),
 	.zpu_dat_i(zpu_w),
@@ -160,7 +162,6 @@ softusb_sie sie(
 	.usbb_vm(usbb_vm)
 );
 
-wire zpu_re;
 reg zpu_ack;
 
 softusb_zpu_core zpu(

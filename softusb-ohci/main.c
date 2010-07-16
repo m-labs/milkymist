@@ -17,11 +17,7 @@
 
 #include "../software/include/base/version.h"
 #include "debug.h"
-
-#define TIMER *((unsigned int *)0x40000000)
-
-#define SIE_LINE_STATUS_A *((unsigned int *)0xc0000000)
-#define SIE_LINE_STATUS_B *((unsigned int *)0xc0000004)
+#include "sie.h"
 
 enum {
 	PORT_STATE_DISCONNECTED,
@@ -46,7 +42,7 @@ int main()
 				print_string("low speed device on port A\n");
 				port_a_stat = PORT_STATE_LOW_SPEED;
 			}
-		} else if(SIE_LINE_STATUS_A == 0x00) {
+		} else if(SIE_DISCON_A) {
 			print_string("device disconnect on port A\n");
 			port_a_stat = PORT_STATE_DISCONNECTED;
 		}
@@ -59,7 +55,7 @@ int main()
 				print_string("low speed device on port B\n");
 				port_b_stat = PORT_STATE_LOW_SPEED;
 			}
-		} else if(SIE_LINE_STATUS_B == 0x00) {
+		} else if(SIE_DISCON_B) {
 			print_string("device disconnect on port B\n");
 			port_b_stat = PORT_STATE_DISCONNECTED;
 		}
