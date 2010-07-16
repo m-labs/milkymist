@@ -63,7 +63,7 @@ reg utmi_rx_valid_r;
 reg rx_error;
 
 always @(posedge usb_clk) begin
-	case(zpu_a[3:0])
+	case(zpu_a[5:2])
 		4'b0000: zpu_dat_o <= {6'd0, line_state_a, 24'd0};
 		4'b0001: zpu_dat_o <= {6'd0, line_state_b, 24'd0};
 		4'b0010: zpu_dat_o <= {7'd0, discon_a, 24'd0};
@@ -86,7 +86,7 @@ always @(posedge usb_clk) begin
 		4'b1100: zpu_dat_o <= {7'd0, rx_error, 24'd0};
 	endcase
 	if(zpu_we) begin
-		case(zpu_a[3:0])
+		case(zpu_a[5:2])
 			4'b0100: port_sel_rx <= zpu_dat_i[24];
 			4'b0101: port_sel_tx <= zpu_dat_i[25:24];
 			4'b0110: begin
