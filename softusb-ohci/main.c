@@ -18,6 +18,70 @@
 #include "../software/include/base/version.h"
 #include "debug.h"
 #include "sie.h"
+#include "crc.h"
+
+static void tx(const unsigned char *buffer, int len)
+{
+	int i;
+
+	for(i=0;i<len;i++) {
+		while(SIE_TX_PENDING);
+		SIE_TX_DATA = buffer[i];
+	}
+	//while(SIE_TX_PENDING);
+	SIE_TX_VALID = 0;
+}
+
+static int rx(unsigned char *buffer)
+{
+	int r;
+
+	r = 0;
+	//do {
+		while(!(SIE_RX_PENDING));
+		buffer[r] = SIE_RX_DATA;
+		r++;
+	//} while(SIE_RX_ACTIVE);
+	//if(SIE_RX_ERROR) return -1;
+	return r;
+}
+
+unsigned char b[128];
+static void test()
+{
+	int r;
+	int i;
+
+	SIE_SEL_TX = 3;
+	SIE_TX_BUSRESET = 1;
+	b[0] = 0x69;
+	b[1] = 0x80;
+	b[2] = 0x28;
+	print_hex(b[0]);
+	print_hex(b[1]);
+	print_hex(b[2]);
+	print_char('\n');
+	for(i=0;i<100000;i++) debug_service();
+	SIE_TX_BUSRESET = 0;
+	for(i=0;i<40;i++) debug_service();
+	tx(b, 3);
+	r = rx(b);
+	r = 0;
+	print_string("length:");
+	print_hex(r);
+	print_char('\n');
+	for(i=0;i<r;i++) {
+		print_hex(b[i]);
+		print_char(' ');
+		debug_service();
+		debug_service();
+		debug_service();
+		debug_service();
+		debug_service();
+		debug_service();
+	}
+	print_char('\n');
+}
 
 enum {
 	PORT_STATE_DISCONNECTED,
@@ -37,6 +101,7 @@ int main()
 			if(SIE_LINE_STATUS_A == 0x01) {
 				print_string("full speed device on port A\n");
 				port_a_stat = PORT_STATE_FULL_SPEED;
+				test();
 			}
 			if(SIE_LINE_STATUS_A == 0x02) {
 				print_string("low speed device on port A\n");

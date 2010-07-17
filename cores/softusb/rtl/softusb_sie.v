@@ -52,6 +52,8 @@ reg utmi_tx_valid;
 wire utmi_tx_ready;
 reg tx_pending;
 
+reg generate_reset;
+
 wire [7:0] utmi_data_in;
 wire utmi_rx_valid;
 wire utmi_rx_active;
@@ -59,7 +61,7 @@ wire utmi_rx_error;
 
 reg [7:0] data_in;
 reg rx_pending;
-reg utmi_rx_valid_r;
+reg utmi_rx_active_r;
 reg rx_error;
 
 always @(posedge usb_clk) begin
@@ -75,15 +77,16 @@ always @(posedge usb_clk) begin
 		4'b0110: zpu_dat_o <= {utmi_data_out, 24'd0};
 		4'b0111: zpu_dat_o <= {7'd0, tx_pending, 24'd0};
 		4'b1000: zpu_dat_o <= {7'd0, utmi_tx_valid, 24'd0};
+		4'b1001: zpu_dat_o <= {7'd0, generate_reset, 24'd0};
 
-		4'b1001: begin
+		4'b1010: begin
 			zpu_dat_o <= {data_in, 24'd0};
 			if(zpu_re)
 				rx_pending <= 1'b0;
 		end
-		4'b1010: zpu_dat_o <= {7'd0, rx_pending, 24'd0};
-		4'b1011: zpu_dat_o <= {7'd0, utmi_rx_active, 24'd0};
-		4'b1100: zpu_dat_o <= {7'd0, rx_error, 24'd0};
+		4'b1011: zpu_dat_o <= {7'd0, rx_pending, 24'd0};
+		4'b1100: zpu_dat_o <= {7'd0, utmi_rx_active, 24'd0};
+		4'b1101: zpu_dat_o <= {7'd0, rx_error, 24'd0};
 	endcase
 	if(zpu_we) begin
 		case(zpu_a[5:2])
@@ -95,6 +98,7 @@ always @(posedge usb_clk) begin
 				tx_pending <= 1'b1;
 			end
 			4'b1000: utmi_tx_valid <= 1'b0;
+			4'b1001: generate_reset <= zpu_dat_i[24];
 		endcase
 	end
 	if(utmi_tx_ready)
@@ -104,10 +108,10 @@ always @(posedge usb_clk) begin
 		rx_pending <= 1'b1;
 	end
 
-	utmi_rx_valid_r <= utmi_rx_valid;
-	if(utmi_rx_valid & ~utmi_rx_valid_r)
+	utmi_rx_active_r <= utmi_rx_active;
+	if(utmi_rx_active & ~utmi_rx_active_r)
 		rx_error <= 1'b0;
-	if(utmi_rx_error)
+	if(utmi_rx_active & utmi_rx_error)
 		rx_error <= 1'b1;
 end
 
@@ -139,6 +143,8 @@ softusb_phy phy(
 	.utmi_data_out(utmi_data_out),
 	.utmi_tx_valid(utmi_tx_valid),
 	.utmi_tx_ready(utmi_tx_ready),
+
+	.generate_reset(generate_reset),
 	
 	.utmi_data_in(utmi_data_in),
 	.utmi_rx_valid(utmi_rx_valid),

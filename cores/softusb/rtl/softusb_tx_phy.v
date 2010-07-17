@@ -54,7 +54,9 @@ module softusb_tx_phy(
 	
 	input [7:0] utmi_data_out,
 	input utmi_tx_valid,
-	output utmi_tx_ready
+	output utmi_tx_ready,
+
+	input generate_reset
 );
 
 parameter	IDLE	= 3'd0,
@@ -261,18 +263,22 @@ always @(posedge usb_clk)
 	if(usb_rst)
 		txoe <= 1'b0;
 	else if(fs_ce)
-		txoe <= txoe_r1 | txoe_r2;
+		txoe <= txoe_r1 | txoe_r2 | generate_reset;
 
 /* Output Registers */
 
 always @(posedge usb_clk)
 	if(usb_rst)
 		txdp <= 1'b1;
+	else if(generate_reset)
+		txdp <= 1'b0;
 	else if(fs_ce)
 		txdp <= !append_eop_sync3 &  sd_nrzi_o;
 
 always @(posedge usb_clk)
 	if(usb_rst)
+		txdn <= 1'b0;
+	else if(generate_reset)
 		txdn <= 1'b0;
 	else if(fs_ce)
 		txdn <= !append_eop_sync3 & ~sd_nrzi_o;

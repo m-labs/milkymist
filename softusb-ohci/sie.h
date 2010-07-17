@@ -27,12 +27,13 @@
 #define SIE_SEL_TX		*((volatile unsigned int *)0xc0000014)
 
 #define SIE_TX_DATA		*((volatile unsigned int *)0xc0000018)
-#define SIE_TX_PENDING		*((volatile unsigned int *)0xc000001C)
+#define SIE_TX_PENDING		*((volatile unsigned int *)0xc000001c)
 #define SIE_TX_VALID		*((volatile unsigned int *)0xc0000020)
+#define SIE_TX_BUSRESET		*((volatile unsigned int *)0xc0000024)
 
-#define SIE_RX_DATA		*((volatile unsigned int *)0xc0000024)
-#define SIE_RX_PENDING		*((volatile unsigned int *)0xc0000028)
-#define SIE_RX_ACTIVE		*((volatile unsigned int *)0xc000002C)
-#define SIE_RX_ERROR		*((volatile unsigned int *)0xc0000030)
+#define SIE_RX_DATA		*((volatile unsigned int *)0xc0000028)
+#define SIE_RX_PENDING		*((volatile unsigned int *)0xc000002c)
+#define SIE_RX_ACTIVE		*((volatile unsigned int *)0xc0000030)
+#define SIE_RX_ERROR		*((volatile unsigned int *)0xc0000034)
 
 #endif /* __SIE_H */

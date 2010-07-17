@@ -35,7 +35,7 @@ void print_char(char c)
 	debug_produce++;
 }
 
-void print_string(char *s)
+void print_string(const char *s)
 {
 	while(*s) {
 		print_char(*s);
@@ -47,7 +47,6 @@ static const char hextab[] = "0123456789ABCDEF";
 
 void print_hex(unsigned char h)
 {
-	print_string("0x");
 	print_char(hextab[(h & 0xf0) >> 4]);
 	print_char(hextab[h & 0x0f]);
 }

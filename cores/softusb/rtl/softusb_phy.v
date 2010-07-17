@@ -70,6 +70,9 @@ module softusb_phy(
 	input [7:0] utmi_data_out,
 	input utmi_tx_valid,
 	output utmi_tx_ready,
+
+	input generate_reset,
+
 	output [7:0] utmi_data_in,
 	output utmi_rx_valid,
 	output utmi_rx_active,
@@ -129,7 +132,9 @@ softusb_tx_phy tx_phy(
 
 	.utmi_data_out(utmi_data_out),
 	.utmi_tx_valid(utmi_tx_valid),
-	.utmi_tx_ready(utmi_tx_ready)
+	.utmi_tx_ready(utmi_tx_ready),
+
+	.generate_reset(generate_reset)
 );
 
 /* RX section */

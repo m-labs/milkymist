@@ -1,4 +1,4 @@
-SOURCES=crt0.S main.c debug.c
+SOURCES=crt0.S main.c debug.c crc.c
 
 all: softusb-ohci.bin
 
