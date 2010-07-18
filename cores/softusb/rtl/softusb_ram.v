@@ -66,7 +66,8 @@ parameter depth = 14; /* in bytes */
 
 softusb_dpram #(
 	.depth(depth-2),
-	.width(8)
+	.width(8),
+	.initfile("firmware0.rom")
 ) ram0 (
 	.clk(sys_clk),
 	.clk2(usb_clk),
@@ -84,7 +85,8 @@ softusb_dpram #(
 
 softusb_dpram #(
 	.depth(depth-2),
-	.width(8)
+	.width(8),
+	.initfile("firmware1.rom")
 ) ram1 (
 	.clk(sys_clk),
 	.clk2(usb_clk),
@@ -102,7 +104,8 @@ softusb_dpram #(
 
 softusb_dpram #(
 	.depth(depth-2),
-	.width(8)
+	.width(8),
+	.initfile("firmware2.rom")
 ) ram2 (
 	.clk(sys_clk),
 	.clk2(usb_clk),
@@ -120,7 +123,8 @@ softusb_dpram #(
 
 softusb_dpram #(
 	.depth(depth-2),
-	.width(8)
+	.width(8),
+	.initfile("firmware3.rom")
 ) ram3 (
 	.clk(sys_clk),
 	.clk2(usb_clk),

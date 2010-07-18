@@ -24,10 +24,14 @@ static void tx(const unsigned char *buffer, int len)
 {
 	int i;
 
-	for(i=0;i<len;i++) {
+	//for(i=0;i<len;i++) {
 		while(SIE_TX_PENDING);
-		SIE_TX_DATA = buffer[i];
-	}
+		SIE_TX_DATA = buffer[0];
+		while(SIE_TX_PENDING);
+		SIE_TX_DATA = buffer[1];
+		while(SIE_TX_PENDING);
+		SIE_TX_DATA = buffer[2];
+	//}
 	//while(SIE_TX_PENDING);
 	SIE_TX_VALID = 0;
 }
@@ -61,7 +65,9 @@ static void test()
 	print_hex(b[1]);
 	print_hex(b[2]);
 	print_char('\n');
+#ifndef FOR_SIMULATION
 	for(i=0;i<100000;i++) debug_service();
+#endif
 	SIE_TX_BUSRESET = 0;
 	for(i=0;i<40;i++) debug_service();
 	tx(b, 3);
@@ -84,7 +90,7 @@ static void test()
 }
 
 enum {
-	PORT_STATE_DISCONNECTED,
+	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_LOW_SPEED,
 	PORT_STATE_FULL_SPEED
 };
@@ -94,8 +100,11 @@ static char port_b_stat;
 
 int main()
 {
+#ifdef FOR_SIMULATION
+	test();
+	while(1);
+#else
 	print_string("softusb-ohci v"VERSION"\n");
-	port_a_stat = port_b_stat = PORT_STATE_DISCONNECTED;
 	while(1) {
 		if(port_a_stat == PORT_STATE_DISCONNECTED) {
 			if(SIE_LINE_STATUS_A == 0x01) {
@@ -126,5 +135,6 @@ int main()
 		}
 		debug_service();
 	}
+#endif
 	return 0;
 }

@@ -19,7 +19,8 @@
 
 module softusb_dpram #(
 	parameter depth = 11, /* < log2 of the capacity in words */
-	parameter width = 32
+	parameter width = 32,
+	parameter initfile = ""
 ) (
 	input clk,
 	input clk2,
@@ -36,6 +37,10 @@ module softusb_dpram #(
 );
 
 reg [width-1:0] ram[0:(1 << depth)-1];
+
+// synthesis translate_on
+initial $readmemh(initfile, ram);
+// synthesis translate_off
 
 always @(posedge clk) begin
 	if(we)

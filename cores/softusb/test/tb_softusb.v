@@ -177,9 +177,6 @@ always begin
 	sys_rst = 1'b0;
 	
 	waitclock;
-	
-	wbwrite(32'h00000020, 32'h0c800b89);
-	wbwrite(32'h00000024, 32'h000004a0);
 
 	wbread(32'h00000000);
 	wbread(32'h00000020);
@@ -187,7 +184,7 @@ always begin
 	
 	csrwrite(32'h00, 32'h00);
 	
-	#1000;
+	#1000000;
 
 	wbread(32'h00000000);
 	wbread(32'h00000020);

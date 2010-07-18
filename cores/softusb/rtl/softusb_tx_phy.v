@@ -171,8 +171,10 @@ assign sft_done_e = sft_done & !sft_done_r;
 always @(posedge usb_clk)
 	if(ld_sop_d)
 		hold_reg <= 8'h80;
-	else if(ld_data)
+	else if(ld_data) begin
 		hold_reg <= utmi_data_out;
+		$display("%t USB TX: %x", $time, utmi_data_out);
+	end
 
 always @(posedge usb_clk) hold_reg_d <= hold_reg;
 
