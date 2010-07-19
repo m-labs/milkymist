@@ -321,7 +321,7 @@ always @(posedge sys_clk) begin
 			endcase
 		end
 		if(lpm_en) begin
-			R = dmem_di;
+			R = pZ[0] ? pmem_d[15:8] : pmem_d[7:0];
 			writeback = 1'b1;
 		end
 		if(update_nzv) begin
