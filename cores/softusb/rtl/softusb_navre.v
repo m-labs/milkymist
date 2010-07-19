@@ -37,7 +37,18 @@ reg [7:0] GPR[0:31];
 reg T, H, S, V, N, Z, C;
 
 /* Register operations */
+wire immediate = pmem_d[14];
+wire [4:0] Rd = {immediate | pmem_d[8], pmem_d[7:4]};
+wire [4:0] Rr = {pmem_d[9], pmem_d[3:0]};
+wire [7:0] K = {pmem_d[11:8], pmem_d[3:0]};
+wire [2:0] b = pmem_d[2:0];
+wire signed [11:0] Kl = pmem_d[11:0];
+
+wire [7:0] GPR_Rd = GPR[Rd];
+wire [7:0] GPR_Rr = GPR[Rr];
+
 reg PC_inc_en;
+reg PC_kl_en;
 wire [pmem_width-1:0] PC_inc = PC + 1;
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
@@ -45,19 +56,12 @@ always @(posedge sys_clk) begin
 	end else begin
 		if(PC_inc_en)
 			PC <= PC_inc;
+		if(PC_kl_en)
+			PC <= Kl + 1;
 	end
 end
 assign pmem_a = PC_inc;
 assign pmem_ce = PC_inc_en;
-
-wire immediate = pmem_d[14];
-wire [4:0] Rd = {immediate | pmem_d[8]}, pmem_d[7:4];
-wire [4:0] Rr = {pmem_d[9], pmem_d[3:0]};
-wire [7:0] K = {pmem_d[11:8], pmem_d[3:0]};
-wire [2:0] b = pmem_d[2:0];
-
-wire [7:0] GPR_Rd = GPR[Rd];
-wire [7:0] GPR_Rr = GPR[Rr];
 
 reg normal_en;
 
@@ -87,6 +91,7 @@ always @(posedge sys_clk) begin
 					{C, R} = GPR_Rd + GPR_Rr + (pmem_d[12] & C);
 					H = (GPR_Rd[3] & GPR_Rr[3])|(GPR_Rr[3] & ~R[3])|(~R[3] & GPR_Rd[3]);
 					V = (GPR_Rd[7] & GPR_Rr[7] & ~R[7])|(~GPR_Rd[7] & ~GPR_Rr[7] & R[7]);
+				end
 				6'b000x10, /* subtract */
 				6'b000x01: /* compare  */ begin
 					/* SUB - SBC / CP - CPC */
@@ -129,7 +134,7 @@ always @(posedge sys_clk) begin
 					V = 1'b0;
 				end
 				6'b100101: begin
-					case(Rr)
+					casex(Rr)
 						5'b00000: begin
 							/* COM */
 							R = ~GPR_Rd;
@@ -205,8 +210,8 @@ always @(posedge sys_clk) begin
 					R = K;
 					update_nzv = 1'b0;
 				end
-				/* LSL is implemented with ADD */
-				/* ROL is implemented with ADC */
+				/* LSL is replaced with ADD */
+				/* ROL is replaced with ADC */
 				6'b111110: begin
 					if(pmem_d[9]) begin
 						/* BST */
@@ -228,7 +233,7 @@ always @(posedge sys_clk) begin
 					update_nzv = 1'b0;
 				end
 				/* SEC, CLC, SEN, CLN, SEZ, CLZ, SEI, CLI, SES, CLS, SEV, CLV, SET, CLT, SEH, CLH
-				 * are implemented with BSET and BCLR */
+				 * are replaced with BSET and BCLR */
 				6'b000000: begin
 					/* NOP */
 					update_nzv = 1'b0;
@@ -250,19 +255,79 @@ end
 
 /* Multi-cycle operation sequencer */
 
+reg [2:0] state;
+reg [2:0] next_state;
+
+parameter NORMAL	= 3'd0;
+parameter STALL		= 3'd1;
+
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		state <= NORMAL;
+	else
+		state <= next_state;
+end
+
 always @(*) begin
 	next_state = state;
 	
 	PC_inc_en = 1'b0;
+	PC_kl_en = 1'b0;
 	normal_en = 1'b0;
 	
 	case(state)
 		NORMAL: begin
-			PC_inc_en = 1'b1;
-			normal_en = 1'b1;
+			casex(pmem_d[15:10])
+				6'b1100xx: begin
+					/* RJMP */
+					PC_kl_en = 1'b1;
+					next_state = STALL;
+				end
+				6'b1101xx: begin
+					/* TODO: RCALL */
+				end
+				6'b110101: begin
+					/* TODO: RET, RETI */
+				end
+				6'b000100: begin
+					/* TODO: CPSE */
+				end
+				6'b111111: begin
+					/* TODO: SBRC, SBRS */
+				end
+				6'b100110: begin
+					/* TODO: SBIC, SBIS, SBI, CBI */
+				end
+				6'b111101: begin
+					/* TODO: BRBS, BRBC */
+					if(T) begin
+						PC_kl_en = 1'b1;
+						next_state = STALL;
+					end else begin
+						PC_inc_en = 1'b1;
+						normal_en = 1'b1;
+					end
+				end
+				/* BREQ, BRNE, BRCS, BRCC, BRSH, BRLO, BRMI, BRPL, BRGE, BRLT,
+				 * BRHS, BRHC, BRTS, BRTC, BRVS, BRVC, BRIE, BRID are replaced
+				 * with BRBS/BRBC */
+				6'b10010x: begin
+					/* TODO: LD, ST, LPM */
+				end
+				6'b10110x: begin
+					/* TODO: IN */
+				end
+				6'b10111x: begin
+					/* TODO: OUT */
+				end
+				default: begin
+					PC_inc_en = 1'b1;
+					normal_en = 1'b1;
+				end
+			endcase
 		end
+		STALL: next_state = NORMAL;
 	endcase
 end
-
 
 endmodule
