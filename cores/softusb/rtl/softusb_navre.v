@@ -25,7 +25,8 @@ module softusb_navre #(
 	output [pmem_width-1:0] pmem_a,
 	input [15:0] pmem_d,
 
-	output io_we,
+	output reg io_re,
+	output reg io_we,
 	output [5:0] io_a,
 	output [7:0] io_do,
 	input [7:0] io_di
@@ -60,8 +61,8 @@ always @(posedge sys_clk) begin
 			PC <= Kl + 1;
 	end
 end
-assign pmem_a = PC_inc;
-assign pmem_ce = PC_inc_en;
+assign pmem_a = sys_rst ? 0 : PC_inc;
+assign pmem_ce = sys_rst|PC_inc_en;
 
 reg normal_en;
 
@@ -241,17 +242,30 @@ always @(posedge sys_clk) begin
 				end
 				/* SLEEP is not implemented */
 				/* WDR is not implemented */
+				6'b10110x: begin
+					/* IN (run from state WRITEBACK) */
+					R = io_di;
+					update_nzv = 1'b0;
+				end
 			endcase
 			if(update_nzv) begin
 				N = R[7];
 				S = N ^ V;
 				Z = R == 8'h00;
 			end
-			if(writeback)
+			if(writeback) begin
+				// synthesis translate_off
+				$display("REG WRITE: %d < %d", Rd, R);
+				// synthesis translate_on
 				GPR[Rd] = R;
+			end
 		end
 	end
 end
+
+/* I/O port */
+assign io_a = {pmem_d[10:9], pmem_d[3:0]};
+assign io_do = GPR_Rd;
 
 /* Multi-cycle operation sequencer */
 
@@ -260,6 +274,7 @@ reg [2:0] next_state;
 
 parameter NORMAL	= 3'd0;
 parameter STALL		= 3'd1;
+parameter WRITEBACK	= 3'd2;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -274,6 +289,9 @@ always @(*) begin
 	PC_inc_en = 1'b0;
 	PC_kl_en = 1'b0;
 	normal_en = 1'b0;
+
+	io_re = 1'b0;
+	io_we = 1'b0;
 	
 	case(state)
 		NORMAL: begin
@@ -300,13 +318,6 @@ always @(*) begin
 				end
 				6'b111101: begin
 					/* TODO: BRBS, BRBC */
-					if(T) begin
-						PC_kl_en = 1'b1;
-						next_state = STALL;
-					end else begin
-						PC_inc_en = 1'b1;
-						normal_en = 1'b1;
-					end
 				end
 				/* BREQ, BRNE, BRCS, BRCC, BRSH, BRLO, BRMI, BRPL, BRGE, BRLT,
 				 * BRHS, BRHC, BRTS, BRTC, BRVS, BRVC, BRIE, BRID are replaced
@@ -315,10 +326,14 @@ always @(*) begin
 					/* TODO: LD, ST, LPM */
 				end
 				6'b10110x: begin
-					/* TODO: IN */
+					/* IN */
+					io_re = 1'b1;
+					next_state = WRITEBACK;
 				end
 				6'b10111x: begin
-					/* TODO: OUT */
+					/* OUT */
+					io_we = 1'b1;
+					PC_inc_en = 1'b1;
 				end
 				default: begin
 					PC_inc_en = 1'b1;
@@ -327,6 +342,11 @@ always @(*) begin
 			endcase
 		end
 		STALL: next_state = NORMAL;
+		WRITEBACK: begin
+			PC_inc_en = 1'b1;
+			normal_en = 1'b1;
+			next_state = NORMAL;
+		end
 	endcase
 end
 

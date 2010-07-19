@@ -3,22 +3,16 @@ SOURCES=tb_softusb.v $(wildcard ../rtl/*.v)
 
 all: sim
 
-firmware0.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
-	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware0.rom 8192 0
+firmware.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
+	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware0.rom 1024 16
 
-firmware1.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
-	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware1.rom 8192 1
+sim: firmware.rom
+	cver $(SOURCES)
 
-firmware2.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
-	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware2.rom 8192 2
-
-firmware3.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
-	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware3.rom 8192 3
-
-sim: firmware0.rom firmware1.rom firmware2.rom firmware3.rom
-	cver +incdir+../rtl/ $(SOURCES)
+sim-navre:
+	cver ../rtl/softusb_navre.v tb_navre.v
 
 clean:
-	rm -f verilog.log firmware0.rom firmware1.rom firmware2.rom firmware3.rom
+	rm -f verilog.log firmware.rom
 
-.PHONY: clean sim
+.PHONY: clean sim sim-navre
