@@ -32,29 +32,14 @@ wire pmem_ce;
 wire [9:0] pmem_a;
 reg [15:0] pmem_d;
 
+reg [15:0] pmem[0:1023];
+
+initial $readmemh("fib.rom", pmem);
 always @(posedge sys_clk) begin
-	if(pmem_ce) begin
-		case(pmem_a)
-			/* test addition 4+38=42 */
-			10'd0: pmem_d <= 16'b1110_0000_0000_0100; /* LDI R16, 4 */
-			10'd1: pmem_d <= 16'b1110_0010_0001_0110; /* LDI R17, 38 */
-			10'd2: pmem_d <= 16'b0000_1111_0000_0001; /* ADD R16, R17 */
-			10'd3: pmem_d <= 16'b1011_1001_0000_0000; /* OUT 0, R16 */
-
-			/* call subroutine */
-			10'd4: pmem_d <= {4'b1101, 12'd15}; /* RCALL */
-
-			/* end */
-			10'd5: pmem_d <= 16'b1110_1111_0000_1110; /* LDI R16, 254 */
-			10'd6: pmem_d <= 16'b1011_1001_0000_0000; /* OUT 0, R16 */
-
-			/* subroutine */
-			10'd20: pmem_d <= 16'b1011_1001_0000_0001; /* OUT 1, R16 */
-			10'd21: pmem_d <= 16'b1001_0101_0000_1000; /* RET */
-			default: pmem_d <= 16'd0;
-		endcase
-	end
+	if(pmem_ce)
+		pmem_d <= pmem[pmem_a];
 end
+
 
 wire dmem_we;
 wire [9:0] dmem_a;

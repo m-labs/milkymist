@@ -16,6 +16,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 int main(int argc, char *argv[])
@@ -24,10 +25,10 @@ int main(int argc, char *argv[])
 	int pad;
 	FILE *fdi, *fdo;
 	unsigned char w[4];
-	int select;
+	int mode16;
 	
 	if((argc != 4) && (argc != 5)) {
-		fprintf(stderr, "Usage: bin2hex <infile> <outfile> <size> [select]\n");
+		fprintf(stderr, "Usage: bin2hex <infile> <outfile> <size> [16]\n");
 		return 1;
 	}
 	pad = atoi(argv[3]);
@@ -46,34 +47,29 @@ int main(int argc, char *argv[])
 		fclose(fdi);
 		return 1;
 	}
-	if(argc == 5)
-		select = atoi(argv[4]);
-	else
-		select = -1;
-	while(1) {
-		if(fread(w, 4, 1, fdi) <= 0) break;
-		switch(select) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-				fprintf(fdo, "%02hhx\n", w[select]);
-				break;
-			default:
-				fprintf(fdo, "%02hhx%02hhx%02hhx%02hhx\n", w[3], w[2], w[1], w[0]);
-				break;
+	mode16 = (argc == 5) && (strcmp(argv[4], "16") == 0);
+	if(mode16) {
+		while(1) {
+			if(fread(w, 2, 1, fdi) <= 0) break;
+			fprintf(fdo, "%02hhx%02hhx\n", w[1], w[0]);
+			pad--;
 		}
-		pad--;
+	} else {
+		while(1) {
+			if(fread(w, 4, 1, fdi) <= 0) break;
+			fprintf(fdo, "%02hhx%02hhx%02hhx%02hhx\n", w[3], w[2], w[1], w[0]);
+			pad--;
+		}
 	}
 	fclose(fdi);
 	if(pad<0)
 		fprintf(stderr, "Warning: Input binary is larger than specified size\n");
-	if(select == -1) {
+	if(mode16) {
 		for(i=0;i<pad;i++)
-			fprintf(fdo, "00000000\n");
+			fprintf(fdo, "0000\n");
 	} else {
 		for(i=0;i<pad;i++)
-			fprintf(fdo, "00\n");
+			fprintf(fdo, "00000000\n");
 	}
 	if(fclose(fdo) != 0) {
 		perror("Unable to close output file");

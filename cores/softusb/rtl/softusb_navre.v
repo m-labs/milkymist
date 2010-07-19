@@ -58,7 +58,7 @@ always @(posedge sys_clk) begin
 	end else begin
 		io_use_stack <= 1'b0;
 		io_sp <= io_a[0] ? SP[7:0] : SP[15:8];
-		if(io_a[5:1] == 5'b11110) begin
+		if((io_a == 6'b111101) | (io_a == 6'b111110)) begin
 			io_use_stack <= 1'b1;
 			if(io_we) begin
 				if(io_a[0])
@@ -75,8 +75,9 @@ always @(posedge sys_clk) begin
 end
 
 /* Register operations */
-wire immediate = pmem_d[14]
-	& (pmem_d[15:10] != 6'b111111); /* SBRC - SBRS */
+wire immediate = (pmem_d[14]
+	| (pmem_d[15:12] == 4'b0011))		/* CPI */
+	& (pmem_d[15:10] != 6'b111111);		/* SBRC - SBRS */
 reg lpm_en;
 wire [4:0] Rd = lpm_en ? 5'd0 : {immediate | pmem_d[8], pmem_d[7:4]};
 wire [4:0] Rr = {pmem_d[9], pmem_d[3:0]};
