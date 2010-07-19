@@ -16,14 +16,20 @@
  */
 
 module softusb_navre #(
-	parameter pmem_width = 8
+	parameter pmem_width = 9,
+	parameter dmem_width = 9
 ) (
 	input sys_clk,
 	input sys_rst,
 
-	output pmem_ce,
+	output reg pmem_ce,
 	output [pmem_width-1:0] pmem_a,
 	input [15:0] pmem_d,
+
+	output reg dmem_we,
+	output reg [dmem_width-1:0] dmem_a,
+	input [7:0] dmem_di,
+	output reg [7:0] dmem_do,
 
 	output reg io_re,
 	output reg io_we,
@@ -36,6 +42,36 @@ module softusb_navre #(
 reg [pmem_width-1:0] PC;
 reg [7:0] GPR[0:31];
 reg T, H, S, V, N, Z, C;
+
+/* Stack */
+reg io_use_stack;
+reg [7:0] io_sp;
+reg [15:0] SP;
+reg push;
+reg pop;
+always @(posedge sys_clk) begin
+	if(sys_rst) begin
+		io_use_stack <= 1'b0;
+		io_sp <= 8'd0;
+		SP <= 16'd0;
+	end else begin
+		io_use_stack <= 1'b0;
+		io_sp <= io_a[0] ? SP[7:0] : SP[15:8];
+		if(io_a[5:1] == 5'b11110) begin
+			io_use_stack <= 1'b1;
+			if(io_we) begin
+				if(io_a[0])
+					SP[7:0] <= io_do;
+				else
+					SP[15:8] <= io_do;
+			end
+		end
+		if(push)
+			SP <= SP - 16'd1;
+		if(pop)
+			SP <= SP + 16'd1;
+	end
+end
 
 /* Register operations */
 wire immediate = pmem_d[14];
@@ -51,6 +87,7 @@ wire [7:0] GPR_Rr = GPR[Rr];
 reg PC_inc_en;
 reg PC_kl_en;
 wire [pmem_width-1:0] PC_inc = PC + 1;
+wire [pmem_width-1:0] PC_kl = PC + Kl;
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		PC <= 0;
@@ -58,11 +95,10 @@ always @(posedge sys_clk) begin
 		if(PC_inc_en)
 			PC <= PC_inc;
 		if(PC_kl_en)
-			PC <= Kl + 1;
+			PC <= PC_kl;
 	end
 end
 assign pmem_a = sys_rst ? 0 : PC_inc;
-assign pmem_ce = sys_rst|PC_inc_en;
 
 reg normal_en;
 
@@ -244,7 +280,7 @@ always @(posedge sys_clk) begin
 				/* WDR is not implemented */
 				6'b10110x: begin
 					/* IN (run from state WRITEBACK) */
-					R = io_di;
+					R = io_use_stack ? io_sp : io_di;
 					update_nzv = 1'b0;
 				end
 			endcase
@@ -267,14 +303,51 @@ end
 assign io_a = {pmem_d[10:9], pmem_d[3:0]};
 assign io_do = GPR_Rd;
 
+/* Data memory */
+reg [2:0] dmem_sel;
+
+parameter DMEM_SEL_UNDEFINED	= 3'bxxx;
+parameter DMEM_SEL_X		= 3'd0;
+parameter DMEM_SEL_Y		= 3'd1;
+parameter DMEM_SEL_Z		= 3'd2;
+parameter DMEM_SEL_SP_R		= 3'd3;
+parameter DMEM_SEL_SP_PCL	= 3'd4;
+parameter DMEM_SEL_SP_PCH	= 3'd5;
+
+always @(*) begin
+	case(dmem_sel)
+		DMEM_SEL_X: dmem_a = 0; // TODO
+		DMEM_SEL_Y: dmem_a = 0; // TODO
+		DMEM_SEL_Z: dmem_a = 0; // TODO
+		DMEM_SEL_SP_R,
+		DMEM_SEL_SP_PCL,
+		DMEM_SEL_SP_PCH: dmem_a = SP;
+		default: dmem_a = {dmem_width{1'bx}};
+	endcase
+end
+
+wire [pmem_width-1:0] PC_inc_kl = PC + Kl + 1;
+always @(*) begin
+	case(dmem_sel)
+		DMEM_SEL_X,
+		DMEM_SEL_Y,
+		DMEM_SEL_Z,
+		DMEM_SEL_SP_R: dmem_do = GPR_Rd;
+		DMEM_SEL_SP_PCL: dmem_do = PC_inc_kl[7:0];
+		DMEM_SEL_SP_PCH: dmem_do = PC_inc_kl[pmem_width-1:8];
+		default: dmem_do = 8'hxx;
+	endcase
+end
+
 /* Multi-cycle operation sequencer */
 
 reg [2:0] state;
 reg [2:0] next_state;
 
 parameter NORMAL	= 3'd0;
-parameter STALL		= 3'd1;
-parameter WRITEBACK	= 3'd2;
+parameter RCALL		= 3'd1;
+parameter STALL		= 3'd2;
+parameter WRITEBACK	= 3'd3;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -285,6 +358,8 @@ end
 
 always @(*) begin
 	next_state = state;
+
+	pmem_ce = sys_rst;
 	
 	PC_inc_en = 1'b0;
 	PC_kl_en = 1'b0;
@@ -292,6 +367,12 @@ always @(*) begin
 
 	io_re = 1'b0;
 	io_we = 1'b0;
+
+	dmem_we = 1'b0;
+	dmem_sel = DMEM_SEL_UNDEFINED;
+
+	push = 1'b0;
+	pop = 1'b0;
 	
 	case(state)
 		NORMAL: begin
@@ -302,10 +383,17 @@ always @(*) begin
 					next_state = STALL;
 				end
 				6'b1101xx: begin
-					/* TODO: RCALL */
+					/* RCALL */
+					/* TODO: in what order should we push the bytes? */
+					dmem_sel = DMEM_SEL_SP_PCL;
+					dmem_we = 1'b1;
+					push = 1'b1;
+					next_state = RCALL;
 				end
 				6'b110101: begin
-					/* TODO: RET, RETI */
+					/* RET - RETI (treated as RET) */
+					/* TODO: in what order should we pop the bytes? */
+					pop = 1'b1;
 				end
 				6'b000100: begin
 					/* TODO: CPSE */
@@ -334,15 +422,28 @@ always @(*) begin
 					/* OUT */
 					io_we = 1'b1;
 					PC_inc_en = 1'b1;
+					pmem_ce = 1'b1;
 				end
 				default: begin
 					PC_inc_en = 1'b1;
 					normal_en = 1'b1;
+					pmem_ce = 1'b1;
 				end
 			endcase
 		end
-		STALL: next_state = NORMAL;
+		RCALL: begin
+			dmem_sel = DMEM_SEL_SP_PCH;
+			dmem_we = 1'b1;
+			push = 1'b1;
+			PC_kl_en = 1'b1;
+			next_state = STALL;
+		end
+		STALL: begin
+			pmem_ce = 1'b1;
+			next_state = NORMAL;
+		end
 		WRITEBACK: begin
+			pmem_ce = 1'b1;
 			PC_inc_en = 1'b1;
 			normal_en = 1'b1;
 			next_state = NORMAL;
