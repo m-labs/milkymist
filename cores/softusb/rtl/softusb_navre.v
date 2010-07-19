@@ -84,21 +84,31 @@ wire signed [11:0] Kl = pmem_d[11:0];
 wire [7:0] GPR_Rd = GPR[Rd];
 wire [7:0] GPR_Rr = GPR[Rr];
 
-reg PC_inc_en;
-reg PC_kl_en;
-wire [pmem_width-1:0] PC_inc = PC + 1;
-wire [pmem_width-1:0] PC_kl = PC + Kl;
+reg [2:0] pc_sel;
+
+parameter PC_SEL_UNDEFINED	= 3'bxxx;
+parameter PC_SEL_NOP		= 3'd0;
+parameter PC_SEL_INC		= 3'd1;
+parameter PC_SEL_KL		= 3'd2;
+parameter PC_SEL_DMEML		= 3'd3;
+parameter PC_SEL_DMEMH		= 3'd4;
+parameter PC_SEL_DEC		= 3'd5;
+
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		PC <= 0;
 	end else begin
-		if(PC_inc_en)
-			PC <= PC_inc;
-		if(PC_kl_en)
-			PC <= PC_kl;
+		case(pc_sel)
+			PC_SEL_NOP:;
+			PC_SEL_INC: PC <= PC + 1;
+			PC_SEL_KL: PC <= PC + Kl;
+			PC_SEL_DMEML: PC[7:0] <= dmem_di;
+			PC_SEL_DMEMH: PC[pmem_width-1:8] <= dmem_di;
+			PC_SEL_DEC: PC <= PC - 1;
+		endcase
 	end
 end
-assign pmem_a = sys_rst ? 0 : PC_inc;
+assign pmem_a = sys_rst ? 0 : PC + 1;
 
 reg normal_en;
 
@@ -326,15 +336,15 @@ always @(*) begin
 	endcase
 end
 
-wire [pmem_width-1:0] PC_inc_kl = PC + Kl + 1;
+wire [pmem_width-1:0] PC_inc = PC + 1;
 always @(*) begin
 	case(dmem_sel)
 		DMEM_SEL_X,
 		DMEM_SEL_Y,
 		DMEM_SEL_Z,
 		DMEM_SEL_SP_R: dmem_do = GPR_Rd;
-		DMEM_SEL_SP_PCL: dmem_do = PC_inc_kl[7:0];
-		DMEM_SEL_SP_PCH: dmem_do = PC_inc_kl[pmem_width-1:8];
+		DMEM_SEL_SP_PCL: dmem_do = PC_inc[7:0];
+		DMEM_SEL_SP_PCH: dmem_do = PC_inc[pmem_width-1:8];
 		default: dmem_do = 8'hxx;
 	endcase
 end
@@ -347,7 +357,11 @@ reg [2:0] next_state;
 parameter NORMAL	= 3'd0;
 parameter RCALL		= 3'd1;
 parameter STALL		= 3'd2;
-parameter WRITEBACK	= 3'd3;
+parameter RET1		= 3'd3;
+parameter RET2		= 3'd4;
+parameter RET3		= 3'd5;
+parameter RET4		= 3'd6;
+parameter WRITEBACK	= 3'd7;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -360,9 +374,8 @@ always @(*) begin
 	next_state = state;
 
 	pmem_ce = sys_rst;
-	
-	PC_inc_en = 1'b0;
-	PC_kl_en = 1'b0;
+
+	pc_sel = PC_SEL_NOP;
 	normal_en = 1'b0;
 
 	io_re = 1'b0;
@@ -379,7 +392,7 @@ always @(*) begin
 			casex(pmem_d[15:10])
 				6'b1100xx: begin
 					/* RJMP */
-					PC_kl_en = 1'b1;
+					pc_sel = PC_SEL_KL;
 					next_state = STALL;
 				end
 				6'b1101xx: begin
@@ -389,11 +402,6 @@ always @(*) begin
 					dmem_we = 1'b1;
 					push = 1'b1;
 					next_state = RCALL;
-				end
-				6'b110101: begin
-					/* RET - RETI (treated as RET) */
-					/* TODO: in what order should we pop the bytes? */
-					pop = 1'b1;
 				end
 				6'b000100: begin
 					/* TODO: CPSE */
@@ -410,9 +418,7 @@ always @(*) begin
 				/* BREQ, BRNE, BRCS, BRCC, BRSH, BRLO, BRMI, BRPL, BRGE, BRLT,
 				 * BRHS, BRHC, BRTS, BRTC, BRVS, BRVC, BRIE, BRID are replaced
 				 * with BRBS/BRBC */
-				6'b10010x: begin
-					/* TODO: LD, ST, LPM */
-				end
+				/* TODO: LD, ST, LPM */
 				6'b10110x: begin
 					/* IN */
 					io_re = 1'b1;
@@ -421,13 +427,20 @@ always @(*) begin
 				6'b10111x: begin
 					/* OUT */
 					io_we = 1'b1;
-					PC_inc_en = 1'b1;
+					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
 				end
 				default: begin
-					PC_inc_en = 1'b1;
-					normal_en = 1'b1;
-					pmem_ce = 1'b1;
+					if((pmem_d[15:5] == 11'b1001_0101_000) & (pmem_d[3:0] == 4'b1000)) begin
+						/* RET - RETI (treated as RET) */
+						/* TODO: in what order should we pop the bytes? */
+						pop = 1'b1;
+						next_state = RET1;
+					end else begin
+						pc_sel = PC_SEL_INC;
+						normal_en = 1'b1;
+						pmem_ce = 1'b1;
+					end
 				end
 			endcase
 		end
@@ -435,16 +448,35 @@ always @(*) begin
 			dmem_sel = DMEM_SEL_SP_PCH;
 			dmem_we = 1'b1;
 			push = 1'b1;
-			PC_kl_en = 1'b1;
+			pc_sel = PC_SEL_KL;
+			next_state = STALL;
+		end
+		RET1: begin
+			dmem_sel = DMEM_SEL_SP_PCH;
+			pop = 1'b1;
+			next_state = RET2;
+		end
+		RET2: begin
+			pc_sel = PC_SEL_DMEMH;
+			dmem_sel = DMEM_SEL_SP_PCL;
+			next_state = RET3;
+		end
+		RET3: begin
+			pc_sel = PC_SEL_DMEML;
+			next_state = RET4;
+		end
+		RET4: begin
+			pc_sel = PC_SEL_DEC;
 			next_state = STALL;
 		end
 		STALL: begin
+			pc_sel = PC_SEL_INC;
 			pmem_ce = 1'b1;
 			next_state = NORMAL;
 		end
 		WRITEBACK: begin
 			pmem_ce = 1'b1;
-			PC_inc_en = 1'b1;
+			pc_sel = PC_SEL_INC;
 			normal_en = 1'b1;
 			next_state = NORMAL;
 		end
