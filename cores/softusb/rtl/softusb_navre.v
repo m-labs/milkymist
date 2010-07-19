@@ -116,7 +116,7 @@ always @(posedge sys_clk) begin
 	end
 end
 reg pmem_selz;
-assign pmem_a = sys_rst ? 0 : (pmem_selz ? pZ : PC + 1);
+assign pmem_a = sys_rst ? 0 : (pmem_selz ? pZ[15:1] : PC + 1);
 
 reg normal_en;
 
