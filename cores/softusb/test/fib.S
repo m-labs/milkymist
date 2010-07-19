@@ -6,7 +6,7 @@ _start:
 	out 0x3e, r16
 	out 0x3d, r16
 	/* compute number */
-	ldi r16, 1
+	ldi r16, 11
 	rcall fib
 	/* output result to port 1 */
 	out 0x01, r16
@@ -24,7 +24,7 @@ fib:
 	rcall fib
 	pop r17
 	push r16
-	mov r17, r16
+	mov r16, r17
 	dec r16
 	rcall fib
 	pop r17

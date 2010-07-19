@@ -50,7 +50,7 @@ reg [7:0] dmem[0:1023];
 
 always @(posedge sys_clk) begin
 	if(dmem_we) begin
-		$display("DMEM WRITE: adr=%d dat=%d", dmem_a, dmem_do);
+		//$display("DMEM WRITE: adr=%d dat=%d", dmem_a, dmem_do);
 		dmem[dmem_a] <= dmem_do;
 	end
 	dmem_di <= dmem[dmem_a];

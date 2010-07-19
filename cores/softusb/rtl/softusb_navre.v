@@ -220,7 +220,7 @@ always @(posedge sys_clk) begin
 						end
 						5'b01010: begin
 							/* DEC */
-							R = GPR_Rd + 8'd1;
+							R = GPR_Rd - 8'd1;
 							V = R == 8'h7f;
 						end
 						5'b0011x: begin
@@ -307,8 +307,9 @@ always @(posedge sys_clk) begin
 				end
 				/* SLEEP is not implemented */
 				/* WDR is not implemented */
+				6'b100100,
 				6'b100000: begin
-					/* LD (run from state WRITEBACK) */
+					/* LD - POP (run from state WRITEBACK) */
 					R = dmem_di;
 					update_nzv = 1'b0;
 				end
@@ -330,7 +331,7 @@ always @(posedge sys_clk) begin
 		end
 		if(writeback) begin
 			// synthesis translate_off
-			$display("REG WRITE: %d < %d", Rd, R);
+			//$display("REG WRITE: %d < %d", Rd, R);
 			// synthesis translate_on
 			case(Rd)
 				5'd30: pZ[7:0] = R;
@@ -359,7 +360,7 @@ always @(*) begin
 		DMEM_SEL_Z: dmem_a = pZ;
 		DMEM_SEL_SP_R,
 		DMEM_SEL_SP_PCL,
-		DMEM_SEL_SP_PCH: dmem_a = SP;
+		DMEM_SEL_SP_PCH: dmem_a = SP + pop;
 		default: dmem_a = {dmem_width{1'bx}};
 	endcase
 end
@@ -402,9 +403,8 @@ parameter STALL		= 4'd2;
 parameter RET1		= 4'd3;
 parameter RET2		= 4'd4;
 parameter RET3		= 4'd5;
-parameter RET4		= 4'd6;
-parameter LPM		= 4'd7;
-parameter WRITEBACK	= 4'd8;
+parameter LPM		= 4'd6;
+parameter WRITEBACK	= 4'd7;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -443,7 +443,7 @@ always @(*) begin
 				end
 				6'b1101xx: begin
 					/* RCALL */
-					/* TODO: in what order should we push the bytes? */
+					/* TODO: in which order should we push the bytes? */
 					dmem_sel = DMEM_SEL_SP_PCL;
 					dmem_we = 1'b1;
 					push = 1'b1;
@@ -499,10 +499,27 @@ always @(*) begin
 					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
 				end
+				6'b100100: begin
+					if(pmem_d[9]) begin
+						/* PUSH */
+						push = 1'b1;
+						dmem_sel = DMEM_SEL_SP_R;
+						dmem_we = 1'b1;
+						pc_sel = PC_SEL_INC;
+						pmem_ce = 1'b1;
+					end else begin
+						/* POP */
+						pop = 1'b1;
+						dmem_sel = DMEM_SEL_SP_R;
+						next_state = WRITEBACK;
+					end
+				end
+				/* TODO: ADIW, SBIW, IJMP, ICALL, LDS, STS and fancy addressing modes (STD/LDD) */
 				default: begin
 					if((pmem_d[15:5] == 11'b1001_0101_000) & (pmem_d[3:0] == 4'b1000)) begin
 						/* RET - RETI (treated as RET) */
-						/* TODO: in what order should we pop the bytes? */
+						/* TODO: in which order should we pop the bytes? */
+						dmem_sel = DMEM_SEL_SP_PCH;
 						pop = 1'b1;
 						next_state = RET1;
 					end else if(pmem_d == 16'b1001_0101_1100_1000) begin
@@ -526,20 +543,16 @@ always @(*) begin
 			next_state = STALL;
 		end
 		RET1: begin
-			dmem_sel = DMEM_SEL_SP_PCH;
+			pc_sel = PC_SEL_DMEMH;
+			dmem_sel = DMEM_SEL_SP_PCL;
 			pop = 1'b1;
 			next_state = RET2;
 		end
 		RET2: begin
-			pc_sel = PC_SEL_DMEMH;
-			dmem_sel = DMEM_SEL_SP_PCL;
+			pc_sel = PC_SEL_DMEML;
 			next_state = RET3;
 		end
 		RET3: begin
-			pc_sel = PC_SEL_DMEML;
-			next_state = RET4;
-		end
-		RET4: begin
 			pc_sel = PC_SEL_DEC;
 			next_state = STALL;
 		end
