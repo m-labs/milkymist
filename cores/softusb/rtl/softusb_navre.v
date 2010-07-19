@@ -74,15 +74,18 @@ always @(posedge sys_clk) begin
 end
 
 /* Register operations */
-wire immediate = pmem_d[14];
+wire immediate = pmem_d[14]
+	& (pmem_d[15:10] != 6'b111111); /* SBRC - SBRS */
 wire [4:0] Rd = {immediate | pmem_d[8], pmem_d[7:4]};
 wire [4:0] Rr = {pmem_d[9], pmem_d[3:0]};
 wire [7:0] K = {pmem_d[11:8], pmem_d[3:0]};
 wire [2:0] b = pmem_d[2:0];
 wire signed [11:0] Kl = pmem_d[11:0];
+wire signed [6:0] Ks = pmem_d[9:3];
 
 wire [7:0] GPR_Rd = GPR[Rd];
 wire [7:0] GPR_Rr = GPR[Rr];
+wire GPR_Rd_b = GPR_Rd[b];
 
 reg [2:0] pc_sel;
 
@@ -90,9 +93,10 @@ parameter PC_SEL_UNDEFINED	= 3'bxxx;
 parameter PC_SEL_NOP		= 3'd0;
 parameter PC_SEL_INC		= 3'd1;
 parameter PC_SEL_KL		= 3'd2;
-parameter PC_SEL_DMEML		= 3'd3;
-parameter PC_SEL_DMEMH		= 3'd4;
-parameter PC_SEL_DEC		= 3'd5;
+parameter PC_SEL_KS		= 3'd3;
+parameter PC_SEL_DMEML		= 3'd4;
+parameter PC_SEL_DMEMH		= 3'd6;
+parameter PC_SEL_DEC		= 3'd7;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
@@ -102,6 +106,7 @@ always @(posedge sys_clk) begin
 			PC_SEL_NOP:;
 			PC_SEL_INC: PC <= PC + 1;
 			PC_SEL_KL: PC <= PC + Kl;
+			PC_SEL_KS: PC <= PC + Ks;
 			PC_SEL_DMEML: PC[7:0] <= dmem_di;
 			PC_SEL_DMEMH: PC[pmem_width-1:8] <= dmem_di;
 			PC_SEL_DEC: PC <= PC - 1;
@@ -262,7 +267,7 @@ always @(posedge sys_clk) begin
 				6'b111110: begin
 					if(pmem_d[9]) begin
 						/* BST */
-						T = GPR_Rd[b];
+						T = GPR_Rd_b;
 						writeback = 1'b0;
 					end else begin
 						/* BLD */
@@ -351,6 +356,22 @@ end
 
 /* Multi-cycle operation sequencer */
 
+wire reg_equal = GPR_Rd == GPR_Rr;
+
+reg sreg_read;
+always @(*) begin
+	case(b)
+		3'd0: sreg_read = C;
+		3'd1: sreg_read = Z;
+		3'd2: sreg_read = N;
+		3'd3: sreg_read = V;
+		3'd4: sreg_read = S;
+		3'd5: sreg_read = H;
+		3'd6: sreg_read = T;
+		3'd7: sreg_read = 1'b0;
+	endcase
+end
+
 reg [2:0] state;
 reg [2:0] next_state;
 
@@ -404,16 +425,28 @@ always @(*) begin
 					next_state = RCALL;
 				end
 				6'b000100: begin
-					/* TODO: CPSE */
+					/* CPSE */
+					pc_sel = PC_SEL_INC;
+					pmem_ce = 1'b1;
+					if(reg_equal)
+						next_state = STALL;
 				end
 				6'b111111: begin
-					/* TODO: SBRC, SBRS */
+					/* SBRC - SBRS */
+					pc_sel = PC_SEL_INC;
+					pmem_ce = 1'b1;
+					if(GPR_Rd_b == pmem_d[9])
+						next_state = STALL;
 				end
-				6'b100110: begin
-					/* TODO: SBIC, SBIS, SBI, CBI */
-				end
-				6'b111101: begin
-					/* TODO: BRBS, BRBC */
+				/* SBIC, SBIS, SBI, CBI are not implemented */
+				6'b11110x: begin
+					/* BRBS - BRBC */
+					pmem_ce = 1'b1;
+					if(sreg_read ^ pmem_d[10]) begin
+						pc_sel = PC_SEL_KS;
+						next_state = STALL;
+					end else
+						pc_sel = PC_SEL_INC;
 				end
 				/* BREQ, BRNE, BRCS, BRCC, BRSH, BRLO, BRMI, BRPL, BRGE, BRLT,
 				 * BRHS, BRHC, BRTS, BRTC, BRVS, BRVC, BRIE, BRID are replaced
