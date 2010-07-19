@@ -22,11 +22,6 @@ initial sys_clk = 1'b1;
 always #5 sys_clk = ~sys_clk;
 
 reg sys_rst;
-initial begin
-	sys_rst = 1'b1;
-	#15;
-	sys_rst = 1'b0;
-end
 
 wire pmem_ce;
 wire [9:0] pmem_a;
@@ -34,7 +29,6 @@ reg [15:0] pmem_d;
 
 reg [15:0] pmem[0:1023];
 
-initial $readmemh("fib.rom", pmem);
 always @(posedge sys_clk) begin
 	if(pmem_ce)
 		pmem_d <= pmem[pmem_a];
@@ -62,7 +56,9 @@ wire [5:0] io_a;
 wire [7:0] io_do;
 reg [7:0] io_di;
 
+reg end_of_test;
 always @(posedge sys_clk) begin
+	end_of_test <= 1'b0;
 	if(~sys_rst) begin
 		if(io_re) begin
 			$display("IO READ adr=%d", io_a);
@@ -71,7 +67,7 @@ always @(posedge sys_clk) begin
 		if(io_we) begin
 			$display("IO WRITE adr=%d dat=%d", io_a, io_do);
 			if((io_a == 0) && (io_do == 254))
-				$finish;
+				end_of_test <= 1'b1;
 		end
 	end
 end
@@ -98,5 +94,23 @@ softusb_navre #(
 	.io_do(io_do),
 	.io_di(io_di)
 );
+
+initial begin
+	$display("Test: Fibonacci (assembler)");
+	$readmemh("fib.rom", pmem);
+	sys_rst = 1'b1;
+	#15;
+	sys_rst = 1'b0;
+	@(posedge end_of_test);
+
+	$display("Test: Fibonacci (C)");
+	$readmemh("fibc.rom", pmem);
+	sys_rst = 1'b1;
+	#15;
+	sys_rst = 1'b0;
+	@(posedge end_of_test);
+
+	$finish;
+end
 
 endmodule

@@ -12,16 +12,19 @@ sim: firmware.rom
 fib.elf: fib.S
 	avr-gcc -o fib.elf -mmcu=avr2 -Os fib.S -nostdlib
 
-fib.bin: fib.elf
-	avr-objcopy -O binary fib.elf fib.bin
+fibc.elf: fibc.c fibc_crt.S
+	avr-gcc -o fibc.elf -mmcu=avr2 -Os fibc_crt.S fibc.c -nostdlib
 
-fib.rom: fib.bin
-	$(MMDIR)/tools/bin2hex fib.bin fib.rom 1024 16
+%.bin: %.elf
+	avr-objcopy -O binary $< $@
 
-sim-navre: fib.rom
+%.rom: %.bin
+	$(MMDIR)/tools/bin2hex $< $@ 1024 16
+
+sim-navre: fib.rom fibc.rom
 	cver ../rtl/softusb_navre.v tb_navre.v
 
 clean:
-	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom
+	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom
 
 .PHONY: clean sim sim-navre
