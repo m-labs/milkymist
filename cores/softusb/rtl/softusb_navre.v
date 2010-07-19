@@ -41,6 +41,7 @@ module softusb_navre #(
 /* Register file */
 reg [pmem_width-1:0] PC;
 reg [7:0] GPR[0:31];
+reg [15:0] pZ;
 reg T, H, S, V, N, Z, C;
 
 /* Stack */
@@ -89,7 +90,6 @@ wire GPR_Rd_b = GPR_Rd[b];
 
 reg [2:0] pc_sel;
 
-parameter PC_SEL_UNDEFINED	= 3'bxxx;
 parameter PC_SEL_NOP		= 3'd0;
 parameter PC_SEL_INC		= 3'd1;
 parameter PC_SEL_KL		= 3'd2;
@@ -117,7 +117,9 @@ assign pmem_a = sys_rst ? 0 : PC + 1;
 
 reg normal_en;
 
+// synthesis translate_off
 integer i_rst_regf;
+// synthesis translate_on
 reg [7:0] R;
 reg writeback;
 reg update_nzv;
@@ -126,8 +128,15 @@ always @(posedge sys_clk) begin
 	writeback = 1'b1;
 	update_nzv = 1'b1;
 	if(sys_rst) begin
-		for(i_rst_regf=0;i_rst_regf<32;i_rst_regf=i_rst_regf+1)
+		/*
+		 * Not resetting the register file enables the use of more efficient
+		 * distributed block RAM.
+		 */
+		// synthesis translate_off
+		for(i_rst_regf=0;i_rst_regf<31;i_rst_regf=i_rst_regf+1)
 			GPR[i_rst_regf] = 8'd0;
+		pZ = 16'd0;
+		// synthesis translate_on
 		T = 1'b0;
 		H = 1'b0;
 		S = 1'b0;
@@ -293,6 +302,11 @@ always @(posedge sys_clk) begin
 				end
 				/* SLEEP is not implemented */
 				/* WDR is not implemented */
+				6'b100000: begin
+					/* LD (run from state WRITEBACK) */
+					R = dmem_di;
+					update_nzv = 1'b0;
+				end
 				6'b10110x: begin
 					/* IN (run from state WRITEBACK) */
 					R = io_use_stack ? io_sp : io_di;
@@ -308,6 +322,10 @@ always @(posedge sys_clk) begin
 				// synthesis translate_off
 				$display("REG WRITE: %d < %d", Rd, R);
 				// synthesis translate_on
+				case(Rd)
+					5'd30: pZ[7:0] = R;
+					5'd31: pZ[15:8] = R;
+				endcase
 				GPR[Rd] = R;
 			end
 		end
@@ -319,21 +337,17 @@ assign io_a = {pmem_d[10:9], pmem_d[3:0]};
 assign io_do = GPR_Rd;
 
 /* Data memory */
-reg [2:0] dmem_sel;
+reg [1:0] dmem_sel;
 
-parameter DMEM_SEL_UNDEFINED	= 3'bxxx;
-parameter DMEM_SEL_X		= 3'd0;
-parameter DMEM_SEL_Y		= 3'd1;
-parameter DMEM_SEL_Z		= 3'd2;
-parameter DMEM_SEL_SP_R		= 3'd3;
-parameter DMEM_SEL_SP_PCL	= 3'd4;
-parameter DMEM_SEL_SP_PCH	= 3'd5;
+parameter DMEM_SEL_UNDEFINED	= 2'bxx;
+parameter DMEM_SEL_Z		= 2'd0;
+parameter DMEM_SEL_SP_R		= 2'd1;
+parameter DMEM_SEL_SP_PCL	= 2'd2;
+parameter DMEM_SEL_SP_PCH	= 2'd3;
 
 always @(*) begin
 	case(dmem_sel)
-		DMEM_SEL_X: dmem_a = 0; // TODO
-		DMEM_SEL_Y: dmem_a = 0; // TODO
-		DMEM_SEL_Z: dmem_a = 0; // TODO
+		DMEM_SEL_Z: dmem_a = pZ;
 		DMEM_SEL_SP_R,
 		DMEM_SEL_SP_PCL,
 		DMEM_SEL_SP_PCH: dmem_a = SP;
@@ -344,8 +358,6 @@ end
 wire [pmem_width-1:0] PC_inc = PC + 1;
 always @(*) begin
 	case(dmem_sel)
-		DMEM_SEL_X,
-		DMEM_SEL_Y,
 		DMEM_SEL_Z,
 		DMEM_SEL_SP_R: dmem_do = GPR_Rd;
 		DMEM_SEL_SP_PCL: dmem_do = PC_inc[7:0];
@@ -451,7 +463,19 @@ always @(*) begin
 				/* BREQ, BRNE, BRCS, BRCC, BRSH, BRLO, BRMI, BRPL, BRGE, BRLT,
 				 * BRHS, BRHC, BRTS, BRTC, BRVS, BRVC, BRIE, BRID are replaced
 				 * with BRBS/BRBC */
-				/* TODO: LD, ST, LPM */
+				6'b100000: begin
+					dmem_sel = DMEM_SEL_Z;
+					if(pmem_d[9]) begin
+						/* ST */
+						pc_sel = PC_SEL_INC;
+						pmem_ce = 1'b1;
+						dmem_we = 1'b1;
+					end else begin
+						/* LD */
+						next_state = WRITEBACK;
+					end
+				end
+				/* TODO: LPM */
 				6'b10110x: begin
 					/* IN */
 					io_re = 1'b1;
