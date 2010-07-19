@@ -77,7 +77,8 @@ end
 /* Register operations */
 wire immediate = pmem_d[14]
 	& (pmem_d[15:10] != 6'b111111); /* SBRC - SBRS */
-wire [4:0] Rd = {immediate | pmem_d[8], pmem_d[7:4]};
+reg lpm_en;
+wire [4:0] Rd = lpm_en ? 5'd0 : {immediate | pmem_d[8], pmem_d[7:4]};
 wire [4:0] Rr = {pmem_d[9], pmem_d[3:0]};
 wire [7:0] K = {pmem_d[11:8], pmem_d[3:0]};
 wire [2:0] b = pmem_d[2:0];
@@ -113,7 +114,8 @@ always @(posedge sys_clk) begin
 		endcase
 	end
 end
-assign pmem_a = sys_rst ? 0 : PC + 1;
+reg pmem_selz;
+assign pmem_a = sys_rst ? 0 : (pmem_selz ? pZ : PC + 1);
 
 reg normal_en;
 
@@ -125,8 +127,8 @@ reg writeback;
 reg update_nzv;
 always @(posedge sys_clk) begin
 	R = 8'hxx;
-	writeback = 1'b1;
-	update_nzv = 1'b1;
+	writeback = 1'b0;
+	update_nzv = 1'b0;
 	if(sys_rst) begin
 		/*
 		 * Not resetting the register file enables the use of more efficient
@@ -146,6 +148,8 @@ always @(posedge sys_clk) begin
 		C = 1'b0;
 	end else begin
 		if(normal_en) begin
+			writeback = 1'b1;
+			update_nzv = 1'b1;
 			casex(pmem_d[15:10])
 				6'b000x11: begin
 					/* ADD - ADC */
@@ -313,21 +317,25 @@ always @(posedge sys_clk) begin
 					update_nzv = 1'b0;
 				end
 			endcase
-			if(update_nzv) begin
+		end
+		if(lpm_en) begin
+			R = dmem_di;
+			writeback = 1'b1;
+		end
+		if(update_nzv) begin
 				N = R[7];
 				S = N ^ V;
 				Z = R == 8'h00;
-			end
-			if(writeback) begin
-				// synthesis translate_off
-				$display("REG WRITE: %d < %d", Rd, R);
-				// synthesis translate_on
-				case(Rd)
-					5'd30: pZ[7:0] = R;
-					5'd31: pZ[15:8] = R;
-				endcase
-				GPR[Rd] = R;
-			end
+		end
+		if(writeback) begin
+			// synthesis translate_off
+			$display("REG WRITE: %d < %d", Rd, R);
+			// synthesis translate_on
+			case(Rd)
+				5'd30: pZ[7:0] = R;
+				5'd31: pZ[15:8] = R;
+			endcase
+			GPR[Rd] = R;
 		end
 	end
 end
@@ -384,17 +392,18 @@ always @(*) begin
 	endcase
 end
 
-reg [2:0] state;
-reg [2:0] next_state;
+reg [3:0] state;
+reg [3:0] next_state;
 
-parameter NORMAL	= 3'd0;
-parameter RCALL		= 3'd1;
-parameter STALL		= 3'd2;
-parameter RET1		= 3'd3;
-parameter RET2		= 3'd4;
-parameter RET3		= 3'd5;
-parameter RET4		= 3'd6;
-parameter WRITEBACK	= 3'd7;
+parameter NORMAL	= 4'd0;
+parameter RCALL		= 4'd1;
+parameter STALL		= 4'd2;
+parameter RET1		= 4'd3;
+parameter RET2		= 4'd4;
+parameter RET3		= 4'd5;
+parameter RET4		= 4'd6;
+parameter LPM		= 4'd7;
+parameter WRITEBACK	= 4'd8;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -410,6 +419,7 @@ always @(*) begin
 
 	pc_sel = PC_SEL_NOP;
 	normal_en = 1'b0;
+	lpm_en = 1'b0;
 
 	io_re = 1'b0;
 	io_we = 1'b0;
@@ -419,6 +429,8 @@ always @(*) begin
 
 	push = 1'b0;
 	pop = 1'b0;
+
+	pmem_selz = 1'b0;
 	
 	case(state)
 		NORMAL: begin
@@ -475,7 +487,6 @@ always @(*) begin
 						next_state = WRITEBACK;
 					end
 				end
-				/* TODO: LPM */
 				6'b10110x: begin
 					/* IN */
 					io_re = 1'b1;
@@ -493,6 +504,11 @@ always @(*) begin
 						/* TODO: in what order should we pop the bytes? */
 						pop = 1'b1;
 						next_state = RET1;
+					end else if(pmem_d == 16'b1001_0101_1100_1000) begin
+						/* LPM */
+						pmem_selz = 1'b1;
+						pmem_ce = 1'b1;
+						next_state = LPM;
 					end else begin
 						pc_sel = PC_SEL_INC;
 						normal_en = 1'b1;
@@ -525,6 +541,12 @@ always @(*) begin
 		RET4: begin
 			pc_sel = PC_SEL_DEC;
 			next_state = STALL;
+		end
+		LPM: begin
+			lpm_en = 1'b1;
+			pc_sel = PC_SEL_INC;
+			pmem_ce = 1'b1;
+			next_state = NORMAL;
 		end
 		STALL: begin
 			pc_sel = PC_SEL_INC;
