@@ -40,7 +40,7 @@ module softusb_dpram #(
 reg [width-1:0] ram[0:(1 << depth)-1];
 
 // synthesis translate_off
-initial $readmemh(initfile, ram);
+initial if(initfile != "") $readmemh(initfile, ram);
 // synthesis translate_on
 
 always @(posedge clk) begin

@@ -153,15 +153,6 @@ begin
 end
 endtask
 
-/*
-   0:	89          	im 9
-   1:	0b          	nop
-   2:	80          	im 0
-   3:	0c          	store
-   4:	a0          	im 0x20
-   5:	04          	poppc
-*/
-
 always begin
 	/* Reset / Initialize our logic */
 	sys_rst = 1'b1;

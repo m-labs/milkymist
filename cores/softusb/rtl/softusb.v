@@ -160,8 +160,8 @@ softusb_navre #(
 	.pmem_width(pmem_width),
 	.dmem_width(dmem_width)
 ) navre (
-	.clk(sys_clk),
-	.rst(sys_rst),
+	.clk(usb_clk),
+	.rst(usb_rst),
 
 	.pmem_ce(pmem_ce),
 	.pmem_a(pmem_a),

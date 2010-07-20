@@ -37,7 +37,7 @@ static const char disconnect[] PROGMEM = "device disconnect on port ";
 
 int main()
 {
-	print_string(banner);
+	/*print_string(banner);
 	while(1) {
 		if(port_a_stat == PORT_STATE_DISCONNECTED) {
 			if(SIE_LINE_STATUS_A == 0x01) {
@@ -66,7 +66,8 @@ int main()
 			port_b_stat = PORT_STATE_DISCONNECTED;
 		}
 		debug_service();
-	}
+	}*/
 
+	while(1);
 	return 0;
 }

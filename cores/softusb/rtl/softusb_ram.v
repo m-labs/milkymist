@@ -59,7 +59,8 @@ end
 wire [31:0] wb_dat_o_prog;
 softusb_dpram #(
 	.depth(pmem_width),
-	.width(16)
+	.width(16),
+	.initfile("firmware.rom")
 ) program (
 	.clk(sys_clk),
 	.clk2(usb_clk),

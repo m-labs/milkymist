@@ -102,7 +102,7 @@ always @(posedge usb_clk) begin
 			6'h0e, 6'h0f: io_do <= 8'hxx;
 		endcase
 		if(io_re)
-			$display("USB SIE R: a=%x dat=%x", io_a, io_do);
+			#1 $display("USB SIE R: a=%x dat=%x", io_a, io_do);
 		if(io_we) begin
 			$display("USB SIE W: a=%x dat=%x", io_a, io_di);
 			case(io_a)
@@ -110,7 +110,7 @@ always @(posedge usb_clk) begin
 				6'h05: port_sel_tx <= io_di[1:0];
 				6'h06: begin
 					utmi_tx_valid <= 1'b1;
-					utmi_data_out <= io_di[1:0];
+					utmi_data_out <= io_di;
 					tx_pending <= 1'b1;
 				end
 				6'h08: utmi_tx_valid <= 1'b0;

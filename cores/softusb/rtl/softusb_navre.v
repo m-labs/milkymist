@@ -83,8 +83,8 @@ wire [4:0] Rd = lpm_en ? 5'd0 : {immediate | pmem_d[8], pmem_d[7:4]};
 wire [4:0] Rr = {pmem_d[9], pmem_d[3:0]};
 wire [7:0] K = {pmem_d[11:8], pmem_d[3:0]};
 wire [2:0] b = pmem_d[2:0];
-wire signed [11:0] Kl = pmem_d[11:0];
-wire signed [6:0] Ks = pmem_d[9:3];
+wire [11:0] Kl = pmem_d[11:0];
+wire [6:0] Ks = pmem_d[9:3];
 
 wire [7:0] GPR_Rd = GPR[Rd];
 wire [7:0] GPR_Rr = GPR[Rr];
@@ -107,8 +107,9 @@ always @(posedge clk) begin
 		case(pc_sel)
 			PC_SEL_NOP:;
 			PC_SEL_INC: PC <= PC + 1;
+			// !!! WARNING !!! replace with PC <= PC + {{pmem_width-12{Kl[11]}}, Kl}; if pmem_width>12
 			PC_SEL_KL: PC <= PC + Kl;
-			PC_SEL_KS: PC <= PC + Ks;
+			PC_SEL_KS: PC <= PC + {{pmem_width-7{Ks[6]}}, Ks};
 			PC_SEL_DMEML: PC[7:0] <= dmem_di;
 			PC_SEL_DMEMH: PC[pmem_width-1:8] <= dmem_di;
 			PC_SEL_DEC: PC <= PC - 1;

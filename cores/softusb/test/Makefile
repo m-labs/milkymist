@@ -4,7 +4,7 @@ SOURCES=tb_softusb.v $(wildcard ../rtl/*.v)
 all: sim
 
 firmware.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
-	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware0.rom 1024 16
+	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware.rom 2048 16
 
 sim: firmware.rom
 	cver $(SOURCES)
