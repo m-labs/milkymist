@@ -24,7 +24,7 @@ You will need:
  - Bourne Again Shell (bash),
  - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
- - ZPU toolchain for building the USB OHCI firmware,
+ - AVR toolchain for building the USB OHCI firmware,
  - SRecord,
  - xxd,
  - mtools,
@@ -80,8 +80,6 @@ Milkymist is a trademark of Sebastien Bourdeauducq.
 The SoC design uses:
  - the Mico32 soft-processor by Lattice Semiconductor. See the LICENSE.LATTICE file.
  - a modified version of wb_conbus by Johny Chi and Rudolf Usselmann. See LICENSE.LGPL.
- - the ZPU "Avalanche" core by Antonio J. Anton and Zylin.
- See notices at the beginning of the files.
  - the USB PHY by Rudolf Usselmann. See notices at the beginning of the files.
 
 The directory organization and build scripts were inspired by soc-lm32 by the German
