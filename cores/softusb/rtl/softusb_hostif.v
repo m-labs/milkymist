@@ -31,7 +31,8 @@ module softusb_hostif #(
 
 	output irq,
 
-	input zpu_we
+	input io_we,
+	input [5:0] io_a
 );
 
 wire csr_selected = csr_a[13:10] == csr_addr;
@@ -66,7 +67,7 @@ reg irq_flip;
 always @(posedge usb_clk) begin
 	if(usb_rst)
 		irq_flip <= 1'b0;
-	else if(zpu_we)
+	else if(io_we && (io_a == 6'h14))
 		irq_flip <= ~irq_flip;
 end
 

@@ -16,11 +16,11 @@
  */
 
 module softusb_navre #(
-	parameter pmem_width = 9,
-	parameter dmem_width = 9
+	parameter pmem_width = 11, /* < in 16-bit instructions */
+	parameter dmem_width = 13  /* < in bytes */
 ) (
-	input sys_clk,
-	input sys_rst,
+	input clk,
+	input rst,
 
 	output reg pmem_ce,
 	output [pmem_width-1:0] pmem_a,
@@ -50,8 +50,8 @@ reg [7:0] io_sp;
 reg [15:0] SP;
 reg push;
 reg pop;
-always @(posedge sys_clk) begin
-	if(sys_rst) begin
+always @(posedge clk) begin
+	if(rst) begin
 		io_use_stack <= 1'b0;
 		io_sp <= 8'd0;
 		SP <= 16'd0;
@@ -100,8 +100,8 @@ parameter PC_SEL_DMEML		= 3'd4;
 parameter PC_SEL_DMEMH		= 3'd6;
 parameter PC_SEL_DEC		= 3'd7;
 
-always @(posedge sys_clk) begin
-	if(sys_rst) begin
+always @(posedge clk) begin
+	if(rst) begin
 		PC <= 0;
 	end else begin
 		case(pc_sel)
@@ -116,7 +116,7 @@ always @(posedge sys_clk) begin
 	end
 end
 reg pmem_selz;
-assign pmem_a = sys_rst ? 0 : (pmem_selz ? pZ[15:1] : PC + 1);
+assign pmem_a = rst ? 0 : (pmem_selz ? pZ[15:1] : PC + 1);
 
 reg normal_en;
 
@@ -126,11 +126,11 @@ integer i_rst_regf;
 reg [7:0] R;
 reg writeback;
 reg update_nzv;
-always @(posedge sys_clk) begin
+always @(posedge clk) begin
 	R = 8'hxx;
 	writeback = 1'b0;
 	update_nzv = 1'b0;
-	if(sys_rst) begin
+	if(rst) begin
 		/*
 		 * Not resetting the register file enables the use of more efficient
 		 * distributed block RAM.
@@ -406,8 +406,8 @@ parameter RET3		= 4'd5;
 parameter LPM		= 4'd6;
 parameter WRITEBACK	= 4'd7;
 
-always @(posedge sys_clk) begin
-	if(sys_rst)
+always @(posedge clk) begin
+	if(rst)
 		state <= NORMAL;
 	else
 		state <= next_state;
@@ -416,7 +416,7 @@ end
 always @(*) begin
 	next_state = state;
 
-	pmem_ce = sys_rst;
+	pmem_ce = rst;
 
 	pc_sel = PC_SEL_NOP;
 	normal_en = 1'b0;

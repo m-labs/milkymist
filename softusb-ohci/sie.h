@@ -18,22 +18,22 @@
 #ifndef __SIE_H
 #define __SIE_H
 
-#define SIE_LINE_STATUS_A	*((volatile unsigned int *)0xc0000000)
-#define SIE_LINE_STATUS_B	*((volatile unsigned int *)0xc0000004)
-#define SIE_DISCON_A		*((volatile unsigned int *)0xc0000008)
-#define SIE_DISCON_B		*((volatile unsigned int *)0xc000000c)
+#define SIE_LINE_STATUS_A	0x00
+#define SIE_LINE_STATUS_B	0x01
+#define SIE_DISCON_A		0x02
+#define SIE_DISCON_B		0x03
 
-#define SIE_SEL_RX		*((volatile unsigned int *)0xc0000010)
-#define SIE_SEL_TX		*((volatile unsigned int *)0xc0000014)
+#define SIE_SEL_RX		0x04
+#define SIE_SEL_TX		0x05
 
-#define SIE_TX_DATA		*((volatile unsigned int *)0xc0000018)
-#define SIE_TX_PENDING		*((volatile unsigned int *)0xc000001c)
-#define SIE_TX_VALID		*((volatile unsigned int *)0xc0000020)
-#define SIE_TX_BUSRESET		*((volatile unsigned int *)0xc0000024)
+#define SIE_TX_DATA		0x06
+#define SIE_TX_PENDING		0x07
+#define SIE_TX_VALID		0x08
+#define SIE_TX_BUSRESET		0x09
 
-#define SIE_RX_DATA		*((volatile unsigned int *)0xc0000028)
-#define SIE_RX_PENDING		*((volatile unsigned int *)0xc000002c)
-#define SIE_RX_ACTIVE		*((volatile unsigned int *)0xc0000030)
-#define SIE_RX_ERROR		*((volatile unsigned int *)0xc0000034)
+#define SIE_RX_DATA		0x0a
+#define SIE_RX_PENDING		0x0b
+#define SIE_RX_ACTIVE		0x0c
+#define SIE_RX_ERROR		0x0d
 
 #endif /* __SIE_H */

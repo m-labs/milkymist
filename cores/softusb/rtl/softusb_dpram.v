@@ -30,6 +30,7 @@ module softusb_dpram #(
 	input [width-1:0] di,
 	output reg [width-1:0] do,
 
+	input ce2,
 	input [depth-1:0] a2,
 	input we2,
 	input [width-1:0] di2,
@@ -38,9 +39,9 @@ module softusb_dpram #(
 
 reg [width-1:0] ram[0:(1 << depth)-1];
 
-// synthesis translate_on
-initial $readmemh(initfile, ram);
 // synthesis translate_off
+initial $readmemh(initfile, ram);
+// synthesis translate_on
 
 always @(posedge clk) begin
 	if(we)
@@ -49,9 +50,11 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk2) begin
-	if(we2)
-		ram[a2] <= di2;
-	do2 <= ram[a2];
+	if(ce2) begin
+		if(we2)
+			ram[a2] <= di2;
+		do2 <= ram[a2];
+	end
 end
 
 endmodule

@@ -76,8 +76,8 @@ softusb_navre #(
 	.pmem_width(10),
 	.dmem_width(10)
 ) dut (
-	.sys_clk(sys_clk),
-	.sys_rst(sys_rst),
+	.clk(sys_clk),
+	.rst(sys_rst),
 
 	.pmem_ce(pmem_ce),
 	.pmem_a(pmem_a),

@@ -16,7 +16,10 @@
  */
 
 
-module softusb_ram(
+module softusb_ram #(
+	parameter pmem_width = 11,
+	parameter dmem_width = 13
+) (
 	input sys_clk,
 	input sys_rst,
 
@@ -32,11 +35,14 @@ module softusb_ram(
 	output reg wb_ack_o,
 	input wb_we_i,
 
-	input zpu_we,
-	input [3:0] zpu_sel,
-	input [31:0] zpu_a,
-	input [31:0] zpu_dat_i,
-	output [31:0] zpu_dat_o
+	input pmem_ce,
+	input [pmem_width-1:0] pmem_a,
+	output [15:0] pmem_d,
+
+	input dmem_we,
+	input [dmem_width-1:0] dmem_a,
+	input [7:0] dmem_di,
+	output reg [7:0] dmem_do
 );
 
 always @(posedge sys_clk) begin
@@ -50,94 +56,122 @@ always @(posedge sys_clk) begin
 	end
 end
 
-reg zpu_ack;
-always @(posedge usb_clk) begin
-	if(usb_rst)
-		zpu_ack <= 1'b0;
-	else begin
-		if(zpu_we & ~zpu_ack)
-			zpu_ack <= 1'b1;
-		else
-			zpu_ack <= 1'b0;
-	end
+wire [31:0] wb_dat_o_prog;
+softusb_dpram #(
+	.depth(pmem_width),
+	.width(16)
+) program (
+	.clk(sys_clk),
+	.clk2(usb_clk),
+
+	.a(wb_adr_i[dmem_width-1:2]),
+	.we(wb_stb_i & wb_cyc_i & ~wb_adr_i[17] & wb_we_i & ~wb_ack_o),
+	.di(wb_dat_i[15:0]),
+	.do(wb_dat_o_prog[15:0]),
+
+	.ce2(pmem_ce),
+	.a2(pmem_a),
+	.we2(1'b0),
+	.di2(16'hxxxx),
+	.do2(pmem_d)
+);
+assign wb_dat_o_prog[31:16] = 16'd0;
+
+wire [7:0] dmem_do0;
+wire [7:0] dmem_do1;
+wire [7:0] dmem_do2;
+wire [7:0] dmem_do3;
+wire [31:0] wb_dat_o_data;
+
+softusb_dpram #(
+	.depth(dmem_width-2),
+	.width(8)
+) dataram0 (
+	.clk(sys_clk),
+	.clk2(usb_clk),
+
+	.a(wb_adr_i[dmem_width-1:2]),
+	.we(wb_stb_i & wb_cyc_i & wb_adr_i[17] & wb_we_i & wb_sel_i[0] & ~wb_ack_o),
+	.di(wb_dat_i[7:0]),
+	.do(wb_dat_o_data[7:0]),
+
+	.ce2(1'b1),
+	.a2(dmem_a[dmem_width-1:2]),
+	.we2(dmem_we & (dmem_a[1:0] == 2'd3)),
+	.di2(dmem_di),
+	.do2(dmem_do0)
+);
+
+softusb_dpram #(
+	.depth(dmem_width-2),
+	.width(8)
+) dataram1 (
+	.clk(sys_clk),
+	.clk2(usb_clk),
+
+	.a(wb_adr_i[dmem_width-1:2]),
+	.we(wb_stb_i & wb_cyc_i & wb_adr_i[17] & wb_we_i & wb_sel_i[1] & ~wb_ack_o),
+	.di(wb_dat_i[15:8]),
+	.do(wb_dat_o_data[15:8]),
+
+	.ce2(1'b1),
+	.a2(dmem_a[dmem_width-1:2]),
+	.we2(dmem_we & (dmem_a[1:0] == 2'd2)),
+	.di2(dmem_di),
+	.do2(dmem_do1)
+);
+
+softusb_dpram #(
+	.depth(dmem_width-2),
+	.width(8)
+) dataram2 (
+	.clk(sys_clk),
+	.clk2(usb_clk),
+
+	.a(wb_adr_i[dmem_width-1:2]),
+	.we(wb_stb_i & wb_cyc_i & wb_adr_i[17] & wb_we_i & wb_sel_i[2] & ~wb_ack_o),
+	.di(wb_dat_i[23:16]),
+	.do(wb_dat_o_data[23:16]),
+
+	.ce2(1'b1),
+	.a2(dmem_a[dmem_width-1:2]),
+	.we2(dmem_we & (dmem_a[1:0] == 2'd1)),
+	.di2(dmem_di),
+	.do2(dmem_do2)
+);
+
+softusb_dpram #(
+	.depth(dmem_width-2),
+	.width(8)
+) dataram3 (
+	.clk(sys_clk),
+	.clk2(usb_clk),
+
+	.a(wb_adr_i[dmem_width-1:2]),
+	.we(wb_stb_i & wb_cyc_i & wb_adr_i[17] & wb_we_i & wb_sel_i[3] & ~wb_ack_o),
+	.di(wb_dat_i[31:24]),
+	.do(wb_dat_o_data[31:24]),
+
+	.ce2(1'b1),
+	.a2(dmem_a[dmem_width-1:2]),
+	.we2(dmem_we & (dmem_a[1:0] == 2'd0)),
+	.di2(dmem_di),
+	.do2(dmem_do3)
+);
+
+reg [1:0] dmem_a01;
+always @(posedge usb_clk) dmem_a01 <= dmem_a[1:0];
+always @(*) begin
+	case(dmem_a01)
+		2'd0: dmem_do = dmem_do3;
+		2'd1: dmem_do = dmem_do2;
+		2'd2: dmem_do = dmem_do1;
+		2'd3: dmem_do = dmem_do0;
+	endcase
 end
 
-parameter depth = 14; /* in bytes */
-
-softusb_dpram #(
-	.depth(depth-2),
-	.width(8),
-	.initfile("firmware0.rom")
-) ram0 (
-	.clk(sys_clk),
-	.clk2(usb_clk),
-
-	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[0] & ~wb_ack_o),
-	.di(wb_dat_i[7:0]),
-	.do(wb_dat_o[7:0]),
-
-	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[0] & ~zpu_ack),
-	.di2(zpu_dat_i[7:0]),
-	.do2(zpu_dat_o[7:0])
-);
-
-softusb_dpram #(
-	.depth(depth-2),
-	.width(8),
-	.initfile("firmware1.rom")
-) ram1 (
-	.clk(sys_clk),
-	.clk2(usb_clk),
-
-	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[1] & ~wb_ack_o),
-	.di(wb_dat_i[15:8]),
-	.do(wb_dat_o[15:8]),
-
-	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[1] & ~zpu_ack),
-	.di2(zpu_dat_i[15:8]),
-	.do2(zpu_dat_o[15:8])
-);
-
-softusb_dpram #(
-	.depth(depth-2),
-	.width(8),
-	.initfile("firmware2.rom")
-) ram2 (
-	.clk(sys_clk),
-	.clk2(usb_clk),
-
-	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[2] & ~wb_ack_o),
-	.di(wb_dat_i[23:16]),
-	.do(wb_dat_o[23:16]),
-
-	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[2] & ~zpu_ack),
-	.di2(zpu_dat_i[23:16]),
-	.do2(zpu_dat_o[23:16])
-);
-
-softusb_dpram #(
-	.depth(depth-2),
-	.width(8),
-	.initfile("firmware3.rom")
-) ram3 (
-	.clk(sys_clk),
-	.clk2(usb_clk),
-
-	.a(wb_adr_i[depth-1:2]),
-	.we(wb_stb_i & wb_cyc_i & wb_we_i & wb_sel_i[3] & ~wb_ack_o),
-	.di(wb_dat_i[31:24]),
-	.do(wb_dat_o[31:24]),
-
-	.a2(zpu_a[depth-1:2]),
-	.we2(zpu_we & zpu_sel[3] & ~zpu_ack),
-	.di2(zpu_dat_i[31:24]),
-	.do2(zpu_dat_o[31:24])
-);
+reg datasel;
+always @(posedge sys_clk) datasel <= wb_adr_i[17];
+assign wb_dat_o = datasel ? wb_dat_o_prog : wb_dat_o_data;
 
 endmodule
