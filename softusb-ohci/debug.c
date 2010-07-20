@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "progmem.h"
+
 #define REG_DEBUG *((volatile char *)0x3)
 
 static char debug_buffer[256];
@@ -35,18 +37,20 @@ void print_char(char c)
 	debug_produce++;
 }
 
-void print_string(const char *s)
+void print_string(const char *s) /* in program memory */
 {
-	while(*s) {
-		print_char(*s);
+	char c;
+	
+	while(c = read_pgm_byte(s)) {
+		print_char(c);
 		s++;
 	}
 }
 
-static const char hextab[] = "0123456789ABCDEF";
+static const char hextab[] PROGMEM = "0123456789ABCDEF";
 
 void print_hex(unsigned char h)
 {
-	print_char(hextab[(h & 0xf0) >> 4]);
-	print_char(hextab[h & 0x0f]);
+	print_char(read_pgm_byte(&hextab[(h & 0xf0) >> 4]));
+	print_char(read_pgm_byte(&hextab[h & 0x0f]));
 }

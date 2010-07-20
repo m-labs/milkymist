@@ -2,11 +2,11 @@ SOURCES=crt0.S main.c debug.c crc.c
 
 all: softusb-ohci.bin
 
-softusb-ohci.bin: softusb-ohci.elf
-	zpu-elf-objcopy -O binary softusb-ohci.elf softusb-ohci.bin
+%.bin: %.elf
+	avr-objcopy -O binary $< $@
 
 softusb-ohci.elf: $(SOURCES)
-	zpu-elf-gcc -o softusb-ohci.elf -nostdlib -nodefaultlibs -Wl,-T -Wl,linker.ld -Os -Wall $(CFLAGS) $(SOURCES)
+	avr-gcc -o softusb-ohci.elf -mmcu=avr2 -Os $(SOURCES) $(CFLAGS) -nostdlib -Wl,-T -Wl,navre.ld
 
 .PHONY: clean
 
