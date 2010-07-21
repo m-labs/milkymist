@@ -92,7 +92,7 @@ always @(posedge usb_clk) begin
 			6'h09: io_do <= generate_reset;
 
 			6'h0a: begin
-				io_do <= {data_in, 24'd0};
+				io_do <= data_in;
 				if(io_re)
 					rx_pending <= 1'b0;
 			end

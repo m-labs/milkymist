@@ -65,7 +65,7 @@ softusb_dpram #(
 	.clk(sys_clk),
 	.clk2(usb_clk),
 
-	.a(wb_adr_i[pmem_width-1:2]),
+	.a(wb_adr_i[pmem_width+1:2]),
 	.we(wb_stb_i & wb_cyc_i & ~wb_adr_i[17] & wb_we_i & ~wb_ack_o),
 	.di(wb_dat_i[15:0]),
 	.do(wb_dat_o_prog[15:0]),

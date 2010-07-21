@@ -137,7 +137,7 @@ always @(posedge clk) begin
 		 * distributed block RAM.
 		 */
 		// synthesis translate_off
-		for(i_rst_regf=0;i_rst_regf<31;i_rst_regf=i_rst_regf+1)
+		for(i_rst_regf=0;i_rst_regf<32;i_rst_regf=i_rst_regf+1)
 			GPR[i_rst_regf] = 8'd0;
 		pZ = 16'd0;
 		// synthesis translate_on
@@ -326,9 +326,9 @@ always @(posedge clk) begin
 			writeback = 1'b1;
 		end
 		if(update_nzv) begin
-				N = R[7];
-				S = N ^ V;
-				Z = R == 8'h00;
+			N = R[7];
+			S = N ^ V;
+			Z = R == 8'h00;
 		end
 		if(writeback) begin
 			// synthesis translate_off

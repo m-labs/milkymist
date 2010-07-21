@@ -173,7 +173,9 @@ always begin
 
 	csrwrite(32'h00, 32'h00);
 	
-	#100000000;
+	#10000;
+
+	wbread(32'h00020000);
 	
 	$finish;
 end

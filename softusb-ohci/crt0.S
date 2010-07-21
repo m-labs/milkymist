@@ -9,8 +9,8 @@ _start:
 	out 0x3e, r16
 	out 0x3d, r16
 
-	/* HACK */
-
+#define HACK
+#ifdef HACK
 	ldi r16, 0x03
 	out SIE_SEL_TX, r16
 
@@ -87,11 +87,9 @@ waitrx:
 	cpi r16, 0x00
 	breq waitrx
 	in r16, SIE_RX_DATA
-	ldi r16, 0x42
 	st Z, r16
 	inc r30
 	rjmp waitrx
-
-	/* END HACK */
+#endif
 
 	rcall main
