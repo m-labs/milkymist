@@ -24,6 +24,10 @@
 
 #define SOFTUSB_CONTROL_RESET	(0x1)
 
-#define SOFTUSB_RAM_BASE	(0xa0000000)
+#define SOFTUSB_PMEM_BASE	(0xa0000000)
+#define SOFTUSB_DMEM_BASE	(0xa0020000)
+
+#define SOFTUSB_PMEM_SIZE	(1 << 12)
+#define SOFTUSB_DMEM_SIZE	(1 << 13)
 
 #endif /* __SOFTUSB_H */

@@ -154,6 +154,8 @@ end
 endtask
 
 always begin
+	$dumpfile("softusb.vcd");
+	$dumpvars(0, dut);
 	/* Reset / Initialize our logic */
 	sys_rst = 1'b1;
 	
@@ -169,17 +171,9 @@ always begin
 	
 	waitclock;
 
-	wbread(32'h00000000);
-	wbread(32'h00000020);
-	wbread(32'h00000024);
-	
 	csrwrite(32'h00, 32'h00);
 	
-	#1000000;
-
-	wbread(32'h00000000);
-	wbread(32'h00000020);
-	wbread(32'h00000024);
+	#100000000;
 	
 	$finish;
 end

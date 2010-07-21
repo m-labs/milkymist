@@ -29,23 +29,24 @@ void usb_init()
 {
 	int nwords;
 	int i;
-	unsigned int *usb_ram = (unsigned int *)SOFTUSB_RAM_BASE;
+	unsigned int *usb_dmem = (unsigned int *)SOFTUSB_DMEM_BASE;
+	unsigned int *usb_pmem = (unsigned int *)SOFTUSB_PMEM_BASE;
 
 	printf("USB: loading OHCI firmware\n");
 	CSR_SOFTUSB_CONTROL = SOFTUSB_CONTROL_RESET;
-	nwords = (sizeof(ohci_firmware)+3)/4;
+	for(i=0;i<SOFTUSB_DMEM_SIZE/4;i++)
+		usb_dmem[i] = 0;
+	for(i=0;i<SOFTUSB_PMEM_SIZE/2;i++)
+		usb_pmem[i] = 0;
+	nwords = (sizeof(ohci_firmware)+1)/2;
 	for(i=0;i<nwords;i++)
-		usb_ram[i] = ((unsigned int)(ohci_firmware[4*i]))
-			|((unsigned int)(ohci_firmware[4*i+1]) << 8)
-			|((unsigned int)(ohci_firmware[4*i+2]) << 16)
-			|((unsigned int)(ohci_firmware[4*i+3]) << 24);
+		usb_pmem[i] = ((unsigned int)(ohci_firmware[2*i]))
+			|((unsigned int)(ohci_firmware[2*i+1]) << 8);
 	printf("USB: starting host controller\n");
 	CSR_SOFTUSB_CONTROL = 0;
 
 	hc_debug_buffer_len = 0;
 }
-
-#define HCREG_DEBUG *((volatile char *)(SOFTUSB_RAM_BASE))
 
 static void flush_debug_buffer()
 {
@@ -56,8 +57,9 @@ static void flush_debug_buffer()
 
 void usb_service()
 {
+	/*
 	char c;
-	
+
 	c = HCREG_DEBUG;
 	if(c != 0x00) {
 		if(c == '\n')
@@ -70,4 +72,5 @@ void usb_service()
 		}
 		HCREG_DEBUG = 0;
 	}
+	*/
 }
