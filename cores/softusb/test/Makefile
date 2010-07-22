@@ -9,6 +9,12 @@ firmware.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
 sim: firmware.rom
 	cver $(SOURCES)
 
+isim: runsim firmware.rom
+	./runsim
+
+runsim: $(SOURCES)
+	iverilog -o runsim $(SOURCES)
+
 fib.elf: fib.S
 	avr-gcc -o fib.elf -mmcu=avr2 -Os fib.S -nostdlib
 
@@ -25,6 +31,6 @@ sim-navre: fib.rom fibc.rom
 	cver ../rtl/softusb_navre.v tb_navre.v
 
 clean:
-	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom
+	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim
 
 .PHONY: clean sim sim-navre

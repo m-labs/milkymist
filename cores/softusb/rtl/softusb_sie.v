@@ -101,8 +101,6 @@ always @(posedge usb_clk) begin
 			6'h0d: io_do <= rx_error;
 			6'h0e, 6'h0f: io_do <= 8'hxx;
 		endcase
-		if(io_re)
-			#1 $display("USB SIE R: a=%x dat=%x", io_a, io_do);
 		if(io_we) begin
 			$display("USB SIE W: a=%x dat=%x", io_a, io_di);
 			case(io_a)
@@ -129,6 +127,8 @@ always @(posedge usb_clk) begin
 			rx_error <= 1'b0;
 		if(utmi_rx_active & utmi_rx_error)
 			rx_error <= 1'b1;
+		if(io_re) // must be at the end because of the delay!
+			#1 $display("USB SIE R: a=%x dat=%x", io_a, io_do);
 	end
 end
 

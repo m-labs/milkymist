@@ -54,7 +54,7 @@ module softusb_tx_phy(
 	
 	input [7:0] utmi_data_out,
 	input utmi_tx_valid,
-	output utmi_tx_ready,
+	output reg utmi_tx_ready,
 
 	input generate_reset
 );
@@ -67,7 +67,6 @@ parameter	IDLE	= 3'd0,
 		WAIT	= 3'h5;
 
 reg [2:0] state, next_state;
-reg tx_ready_d;
 reg ld_sop_d;
 reg ld_data_d;
 reg ld_eop_d;
@@ -95,8 +94,6 @@ reg append_eop_sync2;
 reg append_eop_sync3;
 reg append_eop_sync4;
 reg txoe_r1, txoe_r2;
-
-assign utmi_tx_ready = tx_ready_d & utmi_tx_valid;
 
 always @(posedge usb_clk) ld_data <= ld_data_d;
 
@@ -295,7 +292,7 @@ always @(posedge usb_clk)
 
 always @(*) begin
 	next_state = state;
-	tx_ready_d = 1'b0;
+	utmi_tx_ready = 1'b0;
 
 	ld_sop_d = 1'b0;
 	ld_data_d = 1'b0;
@@ -307,7 +304,7 @@ always @(*) begin
 				next_state = SOP;
 			end
 		SOP: if(sft_done_e) begin
-				tx_ready_d = 1'b1;
+				utmi_tx_ready = 1'b1;
 				ld_data_d = 1'b1;
 				next_state = DATA;
 			end
@@ -317,7 +314,7 @@ always @(*) begin
 				next_state = EOP1;
 			end
 			if(data_done && sft_done_e) begin
-				tx_ready_d = 1'b1;
+				utmi_tx_ready = 1'b1;
 				ld_data_d = 1'b1;
 			end
 		end

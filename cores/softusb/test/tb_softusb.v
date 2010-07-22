@@ -45,6 +45,8 @@ always #5 sys_clk = ~sys_clk;
 initial usb_clk = 1'b0;
 always #5 usb_clk = ~usb_clk;
 
+wire usba_vp;
+wire usba_vm;
 softusb dut(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -69,9 +71,9 @@ softusb dut(
 	
 	.usba_spd(),
 	.usba_oe_n(),
-	.usba_rcv(),
-	.usba_vp(),
-	.usba_vm(),
+	.usba_rcv(usba_vp),
+	.usba_vp(usba_vp),
+	.usba_vm(usba_vm),
 
 	.usbb_spd(),
 	.usbb_oe_n(),
@@ -153,11 +155,53 @@ begin
 end
 endtask
 
+reg usb_rst;
+wire fs_ce;
+wire txdp;
+wire txdn;
+wire txoe;
+reg [7:0] utmi_data_out;
+reg utmi_tx_valid;
+softusb_tx_phy txtest(
+	.usb_clk(usb_clk),
+	.usb_rst(usb_rst),
+
+	.fs_ce(fs_ce),
+
+	.txdp(txdp),
+	.txdn(txdn),
+	.txoe(txoe),
+
+	.utmi_data_out(utmi_data_out),
+	.utmi_tx_valid(utmi_tx_valid),
+	.utmi_tx_ready(),
+
+	.generate_reset(1'b0)
+);
+assign usba_vp = txoe ? txdp : 1'bz;
+assign usba_vm = txoe ? txdn : 1'bz;
+
+reg [1:0] counter;
+initial counter <= 2'd0;
+always @(posedge usb_clk) counter <= counter + 2'd1;
+assign fs_ce = &counter;
+
+initial begin
+	usb_rst = 1'b1;
+	@(posedge usb_clk);
+	@(posedge usb_clk);
+	@(posedge usb_clk);
+	@(posedge usb_clk);
+	@(posedge usb_clk);
+	#1 usb_rst = 1'b0;
+end
+
 always begin
 	$dumpfile("softusb.vcd");
 	$dumpvars(0, dut);
 	/* Reset / Initialize our logic */
 	sys_rst = 1'b1;
+	utmi_tx_valid = 1'b0;
 	
 	wb_adr_i = 32'd0;
 	wb_dat_i = 32'd0;
@@ -173,9 +217,18 @@ always begin
 
 	csrwrite(32'h00, 32'h00);
 	
-	#10000;
+	#7000;
+
+	@(posedge usb_clk);
+	#1 utmi_tx_valid = 1'b1;
+	utmi_data_out = 8'h42;
+	#2000;
+	utmi_tx_valid = 1'b0;
+
+	#4000;
 
 	wbread(32'h00020000);
+	wbread(32'h00020004);
 	
 	$finish;
 end
