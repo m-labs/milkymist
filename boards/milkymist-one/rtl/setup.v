@@ -23,14 +23,14 @@
  */
 //`define ENABLE_MEMORYCARD
 `define ENABLE_AC97
-//`define ENABLE_PFPU
-//`define ENABLE_TMU
+`define ENABLE_PFPU
+`define ENABLE_TMU
 `define ENABLE_ETHERNET
-//`define ENABLE_FMLMETER
+`define ENABLE_FMLMETER
 //`define ENABLE_VIDEOIN
-//`define ENABLE_MIDI
+`define ENABLE_MIDI
 //`define ENABLE_DMX
-//`define ENABLE_IR
+`define ENABLE_IR
 `define ENABLE_USB
 
 /*

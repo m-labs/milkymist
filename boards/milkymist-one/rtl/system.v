@@ -1234,7 +1234,6 @@ assign videoin_sdc = 1'b0;
 // MIDI
 //---------------------------------------------------------------------------
 `ifdef ENABLE_MIDI
-wire midi_tx_n;
 uart #(
 	.csr_addr(4'hd),
 	.clk_freq(`CLOCK_FREQUENCY),

@@ -16,6 +16,8 @@
  */
 
 #include <hw/softusb.h>
+#include <hw/sysctl.h>
+#include <hw/capabilities.h>
 #include <stdio.h>
 
 static const unsigned char ohci_firmware[] = {
@@ -31,6 +33,11 @@ void usb_init()
 	int i;
 	unsigned int *usb_dmem = (unsigned int *)SOFTUSB_DMEM_BASE;
 	unsigned int *usb_pmem = (unsigned int *)SOFTUSB_PMEM_BASE;
+
+	if(!(CSR_CAPABILITIES & CAP_USB)) {
+		printf("USB: not supported, skipping initialization\n");
+		return;
+	}
 
 	printf("USB: loading OHCI firmware\n");
 	CSR_SOFTUSB_CONTROL = SOFTUSB_CONTROL_RESET;
