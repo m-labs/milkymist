@@ -28,35 +28,35 @@ module bt656cap_colorspace(
 );
 
 /* Datapath */
-wire [7:0] cb = ycc422[31:24];
-wire [7:0] y0 = ycc422[23:16];
-wire [7:0] cr = ycc422[15: 8];
-wire [7:0] y1 = ycc422[ 7: 0];
+wire signed [7:0] cb = ycc422[31:24] - 8'd128;
+wire signed [7:0] y0 = ycc422[23:16] - 8'd128;
+wire signed [7:0] cr = ycc422[15: 8] - 8'd128;
+wire signed [7:0] y1 = ycc422[ 7: 0] - 8'd128;
 
 reg mult_sela;
 reg [1:0] mult_selb;
 
-wire [7:0] mult_opa = mult_sela ? cr : cb;
-reg [8:0] mult_opb;
+wire signed [7:0] mult_opa = mult_sela ? cr : cb;
+reg signed [9:0] mult_opb;
 always @(*) begin
 	case(mult_selb)
-		2'd0: mult_opb = 9'd359; // 1.402
-		2'd1: mult_opb = 9'd454; // 1.772
-		2'd2: mult_opb = 9'd88;  // 0.344
-		2'd3: mult_opb = 9'd183; // 0.714
+		2'd0: mult_opb = 10'd359; // 1.402
+		2'd1: mult_opb = 10'd454; // 1.772
+		2'd2: mult_opb = 10'd88;  // 0.344
+		2'd3: mult_opb = 10'd183; // 0.714
 	endcase
 end
 
-reg [16:0] mult_result;
-wire [8:0] mult_result_t = mult_result[16:8];
+reg signed [17:0] mult_result;
+wire signed [9:0] mult_result_t = mult_result[17:8];
 always @(posedge vid_clk) mult_result <= mult_opa*mult_opb;
 
-reg [8:0] int_r0;
-reg [8:0] int_g0;
-reg [8:0] int_b0;
-reg [8:0] int_r1;
-reg [8:0] int_g1;
-reg [8:0] int_b1;
+reg signed [9:0] int_r0;
+reg signed [9:0] int_g0;
+reg signed [9:0] int_b0;
+reg signed [9:0] int_r1;
+reg signed [9:0] int_g1;
+reg signed [9:0] int_b1;
 
 reg load_y;
 reg add_r;
@@ -88,12 +88,12 @@ end
 /* Output generator */
 reg fsm_stb;
 reg fsm_field;
-wire [8:0] fsm_r0 = int_r0;
-wire [8:0] fsm_g0 = int_g0 - mult_result_t;
-wire [8:0] fsm_b0 = int_b0;
-wire [8:0] fsm_r1 = int_r1;
-wire [8:0] fsm_g1 = int_g1 - mult_result_t;
-wire [8:0] fsm_b1 = int_b1;
+wire signed [9:0] fsm_r0 = int_r0;
+wire signed [9:0] fsm_g0 = int_g0 - mult_result_t;
+wire signed [9:0] fsm_b0 = int_b0;
+wire signed [9:0] fsm_r1 = int_r1;
+wire signed [9:0] fsm_g1 = int_g1 - mult_result_t;
+wire signed [9:0] fsm_b1 = int_b1;
 reg [7:0] out_r0;
 reg [7:0] out_g0;
 reg [7:0] out_b0;
@@ -105,12 +105,12 @@ always @(posedge vid_clk) begin
 	if(fsm_stb) begin
 		stb_o <= 1'b1;
 		field_o <= fsm_field;
-		out_r0 <= fsm_r0[7:0] | {8{fsm_r0[8]}};
-		out_g0 <= fsm_g0[7:0] | {8{fsm_g0[8]}};
-		out_b0 <= fsm_b0[7:0] | {8{fsm_b0[8]}};
-		out_r1 <= fsm_r1[7:0] | {8{fsm_r1[8]}};
-		out_g1 <= fsm_g1[7:0] | {8{fsm_g1[8]}};
-		out_b1 <= fsm_b1[7:0] | {8{fsm_b1[8]}};
+		out_r0 <= (fsm_r0[7:0] | {8{fsm_r0[8]}}) & {8{~fsm_r0[9]}};
+		out_g0 <= (fsm_g0[7:0] | {8{fsm_g0[8]}}) & {8{~fsm_g0[9]}};
+		out_b0 <= (fsm_b0[7:0] | {8{fsm_b0[8]}}) & {8{~fsm_b0[9]}};
+		out_r1 <= (fsm_r1[7:0] | {8{fsm_r1[8]}}) & {8{~fsm_r1[9]}};
+		out_g1 <= (fsm_g1[7:0] | {8{fsm_g1[8]}}) & {8{~fsm_g1[9]}};
+		out_b1 <= (fsm_b1[7:0] | {8{fsm_b1[8]}}) & {8{~fsm_b1[9]}};
 	end
 end
 

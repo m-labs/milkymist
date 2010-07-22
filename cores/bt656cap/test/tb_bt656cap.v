@@ -51,7 +51,12 @@ initial field = 1'b0;
 initial inc = 20'd0;
 always @(posedge vid_clk) begin
 	inc <= inc + 20'd1;
-	p <= {inc[7:1], 1'b0};
+	case(inc[1:0])
+		2'd0: p <= inc % 720;
+		2'd1: p <= 8'hfe;
+		2'd2: p <= inc/720;
+		2'd3: p <= 8'hfe;
+	endcase
 	if(inc == 20'd414720) begin
 		field <= ~field;
 		p <= 8'hff;
