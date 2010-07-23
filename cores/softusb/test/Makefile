@@ -31,6 +31,6 @@ sim-navre: fib.rom fibc.rom
 	cver ../rtl/softusb_navre.v tb_navre.v
 
 clean:
-	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim
+	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim softusb.vcd
 
 .PHONY: clean sim sim-navre
