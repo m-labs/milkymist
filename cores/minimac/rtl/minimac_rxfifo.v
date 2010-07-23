@@ -51,7 +51,7 @@ wire full;
 
 asfifo #(
 	.data_width(9),
-	.address_width(6)
+	.address_width(7)
 ) fifo (
 	.data_out(fifo_out),
 	.empty(empty),

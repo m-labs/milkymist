@@ -134,6 +134,23 @@ always @(*) begin
 	endcase
 end
 
+/* Byte counter */
+reg reset_byte_counter;
+reg [6:0] byte_counter;
+
+always @(posedge sys_clk) begin
+	if(sys_rst)
+		byte_counter <= 7'd0;
+	else begin
+		if(reset_byte_counter)
+			byte_counter <= 7'd0;
+		else if(stb)
+			byte_counter <= byte_counter + 7'd1;
+	end
+end
+
+wire tx_level_reached = byte_counter[6];
+
 /* FIFO control FSM */
 
 reg [1:0] fstate;
@@ -156,18 +173,18 @@ always @(*) begin
 
 	can_tx = 1'b0;
 	purge = 1'b0;
+	reset_byte_counter = 1'b1;
 	
 	case(fstate)
 		FIDLE: begin
 			if(tx_valid)
 				next_fstate = FWAITFULL;
 		end
-		/* Wait for the FIFO to fill before starting transmission.
-		 * We assume that the FIFO is too small to hold the complete packet
-		 * to be transmitted (ethernet minimum = 72 bytes).
-		 */
+		/* Wait for the FIFO to fill to 64 bytes (< ethernet minimum of 72)
+		 * before starting transmission. */
 		FWAITFULL: begin
-			if(full)
+			reset_byte_counter = 1'b0;
+			if(tx_level_reached)
 				next_fstate = FTX;
 		end
 		FTX: begin
