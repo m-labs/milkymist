@@ -46,14 +46,16 @@ initial if(initfile != "") $readmemh(initfile, ram);
 always @(posedge clk) begin
 	if(we)
 		ram[a] <= di;
-	do <= ram[a];
+	else
+		do <= ram[a];
 end
 
 always @(posedge clk2) begin
 	if(ce2) begin
 		if(we2)
 			ram[a2] <= di2;
-		do2 <= ram[a2];
+		else
+			do2 <= ram[a2];
 	end
 end
 
