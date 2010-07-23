@@ -252,7 +252,7 @@ always @(posedge sys_clk) begin
 		tx_valid_r <= 1'b0;
 		irq_tx <= 1'b0;
 	end else begin
-		irq_rx <= slot0_state[1] | slot1_state[1] | slot2_state[1] | slot3_state[1] | fifo_full;
+		irq_rx <= slot0_state[1] | slot1_state[1] | slot2_state[1] | slot3_state[1] | rx_rst;
 		tx_valid_r <= tx_valid;
 		irq_tx <= tx_valid_r & ~tx_valid;
 	end

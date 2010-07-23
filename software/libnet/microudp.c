@@ -114,7 +114,10 @@ typedef union {
 
 static int rxlen;
 static ethernet_buffer *rxbuffer;
-static ethernet_buffer *rxbuffer_back;
+static ethernet_buffer *rxbuffer0;
+static ethernet_buffer *rxbuffer1;
+static ethernet_buffer *rxbuffer2;
+static ethernet_buffer *rxbuffer3;
 static int txlen;
 static ethernet_buffer *txbuffer;
 
@@ -346,6 +349,10 @@ static void process_frame()
 	unsigned int received_crc;
 	unsigned int computed_crc;
 
+	asm volatile( /* Invalidate Level-1 data cache */
+		"wcsr DCC, r0\n"
+		"nop\n"
+	);
 	for(i=0;i<7;i++)
 		if(rxbuffer->frame.eth_header.preamble[i] != 0x55) return;
 	if(rxbuffer->frame.eth_header.preamble[7] != 0xd5) return;
@@ -368,9 +375,11 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 
 	irq_ack(IRQ_ETHRX|IRQ_ETHTX);
 
-	rxbuffer = (ethernet_buffer *)_buffers;
-	rxbuffer_back = (ethernet_buffer *)(_buffers + sizeof(ethernet_buffer));;
-	txbuffer = (ethernet_buffer *)(_buffers + 2*sizeof(ethernet_buffer));
+	rxbuffer0 = (ethernet_buffer *)_buffers;
+	rxbuffer1 = (ethernet_buffer *)(_buffers + sizeof(ethernet_buffer));;
+	rxbuffer2 = (ethernet_buffer *)(_buffers + 2*sizeof(ethernet_buffer));;
+	rxbuffer3 = (ethernet_buffer *)(_buffers + 3*sizeof(ethernet_buffer));;
+	txbuffer = (ethernet_buffer *)(_buffers + 4*sizeof(ethernet_buffer));
 
 	for(i=0;i<6;i++)
 		my_mac[i] = macaddr[i];
@@ -381,50 +390,63 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 		cached_mac[i] = 0;
 
 	rx_callback = (udp_callback)0;
-	
-	CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer_back;
+
+	CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer0;
 	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
+	CSR_MINIMAC_ADDR1 = (unsigned int)rxbuffer1;
+	CSR_MINIMAC_STATE1 = MINIMAC_STATE_LOADED;
+	CSR_MINIMAC_ADDR2 = (unsigned int)rxbuffer2;
+	CSR_MINIMAC_STATE2 = MINIMAC_STATE_LOADED;
+	CSR_MINIMAC_ADDR3 = (unsigned int)rxbuffer3;
+	CSR_MINIMAC_STATE3 = MINIMAC_STATE_LOADED;
 	CSR_MINIMAC_SETUP = 0;
 }
 
 void microudp_service()
 {
-	ethernet_buffer *buf;
-
 	if(irq_pending() & IRQ_ETHRX) {
 		if(CSR_MINIMAC_SETUP & MINIMAC_SETUP_RXRST) {
 			printf("Minimac RX FIFO overflow!\n");
 			CSR_MINIMAC_SETUP = 0;
-			irq_ack(IRQ_ETHRX);
 		}
 		if(CSR_MINIMAC_STATE0 == MINIMAC_STATE_PENDING) {
-			asm volatile( /* Invalidate Level-1 data cache */
-				"wcsr DCC, r0\n"
-				"nop\n"
-			);
 			rxlen = CSR_MINIMAC_COUNT0;
-			/*
-			 * Ack interrupt.
-			 * We must empty the slot before so Minimac deasserts its IRQ line.
-			 */
-			CSR_MINIMAC_STATE0 = MINIMAC_STATE_EMPTY;
-			irq_ack(IRQ_ETHRX);
-			/* Switch RX buffers */
-			buf = rxbuffer;
-			rxbuffer = rxbuffer_back;
-			rxbuffer_back = buf;
-			/* Re-arm DMA engine ASAP */
-			CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer_back;
-			CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
-			/* Now we have time to do the processing */
+			rxbuffer = rxbuffer0;
 			process_frame();
+			CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer0;
+			CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
 		}
+		if(CSR_MINIMAC_STATE1 == MINIMAC_STATE_PENDING) {
+			rxlen = CSR_MINIMAC_COUNT1;
+			rxbuffer = rxbuffer1;
+			process_frame();
+			CSR_MINIMAC_ADDR1 = (unsigned int)rxbuffer1;
+			CSR_MINIMAC_STATE1 = MINIMAC_STATE_LOADED;
+		}
+		if(CSR_MINIMAC_STATE2 == MINIMAC_STATE_PENDING) {
+			rxlen = CSR_MINIMAC_COUNT2;
+			rxbuffer = rxbuffer2;
+			process_frame();
+			CSR_MINIMAC_ADDR2 = (unsigned int)rxbuffer2;
+			CSR_MINIMAC_STATE2 = MINIMAC_STATE_LOADED;
+		}
+		if(CSR_MINIMAC_STATE3 == MINIMAC_STATE_PENDING) {
+			rxlen = CSR_MINIMAC_COUNT3;
+			rxbuffer = rxbuffer3;
+			process_frame();
+			CSR_MINIMAC_ADDR3 = (unsigned int)rxbuffer3;
+			CSR_MINIMAC_STATE3 = MINIMAC_STATE_LOADED;
+		}
+		irq_ack(IRQ_ETHRX);
 	}
 }
 
 void microudp_shutdown()
 {
 	CSR_MINIMAC_STATE0 = MINIMAC_STATE_EMPTY;
+	CSR_MINIMAC_STATE1 = MINIMAC_STATE_EMPTY;
+	CSR_MINIMAC_STATE2 = MINIMAC_STATE_EMPTY;
+	CSR_MINIMAC_STATE3 = MINIMAC_STATE_EMPTY;
 	CSR_MINIMAC_TXREMAINING = 0;
 	/* This transfer should be last. It will make the CPU request the Wishbone bus,
 	 * and therefore, when it completes,

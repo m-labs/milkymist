@@ -15,7 +15,7 @@
 
 \title{Minimac - the minimalist Ethernet MAC}
 \author{S\'ebastien Bourdeauducq}
-\date{March 2010}
+\date{July 2010}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -144,7 +144,7 @@ In order to reduce costs, Minimac does not provide enough on-chip storage to hol
 This scheme obviously assumes that the system memory infrastructure can provide enough bandwidth and low levels of latency to the Minimac DMA interfaces. In case it fails to do so, FIFOs can overflow or underflow. This can happen transitionally, for example if the memory system is temporarily overloaded by transfers made by other cores in the system on chip.
 
 \begin{itemize}
-\item if the RX FIFO overflows, reception is interrupted, the slot does not go into state 2 (the whole packet is dropped), the ``RX reset'' bit is set in the setup register (clearing the FIFO), and the RX interrupt line is pulsed. To recover from this state, software must clear the ``RX reset'' bit.
+\item if the RX FIFO overflows, reception is interrupted, the slot does not go into state 2 (the whole packet is dropped), the ``RX reset'' bit is set in the setup register (clearing the FIFO), and the RX interrupt line is asserted (and kept asserted until the ``RX reset'' bit is cleared). To recover from this state, software must clear the ``RX reset'' bit.
 \item if the TX FIFO underflows, invalid data will be sent on the Ethernet medium. The software is not notified and does not need to do anything to recover from this state, except retransmit the corrupted frame (higher level network protocols will typically do that).
 \end{itemize}
 
