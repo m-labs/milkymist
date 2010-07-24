@@ -476,7 +476,8 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_videoin,
 		csr_dr_ir,
 		csr_dr_midi,
-		csr_dr_usb;
+		csr_dr_usb,
+		csr_dr_memcard;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -632,6 +633,7 @@ csrbrg csrbrg(
 		|csr_dr_ir
 		|csr_dr_midi
 		|csr_dr_usb
+		|csr_dr_memcard
 	)
 );
 
@@ -914,8 +916,23 @@ vga #(
 // Memory card
 //---------------------------------------------------------------------------
 `ifdef ENABLE_MEMORYCARD
-// TODO
+memcard #(
+	.csr_addr(4'h7)
+) memcard (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_memcard),
+
+	.mc_d(mc_d),
+	.mc_cmd(mc_cmd),
+	.mc_clk(mc_clk)
+);
 `else
+assign csr_dr_memcard = 32'd0;
 assign mc_d[3:0] = 4'bz;
 assign mc_cmd = 1'bz;
 assign mc_clk = 1'b0;
