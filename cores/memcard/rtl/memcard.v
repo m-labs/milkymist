@@ -80,6 +80,24 @@ always @(posedge sys_clk) begin
 	clkdiv_ce <= clkdiv_ce0;
 end
 
+reg mc_cmd_r0;
+reg mc_cmd_r1;
+reg mc_cmd_r2;
+always @(posedge sys_clk) begin
+	mc_cmd_r0 <= mc_cmd;
+	mc_cmd_r1 <= mc_cmd_r0;
+	mc_cmd_r2 <= mc_cmd_r1;
+end
+
+reg [3:0] mc_d_r0;
+reg [3:0] mc_d_r1;
+reg [3:0] mc_d_r2;
+always @(posedge sys_clk) begin
+	mc_d_r0 <= mc_d;
+	mc_d_r1 <= mc_d_r0;
+	mc_d_r2 <= mc_d_r1;
+end
+
 wire csr_selected = csr_a[13:10] == csr_addr;
 
 reg [2:0] cmd_bitcount;
@@ -151,12 +169,12 @@ always @(posedge sys_clk) begin
 		end
 
 		if(clkdiv_ce) begin
-			if(cmd_tx_enabled|cmd_rx_started|~mc_cmd) begin
-				cmd_data <= {cmd_data[6:0], mc_cmd};
+			if(cmd_tx_enabled|cmd_rx_started|~mc_cmd_r2) begin
+				cmd_data <= {cmd_data[6:0], mc_cmd_r2};
 				if(cmd_rx_enabled)
 					cmd_rx_started <= 1'b1;
 			end
-			if(cmd_tx_enabled|(cmd_rx_enabled & (cmd_rx_started|~mc_cmd)))
+			if(cmd_tx_enabled|(cmd_rx_enabled & (cmd_rx_started|~mc_cmd_r2)))
 				cmd_bitcount <= cmd_bitcount + 3'd1;
 			if(cmd_bitcount == 3'd7) begin
 				if(cmd_tx_enabled)
@@ -165,12 +183,12 @@ always @(posedge sys_clk) begin
 					cmd_rx_pending <= 1'b1;
 			end
 
-			if(dat_tx_enabled|dat_rx_started|(mc_d == 4'h0)) begin
-				dat_data <= {dat_data[27:0], mc_d};
+			if(dat_tx_enabled|dat_rx_started|(mc_d_r2 == 4'h0)) begin
+				dat_data <= {dat_data[27:0], mc_d_r2};
 				if(dat_rx_enabled)
 					dat_rx_started <= 1'b1;
 			end
-			if(dat_tx_enabled|(dat_rx_enabled & (dat_rx_started|(mc_d == 4'h0))))
+			if(dat_tx_enabled|(dat_rx_enabled & (dat_rx_started|(mc_d_r2 == 4'h0))))
 				dat_bitcount <= dat_bitcount + 5'd1;
 			if(dat_bitcount == 5'd31) begin
 				if(dat_tx_enabled)
