@@ -101,7 +101,7 @@ end
 wire csr_selected = csr_a[13:10] == csr_addr;
 
 reg [2:0] cmd_bitcount;
-reg [4:0] dat_bitcount;
+reg [2:0] dat_bitcount;
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		csr_do <= 32'd0;
@@ -121,7 +121,7 @@ always @(posedge sys_clk) begin
 		dat_data <= 32'd0;
 
 		cmd_bitcount <= 3'd0;
-		dat_bitcount <= 5'd0;
+		dat_bitcount <= 3'd0;
 	end else begin
 		csr_do <= 32'd0;
 
@@ -145,7 +145,7 @@ always @(posedge sys_clk) begin
 						end
 						if(csr_di[3]) begin
 							dat_rx_pending <= 1'b0;
-							dat_bitcount <= 5'd0;
+							dat_bitcount <= 3'd0;
 						end
 					end
 					3'b011: begin
@@ -162,7 +162,7 @@ always @(posedge sys_clk) begin
 					3'b101: begin
 						dat_data <= csr_di;
 						dat_tx_pending <= 1'b1;
-						dat_bitcount <= 5'd0;
+						dat_bitcount <= 3'd0;
 					end
 				endcase
 			end
@@ -183,14 +183,15 @@ always @(posedge sys_clk) begin
 					cmd_rx_pending <= 1'b1;
 			end
 
-			if(dat_tx_enabled|dat_rx_started|(mc_d_r2 == 4'h0)) begin
+			if(dat_tx_enabled|dat_rx_started)
 				dat_data <= {dat_data[27:0], mc_d_r2};
+			if(dat_tx_enabled|dat_rx_started|(mc_d_r2 == 4'h0)) begin
 				if(dat_rx_enabled)
 					dat_rx_started <= 1'b1;
 			end
-			if(dat_tx_enabled|(dat_rx_enabled & (dat_rx_started|(mc_d_r2 == 4'h0))))
-				dat_bitcount <= dat_bitcount + 5'd1;
-			if(dat_bitcount == 5'd31) begin
+			if(dat_tx_enabled|(dat_rx_enabled & dat_rx_started))
+				dat_bitcount <= dat_bitcount + 3'd1;
+			if(dat_bitcount == 3'd7) begin
 				if(dat_tx_enabled)
 					dat_tx_pending <= 1'b0;
 				if(dat_rx_enabled)
