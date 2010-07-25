@@ -24,7 +24,9 @@ enum {
 };
 
 int bd_init(int devnr);
-int bd_readblock(int block, void *buffer);
+int bd_readblock(unsigned int block, void *buffer);
 void bd_done();
+
+int bd_has_part_table(int devnr);
 
 #endif /* __BLOCKDEV_H */

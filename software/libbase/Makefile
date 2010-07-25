@@ -28,6 +28,8 @@ clean:
 atof.o: ../../software/include/base/stdlib.h
 atof.o: ../../software/include/base/ctype.h
 blockdev.o: ../../software/include/hw/flash.h
+blockdev.o: ../../software/include/hw/memcard.h
+blockdev.o: ../../software/include/hw/common.h
 blockdev.o: ../../software/include/base/string.h
 blockdev.o: ../../software/include/base/stdlib.h
 blockdev.o: ../../software/include/base/blockdev.h

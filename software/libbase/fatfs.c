@@ -121,7 +121,7 @@ static struct directory_entry fatfs_dir_sector_cache[BLOCK_SIZE/sizeof(struct di
 
 static int fatfs_data_start_sector;
 
-int fatfs_init(int devnr, int has_part_table)
+int fatfs_init(int devnr)
 {
 	struct firstsector s0;
 	struct fat16_firstsector s;
@@ -132,7 +132,7 @@ int fatfs_init(int devnr, int has_part_table)
 		return 0;
 	}
 
-	if(has_part_table) {
+	if(bd_has_part_table(devnr)) {
 		/* Read sector 0, with partition table */
 		if(!bd_readblock(0, (void *)&s0)) {
 			printf("E: Unable to read block 0\n");
@@ -177,7 +177,7 @@ int fatfs_init(int devnr, int has_part_table)
 #endif
 	
 	if(le16toh(s.bytes_per_sector) != BLOCK_SIZE) {
-		printf("E: Unexpected number of bytes per sector\n");
+		printf("E: Unexpected number of bytes per sector (%d)\n", le16toh(s.bytes_per_sector));
 		return 0;
 	}
 	fatfs_sectors_per_cluster = s.sectors_per_cluster;
@@ -200,10 +200,10 @@ int fatfs_init(int devnr, int has_part_table)
 	}
 	
 #ifdef DEBUG
-	printf("I: Cluster is %d sectors, FAT has %d entries, FAT 1 is at sector %d,\nI: root table is at sector %d (max %d), data is at sector %d\n",
+	printf("I: Cluster is %d sectors, FAT has %d entries, FAT 1 is at sector %d,\nI: root table is at sector %d (max %d), data is at sector %d, nb of fat: %d\n",
 		fatfs_sectors_per_cluster, fatfs_fat_entries, fatfs_fat_sector,
 		fatfs_root_table_sector, fatfs_max_root_entries,
-		fatfs_data_start_sector);
+		fatfs_data_start_sector, s.number_of_fat);
 #endif
 	return 1;
 }

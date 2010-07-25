@@ -158,9 +158,18 @@ static int lscb(const char *filename, const char *longname, void *param)
 	return 1;
 }
 
-static void ls()
+static int get_dev(const char *dev)
 {
-	if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
+	if(dev == NULL)
+		return BLOCKDEV_FLASH;
+	if(*dev == 'm')
+		return BLOCKDEV_MEMORY_CARD;
+	return BLOCKDEV_FLASH;
+}
+
+static void ls(const char *dev)
+{
+	if(!fatfs_init(get_dev(dev))) return;
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
@@ -176,17 +185,17 @@ static void edid()
 	dump_bytes((unsigned int *)buf, 256, 0);
 }
 
-static void render(const char *filename)
+static void render(const char *filename, const char *dev)
 {
 	char buffer[8192];
 	int size;
 
 	if(*filename == 0) {
-		printf("render <filename>\n");
+		printf("render <filename> [device]\n");
 		return;
 	}
 
-	if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
+	if(!fatfs_init(get_dev(dev))) return;
 	if(!fatfs_load(filename, buffer, sizeof(buffer), &size)) return;
 	fatfs_done();
 	buffer[size] = 0;
@@ -272,7 +281,7 @@ static void loadpic(const char *filename)
 		return;
 	}
 
-	if(!fatfs_init(BLOCKDEV_FLASH, 0)) return;
+	if(!fatfs_init(BLOCKDEV_FLASH)) return;
 	if(!fatfs_load(filename, (void *)vga_backbuffer, vga_hres*vga_vres*2, &size)) return;
 	fatfs_done();
 
@@ -674,223 +683,21 @@ static void miditx(char *note)
 	midisend(0x22);
 }
 
-#define MEMCARD_DEBUG
-
-static void memcard_start_cmd_tx()
+static void readblock(char *b)
 {
-	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_TX;
-}
-
-static void memcard_start_cmd_rx()
-{
-	CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
-	CSR_MEMCARD_START = MEMCARD_START_CMD_RX;
-	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_RX;
-}
-
-static void memcard_start_cmd_dat_rx()
-{
-	CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX|MEMCARD_PENDING_DAT_RX;
-	CSR_MEMCARD_START = MEMCARD_START_CMD_RX|MEMCARD_START_DAT_RX;
-	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_RX|MEMCARD_ENABLE_DAT_RX;
-}
-
-static void memcard_send_command(unsigned char cmd, unsigned int arg)
-{
-	unsigned char packet[6];
-	int a;
-	int i;
-	unsigned char data;
-	unsigned char crc;
-
-	packet[0] = cmd | 0x40;
-	packet[1] = ((arg >> 24) & 0xff);
-	packet[2] = ((arg >> 16) & 0xff);
-	packet[3] = ((arg >> 8) & 0xff);
-	packet[4] = (arg & 0xff);
-
-	crc = 0;
-	for(a=0;a<5;a++) {
-		data = packet[a];
-		for(i=0;i<8;i++) {
-			crc <<= 1;
-			if((data & 0x80) ^ (crc & 0x80))
-				crc ^= 0x09;
-			data <<= 1;
-		}
+	char *c;
+	unsigned int b2;
+	unsigned int buf[128];
+	if(*b == 0) {
+		printf("readblock <block>\n");
+		return;
 	}
-	crc = (crc<<1) | 1;
-	
-	packet[5] = crc;
-
-#ifdef MEMCARD_DEBUG
-	printf(">> %02x %02x %02x %02x %02x %02x\n", packet[0], packet[1], packet[2], packet[3], packet[4], packet[5]);
-#endif
-
-	for(i=0;i<6;i++) {
-		CSR_MEMCARD_CMD = packet[i];
-		while(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_TX);
+	b2 = strtoul(b, &c, 0);
+	if(*c != 0) {
+		printf("incorrect block\n");
+		return;
 	}
-}
-
-static void memcard_send_dummy()
-{
-	CSR_MEMCARD_CMD = 0xff;
-	while(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_TX);
-}
-
-static int memcard_receive_command(unsigned char *buffer)
-{
-	int i;
-	int timeout;
-
-	for(i=0;i<6;i++) {
-		timeout = 2000000;
-		while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX)) {
-			timeout--;
-			if(timeout == 0) {
-				#ifdef MEMCARD_DEBUG
-				printf("Command receive timeout\n");
-				#endif
-				return 0;
-			}
-		}
-		buffer[i] = CSR_MEMCARD_CMD;
-		CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
-	}
-
-	#ifdef MEMCARD_DEBUG
-	printf("<< %02x %02x %02x %02x %02x %02x\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5]);
-	#endif
-
-	
-	return 1;
-}
-
-static int memcard_receive_command_data(unsigned char *command, unsigned int *data)
-{
-	int i, j;
-	int timeout;
-
-	i = 0;
-	j = 0;
-	while(j < 129) {
-		timeout = 2000000;
-		while(!(CSR_MEMCARD_PENDING & (MEMCARD_PENDING_CMD_RX|MEMCARD_PENDING_DAT_RX))) {
-			timeout--;
-			if(timeout == 0) {
-				#ifdef MEMCARD_DEBUG
-				printf("Command receive timeout\n");
-				#endif
-				return 0;
-			}
-		}
-		if(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX) {
-			command[i++] = CSR_MEMCARD_CMD;
-			CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
-			if(i == 6)
-				CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_DAT_RX; /* disable command RX */
-		}
-		if(CSR_MEMCARD_PENDING & MEMCARD_PENDING_DAT_RX) {
-			data[j++] = CSR_MEMCARD_DAT;
-			CSR_MEMCARD_PENDING = MEMCARD_PENDING_DAT_RX;
-		}
-	}
-
-	#ifdef MEMCARD_DEBUG
-	printf("<< %02x %02x %02x %02x %02x %02x\n", command[0], command[1], command[2], command[3], command[4], command[5]);
-	#endif
-
-	return 1;
-}
-
-static void memcard()
-{
-	int i;
-	unsigned char b[6];
-	unsigned int rca;
-	unsigned int bd[129];
-	struct timestamp t0, t1, d;
-
-	CSR_MEMCARD_CLK2XDIV = 250;
-
-	/* CMD0 */
-	memcard_start_cmd_tx();
-	memcard_send_command(0, 0);
-
-	memcard_send_dummy();
-
-	/* CMD8 */
-	memcard_send_command(8, 0x1aa);
-	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return;
-
-	/* ACMD41 - initialize */
-	while(1) {
-		memcard_start_cmd_tx();
-		memcard_send_command(55, 0);
-		memcard_start_cmd_rx();
-		if(!memcard_receive_command(b)) return;
-		memcard_start_cmd_tx();
-		memcard_send_command(41, 0x00300000);
-		memcard_start_cmd_rx();
-		if(!memcard_receive_command(b)) return;
-		if(b[1] & 0x80) break;
-		printf("Card is busy, retrying\n");
-	}
-
-	/* CMD2 - get CID */
-	memcard_start_cmd_tx();
-	memcard_send_command(2, 0);
-	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return;
-
-	/* CMD3 - get RCA */
-	memcard_start_cmd_tx();
-	memcard_send_command(3, 0);
-	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return;
-	rca = (((unsigned int)b[1]) << 8)|((unsigned int)b[2]);
-	printf("RCA: %04x\n", rca);
-
-	/* CMD3 - get RCA. Seems we need to do it twice for some reason. */
-	memcard_start_cmd_tx();
-	memcard_send_command(3, 0);
-	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return;
-	rca = (((unsigned int)b[1]) << 8)|((unsigned int)b[2]);
-	printf("RCA: %04x\n", rca);
-
-	/* CMD7 - select card */
-	memcard_start_cmd_tx();
-	memcard_send_command(7, rca << 16);
-	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return;
-	
-	/* ACMD6 - set bus width */
-	memcard_start_cmd_tx();
-	memcard_send_command(55, rca << 16);
-	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return;
-	memcard_start_cmd_tx();
-	memcard_send_command(6, 2);
-	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return;
-
-	CSR_MEMCARD_CLK2XDIV = 2;
-
-	/* CMD17 - read block */
-	time_get(&t0);
-	memcard_start_cmd_tx();
-	memcard_send_command(17, 0);
-	memcard_start_cmd_dat_rx();
-	if(!memcard_receive_command_data(b, bd)) return;
-	time_get(&t1);
-	for(i=0;i<129;i++)
-		printf("%08x ", bd[i]);
-	printf("\n");
-	time_diff(&d, &t1, &t0);
-	printf("Transfer speed: %d KB/s\n", 500000/d.usec);
+	bd_readblock(b2, buf);
 }
 
 static char *get_token(char **str)
@@ -929,10 +736,10 @@ static void do_command(char *c)
 
 		if(strcmp(command, "mr") == 0) mr(param1, param2);
 		else if(strcmp(command, "mw") == 0) mw(param1, param2, param3);
-		else if(strcmp(command, "ls") == 0) ls();
+		else if(strcmp(command, "ls") == 0) ls(param1);
 		else if(strcmp(command, "flush") == 0) flush_bridge_cache();
 		else if(strcmp(command, "edid") == 0) edid();
-		else if(strcmp(command, "render") == 0) render(param1);
+		else if(strcmp(command, "render") == 0) render(param1, param2);
 		else if(strcmp(command, "irender") == 0) {
 			renderer_istart();
 			irender = 1;
@@ -955,7 +762,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "irtest") == 0) irtest();
 		else if(strcmp(command, "midirx") == 0) midirx();
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
-		else if(strcmp(command, "memcard") == 0) memcard();
+		else if(strcmp(command, "readblock") == 0) readblock(param1);
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}

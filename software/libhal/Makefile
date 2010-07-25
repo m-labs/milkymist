@@ -56,6 +56,8 @@ tmu.o: ../../software/include/hw/interrupts.h ../../software/include/hw/tmu.h
 tmu.o: ../../software/include/hw/common.h ../../software/include/hal/brd.h
 tmu.o: ../../software/include/hal/tmu.h
 usb.o: ../../software/include/hw/softusb.h ../../software/include/hw/common.h
+usb.o: ../../software/include/hw/sysctl.h
+usb.o: ../../software/include/hw/capabilities.h
 usb.o: ../../software/include/base/stdio.h
 usb.o: ../../software/include/base/stdlib.h softusb-ohci.h
 vga.o: ../../software/include/base/stdio.h

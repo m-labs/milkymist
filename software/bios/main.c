@@ -211,7 +211,7 @@ static int lscb(const char *filename, const char *longname, void *param)
 
 static void ls()
 {
-	fatfs_init(BLOCKDEV_FLASH, 0);
+	fatfs_init(BLOCKDEV_FLASH);
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
@@ -230,7 +230,7 @@ static void load(char *filename, char *addr)
 		printf("incorrect address\n");
 		return;
 	}
-	fatfs_init(BLOCKDEV_FLASH, 0);
+	fatfs_init(BLOCKDEV_FLASH);
 	fatfs_load(filename, (char *)addr2, 16*1024*1024, NULL);
 	fatfs_done();
 }

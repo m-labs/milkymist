@@ -16,23 +16,276 @@
  */
 
 #include <hw/flash.h>
+#include <hw/memcard.h>
 #include <string.h>
 
 #include <blockdev.h>
 
-int bd_init(int devnr)
+//#define MEMCARD_DEBUG
+
+static void memcard_start_cmd_tx()
 {
-	/* Only flash is supported for now */
-	if(devnr != BLOCKDEV_FLASH) return 0;
+	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_TX;
+}
+
+static void memcard_start_cmd_rx()
+{
+	CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
+	CSR_MEMCARD_START = MEMCARD_START_CMD_RX;
+	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_RX;
+}
+
+static void memcard_start_cmd_dat_rx()
+{
+	CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX|MEMCARD_PENDING_DAT_RX;
+	CSR_MEMCARD_START = MEMCARD_START_CMD_RX|MEMCARD_START_DAT_RX;
+	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_RX|MEMCARD_ENABLE_DAT_RX;
+}
+
+static void memcard_send_command(unsigned char cmd, unsigned int arg)
+{
+	unsigned char packet[6];
+	int a;
+	int i;
+	unsigned char data;
+	unsigned char crc;
+
+	packet[0] = cmd | 0x40;
+	packet[1] = ((arg >> 24) & 0xff);
+	packet[2] = ((arg >> 16) & 0xff);
+	packet[3] = ((arg >> 8) & 0xff);
+	packet[4] = (arg & 0xff);
+
+	crc = 0;
+	for(a=0;a<5;a++) {
+		data = packet[a];
+		for(i=0;i<8;i++) {
+			crc <<= 1;
+			if((data & 0x80) ^ (crc & 0x80))
+				crc ^= 0x09;
+			data <<= 1;
+		}
+	}
+	crc = (crc<<1) | 1;
+
+	packet[5] = crc;
+
+#ifdef MEMCARD_DEBUG
+	printf(">> %02x %02x %02x %02x %02x %02x\n", packet[0], packet[1], packet[2], packet[3], packet[4], packet[5]);
+#endif
+
+	for(i=0;i<6;i++) {
+		CSR_MEMCARD_CMD = packet[i];
+		while(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_TX);
+	}
+}
+
+static void memcard_send_dummy()
+{
+	CSR_MEMCARD_CMD = 0xff;
+	while(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_TX);
+}
+
+static int memcard_receive_command(unsigned char *buffer)
+{
+	int i;
+	int timeout;
+
+	for(i=0;i<6;i++) {
+		timeout = 2000000;
+		while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX)) {
+			timeout--;
+			if(timeout == 0) {
+				#ifdef MEMCARD_DEBUG
+				printf("Command receive timeout\n");
+				#endif
+				return 0;
+			}
+		}
+		buffer[i] = CSR_MEMCARD_CMD;
+		CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
+	}
+
+	while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX));
+
+	#ifdef MEMCARD_DEBUG
+	printf("<< %02x %02x %02x %02x %02x %02x\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5]);
+	#endif
+
 	return 1;
 }
 
-int bd_readblock(int block, void *buffer)
+static int memcard_receive_command_data(unsigned char *command, unsigned int *data)
 {
-	memcpy(buffer, (char *)(FLASH_OFFSET_USERFS + block*512), 512);
+	int i, j;
+	int timeout;
+
+	i = 0;
+	j = 0;
+	while(j < 128) {
+		timeout = 2000000;
+		while(!(CSR_MEMCARD_PENDING & (MEMCARD_PENDING_CMD_RX|MEMCARD_PENDING_DAT_RX))) {
+			timeout--;
+			if(timeout == 0) {
+				#ifdef MEMCARD_DEBUG
+				printf("Command receive timeout\n");
+				#endif
+				return 0;
+			}
+		}
+		if(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX) {
+			command[i++] = CSR_MEMCARD_CMD;
+			CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
+			if(i == 6)
+				CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_DAT_RX; /* disable command RX */
+		}
+		if(CSR_MEMCARD_PENDING & MEMCARD_PENDING_DAT_RX) {
+			data[j++] = CSR_MEMCARD_DAT;
+			CSR_MEMCARD_PENDING = MEMCARD_PENDING_DAT_RX;
+		}
+	}
+
+	/* Get CRC (ignored) */
+	for(i=0;i<2;i++) {
+		while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_DAT_RX));
+		#ifdef MEMCARD_DEBUG
+		printf("CRC: %08x\n", CSR_MEMCARD_DAT);
+		#endif MEMCARD_DEBUG
+		CSR_MEMCARD_PENDING = MEMCARD_PENDING_DAT_RX;
+	}
+
+	while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_DAT_RX));
+
+	#ifdef MEMCARD_DEBUG
+	printf("<< %02x %02x %02x %02x %02x %02x\n", command[0], command[1], command[2], command[3], command[4], command[5]);
+	#endif
+
+	//for(i=0;i<128;i++)
+	//	printf("%08x ", data[i]);
+	//printf("\n");
+
 	return 1;
+}
+
+static int memcard_init()
+{
+	int i;
+	unsigned char b[6];
+	unsigned int rca;
+
+	CSR_MEMCARD_CLK2XDIV = 250;
+
+	/* CMD0 */
+	memcard_start_cmd_tx();
+	memcard_send_command(0, 0);
+
+	memcard_send_dummy();
+
+	/* CMD8 */
+	memcard_send_command(8, 0x1aa);
+	memcard_start_cmd_rx();
+	if(!memcard_receive_command(b)) return 0;
+
+	/* ACMD41 - initialize */
+	while(1) {
+		memcard_start_cmd_tx();
+		memcard_send_command(55, 0);
+		memcard_start_cmd_rx();
+		if(!memcard_receive_command(b)) return 0;
+		memcard_start_cmd_tx();
+		memcard_send_command(41, 0x00300000);
+		memcard_start_cmd_rx();
+		if(!memcard_receive_command(b)) return 0;
+		if(b[1] & 0x80) break;
+		#ifdef MEMCARD_DEBUG
+		printf("Card is busy, retrying\n");
+		#endif
+	}
+
+	/* CMD2 - get CID */
+	memcard_start_cmd_tx();
+	memcard_send_command(2, 0);
+	memcard_start_cmd_rx();
+	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b)) return 0;
+
+	/* CMD3 - get RCA */
+	memcard_start_cmd_tx();
+	memcard_send_command(3, 0);
+	memcard_start_cmd_rx();
+	if(!memcard_receive_command(b)) return 0;
+	rca = (((unsigned int)b[1]) << 8)|((unsigned int)b[2]);
+	#ifdef MEMCARD_DEBUG
+	printf("RCA: %04x\n", rca);
+	#endif
+
+	/* CMD7 - select card */
+	memcard_start_cmd_tx();
+	memcard_send_command(7, rca << 16);
+	memcard_start_cmd_rx();
+	if(!memcard_receive_command(b)) return 0;
+
+	/* ACMD6 - set bus width */
+	memcard_start_cmd_tx();
+	memcard_send_command(55, rca << 16);
+	memcard_start_cmd_rx();
+	if(!memcard_receive_command(b)) return 0;
+	memcard_start_cmd_tx();
+	memcard_send_command(6, 2);
+	memcard_start_cmd_rx();
+	if(!memcard_receive_command(b)) return 0;
+
+	CSR_MEMCARD_CLK2XDIV = 3;
+
+	return 1;
+}
+
+static int memcard_readblock(unsigned int block, void *buffer)
+{
+	char b[6];
+
+	/* CMD17 - read block */
+	memcard_start_cmd_tx();
+	memcard_send_command(17, block*512);
+	memcard_start_cmd_dat_rx();
+	if(!memcard_receive_command_data(b, (unsigned int *)buffer)) return 0;
+	return 1;
+}
+
+static int current_devnr;
+
+int bd_init(int devnr)
+{
+	current_devnr = devnr;
+	switch(devnr) {
+		case BLOCKDEV_FLASH:
+			return 1;
+		case BLOCKDEV_MEMORY_CARD:
+			return memcard_init();
+		default:
+			return 0;
+	}
+}
+
+int bd_readblock(unsigned int block, void *buffer)
+{
+	switch(current_devnr) {
+		case BLOCKDEV_FLASH:
+			memcpy(buffer, (char *)(FLASH_OFFSET_USERFS + block*512), 512);
+			return 1;
+		case BLOCKDEV_MEMORY_CARD:
+			return memcard_readblock(block, buffer);
+		default:
+			return 0;
+	}
 }
 
 void bd_done()
 {
+}
+
+int bd_has_part_table(int devnr)
+{
+	return 0;
 }

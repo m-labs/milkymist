@@ -20,7 +20,7 @@
 
 typedef int (*fatfs_dir_callback)(const char *, const char *, void *);
 
-int fatfs_init(int devnr, int has_part_table);
+int fatfs_init(int devnr);
 int fatfs_list_files(fatfs_dir_callback cb, void *param);
 int fatfs_load(const char *filename, char *buffer, int size, int *realsize);
 void fatfs_done();
