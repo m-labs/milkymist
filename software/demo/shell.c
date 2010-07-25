@@ -35,6 +35,7 @@
 #include <hw/bt656cap.h>
 #include <hw/rc5.h>
 #include <hw/midi.h>
+#include <hw/memcard.h>
 
 #include <hal/vga.h>
 #include <hal/snd.h>
@@ -662,7 +663,7 @@ static void miditx(char *note)
 		printf("miditx <note>\n");
 		return;
 	}
-	note2 = (unsigned *)strtoul(note, &c, 0);
+	note2 = strtoul(note, &c, 0);
 	if(*c != 0) {
 		printf("incorrect note\n");
 		return;
@@ -671,6 +672,65 @@ static void miditx(char *note)
 	//midisend(0x90);
 	midisend(note2);
 	//midisend(0x22);
+}
+
+static void memcard_send_command(unsigned char cmd, unsigned int arg)
+{
+	unsigned char packet[6];
+	int a;
+	int i;
+	unsigned char data;
+	unsigned char crc;
+
+	packet[0] = cmd | 0x40;
+	packet[1] = ((arg >> 24) & 0xff);
+	packet[2] = ((arg >> 16) & 0xff);
+	packet[3] = ((arg >> 8) & 0xff);
+	packet[4] = (arg & 0xff);
+
+	crc = 0;
+	for(a=0;a<5;a++) {
+		data = packet[a];
+		for(i=0;i<8;i++) {
+			crc <<= 1;
+			if((data & 0x80) ^ (crc & 0x80))
+				crc ^= 0x09;
+			data <<= 1;
+		}
+	}
+	crc = (crc<<1) | 1;
+	
+	packet[5] = crc;
+
+	printf("sending: %02x %02x %02x %02x %02x %02x\n", packet[0], packet[1], packet[2], packet[3], packet[4], packet[5]);
+
+	for(i=0;i<6;i++) {
+		CSR_MEMCARD_CMD = packet[i];
+		while(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_TX);
+	}
+	printf("done!\n");
+}
+
+
+static void memcard()
+{
+	int i;
+
+	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_TX;
+	memcard_send_command(0, 0);
+	CSR_MEMCARD_ENABLE = 0;
+	for(i=0;i<2000000;i++) __asm__ volatile("nop");
+	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_TX;
+	memcard_send_command(8, 0x1aa);
+	
+	CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
+	CSR_MEMCARD_START = MEMCARD_START_CMD_RX;
+	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_RX;
+	for(i=0;i<6;i++) {
+		while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX));
+		printf("RX: %x\n", CSR_MEMCARD_CMD);
+		CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
+	}
 }
 
 static char *get_token(char **str)
@@ -735,6 +795,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "irtest") == 0) irtest();
 		else if(strcmp(command, "midirx") == 0) midirx();
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
+		else if(strcmp(command, "memcard") == 0) memcard();
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}

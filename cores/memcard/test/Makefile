@@ -6,6 +6,6 @@ sim: $(SOURCES)
 	cver $(SOURCES)
 
 clean:
-	rm -f verilog.log
+	rm -f verilog.log memcard.vcd
 
 .PHONY: sim

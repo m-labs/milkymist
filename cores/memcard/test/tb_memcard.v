@@ -76,9 +76,9 @@ end
 reg cmd_txen;
 reg [47:0] cmd_txreg;
 initial cmd_txreg = 48'h7f0102030405;
-always @(negedge mc_clk) begin
+always @(posedge mc_clk) begin
 	if(cmd_txen)
-		cmd_txreg <= {cmd_txreg[46:0], 1'b1};
+		#50 cmd_txreg <= {cmd_txreg[46:0], 1'b1};
 end
 assign mc_cmd = cmd_txen ? cmd_txreg[47] : 1'bz;
 
@@ -130,20 +130,23 @@ always begin
 	sys_rst = 1'b0;
 	waitclock;
 
+	$dumpvars(0, dut);
+	$dumpfile("memcard.vcd");
+
 	csrread(32'h00);
 	csrwrite(32'h04, 32'h1); /* enable TX */
 	waitnclock(256);
-	csrwrite(32'h10, 32'h7f);
+	csrwrite(32'h10, 32'h51);
 	waitnclock(256);
-	csrwrite(32'h10, 32'hff);
+	csrwrite(32'h10, 32'h00);
 	waitnclock(256);
-	csrwrite(32'h10, 32'hca);
+	csrwrite(32'h10, 32'h00);
 	waitnclock(256);
-	csrwrite(32'h10, 32'hfe);
+	csrwrite(32'h10, 32'h00);
 	waitnclock(256);
-	csrwrite(32'h10, 32'hba);
+	csrwrite(32'h10, 32'h00);
 	waitnclock(256);
-	csrwrite(32'h10, 32'hbe);
+	csrwrite(32'h10, 32'h55);
 	waitnclock(256);
 
 	csrwrite(32'h08, 32'h2); /* reset RX */

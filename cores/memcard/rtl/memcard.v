@@ -73,8 +73,12 @@ always @(posedge sys_clk) begin
 		clkdiv <= ~clkdiv;
 end
 
+reg clkdiv_ce0;
 reg clkdiv_ce;
-always @(posedge sys_clk) clkdiv_ce <= clkdiv2x_ce & clock_active & ~clkdiv;
+always @(posedge sys_clk) begin
+	clkdiv_ce0 <= clkdiv2x_ce & clock_active & ~clkdiv;
+	clkdiv_ce <= clkdiv_ce0;
+end
 
 wire csr_selected = csr_a[13:10] == csr_addr;
 
@@ -84,7 +88,7 @@ always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		csr_do <= 32'd0;
 		
-		clkdiv2x_factor <= 10'd10;
+		clkdiv2x_factor <= 11'd1023;
 		cmd_tx_enabled <= 1'b0;
 		cmd_tx_pending <= 1'b0;
 		cmd_rx_enabled <= 1'b0;
