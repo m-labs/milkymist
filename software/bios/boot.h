@@ -20,6 +20,6 @@
 
 void serialboot();
 void netboot();
-void fsboot();
+void fsboot(int devnr);
 
 #endif /* __BOOT_H */

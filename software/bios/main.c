@@ -209,14 +209,23 @@ static int lscb(const char *filename, const char *longname, void *param)
 	return 1;
 }
 
-static void ls()
+static int get_dev(const char *dev)
 {
-	fatfs_init(BLOCKDEV_FLASH);
+	if(dev == NULL)
+		return BLOCKDEV_FLASH;
+	if(*dev == 'm')
+		return BLOCKDEV_MEMORY_CARD;
+	return BLOCKDEV_FLASH;
+}
+
+static void ls(char *dev)
+{
+	if(!fatfs_init(get_dev(dev))) return;
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
 
-static void load(char *filename, char *addr)
+static void load(char *filename, char *addr, char *dev)
 {
 	char *c;
 	unsigned int *addr2;
@@ -230,7 +239,7 @@ static void load(char *filename, char *addr)
 		printf("incorrect address\n");
 		return;
 	}
-	fatfs_init(BLOCKDEV_FLASH);
+	if(!fatfs_init(get_dev(dev))) return;
 	fatfs_load(filename, (char *)addr2, 16*1024*1024, NULL);
 	fatfs_done();
 }
@@ -329,12 +338,12 @@ static void do_command(char *c)
 	else if(strcmp(token, "mc") == 0) mc(get_token(&c), get_token(&c), get_token(&c));
 	else if(strcmp(token, "crc") == 0) crc(get_token(&c), get_token(&c));
 	
-	else if(strcmp(token, "ls") == 0) ls();
-	else if(strcmp(token, "load") == 0) load(get_token(&c), get_token(&c));
+	else if(strcmp(token, "ls") == 0) ls(get_token(&c));
+	else if(strcmp(token, "load") == 0) load(get_token(&c), get_token(&c), get_token(&c));
 	
 	else if(strcmp(token, "serialboot") == 0) serialboot();
 	else if(strcmp(token, "netboot") == 0) netboot();
-	else if(strcmp(token, "fsboot") == 0) fsboot();
+	else if(strcmp(token, "fsboot") == 0) fsboot(get_dev(get_token(&c)));
 
 	else if(strcmp(token, "mdior") == 0) mdior(get_token(&c));
 	else if(strcmp(token, "mdiow") == 0) mdiow(get_token(&c), get_token(&c));
@@ -431,7 +440,8 @@ static void boot_sequence()
 	splash_display();
 	if(test_user_abort()) {
 		serialboot();
-		fsboot();
+		fsboot(BLOCKDEV_MEMORY_CARD);
+		fsboot(BLOCKDEV_FLASH);
 		netboot();
 		printf("E: No boot medium found\n");
 	}

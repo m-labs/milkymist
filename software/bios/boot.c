@@ -277,13 +277,13 @@ static int tryload(char *filename, unsigned int address)
 	return realsize;
 }
 
-void fsboot()
+void fsboot(int devnr)
 {
 	int size;
 	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
 
 	printf("I: Booting from filesystem...\n");
-	if(!fatfs_init(BLOCKDEV_FLASH)) {
+	if(!fatfs_init(devnr)) {
 		printf("E: Unable to initialize filesystem\n");
 		return;
 	}
