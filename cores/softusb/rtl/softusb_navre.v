@@ -765,7 +765,7 @@ always @(*) begin
 		end
 		STS: begin
 			pc_sel = PC_SEL_INC;
-			normal_en = 1'b1;
+			pmem_ce = 1'b1;
 			dmem_sel = DMEM_SEL_PMEM;
 			dmem_we = 1'b1;
 			next_state = NORMAL;

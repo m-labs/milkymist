@@ -1,6 +1,9 @@
 /* test for Navre core - compute Fibonacci numbers recursively */
 
 _start:
+	/* test STS instruction */
+	ldi r24, 0x42 
+	sts 0x100, r24
 	/* set stack pointer */
 	ldi r16, 0xff
 	out 0x3e, r16
