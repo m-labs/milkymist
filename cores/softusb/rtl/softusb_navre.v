@@ -416,6 +416,9 @@ always @(posedge clk) begin
 		end
 		if(writeback) begin
 			if(mode16) begin
+				// synthesis translate_off
+				//$display("REG WRITE(16): %d < %d", Rd16, R16);
+				// synthesis translate_on
 				case(Rd16)
 					2'd0: U = R16;
 					2'd1: pX = R16;
@@ -552,13 +555,13 @@ always @(*) begin
 	
 	case(state)
 		NORMAL: begin
-			casex(pmem_d[15:10])
-				6'b1100xx: begin
+			casex(pmem_d)
+				16'b1100_xxxx_xxxx_xxxx: begin
 					/* RJMP */
 					pc_sel = PC_SEL_KL;
 					next_state = STALL;
 				end
-				6'b1101xx: begin
+				16'b1101_xxxx_xxxx_xxxx: begin
 					/* RCALL */
 					/* TODO: in which order should we push the bytes? */
 					dmem_sel = DMEM_SEL_SP_PCL;
@@ -566,14 +569,14 @@ always @(*) begin
 					push = 1'b1;
 					next_state = RCALL;
 				end
-				6'b000100: begin
+				16'b0001_00xx_xxxx_xxxx: begin
 					/* CPSE */
 					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
 					if(reg_equal)
 						next_state = SKIP;
 				end
-				6'b111111: begin
+				16'b1111_11xx_xxxx_xxxx: begin
 					/* SBRC - SBRS */
 					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
@@ -581,7 +584,7 @@ always @(*) begin
 						next_state = SKIP;
 				end
 				/* SBIC, SBIS, SBI, CBI are not implemented */
-				6'b11110x: begin
+				16'b1111_0xxx_xxxx_xxxx: begin
 					/* BRBS - BRBC */
 					pmem_ce = 1'b1;
 					if(sreg_read ^ pmem_d[10]) begin
@@ -593,7 +596,7 @@ always @(*) begin
 				/* BREQ, BRNE, BRCS, BRCC, BRSH, BRLO, BRMI, BRPL, BRGE, BRLT,
 				 * BRHS, BRHC, BRTS, BRTC, BRVS, BRVC, BRIE, BRID are replaced
 				 * with BRBS/BRBC */
-				6'b100000: begin
+				16'b1000_00xx_xxxx_xxxx: begin
 					dmem_sel = DMEM_SEL_Z;
 					if(pmem_d[9]) begin
 						/* ST */
@@ -605,18 +608,18 @@ always @(*) begin
 						next_state = WRITEBACK;
 					end
 				end
-				6'b10110x: begin
+				16'b1011_0xxx_xxxx_xxxx: begin
 					/* IN */
 					io_re = 1'b1;
 					next_state = WRITEBACK;
 				end
-				6'b10111x: begin
+				16'b1011_1xxx_xxxx_xxxx: begin
 					/* OUT */
 					io_we = 1'b1;
 					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
 				end
-				6'b100100: begin
+				16'b1001_00xx_xxxx_xxxx: begin
 					if(pmem_d[3:0] == 4'hf) begin
 						if(pmem_d[9]) begin
 							/* PUSH */
@@ -642,35 +645,36 @@ always @(*) begin
 							next_state = LDS1;
 					end
 				end
-				/* TODO: fancy addressing modes (STD/LDD) */
+				16'b1001_0101_000x_1000: begin
+					/* RET - RETI (treated as RET) */
+					/* TODO: in which order should we pop the bytes? */
+					dmem_sel = DMEM_SEL_SP_PCH;
+					pop = 1'b1;
+					next_state = RET1;
+				end
+				16'b1001_0101_1100_1000: begin
+					/* LPM */
+					pmem_selz = 1'b1;
+					pmem_ce = 1'b1;
+					next_state = LPM;
+				end
+				16'b1001_0100_0000_1001: begin
+					/* IJMP */
+					pc_sel = PC_SEL_Z;
+					next_state = STALL;
+				end
+				16'b1001_0101_0000_1001: begin
+					/* ICALL */
+					/* TODO: in which order should we push the bytes? */
+					dmem_sel = DMEM_SEL_SP_PCL;
+					dmem_we = 1'b1;
+					push = 1'b1;
+					next_state = ICALL;
+				end
 				default: begin
-					if((pmem_d[15:5] == 11'b1001_0101_000) & (pmem_d[3:0] == 4'b1000)) begin
-						/* RET - RETI (treated as RET) */
-						/* TODO: in which order should we pop the bytes? */
-						dmem_sel = DMEM_SEL_SP_PCH;
-						pop = 1'b1;
-						next_state = RET1;
-					end else if(pmem_d == 16'b1001_0101_1100_1000) begin
-						/* LPM */
-						pmem_selz = 1'b1;
-						pmem_ce = 1'b1;
-						next_state = LPM;
-					end else if(pmem_d == 16'b1001_0100_0000_1001) begin
-						/* IJMP */
-						pc_sel = PC_SEL_Z;
-						next_state = STALL;
-					end else if(pmem_d == 16'b1001_0101_0000_1001) begin
-						/* ICALL */
-						/* TODO: in which order should we push the bytes? */
-						dmem_sel = DMEM_SEL_SP_PCL;
-						dmem_we = 1'b1;
-						push = 1'b1;
-						next_state = ICALL;
-					end else begin
-						pc_sel = PC_SEL_INC;
-						normal_en = 1'b1;
-						pmem_ce = 1'b1;
-					end
+					pc_sel = PC_SEL_INC;
+					normal_en = 1'b1;
+					pmem_ce = 1'b1;
 				end
 			endcase
 		end
