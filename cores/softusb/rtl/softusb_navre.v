@@ -133,6 +133,19 @@ always @(*) begin
 	endcase
 end
 
+/* Memorize values to support 16-bit instructions */
+reg regmem_ce;
+
+reg [4:0] Rd_r;
+reg [7:0] GPR_Rd_r;
+always @(posedge clk) begin
+	if(regmem_ce)
+		Rd_r <= Rd; /* < control with regmem_ce */
+	GPR_Rd_r <= GPR_Rd; /* < always loaded */
+end
+
+/* PC */
+
 reg [3:0] pc_sel;
 
 parameter PC_SEL_NOP		= 4'd0;
@@ -164,7 +177,10 @@ end
 reg pmem_selz;
 assign pmem_a = rst ? 0 : (pmem_selz ? pZ[15:1] : PC + 1);
 
+/* ALU */
+
 reg normal_en;
+reg lds_writeback;
 
 // synthesis translate_off
 integer i_rst_regf;
@@ -384,6 +400,10 @@ always @(posedge clk) begin
 					update_nsz = 1'b0;
 				end
 			endcase
+		end /* if(normal_en) */
+		if(lds_writeback) begin
+			R = dmem_di;
+			writeback = 1'b1;
 		end
 		if(lpm_en) begin
 			R = pZ[0] ? pmem_d[15:8] : pmem_d[7:0];
@@ -427,20 +447,26 @@ assign io_a = {pmem_d[10:9], pmem_d[3:0]};
 assign io_do = GPR_Rd;
 
 /* Data memory */
-reg [1:0] dmem_sel;
+reg [2:0] dmem_sel;
 
-parameter DMEM_SEL_UNDEFINED	= 2'bxx;
-parameter DMEM_SEL_Z		= 2'd0;
-parameter DMEM_SEL_SP_R		= 2'd1;
-parameter DMEM_SEL_SP_PCL	= 2'd2;
-parameter DMEM_SEL_SP_PCH	= 2'd3;
+parameter DMEM_SEL_UNDEFINED	= 3'bxxx;
+parameter DMEM_SEL_X		= 3'd0;
+parameter DMEM_SEL_Y		= 3'd1;
+parameter DMEM_SEL_Z		= 3'd2;
+parameter DMEM_SEL_SP_R		= 3'd3;
+parameter DMEM_SEL_SP_PCL	= 3'd4;
+parameter DMEM_SEL_SP_PCH	= 3'd5;
+parameter DMEM_SEL_PMEM		= 3'd6;
 
 always @(*) begin
 	case(dmem_sel)
+		DMEM_SEL_X: dmem_a = pX;
+		DMEM_SEL_Y: dmem_a = pY;
 		DMEM_SEL_Z: dmem_a = pZ;
 		DMEM_SEL_SP_R,
 		DMEM_SEL_SP_PCL,
 		DMEM_SEL_SP_PCH: dmem_a = SP + pop;
+		DMEM_SEL_PMEM: dmem_a = pmem_d;
 		default: dmem_a = {dmem_width{1'bx}};
 	endcase
 end
@@ -448,10 +474,13 @@ end
 wire [pmem_width-1:0] PC_inc = PC + 1;
 always @(*) begin
 	case(dmem_sel)
+		DMEM_SEL_X,
+		DMEM_SEL_Y,
 		DMEM_SEL_Z,
 		DMEM_SEL_SP_R: dmem_do = GPR_Rd;
 		DMEM_SEL_SP_PCL: dmem_do = PC_inc[7:0];
 		DMEM_SEL_SP_PCH: dmem_do = PC_inc[pmem_width-1:8];
+		DMEM_SEL_PMEM: dmem_do = GPR_Rd_r;
 		default: dmem_do = 8'hxx;
 	endcase
 end
@@ -485,7 +514,11 @@ parameter RET1		= 4'd4;
 parameter RET2		= 4'd5;
 parameter RET3		= 4'd6;
 parameter LPM		= 4'd7;
-parameter WRITEBACK	= 4'd8;
+parameter STS		= 4'd8;
+parameter LDS1		= 4'd9;
+parameter LDS2		= 4'd10;
+parameter SKIP		= 4'd11;
+parameter WRITEBACK	= 4'd12;
 
 always @(posedge clk) begin
 	if(rst)
@@ -513,6 +546,9 @@ always @(*) begin
 	pop = 1'b0;
 
 	pmem_selz = 1'b0;
+
+	regmem_ce = 1'b1;
+	lds_writeback = 1'b0;
 	
 	case(state)
 		NORMAL: begin
@@ -535,14 +571,14 @@ always @(*) begin
 					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
 					if(reg_equal)
-						next_state = STALL;
+						next_state = SKIP;
 				end
 				6'b111111: begin
 					/* SBRC - SBRS */
 					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
 					if(GPR_Rd_b == pmem_d[9])
-						next_state = STALL;
+						next_state = SKIP;
 				end
 				/* SBIC, SBIS, SBI, CBI are not implemented */
 				6'b11110x: begin
@@ -581,21 +617,32 @@ always @(*) begin
 					pmem_ce = 1'b1;
 				end
 				6'b100100: begin
-					if(pmem_d[9]) begin
-						/* PUSH */
-						push = 1'b1;
-						dmem_sel = DMEM_SEL_SP_R;
-						dmem_we = 1'b1;
+					if(pmem_d[3:0] == 4'hf) begin
+						if(pmem_d[9]) begin
+							/* PUSH */
+							push = 1'b1;
+							dmem_sel = DMEM_SEL_SP_R;
+							dmem_we = 1'b1;
+							pc_sel = PC_SEL_INC;
+							pmem_ce = 1'b1;
+						end else begin
+							/* POP */
+							pop = 1'b1;
+							dmem_sel = DMEM_SEL_SP_R;
+							next_state = WRITEBACK;
+						end
+					end else if(pmem_d[3:0] == 4'h0) begin
 						pc_sel = PC_SEL_INC;
 						pmem_ce = 1'b1;
-					end else begin
-						/* POP */
-						pop = 1'b1;
-						dmem_sel = DMEM_SEL_SP_R;
-						next_state = WRITEBACK;
+						if(pmem_d[9])
+							/* STS */
+							next_state = STS;
+						else
+							/* LDS */
+							next_state = LDS1;
 					end
 				end
-				/* TODO: LDS, STS and fancy addressing modes (STD/LDD) */
+				/* TODO: fancy addressing modes (STD/LDD) */
 				default: begin
 					if((pmem_d[15:5] == 11'b1001_0101_000) & (pmem_d[3:0] == 4'b1000)) begin
 						/* RET - RETI (treated as RET) */
@@ -660,6 +707,33 @@ always @(*) begin
 			pc_sel = PC_SEL_INC;
 			pmem_ce = 1'b1;
 			next_state = NORMAL;
+		end
+		STS: begin
+			pc_sel = PC_SEL_INC;
+			normal_en = 1'b1;
+			dmem_sel = DMEM_SEL_PMEM;
+			dmem_we = 1'b1;
+			next_state = NORMAL;
+		end
+		LDS1: begin
+			dmem_sel = DMEM_SEL_PMEM;
+			regmem_ce = 1'b0;
+			next_state = LDS2;
+		end
+		LDS2: begin
+			pc_sel = PC_SEL_INC;
+			normal_en = 1'b1;
+			lds_writeback = 1'b1;
+			next_state = NORMAL;
+		end
+		SKIP: begin
+			pc_sel = PC_SEL_INC;
+			pmem_ce = 1'b1;
+			/* test for STS and LDS */
+			if((pmem_d[15:10] == 6'b100100) & (pmem_d[3:0] == 4'h0))
+				next_state = STALL; /* 2-word instruction, skip the second word as well */
+			else
+				next_state = NORMAL; /* 1-word instruction */
 		end
 		STALL: begin
 			pc_sel = PC_SEL_INC;
