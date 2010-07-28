@@ -40,8 +40,11 @@ module softusb_navre #(
 
 /* Register file */
 reg [pmem_width-1:0] PC;
-reg [7:0] GPR[0:31];
-reg [15:0] pZ;
+reg [7:0] GPR[0:23];
+reg [15:0] U;	/* < R24-R25 */
+reg [15:0] pX;	/* < R26-R27 */
+reg [15:0] pY;	/* < R28-R29 */
+reg [15:0] pZ;	/* < R30-R31 */
 reg T, H, S, V, N, Z, C;
 
 /* Stack */
@@ -85,10 +88,50 @@ wire [7:0] K = {pmem_d[11:8], pmem_d[3:0]};
 wire [2:0] b = pmem_d[2:0];
 wire [11:0] Kl = pmem_d[11:0];
 wire [6:0] Ks = pmem_d[9:3];
+wire [1:0] Rd16 = pmem_d[5:4];
+wire [5:0] K16 = {pmem_d[7:6], pmem_d[3:0]};
 
-wire [7:0] GPR_Rd = GPR[Rd];
-wire [7:0] GPR_Rr = GPR[Rr];
+wire [7:0] GPR_Rd8 = GPR[Rd];
+wire [7:0] GPR_Rr8 = GPR[Rr];
+reg [7:0] GPR_Rd;
+always @(*) begin
+	case(Rd)
+		default: GPR_Rd = GPR_Rd8;
+		5'd24: GPR_Rd = U[7:0];
+		5'd25: GPR_Rd = U[15:8];
+		5'd26: GPR_Rd = pX[7:0];
+		5'd27: GPR_Rd = pX[15:8];
+		5'd28: GPR_Rd = pY[7:0];
+		5'd29: GPR_Rd = pY[15:8];
+		5'd30: GPR_Rd = pZ[7:0];
+		5'd31: GPR_Rd = pZ[15:8];
+	endcase
+end
+reg [7:0] GPR_Rr;
+always @(*) begin
+	case(Rr)
+		default: GPR_Rr = GPR_Rr8;
+		5'd24: GPR_Rr = U[7:0];
+		5'd25: GPR_Rr = U[15:8];
+		5'd26: GPR_Rr = pX[7:0];
+		5'd27: GPR_Rr = pX[15:8];
+		5'd28: GPR_Rr = pY[7:0];
+		5'd29: GPR_Rr = pY[15:8];
+		5'd30: GPR_Rr = pZ[7:0];
+		5'd31: GPR_Rr = pZ[15:8];
+	endcase
+end
 wire GPR_Rd_b = GPR_Rd[b];
+
+reg [15:0] GPR_Rd16;
+always @(*) begin
+	case(Rd16)
+		2'd0: GPR_Rd16 = U;
+		2'd1: GPR_Rd16 = pX;
+		2'd2: GPR_Rd16 = pY;
+		2'd3: GPR_Rd16 = pZ;
+	endcase
+end
 
 reg [2:0] pc_sel;
 
@@ -126,19 +169,26 @@ integer i_rst_regf;
 // synthesis translate_on
 reg [7:0] R;
 reg writeback;
-reg update_nzv;
+reg update_nsz;
+reg [15:0] R16;
+reg mode16;
 always @(posedge clk) begin
 	R = 8'hxx;
 	writeback = 1'b0;
-	update_nzv = 1'b0;
+	update_nsz = 1'b0;
+	R16 = 16'hxxxx;
+	mode16 = 1'b0;
 	if(rst) begin
 		/*
 		 * Not resetting the register file enables the use of more efficient
 		 * distributed block RAM.
 		 */
 		// synthesis translate_off
-		for(i_rst_regf=0;i_rst_regf<32;i_rst_regf=i_rst_regf+1)
+		for(i_rst_regf=0;i_rst_regf<24;i_rst_regf=i_rst_regf+1)
 			GPR[i_rst_regf] = 8'd0;
+		U = 16'd0;
+		pX = 16'd0;
+		pY = 16'd0;
 		pZ = 16'd0;
 		// synthesis translate_on
 		T = 1'b0;
@@ -151,7 +201,7 @@ always @(posedge clk) begin
 	end else begin
 		if(normal_en) begin
 			writeback = 1'b1;
-			update_nzv = 1'b1;
+			update_nsz = 1'b1;
 			casex(pmem_d[15:10])
 				6'b000x11: begin
 					/* ADD - ADC */
@@ -239,7 +289,7 @@ always @(posedge clk) begin
 						5'b00010: begin
 							/* SWAP */
 							R = {GPR_Rd[3:0], GPR_Rd[7:4]};
-							update_nzv = 1'b0;
+							update_nsz = 1'b0;
 						end
 						5'b01000: begin
 							/* BSET - BCLR */
@@ -259,8 +309,20 @@ always @(posedge clk) begin
 								4'b1101: H = 1'b0;
 								4'b1110: T = 1'b0;
 							endcase
-							update_nzv = 1'b0;
+							update_nsz = 1'b0;
 							writeback = 1'b0;
+						end
+						5'b1xxxx: begin
+							mode16 = 1'b1;
+							if(pmem_d[8]) begin
+								/* SBIW */
+								{C, R16} = GPR_Rd16 - K16;
+								V = GPR_Rd16[15] & ~R16[15];
+							end else begin
+								/* ADIW */
+								{C, R16} = GPR_Rd16 + K16;
+								V = ~GPR_Rd16[15] & R16[15];
+							end
 						end
 					endcase
 				end
@@ -270,12 +332,12 @@ always @(posedge clk) begin
 				6'b001011: begin
 					/* MOV */
 					R = GPR_Rr;
-					update_nzv = 1'b0;
+					update_nsz = 1'b0;
 				end
 				6'b1110xx: begin
 					/* LDI */
 					R = K;
-					update_nzv = 1'b0;
+					update_nsz = 1'b0;
 				end
 				/* LSL is replaced with ADD */
 				/* ROL is replaced with ADC */
@@ -297,13 +359,13 @@ always @(posedge clk) begin
 							3'd7: R = {T, GPR_Rd[6:0]};
 						endcase
 					end
-					update_nzv = 1'b0;
+					update_nsz = 1'b0;
 				end
 				/* SEC, CLC, SEN, CLN, SEZ, CLZ, SEI, CLI, SES, CLS, SEV, CLV, SET, CLT, SEH, CLH
 				 * are replaced with BSET and BCLR */
 				6'b000000: begin
 					/* NOP */
-					update_nzv = 1'b0;
+					update_nsz = 1'b0;
 					writeback = 1'b0;
 				end
 				/* SLEEP is not implemented */
@@ -312,12 +374,12 @@ always @(posedge clk) begin
 				6'b100000: begin
 					/* LD - POP (run from state WRITEBACK) */
 					R = dmem_di;
-					update_nzv = 1'b0;
+					update_nsz = 1'b0;
 				end
 				6'b10110x: begin
 					/* IN (run from state WRITEBACK) */
 					R = io_use_stack ? io_sp : io_di;
-					update_nzv = 1'b0;
+					update_nsz = 1'b0;
 				end
 			endcase
 		end
@@ -325,20 +387,35 @@ always @(posedge clk) begin
 			R = pZ[0] ? pmem_d[15:8] : pmem_d[7:0];
 			writeback = 1'b1;
 		end
-		if(update_nzv) begin
-			N = R[7];
+		if(update_nsz) begin
+			N = mode16 ? R16[15] : R[7];
 			S = N ^ V;
-			Z = R == 8'h00;
+			Z = mode16 ? R16 == 16'h0000 : R == 8'h00;
 		end
 		if(writeback) begin
-			// synthesis translate_off
-			//$display("REG WRITE: %d < %d", Rd, R);
-			// synthesis translate_on
-			case(Rd)
-				5'd30: pZ[7:0] = R;
-				5'd31: pZ[15:8] = R;
-			endcase
-			GPR[Rd] = R;
+			if(mode16) begin
+				case(Rd16)
+					2'd0: U = R16;
+					2'd1: pX = R16;
+					2'd2: pY = R16;
+					2'd3: pZ = R16;
+				endcase
+			end else begin
+				// synthesis translate_off
+				//$display("REG WRITE: %d < %d", Rd, R);
+				// synthesis translate_on
+				case(Rd)
+					default: GPR[Rd] = R;
+					5'd24: U[7:0] = R;
+					5'd25: U[15:8] = R;
+					5'd26: pX[7:0] = R;
+					5'd27: pX[15:8] = R;
+					5'd28: pY[7:0] = R;
+					5'd29: pY[15:8] = R;
+					5'd30: pZ[7:0] = R;
+					5'd31: pZ[15:8] = R;
+				endcase
+			end
 		end
 	end
 end
@@ -515,7 +592,7 @@ always @(*) begin
 						next_state = WRITEBACK;
 					end
 				end
-				/* TODO: ADIW, SBIW, IJMP, ICALL, LDS, STS and fancy addressing modes (STD/LDD) */
+				/* TODO: IJMP, ICALL, LDS, STS and fancy addressing modes (STD/LDD) */
 				default: begin
 					if((pmem_d[15:5] == 11'b1001_0101_000) & (pmem_d[3:0] == 4'b1000)) begin
 						/* RET - RETI (treated as RET) */
