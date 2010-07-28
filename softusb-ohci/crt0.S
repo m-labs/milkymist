@@ -38,9 +38,9 @@ reset1:
 	ldi r16, 0x00
 	out SIE_TX_BUSRESET, r16
 
-	ldi r18, 0x05
-unreset3:
-	ldi r17, 0xff
+//	ldi r18, 0x05
+//unreset3:
+	ldi r17, 0x2
 unreset2:
 	ldi r16, 0xff
 unreset1:
@@ -48,10 +48,44 @@ unreset1:
 	brne unreset1
 	dec r17
 	brne unreset2
-	dec r18
-	brne unreset3
+//	dec r18
+//	brne unreset3
 #endif
 
+	/***** SOF *****/
+	ldi r16, 0xa5
+	out SIE_TX_DATA, r16
+sofwait1:
+	in r16, SIE_TX_PENDING
+	cpi r16, 0x01
+	breq sofwait1
+
+	/** transmit byte 2 **/
+	ldi r16, 0x01
+	out SIE_TX_DATA, r16
+sofwait2:
+	in r16, SIE_TX_PENDING
+	cpi r16, 0x01
+	breq sofwait2
+
+	/** transmit byte 3 **/
+	ldi r16, 0xe8
+	out SIE_TX_DATA, r16
+sofwait3:
+	in r16, SIE_TX_PENDING
+	cpi r16, 0x01
+	breq sofwait3
+
+	/** transmit EOP **/
+	clr r16
+	out SIE_TX_VALID, r16
+
+	ldi r16, 0xff
+sofwait4:
+	dec r16
+	brne sofwait4
+
+	/***** SETUP *****/
 	/** transmit byte 1 **/
 	ldi r16, 0x2d
 	out SIE_TX_DATA, r16
@@ -80,6 +114,7 @@ wait3:
 	clr r16
 	out SIE_TX_VALID, r16
 
+	/***** DATA0 *****/
 	/** transmit byte 1 **/
 	ldi r16, 0xc3
 	out SIE_TX_DATA, r16
