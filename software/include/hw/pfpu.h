@@ -56,8 +56,8 @@
 #define PFPU_OPCODE_TSIGN	(0xe)
 #define PFPU_OPCODE_QUAKE	(0xf)
 
-#define PFPU_LATENCY_FADD	(4)
-#define PFPU_LATENCY_FSUB	(4)
+#define PFPU_LATENCY_FADD	(5)
+#define PFPU_LATENCY_FSUB	(5)
 #define PFPU_LATENCY_FMUL	(7)
 #define PFPU_LATENCY_FABS	(2)
 #define PFPU_LATENCY_F2I	(2)

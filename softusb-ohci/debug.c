@@ -17,7 +17,7 @@
 
 #include "progmem.h"
 
-#define REG_DEBUG *((volatile char *)0x3)
+#define REG_DEBUG *((volatile char *)0x1000)
 
 static char debug_buffer[256];
 static unsigned char debug_consume;
