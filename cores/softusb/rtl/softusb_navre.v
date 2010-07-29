@@ -313,7 +313,7 @@ always @(posedge clk) begin
 				end
 				16'b1001_010x_xxxx_011x: begin
 					/* LSR - ROR */
-					R = {pmem_d[10] & C, GPR_Rd[7:1]};
+					R = {pmem_d[0] & C, GPR_Rd[7:1]};
 					C = GPR_Rd[0];
 					V = R[7] ^ GPR_Rd[0];
 				end
