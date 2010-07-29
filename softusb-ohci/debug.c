@@ -54,3 +54,14 @@ void print_hex(unsigned char h)
 	print_char(read_pgm_byte(&hextab[(h & 0xf0) >> 4]));
 	print_char(read_pgm_byte(&hextab[h & 0x0f]));
 }
+
+void print_bin(unsigned char h, unsigned char count)
+{
+	unsigned char i;
+
+	h <<= 8-count;
+	for(i=0;i<count;i++) {
+		print_char(h & 0x80 ? '1' : '0');
+		h <<= 1;
+	}
+}

@@ -22,5 +22,6 @@ void debug_service();
 void print_char(char c);
 void print_string(const char *s);
 void print_hex(unsigned char h);
+void print_bin(unsigned char h, unsigned char count);
 
 #endif

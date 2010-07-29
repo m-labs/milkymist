@@ -18,9 +18,9 @@
 #ifndef __TIMER_H
 #define __TIMER_H
 
-#define TIMER0			0x10
-#define TIMER1			0x11
-#define TIMER2			0x12
-#define TIMER3			0x13
+#define TIMER0			IO8(0x10)
+#define TIMER1			IO8(0x11)
+#define TIMER2			IO8(0x12)
+#define TIMER3			IO8(0x13)
 
 #endif /* __TIMER_H */
