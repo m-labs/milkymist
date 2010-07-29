@@ -420,7 +420,7 @@ always @(posedge clk) begin
 					R = dmem_di;
 					update_nsz = 1'b0;
 				end
-				16'b10110x: begin
+				16'b1011_0xxx_xxxx_xxxx: begin
 					/* IN (run from state WRITEBACK) */
 					R = io_use_stack ? io_sp : io_di;
 					update_nsz = 1'b0;
