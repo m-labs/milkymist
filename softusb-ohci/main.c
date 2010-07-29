@@ -35,11 +35,9 @@ static const char connect_fs[] PROGMEM = "full speed device on port ";
 static const char connect_ls[] PROGMEM = "low speed device on port ";
 static const char disconnect[] PROGMEM = "device disconnect on port ";
 
-#define REG_DEBUG *((volatile char *)0x1000)
-
 int main()
 {
-	/*print_string(banner);
+	print_string(banner);
 	while(1) {
 		if(port_a_stat == PORT_STATE_DISCONNECTED) {
 			if(SIE_LINE_STATUS_A == 0x01) {
@@ -68,8 +66,6 @@ int main()
 			port_b_stat = PORT_STATE_DISCONNECTED;
 		}
 		debug_service();
-	}*/
-	REG_DEBUG = 0x42;
-	while(1);
+	}
 	return 0;
 }

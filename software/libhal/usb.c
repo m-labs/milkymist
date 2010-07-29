@@ -62,9 +62,10 @@ static void flush_debug_buffer()
 	hc_debug_buffer_len = 0;
 }
 
+#define HCREG_DEBUG *((unsigned char *)(SOFTUSB_DMEM_BASE+0x1000))
+
 void usb_service()
 {
-	/*
 	char c;
 
 	c = HCREG_DEBUG;
@@ -79,5 +80,4 @@ void usb_service()
 		}
 		HCREG_DEBUG = 0;
 	}
-	*/
 }
