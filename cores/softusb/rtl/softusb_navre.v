@@ -171,7 +171,7 @@ always @(posedge clk) begin
 			PC_SEL_DMEML: PC[7:0] <= dmem_di;
 			PC_SEL_DMEMH: PC[pmem_width-1:8] <= dmem_di;
 			PC_SEL_DEC: PC <= PC - 1;
-			PC_SEL_Z: PC <= pZ;
+			PC_SEL_Z: PC <= pZ - 1;
 		endcase
 	end
 end
@@ -200,6 +200,8 @@ parameter DMEM_SEL_PMEM		= 4'd12;
 
 reg normal_en;
 reg lds_writeback;
+
+wire [4:0] write_dest = lds_writeback ? Rd_r : Rd;
 
 // synthesis translate_off
 integer i_rst_regf;
@@ -453,8 +455,8 @@ always @(posedge clk) begin
 				// synthesis translate_off
 				//$display("REG WRITE: %d < %d", Rd, R);
 				// synthesis translate_on
-				case(Rd)
-					default: GPR[Rd] = R;
+				case(write_dest)
+					default: GPR[write_dest] = R;
 					5'd24: U[7:0] = R;
 					5'd25: U[15:8] = R;
 					5'd26: pX[7:0] = R;
@@ -777,6 +779,7 @@ always @(*) begin
 		end
 		LDS2: begin
 			pc_sel = PC_SEL_INC;
+			pmem_ce = 1'b1;
 			normal_en = 1'b1;
 			lds_writeback = 1'b1;
 			next_state = NORMAL;
