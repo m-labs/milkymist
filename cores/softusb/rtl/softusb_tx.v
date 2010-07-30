@@ -54,6 +54,7 @@ always @(posedge usb_clk) begin
 end
 
 /* Shift register w/bit stuffing */
+reg sr_rst;
 reg sr_load;
 reg sr_done;
 reg sr_out;
@@ -61,32 +62,35 @@ reg [2:0] bitcount;
 reg [2:0] onecount;
 reg [6:0] sr;
 always @(posedge usb_clk) begin
-	if(usb_rst)
-		sr_done <= 1'b1;
-	else if(gce) begin
+	if(sr_rst) begin
+		sr_done = 1'b1;
+		onecount = 3'd0;
+	end else if(gce) begin
 		if(sr_load) begin
-			sr_done <= 1'b0;
-			sr_out <= tx_data[0];
-			bitcount <= 3'd0;
+			sr_done = 1'b0;
+			sr_out = tx_data[0];
+			bitcount = 3'd0;
 			if(tx_data[0])
-				onecount <= 1'b1;
+				onecount = onecount + 3'd1;
 			else
-				onecount <= 1'b0;
-			sr <= tx_data[7:1];
+				onecount = 3'd0;
+			sr = tx_data[7:1];
 		end else if(~sr_done) begin
 			if(onecount == 3'd6) begin
-				onecount <= 3'd0;
-				sr_out <= 1'b0;
+				onecount = 3'd0;
+				sr_out = 1'b0;
 				if(bitcount == 3'd7)
-					sr_done <= 1'b1;
+					sr_done = 1'b1;
 			end else begin
-				sr <= {1'b0, sr[6:1]};
-				sr_out <= sr[0];
+				sr_out = sr[0];
 				if(sr[0])
-					onecount <= onecount + 3'd1;
-				bitcount <= bitcount + 3'd1;
-				if((bitcount == 3'd7) & (~sr[0] | (onecount != 3'd5)))
-					sr_done <= 1'b1;
+					onecount = onecount + 3'd1;
+				else
+					onecount = 3'd0;
+				bitcount = bitcount + 3'd1;
+				if((bitcount == 3'd7) && (onecount != 3'd6))
+					sr_done = 1'b1;
+				sr = {1'b0, sr[6:1]};
 			end
 		end
 	end
@@ -147,27 +151,34 @@ always @(posedge usb_clk) begin
 		state <= next_state;
 end
 
+reg tx_ready0;
+always @(posedge usb_clk)
+	tx_ready <= tx_ready0 & gce;
+
 always @(*) begin
 	txoe_ctl = 1'b0;
+	sr_rst = 1'b0;
 	sr_load = 1'b0;
 	generate_se0 = 1'b0;
 	generate_j = 1'b0;
-	tx_ready = 1'b0;
+	tx_ready0 = 1'b0;
 
 	next_state = state;
 
 	case(state)
 		IDLE: begin
 			txoe_ctl = generate_reset;
-			sr_load = tx_valid;
-			if(tx_valid)
+			if(tx_valid) begin
+				sr_load = 1'b1;
 				next_state = DATA;
-			tx_ready = 1'b1;
+			end else
+				sr_rst = 1'b1;
+			tx_ready0 = 1'b1;
 		end
 		DATA: begin
 			txoe_ctl = 1'b1;
 			if(sr_done) begin
-				tx_ready = 1'b1;
+				tx_ready0 = 1'b1;
 				if(tx_valid)
 					sr_load = 1'b1;
 				else
@@ -175,16 +186,19 @@ always @(*) begin
 			end
 		end
 		EOP1: begin
+			sr_rst = 1'b1;
 			txoe_ctl = 1'b1;
 			generate_se0 = 1'b1;
 			next_state = EOP2;
 		end
 		EOP2: begin
+			sr_rst = 1'b1;
 			txoe_ctl = 1'b1;
 			generate_se0 = 1'b1;
 			next_state = J;
 		end
 		J: begin
+			sr_rst = 1'b1;
 			txoe_ctl = 1'b1;
 			generate_j = 1'b1;
 			next_state = IDLE;

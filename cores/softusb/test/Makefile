@@ -30,7 +30,16 @@ fibc.elf: fibc.c fibc_crt.S
 sim-navre: fib.rom fibc.rom
 	cver ../rtl/softusb_navre.v tb_navre.v
 
+sim-sie:
+	cver ../rtl/softusb_tx.v tb_sie.v
+
+isim-sie: runsim-sie
+	./runsim-sie
+
+runsim-sie: ../rtl/softusb_tx.v tb_sie.v
+	iverilog -o runsim-sie ../rtl/softusb_tx.v tb_sie.v
+
 clean:
-	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim softusb.vcd
+	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim softusb.vcd softusb_tx.vcd runsim-sie
 
 .PHONY: clean sim sim-navre

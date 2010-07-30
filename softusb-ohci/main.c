@@ -61,7 +61,7 @@ static void usb_tx(unsigned char *buf, unsigned int len)
 
 int main()
 {
-	char usb_buffer[3];
+	char usb_buffer[4];
 	unsigned int t;
 	
 	frame_nr = 1;
@@ -75,8 +75,9 @@ int main()
 		TIMER0 = 0;
 
 		/* send SOF */
-		make_usb_token(0xa5, frame_nr, usb_buffer);
-		usb_tx(usb_buffer, 3);
+		usb_buffer[0] = 0x80;
+		make_usb_token(0xa5, frame_nr, &usb_buffer[1]);
+		usb_tx(usb_buffer, 4);
 
 		/* handle connections */
 		/*if(port_a_stat == PORT_STATE_DISCONNECTED) {
