@@ -34,22 +34,22 @@ module softusb_phy(
 	output reg usba_discon,
 	output reg usbb_discon,
 
-	output [1:0] utmi_line_state_a,
-	output [1:0] utmi_line_state_b,
+	output [1:0] line_state_a,
+	output [1:0] line_state_b,
 
 	input port_sel_rx,
 	input [1:0] port_sel_tx,
 
-	input [7:0] utmi_data_out,
-	input utmi_tx_valid,
-	output utmi_tx_ready,
+	input [7:0] tx_data,
+	input tx_valid,
+	output tx_ready,
 
 	input generate_reset,
 
-	output [7:0] utmi_data_in,
-	output utmi_rx_valid,
-	output utmi_rx_active,
-	output utmi_rx_error
+	output [7:0] rx_data,
+	output rx_valid,
+	output rx_active,
+	output rx_error
 );
 
 /* RX synchronizer */
@@ -68,7 +68,7 @@ softusb_filter filter_a(
 	.vp_s(rxdp_s_a),
 	.vm_s(rxdn_s_a)
 );
-assign utmi_line_state_a = {vm_s_a, vp_s_a};
+assign line_state_a = {vm_s_a, vp_s_a};
 
 wire rcv_s_b;
 wire vp_s_b;
@@ -84,7 +84,7 @@ softusb_filter filter_b(
 	.vp_s(vp_s_b),
 	.vm_s(vm_s_b)
 );
-assign utmi_line_state_b = {vm_s_b, vp_s_b};
+assign line_state_b = {vm_s_b, vp_s_b};
 
 /* TX section */
 
@@ -116,7 +116,7 @@ always @(posedge usb_clk) begin
 		usba_discon_cnt <= 5'h0;
 		usba_discon <= 1'b0;
 	end else begin
-		if(utmi_line_state_a != 2'h0)
+		if(line_state_a != 2'h0)
 			usba_discon_cnt <= 5'h0;
 		else if(!usba_discon && fs_ce)
 			usba_discon_cnt <= usba_discon_cnt + 5'h1;
@@ -130,7 +130,7 @@ always @(posedge usb_clk) begin
 		usbb_discon_cnt <= 5'h0;
 		usbb_discon <= 1'b0;
 	end else begin
-		if(utmi_line_state_b != 2'h0)
+		if(line_state_b != 2'h0)
 			usbb_discon_cnt <= 5'h0;
 		else if(!usbb_discon && fs_ce)
 			usbb_discon_cnt <= usbb_discon_cnt + 5'h1;

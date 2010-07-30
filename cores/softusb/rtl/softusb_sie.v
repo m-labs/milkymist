@@ -47,32 +47,32 @@ wire discon_b;
 reg port_sel_rx;
 reg [1:0] port_sel_tx;
 
-reg [7:0] utmi_data_out;
-reg utmi_tx_valid;
-wire utmi_tx_ready;
+reg [7:0] tx_data;
+reg tx_valid;
+wire tx_ready;
 reg tx_pending;
 
 reg generate_reset;
 
-wire [7:0] utmi_data_in;
-wire utmi_rx_valid;
-wire utmi_rx_active;
-wire utmi_rx_error;
+wire [7:0] rx_data;
+wire rx_valid;
+wire rx_active;
+wire rx_error;
 
 reg [7:0] data_in;
 reg rx_pending;
-reg utmi_rx_active_r;
+reg rx_active_r;
 reg rx_error;
 
 always @(posedge usb_clk) begin
 	if(usb_rst) begin
 		port_sel_rx <= 1'b0;
 		port_sel_tx <= 2'b00;
-		utmi_tx_valid <= 1'b0;
+		tx_valid <= 1'b0;
 		tx_pending <= 1'b0;
 		generate_reset <= 1'b0;
 		rx_pending <= 1'b0;
-		utmi_rx_active_r <= 1'b0;
+		rx_active_r <= 1'b0;
 		rx_error <= 1'b0;
 		io_do <= 8'd0;
 	end else begin
@@ -86,9 +86,9 @@ always @(posedge usb_clk) begin
 			6'h04: io_do <= port_sel_rx;
 			6'h05: io_do <= port_sel_tx;
 
-			6'h06: io_do <= utmi_data_out;
+			6'h06: io_do <= tx_data;
 			6'h07: io_do <= tx_pending;
-			6'h08: io_do <= utmi_tx_valid;
+			6'h08: io_do <= tx_valid;
 			6'h09: io_do <= generate_reset;
 
 			6'h0a: begin
@@ -97,7 +97,7 @@ always @(posedge usb_clk) begin
 					rx_pending <= 1'b0;
 			end
 			6'h0b: io_do <= rx_pending;
-			6'h0c: io_do <= utmi_rx_active;
+			6'h0c: io_do <= rx_active;
 			6'h0d: io_do <= rx_error;
 			6'h0e, 6'h0f: io_do <= 8'hxx;
 		endcase
@@ -107,25 +107,25 @@ always @(posedge usb_clk) begin
 				6'h04: port_sel_rx <= io_di[0];
 				6'h05: port_sel_tx <= io_di[1:0];
 				6'h06: begin
-					utmi_tx_valid <= 1'b1;
-					utmi_data_out <= io_di;
+					tx_valid <= 1'b1;
+					tx_data <= io_di;
 					tx_pending <= 1'b1;
 				end
-				6'h08: utmi_tx_valid <= 1'b0;
+				6'h08: tx_valid <= 1'b0;
 				6'h09: generate_reset <= io_di[0];
 			endcase
 		end
-		if(utmi_tx_ready)
+		if(tx_ready)
 			tx_pending <= 1'b0;
-		if(utmi_rx_valid) begin
-			data_in <= utmi_data_in;
+		if(rx_valid) begin
+			data_in <= rx_data;
 			rx_pending <= 1'b1;
 		end
 
-		utmi_rx_active_r <= utmi_rx_active;
-		if(utmi_rx_active & ~utmi_rx_active_r)
+		rx_active_r <= rx_active;
+		if(rx_active & ~rx_active_r)
 			rx_error <= 1'b0;
-		if(utmi_rx_active & utmi_rx_error)
+		if(rx_active & rx_error)
 			rx_error <= 1'b1;
 		if(io_re) // must be at the end because of the delay!
 			#1 $display("USB SIE R: a=%x dat=%x", io_a, io_do);
@@ -151,22 +151,22 @@ softusb_phy phy(
 	.usba_discon(discon_a),
 	.usbb_discon(discon_b),
 
-	.utmi_line_state_a(line_state_a),
-	.utmi_line_state_b(line_state_b),
+	.line_state_a(line_state_a),
+	.line_state_b(line_state_b),
 
 	.port_sel_rx(port_sel_rx),
 	.port_sel_tx(port_sel_tx),
 
-	.utmi_data_out(utmi_data_out),
-	.utmi_tx_valid(utmi_tx_valid),
-	.utmi_tx_ready(utmi_tx_ready),
+	.tx_data(tx_data),
+	.tx_valid(tx_valid),
+	.tx_ready(tx_ready),
 
 	.generate_reset(generate_reset),
 	
-	.utmi_data_in(utmi_data_in),
-	.utmi_rx_valid(utmi_rx_valid),
-	.utmi_rx_active(utmi_rx_active),
-	.utmi_rx_error(utmi_rx_error)
+	.rx_data(rx_data),
+	.rx_valid(rx_valid),
+	.rx_active(rx_active),
+	.rx_error(rx_error)
 );
 
 endmodule
