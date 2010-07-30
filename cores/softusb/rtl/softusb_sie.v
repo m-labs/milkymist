@@ -57,12 +57,9 @@ reg generate_reset;
 wire [7:0] rx_data;
 wire rx_valid;
 wire rx_active;
-wire rx_error;
 
 reg [7:0] data_in;
 reg rx_pending;
-reg rx_active_r;
-reg rx_error;
 
 always @(posedge usb_clk) begin
 	if(usb_rst) begin
@@ -72,8 +69,6 @@ always @(posedge usb_clk) begin
 		tx_pending <= 1'b0;
 		generate_reset <= 1'b0;
 		rx_pending <= 1'b0;
-		rx_active_r <= 1'b0;
-		rx_error <= 1'b0;
 		io_do <= 8'd0;
 	end else begin
 		io_do <= 8'd0;
@@ -98,7 +93,6 @@ always @(posedge usb_clk) begin
 			end
 			6'h0b: io_do <= rx_pending;
 			6'h0c: io_do <= rx_active;
-			6'h0d: io_do <= rx_error;
 			6'h0e, 6'h0f: io_do <= 8'hxx;
 		endcase
 		if(io_we) begin
@@ -122,11 +116,6 @@ always @(posedge usb_clk) begin
 			rx_pending <= 1'b1;
 		end
 
-		rx_active_r <= rx_active;
-		if(rx_active & ~rx_active_r)
-			rx_error <= 1'b0;
-		if(rx_active & rx_error)
-			rx_error <= 1'b1;
 		if(io_re) // must be at the end because of the delay!
 			#1 $display("USB SIE R: a=%x dat=%x", io_a, io_do);
 	end
@@ -165,8 +154,7 @@ softusb_phy phy(
 	
 	.rx_data(rx_data),
 	.rx_valid(rx_valid),
-	.rx_active(rx_active),
-	.rx_error(rx_error)
+	.rx_active(rx_active)
 );
 
 endmodule

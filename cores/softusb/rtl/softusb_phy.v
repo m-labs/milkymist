@@ -31,8 +31,8 @@ module softusb_phy(
 	inout usbb_vp,
 	inout usbb_vm,
 
-	output reg usba_discon,
-	output reg usbb_discon,
+	output usba_discon,
+	output usbb_discon,
 
 	output [1:0] line_state_a,
 	output [1:0] line_state_b,
@@ -48,8 +48,7 @@ module softusb_phy(
 
 	output [7:0] rx_data,
 	output rx_valid,
-	output rx_active,
-	output rx_error
+	output rx_active
 );
 
 /* RX synchronizer */
@@ -88,7 +87,24 @@ assign line_state_b = {vm_s_b, vp_s_b};
 
 /* TX section */
 
+wire txp;
+wire txm;
 wire txoe;
+
+softusb_tx tx(
+	.usb_clk(usb_clk),
+	.usb_rst(usb_rst),
+
+	.tx_data(tx_data),
+	.tx_valid(tx_valid),
+	.tx_ready(tx_ready),
+
+	.generate_reset(generate_reset),
+
+	.txp(txp),
+	.txm(txm),
+	.txoe(txoe)
+);
 
 // TODO
 
@@ -102,39 +118,37 @@ wire txoe_a = txoe & port_sel_tx[0];
 wire txoe_b = txoe & port_sel_tx[1];
 
 assign usba_oe_n = ~txoe_a;
-assign usba_vp = txoe_a ? txdp : 1'bz;
-assign usba_vm = txoe_a ? txdn : 1'bz;
+assign usba_vp = txoe_a ? txp : 1'bz;
+assign usba_vm = txoe_a ? txm : 1'bz;
 assign usbb_oe_n = ~txoe_b;
-assign usbb_vp = txoe_b ? txdp : 1'bz;
-assign usbb_vm = txoe_b ? txdn : 1'bz;
+assign usbb_vp = txoe_b ? txp : 1'bz;
+assign usbb_vm = txoe_b ? txm : 1'bz;
 
 /* Assert USB disconnect if we see SE0 for at least 2.5us */
 
-reg [4:0] usba_discon_cnt;
+reg [6:0] usba_discon_cnt;
+assign usba_discon = (usba_discon_cnt == 7'd127);
 always @(posedge usb_clk) begin
-	if(usb_rst) begin
-		usba_discon_cnt <= 5'h0;
-		usba_discon <= 1'b0;
-	end else begin
-		if(line_state_a != 2'h0)
-			usba_discon_cnt <= 5'h0;
-		else if(!usba_discon && fs_ce)
-			usba_discon_cnt <= usba_discon_cnt + 5'h1;
-		usba_discon <= (usba_discon_cnt == 5'h1f);
+	if(usb_rst)
+		usba_discon_cnt <= 7'd0;
+	else begin
+		if(line_state_a != 7'd0)
+			usba_discon_cnt <= 7'd0;
+		else if(~usba_discon)
+			usba_discon_cnt <= usba_discon_cnt + 7'd1;
 	end
 end
 
-reg [4:0] usbb_discon_cnt;
+reg [6:0] usbb_discon_cnt;
+assign usbb_discon = (usbb_discon_cnt == 7'd127);
 always @(posedge usb_clk) begin
-	if(usb_rst) begin
-		usbb_discon_cnt <= 5'h0;
-		usbb_discon <= 1'b0;
-	end else begin
+	if(usb_rst)
+		usbb_discon_cnt <= 7'd0;
+	else begin
 		if(line_state_b != 2'h0)
-			usbb_discon_cnt <= 5'h0;
-		else if(!usbb_discon && fs_ce)
-			usbb_discon_cnt <= usbb_discon_cnt + 5'h1;
-		usbb_discon <= (usbb_discon_cnt == 5'h1f);
+			usbb_discon_cnt <= 7'd0;
+		else if(~usbb_discon)
+			usbb_discon_cnt <= usbb_discon_cnt + 7'd1;
 	end
 end
 
