@@ -62,13 +62,16 @@ static void usb_tx(unsigned char *buf, unsigned int len)
 int main()
 {
 	char usb_buffer[3];
+	unsigned int t;
 	
 	frame_nr = 1;
 	SIE_SEL_TX = 3;
 	print_string(banner);
 	while(1) {
 		/* wait for the next frame */
-		while((TIMER0 < 0x80) && (TIMER1 < 0xBB));
+		do {
+			t = ((unsigned int)TIMER1 << 8)|TIMER0;
+		} while(t < 0xbb70);
 		TIMER0 = 0;
 
 		/* send SOF */
