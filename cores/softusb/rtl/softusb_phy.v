@@ -15,33 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/////////////////////////////////////////////////////////////////////
-////                                                             ////
-//// Copyright (C) 2000-2002 Rudolf Usselmann                    ////
-////                         www.asics.ws                        ////
-////                         rudi@asics.ws                       ////
-////                                                             ////
-//// This source file may be used and distributed without        ////
-//// restriction provided that this copyright statement is not   ////
-//// removed from the file and that any derivative work contains ////
-//// the original copyright notice and the associated disclaimer.////
-////                                                             ////
-////     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY     ////
-//// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED   ////
-//// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS   ////
-//// FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR      ////
-//// OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,         ////
-//// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    ////
-//// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE   ////
-//// GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR        ////
-//// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF  ////
-//// LIABILITY, WHETHER IN  CONTRACT, STRICT LIABILITY, OR TORT  ////
-//// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT  ////
-//// OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         ////
-//// POSSIBILITY OF SUCH DAMAGE.                                 ////
-////                                                             ////
-/////////////////////////////////////////////////////////////////////
-
 module softusb_phy(
 	input usb_clk,
 	input usb_rst,
@@ -79,81 +52,49 @@ module softusb_phy(
 	output utmi_rx_error
 );
 
-/* RX synchronizers and filters */
+/* RX synchronizer */
 
-wire rxd_s_a;
-wire rxdp_s_a;
-wire rxdn_s_a;
+wire rcv_s_a;
+wire vp_s_a;
+wire vm_s_a;
 softusb_filter filter_a(
 	.usb_clk(usb_clk),
 
-	.rxd(usba_rcv),
-	.rxdp(usba_vp),
-	.rxdn(usba_vm),
+	.rcv(usba_rcv),
+	.vp(usba_vp),
+	.vm(usba_vm),
 
-	.rxd_s(rxd_s_a),
-	.rxdp_s(rxdp_s_a),
-	.rxdn_s(rxdn_s_a)
+	.rcv_s(rxd_s_a),
+	.vp_s(rxdp_s_a),
+	.vm_s(rxdn_s_a)
 );
-assign utmi_line_state_a = {rxdn_s_a, rxdp_s_a};
+assign utmi_line_state_a = {vm_s_a, vp_s_a};
 
-wire rxd_s_b;
-wire rxdp_s_b;
-wire rxdn_s_b;
+wire rcv_s_b;
+wire vp_s_b;
+wire vm_s_b;
 softusb_filter filter_b(
 	.usb_clk(usb_clk),
 
-	.rxd(usbb_rcv),
-	.rxdp(usbb_vp),
-	.rxdn(usbb_vm),
+	.rcv(usbb_rcv),
+	.vp(usbb_vp),
+	.vm(usbb_vm),
 
-	.rxd_s(rxd_s_b),
-	.rxdp_s(rxdp_s_b),
-	.rxdn_s(rxdn_s_b)
+	.rcv_s(rcv_s_b),
+	.vp_s(vp_s_b),
+	.vm_s(vm_s_b)
 );
-assign utmi_line_state_b = {rxdn_s_b, rxdp_s_b};
+assign utmi_line_state_b = {vm_s_b, vp_s_b};
 
 /* TX section */
 
-wire fs_ce;
-wire txdp;
-wire txdn;
 wire txoe;
 
-softusb_tx_phy tx_phy(
-	.usb_clk(usb_clk),
-	.usb_rst(usb_rst),
-
-	.fs_ce(fs_ce),
-
-	.txdp(txdp),
-	.txdn(txdn),
-	.txoe(txoe),
-
-	.utmi_data_out(utmi_data_out),
-	.utmi_tx_valid(utmi_tx_valid),
-	.utmi_tx_ready(utmi_tx_ready),
-
-	.generate_reset(generate_reset)
-);
+// TODO
 
 /* RX section */
 
-softusb_rx_phy rx_phy(
-	.usb_clk(usb_clk),
-	.usb_rst(usb_rst),
-	.fs_ce(fs_ce),
-
-	.rxd_s(port_sel_rx ? rxd_s_b : rxd_s_a),
-	.rxdp_s(port_sel_rx ? rxdp_s_b : rxdp_s_a),
-	.rxdn_s(port_sel_rx ? rxdn_s_b : rxdn_s_a),
-
-	.utmi_data_in(utmi_data_in),
-	.utmi_rx_valid(utmi_rx_valid),
-	.utmi_rx_active(utmi_rx_active),
-	.utmi_rx_error(utmi_rx_error),
-	.utmi_rx_en(~txoe)
-);
+// TODO
 
 /* Tri-state enables and drivers */
 
@@ -167,7 +108,7 @@ assign usbb_oe_n = ~txoe_b;
 assign usbb_vp = txoe_b ? txdp : 1'bz;
 assign usbb_vm = txoe_b ? txdn : 1'bz;
 
-/* Generate an USB Disconnect if we see SE0 for at least 2.5uS */
+/* Assert USB disconnect if we see SE0 for at least 2.5us */
 
 reg [4:0] usba_discon_cnt;
 always @(posedge usb_clk) begin
