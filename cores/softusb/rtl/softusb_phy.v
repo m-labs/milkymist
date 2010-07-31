@@ -53,33 +53,27 @@ module softusb_phy(
 
 /* RX synchronizer */
 
-wire rcv_s_a;
 wire vp_s_a;
 wire vm_s_a;
 softusb_filter filter_a(
 	.usb_clk(usb_clk),
 
-	.rcv(usba_rcv),
 	.vp(usba_vp),
 	.vm(usba_vm),
 
-	.rcv_s(rxd_s_a),
 	.vp_s(rxdp_s_a),
 	.vm_s(rxdn_s_a)
 );
 assign line_state_a = {vm_s_a, vp_s_a};
 
-wire rcv_s_b;
 wire vp_s_b;
 wire vm_s_b;
 softusb_filter filter_b(
 	.usb_clk(usb_clk),
 
-	.rcv(usbb_rcv),
 	.vp(usbb_vp),
 	.vm(usbb_vm),
 
-	.rcv_s(rcv_s_b),
 	.vp_s(vp_s_b),
 	.vm_s(vm_s_b)
 );
