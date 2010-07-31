@@ -104,9 +104,8 @@ softusb_tx tx(
 
 softusb_rx rx(
 	.usb_clk(usb_clk),
-	.usb_rst(usb_rst),
 
-	.rxen(~txoe),
+	.rxreset(txoe),
 
 	.rxp(port_sel_rx ? usbb_vp : usba_vp),
 	.rxm(port_sel_rx ? usbb_vm : usba_vm),

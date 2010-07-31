@@ -52,6 +52,8 @@ static void usb_tx(unsigned char *buf, unsigned int len)
 {
 	int i;
 
+	SIE_TX_DATA = 0x80; /* send SYNC */
+	while(SIE_TX_PENDING);
 	for(i=0;i<len;i++) {
 		SIE_TX_DATA = buf[i];
 		while(SIE_TX_PENDING);
@@ -59,25 +61,78 @@ static void usb_tx(unsigned char *buf, unsigned int len)
 	SIE_TX_VALID = 0;
 }
 
+static void usb_rx()
+{
+	unsigned char c;
+
+	while(!SIE_RX_PENDING);
+	c = SIE_RX_DATA;
+	print_hex(c);
+	print_char('\n');
+}
+
 int main()
 {
-	char usb_buffer[4];
+	char usb_buffer[11];
 	unsigned int t;
+	int i;
 	
 	frame_nr = 1;
 	SIE_SEL_TX = 3;
 	print_string(banner);
+	SIE_TX_BUSRESET = 1;
+	for(i=0;i<50;i++) {
+		TIMER0 = 0;
+		do {
+			t = ((unsigned int)TIMER1 << 8)|TIMER0;
+		} while(t < 0xbb70);
+	}
+	SIE_TX_BUSRESET = 0;
 	while(1) {
 		/* wait for the next frame */
 		do {
+			if(SIE_RX_PENDING) {
+				char c;
+				c = SIE_RX_DATA;
+				print_char('f');
+				print_hex(c);
+				print_char('\n');
+			}
 			t = ((unsigned int)TIMER1 << 8)|TIMER0;
 		} while(t < 0xbb70);
 		TIMER0 = 0;
 
 		/* send SOF */
-		usb_buffer[0] = 0x80;
-		make_usb_token(0xa5, frame_nr, &usb_buffer[1]);
-		usb_tx(usb_buffer, 4);
+		make_usb_token(0xa5, frame_nr, usb_buffer);
+		usb_tx(usb_buffer, 3);
+		
+		if((frame_nr & 0xff) == 0xff) {
+			usb_buffer[0] = 0x2d;
+			usb_buffer[1] = 0x00;
+			usb_buffer[2] = 0x10;
+			usb_tx(usb_buffer, 3);
+			usb_buffer[0] = 0xc3;
+			usb_buffer[1] = 0x80;
+			usb_buffer[2] = 0x06;
+			usb_buffer[3] = 0x00;
+			usb_buffer[4] = 0x01;
+			usb_buffer[5] = 0x00;
+			usb_buffer[6] = 0x00;
+			usb_buffer[7] = 0x40;
+			usb_buffer[8] = 0x00;
+			usb_buffer[9] = 0xdd;
+			usb_buffer[10] = 0x94;
+			usb_tx(usb_buffer, 11);
+		}
+
+		if(SIE_RX_PENDING) {
+			char c;
+			c = SIE_RX_DATA;
+			print_char('f');
+			print_hex(c);
+			print_char('\n');
+		}
+
 
 		/* handle connections */
 		/*if(port_a_stat == PORT_STATE_DISCONNECTED) {
