@@ -155,6 +155,22 @@ reg tx_ready0;
 always @(posedge usb_clk)
 	tx_ready <= tx_ready0 & gce;
 
+reg tx_valid_r;
+reg transmission_continue;
+reg transmission_end_ack;
+always @(posedge usb_clk) begin
+	if(usb_rst) begin
+		tx_valid_r <= 1'b0;
+		transmission_continue <= 1'b1;
+	end else begin
+		tx_valid_r <= tx_valid;
+		if(tx_valid_r & ~tx_valid)
+			transmission_continue <= 1'b0;
+		if(transmission_end_ack)
+			transmission_continue <= 1'b1;
+	end
+end
+
 always @(*) begin
 	txoe_ctl = 1'b0;
 	sr_rst = 1'b0;
@@ -162,6 +178,7 @@ always @(*) begin
 	generate_se0 = 1'b0;
 	generate_j = 1'b0;
 	tx_ready0 = 1'b0;
+	transmission_end_ack = 1'b0;
 
 	next_state = state;
 
@@ -178,14 +195,15 @@ always @(*) begin
 		DATA: begin
 			txoe_ctl = 1'b1;
 			if(sr_done) begin
-				tx_ready0 = 1'b1;
-				if(tx_valid)
+				if(transmission_continue) begin
 					sr_load = 1'b1;
-				else
+					tx_ready0 = 1'b1;
+				end else
 					next_state = EOP1;
 			end
 		end
 		EOP1: begin
+			transmission_end_ack = 1'b1;
 			sr_rst = 1'b1;
 			txoe_ctl = 1'b1;
 			generate_se0 = 1'b1;
