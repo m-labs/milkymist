@@ -32,6 +32,8 @@ endtask
 reg [7:0] tx_data;
 reg tx_valid;
 wire tx_ready;
+wire txp;
+wire txm;
 softusb_tx tx(
 	.usb_clk(usb_clk),
 	.usb_rst(usb_rst),
@@ -42,14 +44,29 @@ softusb_tx tx(
 
 	.generate_reset(1'b0),
 
-	.txp(),
-	.txm(),
+	.txp(txp),
+	.txm(txm),
 	.txoe()
 );
 
+softusb_rx rx(
+	.usb_clk(usb_clk),
+	.usb_rst(usb_rst),
+
+	.rxen(1'b1),
+
+	.rxp(txp),
+	.rxm(txm),
+
+	.rx_data(),
+	.rx_valid(),
+	.rx_active()
+);
+
 initial begin
-	$dumpfile("softusb_tx.vcd");
+	$dumpfile("softusb_sie.vcd");
 	$dumpvars(0, tx);
+	$dumpvars(0, rx);
 
 	usb_rst = 1'b1;
 	tx_valid = 1'b0;
@@ -68,14 +85,11 @@ initial begin
 
 	tx_data = 8'h80;
 	tx_valid = 1'b1;
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
+	#300;
+	tx_data = 8'hff;
+	#900;
 	tx_valid = 1'b0;
-	#2000;
+	#4000;
 	$finish;
 end
 

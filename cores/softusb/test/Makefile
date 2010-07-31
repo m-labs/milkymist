@@ -37,6 +37,6 @@ runsim-sie: ../rtl/softusb_tx.v ../rtl/softusb_rx.v tb_sie.v
 	iverilog -o runsim-sie ../rtl/softusb_tx.v ../rtl/softusb_rx.v tb_sie.v
 
 clean:
-	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim softusb.vcd softusb_tx.vcd runsim-sie
+	rm -f verilog.log firmware.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim softusb.vcd softusb_sie.vcd runsim-sie
 
 .PHONY: clean sim sim-navre

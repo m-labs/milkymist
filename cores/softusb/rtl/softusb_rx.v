@@ -21,8 +21,8 @@ module softusb_rx(
 
 	input rxen,
 
-	input vp,
-	input vm,
+	input rxp,
+	input rxm,
 
 	output reg [7:0] rx_data,
 	output reg rx_valid,
@@ -36,18 +36,18 @@ module softusb_rx(
  * a bit-stuff error will be detected in at most 6 cycles
  * of the bit clock and RX will stop.
  */
-reg vp_r;
-reg vm_r;
+reg rxp_r;
+reg rxm_r;
 always @(posedge usb_clk) begin
 	if(rxen) begin
-		vp_r <= vp;
-		vm_r <= vm;
+		rxp_r <= rxp;
+		rxm_r <= rxm;
 	end
 end
 
 /* DPLL */
-wire data = vp_r;
-wire data_valid = vp_r != vm_r;
+wire data = rxp_r;
+wire data_valid = rxp_r != rxm_r;
 reg data_r;
 always @(posedge usb_clk) begin
 	if(data_valid)
@@ -76,9 +76,9 @@ end
  * "Designing a Robust USB Serial Interface Engine (SIE)"
  * USB-IF Technical White Paper
  */
-wire j = vp_r & ~vm_r;
-wire k = ~vp_r & vm_r;
-wire se0 = ~vp_r & ~vm_r;
+wire j = rxp_r & ~rxm_r;
+wire k = ~rxp_r & rxm_r;
+wire se0 = ~rxp_r & ~rxm_r;
 
 reg [2:0] eop_state;
 reg [2:0] eop_next_state;
@@ -142,16 +142,18 @@ always @(posedge usb_clk) begin
 		bitcount = 3'd0;
 		onecount = 3'd0;
 	end else begin
+		rx_valid = 1'b0;
 		if(eop_detected)
 			rx_active = 1'b0;
 		else if(dpll_ce) begin
-			if(rx_active) begin
+			if(rx_active & ~se0) begin
 				if(onecount == 3'd6) begin
 					/* skip stuffed bits */
 					onecount = 3'd0;
 					if((lastrx & ~k)|(~lastrx & ~j))
 						/* no transition? bitstuff error */
 						rx_active = 1'b0;
+					lastrx = ~lastrx;
 				end else begin
 					if(j) begin
 						rx_data = {lastrx, rx_data[7:1]};
@@ -160,7 +162,6 @@ always @(posedge usb_clk) begin
 						else
 							onecount = 3'd0;
 						lastrx = 1'b1;
-						bitcount = bitcount + 3'd1;
 					end
 					if(k) begin
 						rx_data = {~lastrx, rx_data[7:1]};
@@ -169,8 +170,8 @@ always @(posedge usb_clk) begin
 						else
 							onecount = 3'd0;
 						lastrx = 1'b0;
-						bitcount = bitcount + 3'd1;
 					end
+					bitcount = bitcount + 3'd1;
 					rx_valid = bitcount == 3'd7;
 				end
 			end else begin

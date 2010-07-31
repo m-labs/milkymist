@@ -100,11 +100,21 @@ softusb_tx tx(
 	.txoe(txoe)
 );
 
-// TODO
-
 /* RX section */
 
-// TODO
+softusb_rx rx(
+	.usb_clk(usb_clk),
+	.usb_rst(usb_rst),
+
+	.rxen(~txoe),
+
+	.rxp(port_sel_rx ? usbb_vp : usba_vp),
+	.rxm(port_sel_rx ? usbb_vm : usba_vm),
+
+	.rx_data(rx_data),
+	.rx_valid(rx_valid),
+	.rx_active(rx_active)
+);
 
 /* Tri-state enables and drivers */
 
