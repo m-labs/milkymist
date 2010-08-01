@@ -63,11 +63,25 @@ static void usb_tx(unsigned char *buf, unsigned int len)
 
 static void usb_rx()
 {
-	unsigned char c;
+	unsigned char c[32];
+	unsigned char i, j;
+	unsigned char timeout;
 
-	while(!SIE_RX_PENDING);
-	c = SIE_RX_DATA;
-	print_hex(c);
+	i = 0;
+	do {
+		timeout = 200;
+		while(!SIE_RX_PENDING) {
+			if(timeout-- == 0) {
+				print_char('T');
+				print_char('\n');
+				return;
+			}
+		}
+		c[i] = SIE_RX_DATA;
+		i++;
+	} while(SIE_RX_ACTIVE);
+	for(j=0;j<i;j++)
+		print_hex(c[j]);
 	print_char('\n');
 }
 
@@ -87,17 +101,11 @@ int main()
 			t = ((unsigned int)TIMER1 << 8)|TIMER0;
 		} while(t < 0xbb70);
 	}
+	TIMER0 = 0;
 	SIE_TX_BUSRESET = 0;
 	while(1) {
 		/* wait for the next frame */
 		do {
-			if(SIE_RX_PENDING) {
-				char c;
-				c = SIE_RX_DATA;
-				print_char('f');
-				print_hex(c);
-				print_char('\n');
-			}
 			t = ((unsigned int)TIMER1 << 8)|TIMER0;
 		} while(t < 0xbb70);
 		TIMER0 = 0;
@@ -123,16 +131,14 @@ int main()
 			usb_buffer[9] = 0xdd;
 			usb_buffer[10] = 0x94;
 			usb_tx(usb_buffer, 11);
+			usb_rx();
+		} else if((frame_nr & 0xff) == 0x00) {
+			usb_buffer[0] = 0x69;
+			usb_buffer[1] = 0x00;
+			usb_buffer[2] = 0x10;
+			usb_tx(usb_buffer, 3);
+			usb_rx();
 		}
-
-		if(SIE_RX_PENDING) {
-			char c;
-			c = SIE_RX_DATA;
-			print_char('f');
-			print_hex(c);
-			print_char('\n');
-		}
-
 
 		/* handle connections */
 		/*if(port_a_stat == PORT_STATE_DISCONNECTED) {

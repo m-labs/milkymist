@@ -61,8 +61,8 @@ softusb_filter filter_a(
 	.vp(usba_vp),
 	.vm(usba_vm),
 
-	.vp_s(rxdp_s_a),
-	.vm_s(rxdn_s_a)
+	.vp_s(vp_s_a),
+	.vm_s(vm_s_a)
 );
 assign line_state_a = {vm_s_a, vp_s_a};
 
@@ -107,8 +107,8 @@ softusb_rx rx(
 
 	.rxreset(txoe),
 
-	.rxp(port_sel_rx ? usbb_vp : usba_vp),
-	.rxm(port_sel_rx ? usbb_vm : usba_vm),
+	.rxp(port_sel_rx ? vp_s_b : vp_s_a),
+	.rxm(port_sel_rx ? vm_s_b : vm_s_a),
 
 	.rx_data(rx_data),
 	.rx_valid(rx_valid),

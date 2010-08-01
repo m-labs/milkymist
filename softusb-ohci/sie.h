@@ -36,6 +36,5 @@
 #define SIE_RX_DATA		IO8(0x0a)
 #define SIE_RX_PENDING		IO8(0x0b)
 #define SIE_RX_ACTIVE		IO8(0x0c)
-#define SIE_RX_ERROR		IO8(0x0d)
 
 #endif /* __SIE_H */

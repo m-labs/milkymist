@@ -132,34 +132,31 @@ always @(posedge usb_clk) begin
 			rx_active = 1'b0;
 		else if(dpll_ce) begin
 			if(rx_active) begin
-				if(~se0) begin
-					if(onecount == 3'd6) begin
-						/* skip stuffed bits */
-						onecount = 3'd0;
-						if((lastrx & ~k)|(~lastrx & ~j))
-							/* no transition? bitstuff error */
-							rx_active = 1'b0;
-						lastrx = ~lastrx;
+				if(onecount == 3'd6) begin
+					/* skip stuffed bits */
+					onecount = 3'd0;
+					if((lastrx & ~k)|(~lastrx & ~j))
+						/* no transition? bitstuff error */
+						rx_active = 1'b0;
+					lastrx = ~lastrx;
+				end else begin
+					if(j) begin
+						rx_data = {lastrx, rx_data[7:1]};
+						if(lastrx)
+							onecount = onecount + 3'd1;
+						else
+							onecount = 3'd0;
+						lastrx = 1'b1;
 					end else begin
-						if(j) begin
-							rx_data = {lastrx, rx_data[7:1]};
-							if(lastrx)
-								onecount = onecount + 3'd1;
-							else
-								onecount = 3'd0;
-							lastrx = 1'b1;
-						end
-						if(k) begin
-							rx_data = {~lastrx, rx_data[7:1]};
-							if(~lastrx)
-								onecount = onecount + 3'd1;
-							else
-								onecount = 3'd0;
-							lastrx = 1'b0;
-						end
-						rx_valid = bitcount == 3'd7;
-						bitcount = bitcount + 3'd1;
+						rx_data = {~lastrx, rx_data[7:1]};
+						if(~lastrx)
+							onecount = onecount + 3'd1;
+						else
+							onecount = 3'd0;
+						lastrx = 1'b0;
 					end
+					rx_valid = bitcount == 3'd7;
+					bitcount = bitcount + 3'd1;
 				end
 			end else if(startrx) begin
 				rx_active = 1'b1;
