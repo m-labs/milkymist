@@ -47,7 +47,10 @@ softusb_tx tx(
 
 	.txp(txp),
 	.txm(txm),
-	.txoe(txoe)
+	.txoe(txoe),
+
+	.low_speed(1'b1),
+	.generate_eop(1'b0)
 );
 
 reg rxreset;
@@ -62,7 +65,9 @@ softusb_rx rx(
 
 	.rx_data(),
 	.rx_valid(),
-	.rx_active()
+	.rx_active(),
+
+	.low_speed(1'b1)
 );
 
 initial begin
@@ -79,21 +84,15 @@ initial begin
 
 	@(posedge usb_clk);
 	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
-	@(posedge usb_clk);
 
 	rxreset = 1'b0;
 	tx_data = 8'h80;
 	tx_valid = 1'b1;
-	#300;
+	#3000;
 	tx_data = 8'h2d;
-	#900;
+	#9000;
 	tx_valid = 1'b0;
-	#4000;
+	#40000;
 	$finish;
 end
 

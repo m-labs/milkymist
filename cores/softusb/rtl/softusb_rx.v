@@ -111,7 +111,7 @@ always @(posedge usb_clk) begin
 			dpll_counter <= 5'd0;
 		else
 			dpll_counter <= dpll_counter + 5'd1;
-		dpll_ce <= transition|(low_speed ? (dpll_counter == 5'd31) : (dpll_counter[1:0] == 2'd3));
+		dpll_ce <= low_speed ? (dpll_counter == 5'd13) : (transition|(dpll_counter[1:0] == 2'd3));
 	end
 end
 

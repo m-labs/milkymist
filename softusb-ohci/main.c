@@ -65,11 +65,11 @@ static void usb_rx()
 {
 	unsigned char c[32];
 	unsigned char i, j;
-	unsigned char timeout;
+	unsigned int timeout;
 
 	i = 0;
 	do {
-		timeout = 200;
+		timeout = 2000;
 		while(!SIE_RX_PENDING) {
 			if(timeout-- == 0) {
 				print_char('T');
@@ -135,10 +135,20 @@ int main()
 			usb_buffer[10] = 0x94;
 			usb_tx(usb_buffer, 11);
 			usb_rx();
-		} else if((frame_nr & 0xff) == 0x00) {
 			usb_buffer[0] = 0x69;
 			usb_buffer[1] = 0x00;
 			usb_buffer[2] = 0x10;
+			usb_tx(usb_buffer, 3);
+			usb_rx();
+			usb_buffer[0] = 0xd2;
+			usb_tx(usb_buffer, 1);
+			usb_buffer[0] = 0xe1;
+			usb_buffer[1] = 0x00;
+			usb_buffer[2] = 0x10;
+			usb_tx(usb_buffer, 3);
+			usb_buffer[0] = 0x4b;
+			usb_buffer[1] = 0x00;
+			usb_buffer[2] = 0x00;
 			usb_tx(usb_buffer, 3);
 			usb_rx();
 		}
