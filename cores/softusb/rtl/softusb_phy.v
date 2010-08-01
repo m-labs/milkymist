@@ -55,12 +55,15 @@ module softusb_phy(
 
 wire vp_s_a;
 wire vm_s_a;
+wire rcv_s_a;
 softusb_filter filter_a(
 	.usb_clk(usb_clk),
 
+	.rcv(usba_rcv),
 	.vp(usba_vp),
 	.vm(usba_vm),
 
+	.rcv_s(rcv_s_a),
 	.vp_s(vp_s_a),
 	.vm_s(vm_s_a)
 );
@@ -68,12 +71,15 @@ assign line_state_a = {vm_s_a, vp_s_a};
 
 wire vp_s_b;
 wire vm_s_b;
+wire rcv_s_b;
 softusb_filter filter_b(
 	.usb_clk(usb_clk),
 
+	.rcv(usbb_rcv),
 	.vp(usbb_vp),
 	.vm(usbb_vm),
 
+	.rcv_s(rcv_s_b),
 	.vp_s(vp_s_b),
 	.vm_s(vm_s_b)
 );
@@ -102,11 +108,23 @@ softusb_tx tx(
 
 /* RX section */
 
+reg txoe0;
+reg txoe1;
+reg txoe2;
+reg txoe3;
+always @(posedge usb_clk) begin
+	txoe0 <= txoe;
+	txoe1 <= txoe0;
+	txoe2 <= txoe1;
+	txoe3 <= txoe2;
+end
+
 softusb_rx rx(
 	.usb_clk(usb_clk),
 
-	.rxreset(txoe),
+	.rxreset(txoe3),
 
+	.rx(port_sel_rx ? rcv_s_b : rcv_s_a),
 	.rxp(port_sel_rx ? vp_s_b : vp_s_a),
 	.rxm(port_sel_rx ? vm_s_b : vm_s_a),
 

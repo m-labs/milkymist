@@ -56,6 +56,7 @@ softusb_rx rx(
 
 	.rxreset(rxreset),
 
+	.rx(txp),
 	.rxp(txp),
 	.rxm(txm),
 

@@ -20,6 +20,7 @@ module softusb_rx(
 
 	input rxreset,
 
+	input rx,
 	input rxp,
 	input rxm,
 
@@ -28,31 +29,6 @@ module softusb_rx(
 	output reg rx_active
 );
 
-/* DPLL */
-wire data = rxp;
-wire data_valid = rxp != rxm;
-reg data_r;
-always @(posedge usb_clk) begin
-	if(data_valid)
-		data_r <= data;
-end
-wire transition = data_valid & (data != data_r);
-
-reg [1:0] dpll_counter;
-reg dpll_ce;
-always @(posedge usb_clk) begin
-	if(rxreset) begin
-		dpll_counter <= 2'd0;
-		dpll_ce <= 1'b0;
-	end else begin
-		if(transition)
-			dpll_counter <= 2'd0;
-		else
-			dpll_counter <= dpll_counter + 2'd1;
-		dpll_ce <= dpll_counter == 2'd0;
-	end
-end
-
 /* EOP detection */
 
 /*
@@ -60,8 +36,6 @@ end
  * "Designing a Robust USB Serial Interface Engine (SIE)"
  * USB-IF Technical White Paper
  */
-wire j = rxp & ~rxm;
-wire k = ~rxp & rxm;
 wire se0 = ~rxp & ~rxm;
 
 reg [2:0] eop_state;
@@ -101,7 +75,7 @@ always @(*) begin
 			if(se0)
 				eop_next_state = 3'd3;
 			else begin
-				if(j) begin
+				if(rx) begin
 					eop_detected = 1'b1;
 					eop_next_state = 3'd0;
 				end else
@@ -109,11 +83,32 @@ always @(*) begin
 			end
 		end
 		3'd4: begin
-			if(j)
+			if(rx)
 				eop_detected = 1'b1;
 			eop_next_state = 3'd0;
 		end
 	endcase
+end
+
+/* DPLL */
+reg rx_r;
+always @(posedge usb_clk)
+	rx_r <= rx;
+wire transition = (rx != rx_r);
+
+reg [1:0] dpll_counter;
+reg dpll_ce;
+always @(posedge usb_clk) begin
+	if(rxreset) begin
+		dpll_counter <= 2'd0;
+		dpll_ce <= 1'b0;
+	end else begin
+		if(transition)
+			dpll_counter <= 2'd0;
+		else
+			dpll_counter <= dpll_counter + 2'd1;
+		dpll_ce <= transition|(dpll_counter == 2'd3);
+	end
 end
 
 /* Serial->Parallel converter */
@@ -135,12 +130,12 @@ always @(posedge usb_clk) begin
 				if(onecount == 3'd6) begin
 					/* skip stuffed bits */
 					onecount = 3'd0;
-					if((lastrx & ~k)|(~lastrx & ~j))
+					if((lastrx & rx)|(~lastrx & ~rx))
 						/* no transition? bitstuff error */
 						rx_active = 1'b0;
 					lastrx = ~lastrx;
 				end else begin
-					if(j) begin
+					if(rx) begin
 						rx_data = {lastrx, rx_data[7:1]};
 						if(lastrx)
 							onecount = onecount + 3'd1;
@@ -170,22 +165,38 @@ end
 
 /* Find sync pattern */
 
-parameter FS_IDLE	= 3'h0;
-parameter K1		= 3'h1;
-parameter J1		= 3'h2;
-parameter K2		= 3'h3;
-parameter J2		= 3'h4;
-parameter K3		= 3'h5;
-parameter J3		= 3'h6;
-parameter K4		= 3'h7;
+parameter FS_IDLE	= 4'h0;
+parameter K1		= 4'h1;
+parameter J1		= 4'h2;
+parameter K2		= 4'h3;
+parameter J2		= 4'h4;
+parameter K3		= 4'h5;
+parameter J3		= 4'h6;
+parameter K4		= 4'h7;
+parameter K5		= 4'h8;
 
-reg [2:0] fs_state;
-reg [2:0] fs_next_state;
+reg [3:0] fs_state;
+reg [3:0] fs_next_state;
+
+reg [5:0] fs_timeout_counter;
+reg fs_timeout;
+always @(posedge usb_clk) begin
+	if(rxreset|eop_detected) begin
+		fs_timeout_counter <= 6'd0;
+		fs_timeout <= 1'b0;
+	end else begin
+		if(fs_timeout | (fs_state != fs_next_state))
+			fs_timeout_counter <= 6'd0;
+		else
+			fs_timeout_counter <= fs_timeout_counter + 6'd1;
+		fs_timeout <= fs_timeout_counter == 6'd39;
+	end
+end
 
 always @(posedge usb_clk) begin
-	if(rxreset)
+	if(rxreset|eop_detected|fs_timeout)
 		fs_state <= FS_IDLE;
-	else if(dpll_ce)
+	else
 		fs_state <= fs_next_state;
 end
 
@@ -194,51 +205,28 @@ always @(*) begin
 	fs_next_state = fs_state;
 
 	case(fs_state)
-		FS_IDLE: begin
-			if(k & ~rx_active)
-				fs_next_state = K1;
-		end
-		K1: begin
-			if(j)
-				fs_next_state = J1;
+		FS_IDLE: if(~rx & ~rx_active)
+			fs_next_state = K1;
+		K1: if(rx)
+			fs_next_state = J1;
+		J1: if(~rx)
+			fs_next_state = K2;
+		K2: if(rx)
+			fs_next_state = J2;
+		J2: if(~rx)
+			fs_next_state = K3;
+		K3: if(rx)
+			fs_next_state = J3;
+		J3: if(~rx)
+			fs_next_state = K4;
+		K4: if(dpll_ce) begin
+			if(~rx)
+				fs_next_state = K5;
 			else
 				fs_next_state = FS_IDLE;
 		end
-		J1: begin
-			if(k)
-				fs_next_state = K2;
-			else
-				fs_next_state = FS_IDLE;
-		end
-		K2: begin
-			if(j)
-				fs_next_state = J2;
-			else
-				fs_next_state = FS_IDLE;
-		end
-		J2: begin
-			if(k)
-				fs_next_state = K3;
-			else
-				fs_next_state = FS_IDLE;
-		end
-		K3: begin
-			if(j)
-				fs_next_state = J3;
-			else if(k) begin
-				fs_next_state = FS_IDLE; /* first bit may have been missed */
-				startrx = 1'b1;
-			end else
-				fs_next_state = FS_IDLE;
-		end
-		J3: begin
-			if(k)
-				fs_next_state = K4;
-			else
-				fs_next_state = FS_IDLE;
-		end
-		K4: begin
-			if(k)
+		K5: if(dpll_ce) begin
+			if(~rx)
 				startrx = 1'b1;
 			fs_next_state = FS_IDLE;
 		end
