@@ -66,34 +66,34 @@ reg [2:0] onecount;
 reg [6:0] sr;
 always @(posedge usb_clk) begin
 	if(sr_rst) begin
-		sr_done = 1'b1;
-		onecount = 3'd0;
+		sr_done <= 1'b1;
+		onecount <= 3'd0;
 	end else if(gce) begin
 		if(sr_load) begin
-			sr_done = 1'b0;
-			sr_out = tx_data[0];
-			bitcount = 3'd0;
+			sr_done <= 1'b0;
+			sr_out <= tx_data[0];
+			bitcount <= 3'd0;
 			if(tx_data[0])
 				onecount = onecount + 3'd1;
 			else
 				onecount = 3'd0;
-			sr = tx_data[7:1];
+			sr <= tx_data[7:1];
 		end else if(~sr_done) begin
 			if(onecount == 3'd6) begin
-				onecount = 3'd0;
-				sr_out = 1'b0;
+				onecount <= 3'd0;
+				sr_out <= 1'b0;
 				if(bitcount == 3'd7)
-					sr_done = 1'b1;
+					sr_done <= 1'b1;
 			end else begin
-				sr_out = sr[0];
+				sr_out <= sr[0];
 				if(sr[0])
-					onecount = onecount + 3'd1;
+					onecount <= onecount + 3'd1;
 				else
-					onecount = 3'd0;
-				bitcount = bitcount + 3'd1;
-				if((bitcount == 3'd7) & (onecount != 3'd6))
-					sr_done = 1'b1;
-				sr = {1'b0, sr[6:1]};
+					onecount <= 3'd0;
+				bitcount <= bitcount + 3'd1;
+				if((bitcount == 3'd6) & (~sr[0] | (onecount != 3'd5)))
+					sr_done <= 1'b1;
+				sr <= {1'b0, sr[6:1]};
 			end
 		end
 	end
