@@ -93,6 +93,7 @@ int main()
 	
 	frame_nr = 1;
 	SIE_SEL_TX = 3;
+	SIE_SEL_RX = 1;
 	SIE_TX_LOW_SPEED = 1;
 	SIE_LOW_SPEED = 1;
 	print_string(banner);

@@ -116,19 +116,15 @@ softusb_tx tx(
 
 reg txoe0;
 reg txoe1;
-reg txoe2;
-reg txoe3;
 always @(posedge usb_clk) begin
 	txoe0 <= txoe;
 	txoe1 <= txoe0;
-	txoe2 <= txoe1;
-	txoe3 <= txoe2;
 end
 
 softusb_rx rx(
 	.usb_clk(usb_clk),
 
-	.rxreset(txoe3),
+	.rxreset(txoe1),
 
 	.rx(port_sel_rx ? rcv_s_b : rcv_s_a),
 	.rxp(port_sel_rx ? vp_s_b : vp_s_a),

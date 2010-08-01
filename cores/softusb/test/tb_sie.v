@@ -20,6 +20,10 @@ module tb_sie();
 reg usb_clk;
 initial usb_clk = 1'b0;
 always #10 usb_clk = ~usb_clk;
+reg usb_clk_rx;
+initial usb_clk_rx = 1'b0;
+always #10 usb_clk_rx = ~usb_clk_rx;
+
 reg usb_rst;
 
 task waitclock;
@@ -55,7 +59,7 @@ softusb_tx tx(
 
 reg rxreset;
 softusb_rx rx(
-	.usb_clk(usb_clk),
+	.usb_clk(usb_clk_rx),
 
 	.rxreset(rxreset),
 

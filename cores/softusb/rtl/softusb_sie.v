@@ -73,6 +73,8 @@ always @(posedge usb_clk) begin
 		tx_pending <= 1'b0;
 		generate_reset <= 1'b0;
 		rx_pending <= 1'b0;
+		tx_low_speed <= 1'b0;
+		low_speed <= 2'b00;
 		generate_eop <= 1'b0;
 		io_do <= 8'd0;
 	end else begin

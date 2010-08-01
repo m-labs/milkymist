@@ -3,17 +3,17 @@ SOURCES=tb_softusb.v $(wildcard ../rtl/*.v)
 
 all: sim
 
-firmware.rom: $(MMDIR)/softusb-ohci/softusb-ohci.bin
-	$(MMDIR)/tools/bin2hex $(MMDIR)/softusb-ohci/softusb-ohci.bin firmware.rom 2048 16
-
-sim: firmware.rom
+sim: trx.rom
 	cver $(SOURCES)
 
-isim: runsim firmware.rom
+isim: runsim trx.rom
 	./runsim
 
 runsim: $(SOURCES)
 	iverilog -o runsim $(SOURCES)
+
+trx.elf: trx.S
+	avr-gcc -o trx.elf -mmcu=avr2 -Os trx.S -nostdlib
 
 fib.elf: fib.S
 	avr-gcc -o fib.elf -mmcu=avr2 -Os fib.S -nostdlib

@@ -43,7 +43,7 @@ always #5 sys_clk = ~sys_clk;
 
 /* 50MHz USB clock (should be 48) */
 initial usb_clk = 1'b0;
-always #5 usb_clk = ~usb_clk;
+always #10 usb_clk = ~usb_clk;
 
 wire usba_vp;
 wire usba_vm;
@@ -181,6 +181,61 @@ always begin
 	wbread(32'h00020004);
 	
 	$finish;
+end
+
+/* transmitter */
+
+reg usb_clk_tx;
+initial usb_clk_tx = 1'b0;
+always #10 usb_clk_tx = ~usb_clk_tx;
+
+reg usb_rst_tx;
+
+reg [7:0] tx_data;
+reg tx_valid;
+
+wire txp;
+wire txm;
+wire txoe;
+softusb_tx tx(
+	.usb_clk(usb_clk_tx),
+	.usb_rst(usb_rst_tx),
+
+	.tx_data(tx_data),
+	.tx_valid(tx_valid),
+	.tx_ready(),
+
+	.generate_reset(1'b0),
+
+	.txp(txp),
+	.txm(txm),
+	.txoe(txoe),
+
+	.low_speed(1'b0),
+	.generate_eop(1'b0)
+);
+
+pullup(usba_vp);
+pulldown(usba_vm);
+
+assign usba_vp = txoe ? txp : 1'bz;
+assign usba_vm = txoe ? txm : 1'bz;
+
+initial begin
+	$dumpvars(0, tx);
+	usb_rst_tx = 1'b1;
+	tx_valid = 1'b0;
+	#20;
+	usb_rst_tx = 1'b0;
+	
+	#4000;
+
+	tx_data = 8'h80;
+	tx_valid = 1'b1;
+	#400;
+	tx_data = 8'h56;
+	#400;
+	tx_valid = 1'b0;
 end
 
 endmodule

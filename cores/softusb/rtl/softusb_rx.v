@@ -189,11 +189,14 @@ always @(posedge usb_clk) begin
 		fs_timeout_counter <= 6'd0;
 		fs_timeout <= 1'b0;
 	end else begin
-		if(fs_timeout | (fs_state != fs_next_state))
+		if((fs_state != fs_next_state) | (fs_state == FS_IDLE))
 			fs_timeout_counter <= 6'd0;
 		else
 			fs_timeout_counter <= fs_timeout_counter + 6'd1;
-		fs_timeout <= fs_timeout_counter == 6'd39;
+		if(low_speed)
+			fs_timeout <= fs_timeout_counter == 6'd63;
+		else
+			fs_timeout <= fs_timeout_counter == 6'd7;
 	end
 end
 

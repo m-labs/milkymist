@@ -91,7 +91,7 @@ always @(posedge usb_clk) begin
 				else
 					onecount = 3'd0;
 				bitcount = bitcount + 3'd1;
-				if((bitcount == 3'd7) && (onecount != 3'd6))
+				if((bitcount == 3'd7) & (onecount != 3'd6))
 					sr_done = 1'b1;
 				sr = {1'b0, sr[6:1]};
 			end
@@ -105,7 +105,11 @@ reg generate_se0;
 reg generate_j;
 
 always @(posedge usb_clk) begin
-	if(gce) begin
+	if(usb_rst) begin
+		txoe_r <= 1'b0;
+		txp_r <= 1'bx;
+		txm_r <= 1'bx;
+	end else if(gce) begin
 		if(~txoe_ctl) begin
 			txp_r <= ~low_speed; /* return to J */
 			txm_r <= low_speed;
