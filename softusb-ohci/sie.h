@@ -37,4 +37,8 @@
 #define SIE_RX_PENDING		IO8(0x0b)
 #define SIE_RX_ACTIVE		IO8(0x0c)
 
+#define SIE_TX_LOW_SPEED	IO8(0x0d)
+#define SIE_LOW_SPEED		IO8(0x0e)
+#define SIE_GENERATE_EOP	IO8(0x0f)
+
 #endif /* __SIE_H */

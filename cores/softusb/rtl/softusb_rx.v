@@ -26,8 +26,12 @@ module softusb_rx(
 
 	output reg [7:0] rx_data,
 	output reg rx_valid,
-	output reg rx_active
+	output reg rx_active,
+
+	input low_speed
 );
+
+wire rx_corrected = rx ^ low_speed;
 
 /* EOP detection */
 
@@ -75,7 +79,7 @@ always @(*) begin
 			if(se0)
 				eop_next_state = 3'd3;
 			else begin
-				if(rx) begin
+				if(rx_corrected) begin
 					eop_detected = 1'b1;
 					eop_next_state = 3'd0;
 				end else
@@ -83,7 +87,7 @@ always @(*) begin
 			end
 		end
 		3'd4: begin
-			if(rx)
+			if(rx_corrected)
 				eop_detected = 1'b1;
 			eop_next_state = 3'd0;
 		end
@@ -96,18 +100,18 @@ always @(posedge usb_clk)
 	rx_r <= rx;
 wire transition = (rx != rx_r);
 
-reg [1:0] dpll_counter;
+reg [4:0] dpll_counter;
 reg dpll_ce;
 always @(posedge usb_clk) begin
 	if(rxreset) begin
-		dpll_counter <= 2'd0;
+		dpll_counter <= 5'd0;
 		dpll_ce <= 1'b0;
 	end else begin
 		if(transition)
-			dpll_counter <= 2'd0;
+			dpll_counter <= 5'd0;
 		else
-			dpll_counter <= dpll_counter + 2'd1;
-		dpll_ce <= transition|(dpll_counter == 2'd3);
+			dpll_counter <= dpll_counter + 5'd1;
+		dpll_ce <= transition|(low_speed ? (dpll_counter == 5'd31) : (dpll_counter[1:0] == 2'd3));
 	end
 end
 
@@ -130,12 +134,12 @@ always @(posedge usb_clk) begin
 				if(onecount == 3'd6) begin
 					/* skip stuffed bits */
 					onecount = 3'd0;
-					if((lastrx & rx)|(~lastrx & ~rx))
+					if((lastrx & rx_corrected)|(~lastrx & ~rx_corrected))
 						/* no transition? bitstuff error */
 						rx_active = 1'b0;
 					lastrx = ~lastrx;
 				end else begin
-					if(rx) begin
+					if(rx_corrected) begin
 						rx_data = {lastrx, rx_data[7:1]};
 						if(lastrx)
 							onecount = onecount + 3'd1;
@@ -205,28 +209,28 @@ always @(*) begin
 	fs_next_state = fs_state;
 
 	case(fs_state)
-		FS_IDLE: if(~rx & ~rx_active)
+		FS_IDLE: if(~rx_corrected & ~rx_active)
 			fs_next_state = K1;
-		K1: if(rx)
+		K1: if(rx_corrected)
 			fs_next_state = J1;
-		J1: if(~rx)
+		J1: if(~rx_corrected)
 			fs_next_state = K2;
-		K2: if(rx)
+		K2: if(rx_corrected)
 			fs_next_state = J2;
-		J2: if(~rx)
+		J2: if(~rx_corrected)
 			fs_next_state = K3;
-		K3: if(rx)
+		K3: if(rx_corrected)
 			fs_next_state = J3;
-		J3: if(~rx)
+		J3: if(~rx_corrected)
 			fs_next_state = K4;
 		K4: if(dpll_ce) begin
-			if(~rx)
+			if(~rx_corrected)
 				fs_next_state = K5;
 			else
 				fs_next_state = FS_IDLE;
 		end
 		K5: if(dpll_ce) begin
-			if(~rx)
+			if(~rx_corrected)
 				startrx = 1'b1;
 			fs_next_state = FS_IDLE;
 		end

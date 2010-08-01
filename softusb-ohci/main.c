@@ -93,6 +93,8 @@ int main()
 	
 	frame_nr = 1;
 	SIE_SEL_TX = 3;
+	SIE_TX_LOW_SPEED = 1;
+	SIE_LOW_SPEED = 1;
 	print_string(banner);
 	SIE_TX_BUSRESET = 1;
 	for(i=0;i<50;i++) {
@@ -111,8 +113,9 @@ int main()
 		TIMER0 = 0;
 
 		/* send SOF */
-		make_usb_token(0xa5, frame_nr, usb_buffer);
-		usb_tx(usb_buffer, 3);
+		//make_usb_token(0xa5, frame_nr, usb_buffer);
+		//usb_tx(usb_buffer, 3);
+		SIE_GENERATE_EOP = 1;
 		
 		if((frame_nr & 0xff) == 0xff) {
 			usb_buffer[0] = 0x2d;

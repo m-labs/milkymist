@@ -48,7 +48,11 @@ module softusb_phy(
 
 	output [7:0] rx_data,
 	output rx_valid,
-	output rx_active
+	output rx_active,
+
+	input tx_low_speed,
+	input [1:0] low_speed,
+	input generate_eop
 );
 
 /* RX synchronizer */
@@ -103,7 +107,9 @@ softusb_tx tx(
 
 	.txp(txp),
 	.txm(txm),
-	.txoe(txoe)
+	.txoe(txoe),
+	.low_speed(tx_low_speed),
+	.generate_eop(generate_eop)
 );
 
 /* RX section */
@@ -130,7 +136,9 @@ softusb_rx rx(
 
 	.rx_data(rx_data),
 	.rx_valid(rx_valid),
-	.rx_active(rx_active)
+	.rx_active(rx_active),
+
+	.low_speed(port_sel_rx ? low_speed[1] : low_speed[0])
 );
 
 /* Tri-state enables and drivers */
@@ -173,8 +181,7 @@ always @(posedge usb_clk) begin
 	end
 end
 
-/* FIXME: full speed only for now */
-assign usba_spd = 1'b1;
-assign usbb_spd = 1'b1;
+assign usba_spd = ~low_speed[0];
+assign usbb_spd = ~low_speed[1];
 
 endmodule

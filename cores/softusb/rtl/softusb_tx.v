@@ -27,7 +27,10 @@ module softusb_tx(
 
 	output reg txp,
 	output reg txm,
-	output reg txoe
+	output reg txoe,
+
+	input low_speed,
+	input generate_eop
 );
 
 /* Register outputs */
@@ -42,14 +45,14 @@ end
 
 /* Clock 'divider' */
 reg gce; /* global clock enable */
-reg [1:0] gce_counter;
+reg [4:0] gce_counter;
 always @(posedge usb_clk) begin
 	if(usb_rst) begin
 		gce <= 1'b0;
-		gce_counter <= 2'd0;
+		gce_counter <= 5'd0;
 	end else begin
-		gce <= gce_counter == 2'd3;
-		gce_counter <= gce_counter + 2'd1;
+		gce <= low_speed ? (gce_counter == 5'd31) : (gce_counter[1:0] == 2'd3);
+		gce_counter <= gce_counter + 5'd1;
 	end
 end
 
@@ -104,8 +107,8 @@ reg generate_j;
 always @(posedge usb_clk) begin
 	if(gce) begin
 		if(~txoe_ctl) begin
-			txp_r <= 1'b1; /* return to J */
-			txm_r <= 1'b0;
+			txp_r <= ~low_speed; /* return to J */
+			txm_r <= low_speed;
 		end else begin
 			case({generate_reset, generate_se0, generate_j})
 				3'b000: begin
@@ -120,8 +123,8 @@ always @(posedge usb_clk) begin
 					txm_r <= 1'b0;
 				end
 				3'b001: begin
-					txp_r <= 1'b1;
-					txm_r <= 1'b0;
+					txp_r <= ~low_speed;
+					txm_r <= low_speed;
 				end
 				default: begin
 					txp_r <= 1'bx;
@@ -140,6 +143,9 @@ parameter DATA		= 3'd1;
 parameter EOP1		= 3'd2;
 parameter EOP2		= 3'd3;
 parameter J		= 3'd4;
+parameter GEOP1		= 3'd5;
+parameter GEOP2		= 3'd6;
+parameter GJ		= 3'd7;
 
 reg [2:0] state;
 reg [2:0] next_state;
@@ -171,6 +177,19 @@ always @(posedge usb_clk) begin
 	end
 end
 
+reg generate_eop_pending;
+reg generate_eop_clear;
+always @(posedge usb_clk) begin
+	if(usb_rst)
+		generate_eop_pending <= 1'b0;
+	else begin
+		if(generate_eop)
+			generate_eop_pending <= 1'b1;
+		if(generate_eop_clear)
+			generate_eop_pending <= 1'b0;
+	end
+end
+
 always @(*) begin
 	txoe_ctl = 1'b0;
 	sr_rst = 1'b0;
@@ -179,18 +198,23 @@ always @(*) begin
 	generate_j = 1'b0;
 	tx_ready0 = 1'b0;
 	transmission_end_ack = 1'b0;
+	generate_eop_clear = 1'b0;
 
 	next_state = state;
 
 	case(state)
 		IDLE: begin
 			txoe_ctl = generate_reset;
-			if(tx_valid) begin
-				sr_load = 1'b1;
-				next_state = DATA;
-			end else
-				sr_rst = 1'b1;
-			tx_ready0 = 1'b1;
+			if(generate_eop_pending)
+				next_state = GEOP1;
+			else begin
+				if(tx_valid) begin
+					sr_load = 1'b1;
+					next_state = DATA;
+				end else
+					sr_rst = 1'b1;
+				tx_ready0 = 1'b1;
+			end
 		end
 		DATA: begin
 			txoe_ctl = 1'b1;
@@ -216,6 +240,25 @@ always @(*) begin
 			next_state = J;
 		end
 		J: begin
+			sr_rst = 1'b1;
+			txoe_ctl = 1'b1;
+			generate_j = 1'b1;
+			next_state = IDLE;
+		end
+		GEOP1: begin
+			sr_rst = 1'b1;
+			txoe_ctl = 1'b1;
+			generate_se0 = 1'b1;
+			next_state = GEOP2;
+		end
+		GEOP2: begin
+			sr_rst = 1'b1;
+			txoe_ctl = 1'b1;
+			generate_se0 = 1'b1;
+			next_state = GJ;
+		end
+		GJ: begin
+			generate_eop_clear = 1'b1;
 			sr_rst = 1'b1;
 			txoe_ctl = 1'b1;
 			generate_j = 1'b1;
