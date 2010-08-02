@@ -93,9 +93,8 @@ int main()
 	
 	frame_nr = 1;
 	SIE_SEL_TX = 3;
-	SIE_SEL_RX = 1;
 	SIE_TX_LOW_SPEED = 1;
-	SIE_LOW_SPEED = 1;
+	SIE_LOW_SPEED = 3;
 	print_string(banner);
 	SIE_TX_BUSRESET = 1;
 	for(i=0;i<50;i++) {

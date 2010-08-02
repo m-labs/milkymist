@@ -55,6 +55,7 @@ reg eop_detected;
 
 always @(*) begin
 	eop_detected = 1'b0;
+	eop_next_state = eop_state;
 
 	case(eop_state)
 		3'd0: begin

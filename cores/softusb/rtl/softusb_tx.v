@@ -107,8 +107,8 @@ reg generate_j;
 always @(posedge usb_clk) begin
 	if(usb_rst) begin
 		txoe_r <= 1'b0;
-		txp_r <= 1'bx;
-		txm_r <= 1'bx;
+		txp_r <= ~low_speed;
+		txm_r <= low_speed;
 	end else if(gce) begin
 		if(~txoe_ctl) begin
 			txp_r <= ~low_speed; /* return to J */
