@@ -6,4 +6,5 @@ run
 -opt_level 2
 -ofn system.ngc
 -p xc6slx45-fgg484-2
-
+-register_balancing yes
+-cross_clock_analysis yes
