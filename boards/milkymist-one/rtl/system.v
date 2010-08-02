@@ -693,6 +693,8 @@ wire ethernetrx_irq;
 wire ethernettx_irq;
 wire videoin_irq;
 wire ir_irq;
+wire midirx_irq;
+wire miditx_irq;
 wire usb_irq;
 
 wire [31:0] cpu_interrupt;
@@ -1295,7 +1297,7 @@ assign dmxb_d = 1'b0;
 `ifdef ENABLE_IR
 rc5 #(
 	.csr_addr(4'hc),
-	.clk_freq(`CLOCK_FREQUENCY),
+	.clk_freq(`CLOCK_FREQUENCY)
 ) ir (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),

@@ -15,17 +15,15 @@ build/loadsources.tcl: $(SRC)
 	    echo "add_file -verilog -lib work \"../$$i\"" >> build/loadsources.tcl; \
 	done
 
-build/system.sdc: build/system.ucf
-	cd build && ucf2sdc -osdc system.sdc -iucf system.ucf
+build/system_ucf.tcl: build/system.ucf
+	cd build && ucf2mgc system.ucf
 
 build/synplicity.ucf: build/system.edf
 
-# YES ! Synplify is dirty enough to put all its bloated crapware in the script
-# directory rather than in the current directory. Work around this.
 build/synplify.prj: synplify.prj
 	cp synplify.prj build/synplify.prj
 
-build/system.edf: build/loadsources.tcl build/synplify.prj build/system.sdc
+build/system.edf: build/loadsources.tcl build/synplify.prj build/system_ucf.tcl
 	cd build && synplify_pro -batch synplify.prj
 
 build/system.ngd: build/system.edf build/synplicity.ucf

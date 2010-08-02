@@ -1,30 +1,38 @@
 set_option -vlog_std v2001
 
 source "loadsources.tcl"
-add_file "system.sdc"
+#add_file "system_ucf.tcl"
 add_file "../ioffs.sdc"
 
-set_option -technology VIRTEX4
-set_option -part XC4VLX25
-set_option -package FF668
-set_option -speed_grade -10
+set_option -technology Spartan6
+set_option -part XC6SLX45
+set_option -package FGG484
+set_option -speed_grade -2
+set_option -part_companion ""
 
 set_option -top_module system
 
-set_option -default_enum_encoding onehot
-set_option -symbolic_fsm_compiler 0
-set_option -resource_sharing 0
+set_option -symbolic_fsm_compiler 1
 
-set_option -fanout_limit 10000
-set_option -maxfan_hard 0
-set_option -retiming 1
-set_option -pipe 0
+set_option -compiler_compatible 0
+set_option -resource_sharing 1
+
+set_option -run_prop_extract 1
+set_option -maxfan 10000
 set_option -disable_io_insertion 0
+set_option -pipe 1
+set_option -retiming 0
+set_option -update_models_cp 0
+set_option -fixgatedclocks 3
+set_option -fixgeneratedclocks 3
+set_option -no_sequential_opt 0
+set_option -enable_prepacking 1
 
 set_option -include_path "../../../../cores/pfpu/rtl/;../../rtl/"
 
-set_option -write_verilog false
-
-set_option -write_apr_constraint true
+set_option -write_verilog 0
+set_option -write_vhdl 0
+set_option -write_vif 1
+set_option -write_apr_constraint 1
 
 project -result_file "system.edf"
