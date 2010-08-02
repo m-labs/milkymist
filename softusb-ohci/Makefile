@@ -6,7 +6,7 @@ all: softusb-ohci.bin
 	avr-objcopy -O binary $< $@
 
 softusb-ohci.elf: $(SOURCES)
-	avr-gcc -o softusb-ohci.elf -mmcu=avr2 -mno-interrupts -Os $(SOURCES) $(CFLAGS) -nostdlib -Wl,-T -Wl,navre.ld
+	avr-gcc -o softusb-ohci.elf -mmcu=avr2 -mno-interrupts -mint8 -Wall -Os $(SOURCES) $(CFLAGS) -nostdlib -Wl,-T -Wl,navre.ld
 
 .PHONY: clean
 

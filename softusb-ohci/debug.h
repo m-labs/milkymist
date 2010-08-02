@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DEBUG_H
-#define _DEBUG_H
+#ifndef __DEBUG_H
+#define __DEBUG_H
 
 void debug_service();
 void print_char(char c);

@@ -41,7 +41,7 @@ void print_string(const char *s) /* in program memory */
 {
 	char c;
 	
-	while(c = read_pgm_byte(s)) {
+	while((c = read_pgm_byte(s))) {
 		print_char(c);
 		s++;
 	}

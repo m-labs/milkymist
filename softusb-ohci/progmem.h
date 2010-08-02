@@ -20,18 +20,18 @@
 
 #define PROGMEM __attribute__((__progmem__))
 
-#define read_pgm_byte(addr)					\
-	(__extension__({					\
-		unsigned int __addr16 = (unsigned int)(addr);	\
-		unsigned char __result;				\
-		__asm__(					\
-			"lpm" "\n\t"				\
-			"mov %0, r0" "\n\t"			\
-			: "=r" (__result)			\
-			: "z" (__addr16)			\
-			: "r0"					\
-		);						\
-		__result;					\
+#define read_pgm_byte(addr)						\
+	(__extension__({						\
+		unsigned int __addr16 = (unsigned long int)(addr);	\
+		unsigned char __result;					\
+		__asm__(						\
+			"lpm" "\n\t"					\
+			"mov %0, r0" "\n\t"				\
+			: "=r" (__result)				\
+			: "z" (__addr16)				\
+			: "r0"						\
+		);							\
+		__result;						\
 	}))
 
 #endif /* __PROGMEM_H */

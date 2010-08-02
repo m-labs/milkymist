@@ -18,8 +18,25 @@
 #ifndef __IO_H
 #define __IO_H
 
-#define IO8(x)		(*(volatile unsigned char *)((x) + 0x20))
-
 #define HOST8(x)	(*(volatile unsigned char *)((x) + 0x200))
+
+#define CPPSUCKS(x) #x
+
+#define rio8(addr)						\
+	(__extension__({					\
+		unsigned char __result;				\
+		__asm__ volatile(					\
+			"in %0, " CPPSUCKS(addr) " \n\t"	\
+			: "=r" (__result)			\
+		);						\
+		__result;					\
+	}))
+
+#define wio8(addr, value)					\
+		__asm__ volatile(					\
+			"out " CPPSUCKS(addr) ", %0" "\n\t"	\
+			:					\
+			: "r" (value)				\
+		)
 
 #endif /* __IO_H */

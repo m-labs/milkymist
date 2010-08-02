@@ -61,11 +61,14 @@ always @(posedge sys_clk) begin
 	end_of_test <= 1'b0;
 	if(~sys_rst) begin
 		if(io_re) begin
-			$display("IO READ adr=%d", io_a);
-			io_di <= io_a;
+			$display("IO READ adr=%x", io_a);
+			if((io_a == 6'h11)|(io_a == 6'h12))
+				io_di <= 8'hff;
+			else
+				io_di <= io_a;
 		end
 		if(io_we) begin
-			$display("IO WRITE adr=%d dat=%d", io_a, io_do);
+			$display("IO WRITE adr=%x dat=%x", io_a, io_do);
 			if((io_a == 0) && (io_do == 254))
 				end_of_test <= 1'b1;
 		end
