@@ -48,21 +48,17 @@ reg [15:0] pZ;	/* < R30-R31 */
 reg T, H, S, V, N, Z, C;
 
 /* Stack */
-reg io_use_stack;
 reg [7:0] io_sp;
 reg [15:0] SP;
 reg push;
 reg pop;
 always @(posedge clk) begin
 	if(rst) begin
-		io_use_stack <= 1'b0;
 		io_sp <= 8'd0;
 		SP <= 16'd0;
 	end else begin
-		io_use_stack <= 1'b0;
 		io_sp <= io_a[0] ? SP[7:0] : SP[15:8];
 		if((io_a == 6'b111101) | (io_a == 6'b111110)) begin
-			io_use_stack <= 1'b1;
 			if(io_we) begin
 				if(io_a[0])
 					SP[7:0] <= io_do;
@@ -74,6 +70,26 @@ always @(posedge clk) begin
 			SP <= SP - 16'd1;
 		if(pop)
 			SP <= SP + 16'd1;
+	end
+end
+
+/* I/O mapped registers */
+
+parameter IO_SEL_EXT	= 2'd0;
+parameter IO_SEL_STACK	= 2'd1;
+parameter IO_SEL_SREG	= 2'd2;
+
+reg [1:0] io_sel;
+always @(posedge clk) begin
+	if(rst)
+		io_sel <= IO_SEL_EXT;
+	else begin
+		case(io_a)
+			6'b111101,
+			6'b111110: io_sel <= IO_SEL_STACK;
+			6'b111111: io_sel <= IO_SEL_SREG;
+			default: io_sel <= IO_SEL_EXT;
+		endcase
 	end
 end
 
@@ -422,7 +438,12 @@ always @(posedge clk) begin
 				end
 				16'b1011_0xxx_xxxx_xxxx: begin
 					/* IN (run from state WRITEBACK) */
-					R = io_use_stack ? io_sp : io_di;
+					case(io_sel)
+						IO_SEL_EXT: R = io_di;
+						IO_SEL_STACK: R = io_sp;
+						IO_SEL_SREG: R = {1'b0, T, H, S, V, N, Z, C};
+						default: R = 8'hxx;
+					endcase
 					update_nsz = 1'b0;
 				end
 			endcase
@@ -440,6 +461,8 @@ always @(posedge clk) begin
 			S = N ^ V;
 			Z = mode16 ? R16 == 16'h0000 : R == 8'h00;
 		end
+		if(io_we & (io_a == 6'b111111))
+			{T, H, S, V, N, Z, C} = io_do[6:0];
 		if(writeback) begin
 			if(mode16) begin
 				// synthesis translate_off
