@@ -36,7 +36,7 @@ reg wb_stb_i;
 reg wb_we_i;
 wire wb_ack_o;
 
-wire [25:0] fml_adr;
+wire [26:0] fml_adr;
 wire fml_stb;
 wire fml_we;
 reg fml_ack;
@@ -45,7 +45,7 @@ wire [63:0] fml_dw;
 reg [63:0] fml_dr;
 
 reg dcb_stb;
-reg [25:0] dcb_adr;
+reg [26:0] dcb_adr;
 wire [63:0] dcb_dat;
 wire dcb_hit;
 
@@ -82,7 +82,9 @@ always @(posedge clk) begin
 	end
 end
 
-fmlbrg dut(
+fmlbrg #(
+	.fml_depth(27)
+) dut (
 	.sys_clk(clk),
 	.sys_rst(rst),
 	
@@ -178,7 +180,7 @@ always begin
 	wb_we_i = 1'b0;
 
 	dcb_stb = 1'b0;
-	dcb_adr = 26'd0;
+	dcb_adr = 27'd0;
 	
 	waitclock;
 	
@@ -187,29 +189,29 @@ always begin
 	waitclock;
 	
 	$display("Testing: read miss");
-	wbread(26'h0);
+	wbread(27'h0);
 	$display("Testing: write hit");
-	wbwrite(26'h0, 32'h12345678);
-	wbread(26'h0);
+	wbwrite(27'h0, 32'h12345678);
+	wbread(27'h0);
 	$display("Testing: read miss on a dirty line");
-	wbread(26'h10000);
+	wbread(27'h10000);
 	
 	$display("Testing: read hit");
-	wbread(26'h10004);
+	wbread(27'h10004);
 	
 	$display("Testing: write miss");
-	wbwrite(26'h0, 32'habadface);
-	wbread(26'h0);
-	wbread(26'h4);
+	wbwrite(27'h0, 32'habadface);
+	wbread(27'h0);
+	wbread(27'h4);
 
 	$display("Testing: DCB miss");
-	dcb_adr = 26'hfebabe;
+	dcb_adr = 27'hfebabe;
 	dcb_stb = 1'b1;
 	waitclock;
 	$display("Result: hit=%b dat=%x", dcb_hit, dcb_dat);
 
 	$display("Testing: DCB hit");
-	dcb_adr = 26'h0;
+	dcb_adr = 27'h0;
 	dcb_stb = 1'b1;
 	waitclock;
 	$display("Result: hit=%b dat=%x", dcb_hit, dcb_dat);

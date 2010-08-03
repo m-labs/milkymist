@@ -18,7 +18,7 @@
 module fmlbrg #(
 	parameter fml_depth = 26,
 	parameter cache_depth = 15, /* 32kB cache */
-	parameter invalidate_bit = 26
+	parameter invalidate_bit = fml_depth
 ) (
 	input sys_clk,
 	input sys_rst,
