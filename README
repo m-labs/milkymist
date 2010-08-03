@@ -9,20 +9,21 @@ For the latest releases, binary distributions and more:
 
 
 [> Directory Structure
- /cores/      Cores library, with Verilog sources, test benches and documentation.
- /boards/     Top-level design files, constraint files and Makefiles
-              for supported FPGA boards.
- /software/   Software for the SoC.
- /doc/        System documentation.
- /tools/      Small tools for developers.
- /patches/    Example patches.
+ /cores/        Cores library, with Verilog sources, test benches and documentation.
+ /boards/       Top-level design files, constraint files and Makefiles
+                for supported FPGA boards.
+ /software/     Software for the SoC: libraries, bootloader and proof-of-concept renderer.
+ /softusb-ohci/ AVR firmware to implement OHCI on the softusb core (work in progress).
+ /doc/          System documentation.
+ /tools/        Small tools for developers.
+ /patches/      Example patches.
 
 
 [> Building tools
 You will need:
  - GNU Make,
  - Bourne Again Shell (bash),
- - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
+ - Xilinx ISE 12.2 for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
  - AVR toolchain for building the USB OHCI firmware,
  - SRecord,
@@ -35,8 +36,7 @@ You will need:
  - Scilab.
 
 In case of Xst bugs or to improve timing/area (optional):
- - Synplify Pro (Synopsys),
- - or Precision RTL (Mentor Graphics).
+ - Synplify Pro (Synopsys).
 
 NB. Before switching synthesis tools, don't forget to run "make clean" in the
 synthesis directory.
@@ -80,7 +80,6 @@ Milkymist is a trademark of Sebastien Bourdeauducq.
 The SoC design uses:
  - the Mico32 soft-processor by Lattice Semiconductor. See the LICENSE.LATTICE file.
  - a modified version of wb_conbus by Johny Chi and Rudolf Usselmann. See LICENSE.LGPL.
- - the USB PHY by Rudolf Usselmann. See notices at the beginning of the files.
 
 The directory organization and build scripts were inspired by soc-lm32 by the German
 hackerspace Das Labor. Some of the UART and timer code also comes from there.
