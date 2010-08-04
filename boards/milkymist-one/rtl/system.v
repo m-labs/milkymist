@@ -468,6 +468,7 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_sysctl,
 		csr_dr_hpdmc,
 		csr_dr_vga,
+		csr_dr_memcard,
 		csr_dr_ac97,
 		csr_dr_pfpu,
 		csr_dr_tmu,
@@ -476,8 +477,9 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_videoin,
 		csr_dr_ir,
 		csr_dr_midi,
-		csr_dr_usb,
-		csr_dr_memcard;
+		csr_dr_dmx_tx,
+		csr_dr_dmx_rx,
+		csr_dr_usb;
 
 //------------------------------------------------------------------
 // FML master wires
@@ -624,6 +626,7 @@ csrbrg csrbrg(
 		|csr_dr_sysctl
 		|csr_dr_hpdmc
 		|csr_dr_vga
+		|csr_dr_memcard
 		|csr_dr_ac97
 		|csr_dr_pfpu
 		|csr_dr_tmu
@@ -632,8 +635,9 @@ csrbrg csrbrg(
 		|csr_dr_videoin
 		|csr_dr_ir
 		|csr_dr_midi
+		|csr_dr_dmx_tx
+		|csr_dr_dmx_rx
 		|csr_dr_usb
-		|csr_dr_memcard
 	)
 );
 
@@ -1283,8 +1287,41 @@ assign midi_tx = 1'b1;
 // DMX
 //---------------------------------------------------------------------------
 `ifdef ENABLE_DMX
-// TODO
+dmx_tx #(
+	.csr_addr(4'he),
+	.clk_freq(`CLOCK_FREQUENCY)
+) dmx_tx (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_dmx_tx),
+
+	.thru(dmxb_r),
+	.tx(dmxa_d)
+);
+assign dmxa_de = 1'b1;
+dmx_rx #(
+	.csr_addr(4'hf),
+	.clk_freq(`CLOCK_FREQUENCY)
+) dmx_rx (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_dmx_rx),
+
+	.rx(dmxb_r)
+);
+assign dmxb_de = 1'b0;
+assign dmxb_d = 1'b0;
 `else
+assign csr_dr_dmx_tx = 32'd0;
+assign csr_dr_dmx_rx = 32'd0;
 assign dmxa_de = 1'b0;
 assign dmxa_d = 1'b0;
 assign dmxb_de = 1'b0;
