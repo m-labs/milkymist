@@ -44,4 +44,12 @@ end
 always @(posedge clk)
 	do2 <= ram[a2];
 
+// synthesis translate_off
+integer i;
+initial begin
+	for(i=0;i<(1 << depth);i++)
+		ram[i] = {width{1'b0}};
+end
+// synthesis translate_on
+
 endmodule
