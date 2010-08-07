@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module dmx_tx #(
+module dmx_rx #(
 	parameter csr_addr = 4'h0,
 	parameter clk_freq = 100000000
 ) (
@@ -29,5 +29,7 @@ module dmx_tx #(
 
 	input rx
 );
+
+assign csr_do = 32'd0;
 
 endmodule

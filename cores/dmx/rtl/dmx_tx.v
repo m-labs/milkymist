@@ -47,14 +47,14 @@ dmx_dpram channels(
 	.do(csr_do_channels[7:0]),
 
 	.a2(channel_a),
-	.d2(channel_d)
+	.do2(channel_d)
 );
 assign csr_do_channels[31:24] = 24'h000000;
 
 reg thru_en;
 
 reg [31:0] csr_do_reg;
-reg cs_do_sel;
+reg csr_do_sel;
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		csr_do_reg <= 32'd0;
@@ -95,7 +95,7 @@ always @(posedge sys_clk) begin
 			ce_counter <= divisor-1;
 		end else begin
 			ce <= 1'b0;
-			ce_counter <= ce_counter - 9'd0;
+			ce_counter <= ce_counter - 9'd1;
 		end
 	end
 end
@@ -316,7 +316,7 @@ always @(*) begin
 			else
 				next_state = START;
 		end
-	end
+	endcase
 end
 
 endmodule

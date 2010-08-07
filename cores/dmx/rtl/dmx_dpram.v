@@ -47,8 +47,11 @@ always @(posedge clk)
 // synthesis translate_off
 integer i;
 initial begin
-	for(i=0;i<(1 << depth);i++)
+	for(i=0;i<(1 << depth);i=i+1)
 		ram[i] = {width{1'b0}};
+	ram[0] = 8'h55;
+	ram[1] = 8'haa;
+	ram[511] = 8'hff;
 end
 // synthesis translate_on
 
