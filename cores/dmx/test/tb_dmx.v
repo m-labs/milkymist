@@ -27,22 +27,40 @@ always #6 sys_clk = ~sys_clk;
 reg [13:0] csr_a;
 reg csr_we;
 reg [31:0] csr_di;
-wire [31:0] csr_do;
+wire [31:0] csr_do_tx;
+wire [31:0] csr_do_rx;
+
+wire dmx_signal;
 
 dmx_tx #(
 	.csr_addr(4'h0),
 	.clk_freq(83333333)
-) dut (
+) tx_dut (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
 	.csr_a(csr_a),
 	.csr_we(csr_we),
-	.csr_do(csr_do),
+	.csr_do(csr_do_tx),
 	.csr_di(csr_di),
 
 	.thru(1'b0),
-	.tx()
+	.tx(dmx_signal)
+);
+
+dmx_rx #(
+	.csr_addr(4'h1),
+	.clk_freq(83333333)
+) rx_dut (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_do(csr_do_rx),
+	.csr_di(csr_di),
+
+	.rx(dmx_signal)
 );
 
 task waitclock;
@@ -70,13 +88,14 @@ input [31:0] address;
 begin
 	csr_a = address[16:2];
 	waitclock;
-	$display("CSR read : %x=%x", address, csr_do);
+	$display("CSR read : %x=%x", address, csr_do_tx|csr_do_rx);
 end
 endtask
 
 always begin
 	$dumpfile("dmx.vcd");
-	$dumpvars(0, dut);
+	$dumpvars(0, tx_dut);
+	$dumpvars(0, rx_dut);
 
 	/* Reset / Initialize our logic */
 	sys_rst = 1'b1;
@@ -87,9 +106,14 @@ always begin
 	
 	waitclock;
 
-	csrread(32'h00);
-	csrwrite(32'h00, 32'hff);
-	csrread(32'h00);
+	csrread(32'h0000);
+	csrwrite(32'h0000, 32'hff);
+	csrread(32'h0000);
+
+	#1000000;
+
+	csrread(32'h1000);
+	csrread(32'h1004);
 	
 	#50000000;
 	

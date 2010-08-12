@@ -52,6 +52,11 @@ dmx_dpram channels(
 	.do2()
 );
 
+always @(posedge sys_clk) begin
+	if(channel_we)
+		$display("Received value %x for channel %x", channel_d, channel_a);
+end
+
 reg csr_selected_r;
 always @(posedge sys_clk)
 	csr_selected_r <= csr_selected;
@@ -141,6 +146,12 @@ always @(posedge sys_clk) begin
 		state <= next_state;
 end
 
+/* skip 1st byte (start code) */
+reg skip;
+reg next_skip;
+always @(posedge sys_clk)
+	skip <= next_skip;
+
 always @(*) begin
 	ce_load = 1'b0;
 	channel_a_reset = 1'b0;
@@ -150,11 +161,13 @@ always @(*) begin
 	channel_d_load = 3'bxxx;
 
 	next_state = state;
+	next_skip = skip;
 
 	case(state)
 		WAIT_BREAK: begin
 			ce_load = 1'b1;
 			channel_a_reset = 1'b1;
+			next_skip = 1'b1;
 			if(break)
 				next_state = WAIT_MAB;
 		end
@@ -175,7 +188,7 @@ always @(*) begin
 				if(rx_r) /* confirm start bit */
 					next_state = WAIT_BREAK;
 				else
-					next_state = SAMPLE1;
+					next_state = SAMPLE0;
 			end
 		end
 		SAMPLE0: begin
@@ -237,8 +250,11 @@ always @(*) begin
 		SAMPLE_STOP2: begin
 			if(ce) begin
 				if(rx_r) begin /* verify 2nd stop bit */
-					channel_we = 1'b1;
-					channel_a_ce = 1'b1;
+					next_skip = 1'b0;
+					if(~skip) begin
+						channel_we = 1'b1;
+						channel_a_ce = 1'b1;
+					end
 					next_state = WAIT_START;
 				end else
 					next_state = WAIT_BREAK;
