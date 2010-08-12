@@ -194,6 +194,11 @@ static void pfv_callback(struct pfpu_td *td)
 	rpipe_frame->vecho_zoom = eval_read_pfv(pfv_video_echo_zoom);
 	rpipe_frame->vecho_orientation = eval_read_pfv(pfv_video_echo_orientation);
 
+	rpipe_frame->dmx1 = eval_read_pfv(pfv_dmx1);
+	rpipe_frame->dmx2 = eval_read_pfv(pfv_dmx2);
+	rpipe_frame->dmx3 = eval_read_pfv(pfv_dmx3);
+	rpipe_frame->dmx4 = eval_read_pfv(pfv_dmx4);
+
 	eval_transfer_pvv_regs();
 	eval_pvv_fill_td(&pfpu_td, &rpipe_frame->vertices[0][0], pvv_callback, rpipe_frame);
 	pfpu_submit_task(&pfpu_td);

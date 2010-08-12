@@ -48,6 +48,7 @@ struct rpipe_frame {
 	float vecho_alpha;
 	float vecho_zoom;
 	int vecho_orientation;
+	float dmx1, dmx2, dmx3, dmx4;
 	float treb;
 	float time;
 	unsigned int nsamples; /* < audio samples */

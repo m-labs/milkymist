@@ -106,7 +106,12 @@ enum {
 	pfv_video_echo_alpha,
 	pfv_video_echo_zoom,
 	pfv_video_echo_orientation,
-	
+
+	pfv_dmx1,
+	pfv_dmx2,
+	pfv_dmx3,
+	pfv_dmx4,
+
 	EVAL_PFV_COUNT /* must be last */
 };
 

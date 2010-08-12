@@ -40,6 +40,10 @@ void dmx_thru_mode(int thru)
 
 void dmx_set(int channel, int value)
 {
+	if(value < 0)
+		value = 0;
+	if(value > 255)
+		value = 255;
 	CSR_DMX_TX(channel) = value;
 }
 

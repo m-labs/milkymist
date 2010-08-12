@@ -21,8 +21,9 @@
 #include <math.h>
 #include <hw/interrupts.h>
 
-#include <hal/vga.h>
 #include <hal/tmu.h>
+#include <hal/vga.h>
+#include <hal/dmx.h>
 
 #include "renderer.h"
 #include "wave.h"
@@ -561,6 +562,12 @@ void rpipe_swap_bottom_half()
 {
 	unsigned short *b;
 	unsigned int oldmask;
+
+	/* Update DMX outputs */
+	dmx_set(0, 255.0*bh_frame->dmx1);
+	dmx_set(1, 255.0*bh_frame->dmx2);
+	dmx_set(2, 255.0*bh_frame->dmx3);
+	dmx_set(3, 255.0*bh_frame->dmx4);
 	
 	/* Swap texture buffers */
 	b = tex_backbuffer;

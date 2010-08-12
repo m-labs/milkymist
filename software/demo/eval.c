@@ -142,7 +142,12 @@ static const char pfv_names[EVAL_PFV_COUNT][FPVM_MAXSYMLEN] = {
 
 	"fVideoEchoAlpha",
 	"fVideoEchoZoom",
-	"nVideoEchoOrientation"
+	"nVideoEchoOrientation",
+
+	"dmx1",
+	"dmx2",
+	"dmx3",
+	"dmx4"
 };
 
 int eval_pfv_from_name(const char *name)
