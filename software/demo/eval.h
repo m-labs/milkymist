@@ -112,6 +112,11 @@ enum {
 	pfv_dmx3,
 	pfv_dmx4,
 
+	pfv_idmx1,
+	pfv_idmx2,
+	pfv_idmx3,
+	pfv_idmx4,
+
 	EVAL_PFV_COUNT /* must be last */
 };
 

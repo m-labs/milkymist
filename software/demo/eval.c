@@ -147,7 +147,12 @@ static const char pfv_names[EVAL_PFV_COUNT][FPVM_MAXSYMLEN] = {
 	"dmx1",
 	"dmx2",
 	"dmx3",
-	"dmx4"
+	"dmx4",
+
+	"idmx1",
+	"idmx2",
+	"idmx3",
+	"idmx4"
 };
 
 int eval_pfv_from_name(const char *name)

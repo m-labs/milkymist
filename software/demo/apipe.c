@@ -22,6 +22,7 @@
 #include <hal/snd.h>
 #include <hal/pfpu.h>
 #include <hal/time.h>
+#include <hal/dmx.h>
 
 #include "analyzer.h"
 #include "eval.h"
@@ -252,6 +253,11 @@ static void analyzer_bottom_half()
 	eval_write_pfv(pfv_bass_att, bass_att);
 	eval_write_pfv(pfv_mid_att, mid_att);
 	eval_write_pfv(pfv_treb_att, treb_att);
+
+	eval_write_pfv(pfv_idmx1, ((float)dmx_get(0))/255.0);
+	eval_write_pfv(pfv_idmx2, ((float)dmx_get(1))/255.0);
+	eval_write_pfv(pfv_idmx3, ((float)dmx_get(2))/255.0);
+	eval_write_pfv(pfv_idmx4, ((float)dmx_get(3))/255.0);
 
 	rpipe_frame->time = time;
 	rpipe_frame->treb = ftreb;
