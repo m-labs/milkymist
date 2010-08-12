@@ -31,7 +31,7 @@
 `define ENABLE_MIDI
 `define ENABLE_DMX
 `define ENABLE_IR
-//`define ENABLE_USB
+`define ENABLE_USB
 
 /*
  * System clock frequency in Hz.
