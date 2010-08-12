@@ -104,6 +104,13 @@ always @(posedge sys_clk) begin
 	end
 end
 
+reg [7:0] channel_d_r;
+reg channel_d_ce;
+always @(posedge sys_clk) begin
+	if(channel_d_ce)
+		channel_d_r <= channel_d;
+end
+
 reg [3:0] tx_sel;
 parameter TX_SEL_B0 =		4'd0;
 parameter TX_SEL_B1 =		4'd1;
@@ -118,14 +125,14 @@ parameter TX_SEL_LO =		4'd9;
 
 always @(posedge sys_clk) begin
 	case(tx_sel)
-		TX_SEL_B0: tx_gen <= channel_d[0];
-		TX_SEL_B1: tx_gen <= channel_d[1];
-		TX_SEL_B2: tx_gen <= channel_d[2];
-		TX_SEL_B3: tx_gen <= channel_d[3];
-		TX_SEL_B4: tx_gen <= channel_d[4];
-		TX_SEL_B5: tx_gen <= channel_d[5];
-		TX_SEL_B6: tx_gen <= channel_d[6];
-		TX_SEL_B7: tx_gen <= channel_d[7];
+		TX_SEL_B0: tx_gen <= channel_d_r[0];
+		TX_SEL_B1: tx_gen <= channel_d_r[1];
+		TX_SEL_B2: tx_gen <= channel_d_r[2];
+		TX_SEL_B3: tx_gen <= channel_d_r[3];
+		TX_SEL_B4: tx_gen <= channel_d_r[4];
+		TX_SEL_B5: tx_gen <= channel_d_r[5];
+		TX_SEL_B6: tx_gen <= channel_d_r[6];
+		TX_SEL_B7: tx_gen <= channel_d_r[7];
 		TX_SEL_HI: tx_gen <= 1'b1;
 		TX_SEL_LO: tx_gen <= 1'b0;
 		default: tx_gen <= 1'bx;
@@ -209,6 +216,8 @@ always @(*) begin
 	acounter_ce = 1'b0;
 	break_counter_reset = 1'b1;
 
+	channel_d_ce = 1'b0;
+
 	next_state = state;
 
 	case(state)
@@ -266,6 +275,7 @@ always @(*) begin
 		START: begin
 			tx_sel = TX_SEL_LO;
 			acounter_reset = 1'b0;
+			channel_d_ce = 1'b1;
 			next_state = D0;
 		end
 		D0: begin
