@@ -35,6 +35,7 @@ module dmx_tx #(
 
 wire csr_selected = csr_a[13:10] == csr_addr;
 
+wire csr_channels_we;
 wire [31:0] csr_do_channels;
 wire [8:0] channel_a;
 wire [7:0] channel_d;
@@ -42,14 +43,17 @@ dmx_dpram channels(
 	.clk(sys_clk),
 
 	.a(csr_a[8:0]),
-	.we(csr_selected & ~csr_a[9] & csr_we),
+	.we(csr_channels_we),
 	.di(csr_di[7:0]),
 	.do(csr_do_channels[7:0]),
 
 	.a2(channel_a),
+	.we2(1'b0),
+	.di2(8'hxx),
 	.do2(channel_d)
 );
-assign csr_do_channels[31:24] = 24'h000000;
+assign csr_channels_we = csr_selected & ~csr_a[9] & csr_we;
+assign csr_do_channels[31:8] = 24'h000000;
 
 reg thru_en;
 

@@ -86,6 +86,10 @@ always begin
 	sys_rst = 1'b0;
 	
 	waitclock;
+
+	csrread(32'h00);
+	csrwrite(32'h00, 32'hff);
+	csrread(32'h00);
 	
 	#50000000;
 	

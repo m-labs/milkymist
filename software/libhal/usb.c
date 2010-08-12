@@ -68,6 +68,8 @@ void usb_service()
 {
 	char c;
 
+	if(!(CSR_CAPABILITIES & CAP_USB))
+		return;
 	c = HCREG_DEBUG;
 	if(c != 0x00) {
 		if(c == '\n')

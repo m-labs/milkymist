@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC
+ * Milkymist VJ SoC (Software)
  * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,43 +15,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module dmx_dpram #(
-	parameter depth = 9,
-	parameter width = 8
-) (
-	input clk,
+#include <stdio.h>
+#include <hw/dmx.h>
 
-	input [depth-1:0] a,
-	input we,
-	input [width-1:0] di,
-	output reg [width-1:0] do,
+#include <hal/dmx.h>
 
-	input [depth-1:0] a2,
-	input we2,
-	input [width-1:0] di2,
-	output reg [width-1:0] do2
-);
+void dmx_init()
+{
+	int i;
 
-reg [width-1:0] ram[0:(1 << depth)-1];
+	for(i=0;i<512;i++)
+		CSR_DMX_TX(i) = 0;
+	CSR_DMX_THRU = 0;
+	printf("DMX: initialized\n");
+}
 
-always @(posedge clk) begin
-	if(we)
-		ram[a] <= di;
-	do <= ram[a];
-	if(we2)
-		ram[a2] <= di2;
-	do2 <= ram[a2];
-end
+void dmx_thru_mode(int thru)
+{
+	if(thru)
+		CSR_DMX_THRU = 1;
+	else
+		CSR_DMX_THRU = 0;
+}
 
-// synthesis translate_off
-integer i;
-initial begin
-	for(i=0;i<(1 << depth);i=i+1)
-		ram[i] = {width{1'b0}};
-	ram[0] = 8'h55;
-	ram[1] = 8'haa;
-	ram[511] = 8'hff;
-end
-// synthesis translate_on
+void dmx_set(int channel, int value)
+{
+	CSR_DMX_TX(channel) = value;
+}
 
-endmodule
+int dmx_get(int channel)
+{
+	return CSR_DMX_RX(channel);
+}

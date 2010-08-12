@@ -31,6 +31,7 @@
 #include <hal/pfpu.h>
 #include <hal/tmu.h>
 #include <hal/vin.h>
+#include <hal/dmx.h>
 #include <hal/usb.h>
 
 #include "apipe.h"
@@ -64,6 +65,7 @@ int main()
 	vga_init();
 	snd_init();
 	vin_init();
+	dmx_init();
 	pfpu_init();
 	tmu_init();
 	renderer_init();

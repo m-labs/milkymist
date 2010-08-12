@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC
+ * Milkymist VJ SoC (Software)
  * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,43 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module dmx_dpram #(
-	parameter depth = 9,
-	parameter width = 8
-) (
-	input clk,
+#ifndef __HW_DMX_H
+#define __HW_DMX_H
 
-	input [depth-1:0] a,
-	input we,
-	input [width-1:0] di,
-	output reg [width-1:0] do,
+#include <hw/common.h>
 
-	input [depth-1:0] a2,
-	input we2,
-	input [width-1:0] di2,
-	output reg [width-1:0] do2
-);
+#define CSR_DMX_TX(x)		MMPTR(0xe000e000+4*(x))
+#define CSR_DMX_THRU		MMPTR(0xe000e800)
 
-reg [width-1:0] ram[0:(1 << depth)-1];
+#define CSR_DMX_RX(x)		MMPTR(0xe000f000+4*(x))
 
-always @(posedge clk) begin
-	if(we)
-		ram[a] <= di;
-	do <= ram[a];
-	if(we2)
-		ram[a2] <= di2;
-	do2 <= ram[a2];
-end
-
-// synthesis translate_off
-integer i;
-initial begin
-	for(i=0;i<(1 << depth);i=i+1)
-		ram[i] = {width{1'b0}};
-	ram[0] = 8'h55;
-	ram[1] = 8'haa;
-	ram[511] = 8'hff;
-end
-// synthesis translate_on
-
-endmodule
+#endif /* __HW_DMX_H */
