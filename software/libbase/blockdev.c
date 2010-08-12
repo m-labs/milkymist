@@ -150,7 +150,7 @@ static int memcard_receive_command_data(unsigned char *command, unsigned int *da
 		while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_DAT_RX));
 		#ifdef MEMCARD_DEBUG
 		printf("CRC: %08x\n", CSR_MEMCARD_DAT);
-		#endif MEMCARD_DEBUG
+		#endif
 		CSR_MEMCARD_PENDING = MEMCARD_PENDING_DAT_RX;
 	}
 
@@ -169,7 +169,6 @@ static int memcard_receive_command_data(unsigned char *command, unsigned int *da
 
 static int memcard_init()
 {
-	int i;
 	unsigned char b[6];
 	unsigned int rca;
 
@@ -243,7 +242,7 @@ static int memcard_init()
 
 static int memcard_readblock(unsigned int block, void *buffer)
 {
-	char b[6];
+	unsigned char b[6];
 
 	/* CMD17 - read block */
 	memcard_start_cmd_tx();
