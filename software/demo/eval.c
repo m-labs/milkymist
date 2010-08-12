@@ -366,7 +366,12 @@ static const char pvv_names[EVAL_PVV_COUNT][FPVM_MAXSYMLEN] = {
 	"q5",
 	"q6",
 	"q7",
-	"q8"
+	"q8",
+
+	"idmx1",
+	"idmx2",
+	"idmx3",
+	"idmx4"
 };
 
 static void write_pvv(int pvv, float x)
@@ -411,6 +416,11 @@ void eval_transfer_pvv_regs()
 	write_pvv(pvv_q6, eval_read_pfv(pfv_q6));
 	write_pvv(pvv_q7, eval_read_pfv(pfv_q7));
 	write_pvv(pvv_q8, eval_read_pfv(pfv_q8));
+
+	write_pvv(pvv_idmx1, eval_read_pfv(pfv_idmx1));
+	write_pvv(pvv_idmx2, eval_read_pfv(pfv_idmx2));
+	write_pvv(pvv_idmx3, eval_read_pfv(pfv_idmx3));
+	write_pvv(pvv_idmx4, eval_read_pfv(pfv_idmx4));
 }
 
 static int init_pvv()

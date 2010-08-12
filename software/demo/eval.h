@@ -192,6 +192,11 @@ enum {
 	pvv_q6,
 	pvv_q7,
 	pvv_q8,
+
+	pvv_idmx1,
+	pvv_idmx2,
+	pvv_idmx3,
+	pvv_idmx4,
 	
 	EVAL_PVV_COUNT /* must be last */
 };
