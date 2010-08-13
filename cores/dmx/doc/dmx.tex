@@ -1,0 +1,37 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{url}
+
+\title{DMX cores}
+\author{S\'ebastien Bourdeauducq}
+\date{August 2010}
+\begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\maketitle{}
+\section{Overview}
+The DMX cores are made of a transmitter and receiver cores. Both fully implement the DMX512 protocol in hardware and map the DMX channels in the CSR address space.
+
+\section{Channel access}
+Both cores map the 512 DMX channels from addresses 0x000 to 0x7fc. The CSR interface is 32-bit and only the 8 lower bits are significant and represent the DMX channel value; the 24 upper bits are always 0. The first DMX channel is mapped at address 0x000, the second at address 0x004, the third at address 0x008 and so forth.
+
+The transmitter core continuously transmits a DMX signal containing the channel data. The channel data can be read and written at any time over the CSR interface without any glitch occuring on the transmitted signal.
+
+The receiver core continuously tries to receive a DMX signal and updates the channel data. The channel data can be read at any time, and each channel value is updated atomically (i.e. no invalid data is returned if a channel is read over the CSR interface at the same time as it is received).
+
+\section{Thru mode}
+To be able to act as a traditional DMX receiving device, the transmitting DMX core can simply forward the incoming DMX signal instead of transmitting the data from the host CPU. This mode is enabled by writing a 1 to the offset 0x800, and disabled (default) by writing 0.
+
+\section*{Copyright notice}
+Copyright \copyright 2007-2010 S\'ebastien Bourdeauducq. \\
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.3; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the LICENSE.FDL file at the root of the Milkymist source distribution.
+
+\end{document}
