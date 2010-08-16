@@ -173,9 +173,7 @@ class opcode_32_mixin:
 class opcode_stack_mixin:
 	"""Mixin Class for testing opcodes which perform stack operations.
 	"""
-	# Assume an at90s8515 device with end of ram 0x025f (32 + 64 + 512 - 1).
-	# Use 0x0250 so we can pop things off and not go past end of ram.
-	SP_val = 0x0250
+	SP_val = 1020
 
 	def common_setup(self):
 		"""Initialize the stack and then call the base class common_setup.
