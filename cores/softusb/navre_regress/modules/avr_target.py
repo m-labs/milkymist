@@ -67,7 +67,7 @@ class target:
 				index = 0
 			elif line != "":
 				if mode == 1:
-					if index < 32:
+					if index < 33:
 						self.regs[index] = int(line, 16)
 					elif index == 33:
 						self.regs[33] = int(line, 16) << 8

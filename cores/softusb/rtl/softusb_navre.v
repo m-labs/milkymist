@@ -96,7 +96,8 @@ end
 /* Register operations */
 wire immediate = (pmem_d[14]
 	| (pmem_d[15:12] == 4'b0011))		/* CPI */
-	& (pmem_d[15:10] != 6'b111111);		/* SBRC - SBRS */
+	& (pmem_d[15:10] != 6'b111111)		/* SBRC - SBRS */
+	& (pmem_d[15:10] != 6'b111110);		/* BST - BLD */
 reg lpm_en;
 wire [4:0] Rd = lpm_en ? 5'd0 : {immediate | pmem_d[8], pmem_d[7:4]};
 wire [4:0] Rr = {pmem_d[9], pmem_d[3:0]};
@@ -851,10 +852,10 @@ always @(posedge clk) begin
 		$display("%x", pZ[7:0]);
 		$display("%x", pZ[15:8]);
 		$display("%x", {1'b0, T, H, S, V, N, Z, C});
-		$display("%x", SP[15:8]);
-		$display("%x", SP[7:0]);
-		$display("%x", PC[15:8]);
-		$display("%x", {PC[7:0], 1'b0});
+		$display("%x", SP[14:7]);
+		$display("%x", {SP[6:0], 1'b0});
+		$display("%x", PC[14:7]);
+		$display("%x", {PC[6:0], 1'b0});
 		tb_regress.dump;
 		$finish;
 	end
@@ -874,8 +875,8 @@ initial begin
 	pY = {SPR[5], SPR[4]};
 	pZ = {SPR[7], SPR[6]};
 	{I, T, H, S, V, N, Z, C} = SPR[8];
-	SP = {SPR[9], SPR[10]};
-	PC = {SPR[11], SPR[12]};
+	SP = {SPR[9], SPR[10]}/2;
+	PC = {SPR[11], SPR[12]}/2;
 end
 `endif
 
