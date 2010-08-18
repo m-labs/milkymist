@@ -836,8 +836,9 @@ end
 
 `ifdef REGRESS
 integer i;
+integer cycles;
 always @(posedge clk) begin
-	if(~rst & (state == NORMAL) & |PC) begin
+	if(~rst & (state == NORMAL) & (cycles != 0)) begin
 		$display("DUMP REGISTERS");
 		for(i=0;i<24;i=i+1)
 			$display("%x", GPR[i]);
@@ -857,6 +858,10 @@ always @(posedge clk) begin
 		tb_regress.dump;
 		$finish;
 	end
+	if(rst)
+		cycles = 0;
+	else
+		cycles = cycles + 1;
 end
 
 reg [7:0] SPR[0:12];
