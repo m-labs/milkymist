@@ -134,6 +134,7 @@ def run_tests(tdir=None, tmodule=None, tname=None):
           print 'passed'
 
         num_tests += 1
+        sys.exit(1) # XXX
 
       test_names = None
     test_modules = None
@@ -186,5 +187,5 @@ if __name__ == '__main__':
     usage()
 
   status = run_tests()
-    
+
   sys.exit(status)

@@ -176,7 +176,9 @@ parameter PC_SEL_Z		= 4'd7;
 
 always @(posedge clk) begin
 	if(rst) begin
+`ifndef REGRESS
 		PC <= 0;
+`endif
 	end else begin
 		case(pc_sel)
 			PC_SEL_NOP:;
@@ -234,6 +236,7 @@ always @(posedge clk) begin
 	R16 = 16'hxxxx;
 	mode16 = 1'b0;
 	if(rst) begin
+`ifndef REGRESS
 		/*
 		 * Not resetting the register file enables the use of more efficient
 		 * distributed block RAM.
@@ -253,6 +256,7 @@ always @(posedge clk) begin
 		N = 1'b0;
 		Z = 1'b0;
 		C = 1'b0;
+`endif
 	end else begin
 		if(normal_en) begin
 			writeback = 1'b1;
@@ -501,7 +505,7 @@ always @(posedge clk) begin
 				default:;
 			endcase
 		end
-	end /* if(sys_rst) ... else */
+	end /* if(rst) ... else */
 end
 
 /* I/O port */
@@ -829,5 +833,45 @@ always @(*) begin
 		end
 	endcase
 end
+
+`ifdef REGRESS
+integer i;
+always @(posedge clk) begin
+	if(~rst & (state == NORMAL) & |PC) begin
+		$display("DUMP REGISTERS");
+		for(i=0;i<24;i=i+1)
+			$display("%x", GPR[i]);
+		$display("%x", U[7:0]);
+		$display("%x", U[15:8]);
+		$display("%x", pX[7:0]);
+		$display("%x", pX[15:8]);
+		$display("%x", pY[7:0]);
+		$display("%x", pY[15:8]);
+		$display("%x", pZ[7:0]);
+		$display("%x", pZ[15:8]);
+		$display("%x", {1'b0, T, H, S, V, N, Z, C});
+		$display("%x", SP[15:8]);
+		$display("%x", SP[7:0]);
+		$display("%x", PC[15:8]);
+		$display("%x", PC[7:0]);
+		tb_regress.dump;
+		$finish;
+	end
+end
+
+reg [7:0] SPR[0:12];
+reg I;
+initial begin
+	$readmemh("gpr.rom", GPR);
+	$readmemh("spr.rom", SPR);
+	U = {SPR[1], SPR[0]};
+	pX = {SPR[3], SPR[2]};
+	pY = {SPR[5], SPR[4]};
+	pZ = {SPR[7], SPR[6]};
+	{I, T, H, S, V, N, Z, C} = SPR[8];
+	SP = {SPR[9], SPR[10]};
+	PC = {SPR[11], SPR[12]};
+end
+`endif
 
 endmodule
