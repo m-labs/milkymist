@@ -853,7 +853,7 @@ always @(posedge clk) begin
 		$display("%x", SP[15:8]);
 		$display("%x", SP[7:0]);
 		$display("%x", PC[15:8]);
-		$display("%x", PC[7:0]);
+		$display("%x", {PC[7:0], 1'b0});
 		tb_regress.dump;
 		$finish;
 	end

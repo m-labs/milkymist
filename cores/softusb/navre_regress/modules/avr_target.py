@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import subprocess
+import copy
+
 FLASH_SIZE = 8192
 SRAM_SIZE = 1024
 
@@ -10,10 +13,10 @@ class target:
 		self.sram = [0]*SRAM_SIZE	# unit: byte
 
 	def read_regs(self):
-		return self.regs
+		return copy.deepcopy(self.regs)
 
 	def write_regs(self, regs):
-		self.regs = regs
+		self.regs = copy.deepcopy(regs)
 
 	def write_reg(self, reg, val):
 		self.regs[reg] = val
@@ -49,3 +52,32 @@ class target:
 			f.write("%02x\n" % ((self.regs[i] & 0xff00) >> 8))
 			f.write("%02x\n" % (self.regs[i] & 0x00ff))
 		f.close()
+
+		p = subprocess.Popen(["cver", "-q", "+define+REGRESS", "tb_regress.v", "../rtl/softusb_navre.v"],  stdout=subprocess.PIPE)
+		(stdoutdata, stderrdata) = p.communicate()
+		p.wait()
+
+		mode = 0
+		for line in stdoutdata.split('\n'):
+			if line == "DUMP REGISTERS":
+				mode = 1
+				index = 0
+			elif line == "DUMP DMEM":
+				mode = 2
+				index = 0
+			elif line != "":
+				if mode == 1:
+					if index < 32:
+						self.regs[index] = int(line, 16)
+					elif index == 33:
+						self.regs[33] = int(line, 16) << 8
+					elif index == 34:
+						self.regs[33] = self.regs[33] | int(line, 16)
+					elif index == 35:
+						self.regs[34] = int(line, 16) << 8
+					elif index == 36:
+						self.regs[34] = self.regs[34] | int(line, 16)
+					index = index + 1
+				elif mode == 2:
+					self.sram[index] = int(line, 16)
+					index = index + 1

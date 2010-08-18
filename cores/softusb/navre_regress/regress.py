@@ -27,7 +27,6 @@
 # # regress/regress.py.  Generated from regress.py.in by configure.
 
 import os, os.path, sys, fnmatch, glob
-import subprocess
 
 # Check the python version
 _v = sys.version_info
@@ -134,7 +133,6 @@ def run_tests(tdir=None, tmodule=None, tname=None):
           print 'passed'
 
         num_tests += 1
-        sys.exit(1) # XXX
 
       test_names = None
     test_modules = None
