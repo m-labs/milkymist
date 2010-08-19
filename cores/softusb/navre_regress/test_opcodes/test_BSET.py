@@ -73,6 +73,6 @@ class test_BSET_bit%d(base_BSET):
 # automagically generate the test_BSET_bitN_is_[01] class definitions
 #
 code = ''
-for b in range(8):
+for b in range(7): # do not test bit 7
 	code += template % (b,b,b,b)
 exec code
