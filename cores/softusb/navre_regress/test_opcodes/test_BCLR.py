@@ -51,7 +51,7 @@ class base_BCLR(base_test.opcode_test):
 	def analyze_results(self):
 		# check that correct SREG bit is cleared
 		self.reg_changed.append(Reg.SREG)
-		expect = 0xff & ~(1 << self.bit)
+		expect = 0x7f & ~(1 << self.bit)
 		got = self.anal_regs[Reg.SREG]
 		if expect != got:
 			self.fail('SREG bit %d not set: expect=%02x, got=%02x' % (self.bit, expect, got))
