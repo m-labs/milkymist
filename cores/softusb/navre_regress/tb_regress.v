@@ -24,7 +24,7 @@ always #5 sys_clk = ~sys_clk;
 reg sys_rst;
 
 wire pmem_ce;
-wire [9:0] pmem_a;
+wire [11:0] pmem_a;
 reg [15:0] pmem_d;
 
 reg [15:0] pmem[0:4095];
@@ -78,7 +78,7 @@ end
 endtask
 
 softusb_navre #(
-	.pmem_width(10),
+	.pmem_width(12),
 	.dmem_width(10)
 ) dut (
 	.clk(sys_clk),

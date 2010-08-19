@@ -43,9 +43,6 @@ class base_RETI(base_test.opcode_stack_test):
 	opcode is '1001 0101 0001 1000'
 	"""
 	def setup(self):
-		# set the pc to a different position
-		self.setup_regs[Reg.PC] = self.old_pc * 2
-
 		# put the value on the stack
 		self.setup_word_to_stack(self.new_pc)
 
@@ -55,7 +52,6 @@ class base_RETI(base_test.opcode_stack_test):
 		return 0x9518
 
 	def analyze_results(self):
-
 		self.is_pc_checked = 1
 		self.reg_changed.extend( [ Reg.SP, Reg.SREG ] )
 
@@ -75,8 +71,8 @@ class base_RETI(base_test.opcode_stack_test):
 			self.fail('RETI operation failed! PC: expect=%x, got=%x' % (
 				expect, got ))
 
-		# check that the SREG.I flag is set and no others changed
-		expect = 0x1 << SREG.I
+		# check no SREG flag changed
+		expect = 0x00
 		got = self.anal_regs[Reg.SREG]
 
 		if got != expect:

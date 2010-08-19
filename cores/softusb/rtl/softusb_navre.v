@@ -55,7 +55,9 @@ reg pop;
 always @(posedge clk) begin
 	if(rst) begin
 		io_sp <= 8'd0;
+`ifndef REGRESS
 		SP <= 16'd0;
+`endif
 	end else begin
 		io_sp <= io_a[0] ? SP[7:0] : SP[15:8];
 		if((io_a == 6'b111101) | (io_a == 6'b111110)) begin
@@ -195,7 +197,13 @@ always @(posedge clk) begin
 	end
 end
 reg pmem_selz;
-assign pmem_a = rst ? 0 : (pmem_selz ? pZ[15:1] : PC + 1);
+assign pmem_a = rst ?
+`ifdef REGRESS
+	PC
+`else
+	0
+`endif
+	: (pmem_selz ? pZ[15:1] : PC + 1);
 
 /* Load/store operations */
 reg [3:0] dmem_sel;
@@ -397,7 +405,7 @@ always @(posedge clk) begin
 				end
 				/* LSL is replaced with ADD */
 				/* ROL is replaced with ADC */
-				16'b1111_10xx_xxxx_xxxx: begin
+				16'b1111_10xx_xxxx_0xxx: begin
 					if(pmem_d[9]) begin
 						/* BST */
 						T = GPR_Rd_b;
@@ -638,7 +646,7 @@ always @(*) begin
 					if(reg_equal)
 						next_state = SKIP;
 				end
-				16'b1111_11xx_xxxx_xxxx: begin
+				16'b1111_11xx_xxxx_0xxx: begin
 					/* SBRC - SBRS */
 					pc_sel = PC_SEL_INC;
 					pmem_ce = 1'b1;
@@ -852,8 +860,8 @@ always @(posedge clk) begin
 		$display("%x", pZ[7:0]);
 		$display("%x", pZ[15:8]);
 		$display("%x", {1'b0, T, H, S, V, N, Z, C});
-		$display("%x", SP[14:7]);
-		$display("%x", {SP[6:0], 1'b0});
+		$display("%x", SP[15:8]);
+		$display("%x", SP[7:0]);
 		$display("%x", PC[14:7]);
 		$display("%x", {PC[6:0], 1'b0});
 		tb_regress.dump;
@@ -875,7 +883,7 @@ initial begin
 	pY = {SPR[5], SPR[4]};
 	pZ = {SPR[7], SPR[6]};
 	{I, T, H, S, V, N, Z, C} = SPR[8];
-	SP = {SPR[9], SPR[10]}/2;
+	SP = {SPR[9], SPR[10]};
 	PC = {SPR[11], SPR[12]}/2;
 end
 `endif
