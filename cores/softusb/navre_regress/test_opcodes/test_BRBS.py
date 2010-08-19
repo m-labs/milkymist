@@ -81,7 +81,7 @@ class test_BRBS_bit%d_is_%d(base_BRBS):
 # automagically generate the test_BRBS_bitN_is_[01] class definitions
 #
 code = ''
-for b in range(8):
+for b in range(7): # do not test bit 7
 	for v in range(2):
 		code += template % (b,v,b,v,b,v,b,v)
 exec code
