@@ -551,9 +551,12 @@ wire [pmem_width-1:0] PC_inc = PC + 1;
 always @(*) begin
 	case(dmem_sel)
 		DMEM_SEL_X,
+		DMEM_SEL_XPLUS,
 		DMEM_SEL_XMINUS,
+		DMEM_SEL_YPLUS,
 		DMEM_SEL_YMINUS,
 		DMEM_SEL_YQ,
+		DMEM_SEL_ZPLUS,
 		DMEM_SEL_ZMINUS,
 		DMEM_SEL_ZQ,
 		DMEM_SEL_SP_R:		dmem_do = GPR_Rd;
