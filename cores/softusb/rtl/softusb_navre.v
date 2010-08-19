@@ -236,12 +236,14 @@ integer i_rst_regf;
 reg [7:0] R;
 reg writeback;
 reg update_nsz;
+reg change_z;
 reg [15:0] R16;
 reg mode16;
 always @(posedge clk) begin
 	R = 8'hxx;
 	writeback = 1'b0;
 	update_nsz = 1'b0;
+	change_z = 1'b1;
 	R16 = 16'hxxxx;
 	mode16 = 1'b0;
 	if(rst) begin
@@ -283,6 +285,8 @@ always @(posedge clk) begin
 					{C, R} = GPR_Rd - GPR_Rr - (~pmem_d[12] & C);
 					H = (~GPR_Rd[3] & GPR_Rr[3])|(GPR_Rr[3] & R[3])|(R[3] & ~GPR_Rd[3]);
 					V = (GPR_Rd[7] & ~GPR_Rr[7] & ~R[7])|(~GPR_Rd[7] & GPR_Rr[7] & R[7]);
+					if(~pmem_d[12])
+						change_z = 1'b0;
 					writeback = pmem_d[11];
 				end
 				16'b010x_xxxx_xxxx_xxxx, /* subtract */
@@ -291,6 +295,8 @@ always @(posedge clk) begin
 					{C, R} = GPR_Rd - K - (~pmem_d[12] & C);
 					H = (~GPR_Rd[3] & K[3])|(K[3] & R[3])|(R[3] & ~GPR_Rd[3]);
 					V = (GPR_Rd[7] & ~K[7] & ~R[7])|(~GPR_Rd[7] & K[7] & R[7]);
+					if(~pmem_d[12])
+						change_z = 1'b0;
 					writeback = pmem_d[14];
 				end
 				16'b0010_00xx_xxxx_xxxx: begin
@@ -472,7 +478,7 @@ always @(posedge clk) begin
 		if(update_nsz) begin
 			N = mode16 ? R16[15] : R[7];
 			S = N ^ V;
-			Z = mode16 ? R16 == 16'h0000 : R == 8'h00;
+			Z = mode16 ? R16 == 16'h0000 : ((R == 8'h00) & (change_z|Z));
 		end
 		if(io_we & (io_a == 6'b111111))
 			{T, H, S, V, N, Z, C} = io_do[6:0];
