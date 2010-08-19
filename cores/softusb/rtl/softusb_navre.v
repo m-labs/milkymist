@@ -825,7 +825,6 @@ always @(*) begin
 		LDS2: begin
 			pc_sel = PC_SEL_INC;
 			pmem_ce = 1'b1;
-			normal_en = 1'b1;
 			lds_writeback = 1'b1;
 			next_state = NORMAL;
 		end
