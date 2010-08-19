@@ -175,7 +175,7 @@ parameter PC_SEL_KS		= 4'd3;
 parameter PC_SEL_DMEML		= 4'd4;
 parameter PC_SEL_DMEMH		= 4'd6;
 parameter PC_SEL_DEC		= 4'd7;
-parameter PC_SEL_Z		= 4'd7;
+parameter PC_SEL_Z		= 4'd8;
 
 always @(posedge clk) begin
 	if(rst) begin
