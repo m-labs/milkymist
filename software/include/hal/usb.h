@@ -18,7 +18,10 @@
 #ifndef __HAL_USB_H
 #define __HAL_USB_H
 
+typedef void (*mouse_event_cb)(unsigned char buttons, char dx, char dy, unsigned char wheel);
+
 void usb_init();
 void usb_service();
+void usb_set_mouse_cb(mouse_event_cb cb);
 
 #endif /* __HAL_USB_H */

@@ -148,10 +148,13 @@ static void set_configuration()
 	usb_tx(usb_buffer, 1);
 }
 
+#define REG_NMSG *((volatile unsigned char *)0x1001)
+
 static void poll()
 {
 	unsigned char usb_buffer[11];
 	unsigned long int len;
+	unsigned char m;
 
 	/* IN */
 	make_usb_token(0x69, 0x081, usb_buffer);
@@ -162,8 +165,14 @@ static void poll()
 	/* ACK */
 	usb_buffer[0] = 0xd2;
 	usb_tx(usb_buffer, 1);
-	/* dump */
-	dump_hex(&usb_buffer[1], 4);
+	/* send to host */
+	m = REG_NMSG;
+	*((volatile unsigned char *)0x1002+4*m) = usb_buffer[1];
+	*((volatile unsigned char *)0x1003+4*m) = usb_buffer[2];
+	*((volatile unsigned char *)0x1004+4*m) = usb_buffer[3];
+	*((volatile unsigned char *)0x1005+4*m) = usb_buffer[4];
+	m = (m + 1) & 0x0f;
+	REG_NMSG = m;
 }
 
 static void port_service(struct port_status *p, char name)

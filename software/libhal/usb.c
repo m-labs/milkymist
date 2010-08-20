@@ -20,12 +20,17 @@
 #include <hw/capabilities.h>
 #include <stdio.h>
 
+#include <hal/usb.h>
+
 static const unsigned char ohci_firmware[] = {
 #include "softusb-ohci.h"
 };
 
 static char hc_debug_buffer[256];
 static int hc_debug_buffer_len;
+
+static mouse_event_cb mouse_cb;
+static int hc_msg_consume;
 
 void usb_init()
 {
@@ -39,7 +44,7 @@ void usb_init()
 		return;
 	}
 
-	printf("USB: loading OHCI firmware\n");
+	printf("USB: loading Navre firmware\n");
 	CSR_SOFTUSB_CONTROL = SOFTUSB_CONTROL_RESET;
 	for(i=0;i<SOFTUSB_DMEM_SIZE/4;i++)
 		usb_dmem[i] = 0;
@@ -53,6 +58,8 @@ void usb_init()
 	CSR_SOFTUSB_CONTROL = 0;
 
 	hc_debug_buffer_len = 0;
+	hc_msg_consume = 0;
+	mouse_cb = NULL;
 }
 
 static void flush_debug_buffer()
@@ -62,14 +69,17 @@ static void flush_debug_buffer()
 	hc_debug_buffer_len = 0;
 }
 
-#define HCREG_DEBUG *((unsigned char *)(SOFTUSB_DMEM_BASE+0x1000))
+#define HCREG_DEBUG	*((volatile unsigned char *)(SOFTUSB_DMEM_BASE+0x1000))
+#define HCREG_NMSG	*((volatile unsigned char *)(SOFTUSB_DMEM_BASE+0x1001))
 
 void usb_service()
 {
 	char c;
+	int m;
 
 	if(!(CSR_CAPABILITIES & CAP_USB))
 		return;
+
 	c = HCREG_DEBUG;
 	if(c != 0x00) {
 		if(c == '\n')
@@ -82,4 +92,20 @@ void usb_service()
 		}
 		HCREG_DEBUG = 0;
 	}
+
+	m = HCREG_NMSG;
+	while(hc_msg_consume != m) {
+		if(mouse_cb != NULL)
+			mouse_cb(
+				*((unsigned char *)(SOFTUSB_DMEM_BASE+0x1002+4*hc_msg_consume)),
+				*((char *)(SOFTUSB_DMEM_BASE+0x1003+4*hc_msg_consume)),
+				*((char *)(SOFTUSB_DMEM_BASE+0x1004+4*hc_msg_consume)),
+				*((unsigned char *)(SOFTUSB_DMEM_BASE+0x1005+4*hc_msg_consume)));
+		hc_msg_consume = (hc_msg_consume + 1) & 0x0f;
+	}
+}
+
+void usb_set_mouse_cb(mouse_event_cb cb)
+{
+	mouse_cb = cb;
 }

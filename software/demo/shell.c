@@ -700,6 +700,33 @@ static void readblock(char *b)
 	bd_readblock(b2, buf);
 }
 
+static int mouse_x, mouse_y;
+
+static void mouse_cb(unsigned char buttons, char dx, char dy, unsigned char wheel)
+{
+	mouse_x += dx;
+	mouse_y += dy;
+	if(mouse_x < 0)
+		mouse_x = 0;
+	else if(mouse_x >= vga_hres)
+		mouse_x = vga_hres-1;
+	if(mouse_y < 0)
+		mouse_y = 0;
+	else if(mouse_y >= vga_vres)
+		mouse_y = vga_vres-1;
+	vga_frontbuffer[vga_hres*mouse_y+mouse_x] = 0xffff;
+}
+
+static void mouse()
+{
+	mouse_x = 0;
+	mouse_y = 0;
+	usb_set_mouse_cb(mouse_cb);
+	while(!readchar_nonblock())
+		usb_service();
+	usb_set_mouse_cb(NULL);
+}
+
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -763,6 +790,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "midirx") == 0) midirx();
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
 		else if(strcmp(command, "readblock") == 0) readblock(param1);
+		else if(strcmp(command, "mouse") == 0) mouse();
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}
