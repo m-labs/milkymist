@@ -1,7 +1,3 @@
-#
-# $Id: TODO,v 1.1 2004/07/31 00:59:11 rivetwa Exp $
-#
-
 The following opcodes need test cases written (pseudonyms in parens don't need
 to be done). Basically, if there is an avr_op_*() function in decoder.c, then
 there should be a test module written.
@@ -18,29 +14,29 @@ done	BRBC (BRNE, BRCC, BRSH, BRPL, BRGE, BRHC, BRTC, BRVC, BRID)
 done	BRBS (BREQ, BRCS, BRLO, BRMI, BRLT, BRHS, BRTS, BRVS, BRIE)
 done	BSET (SE{C,Z,N,V,S,H,T,I})
 done	BST
-done	CALL
-	CBI       --- heavily dependent on io functionality (yuck!)
+unsup	CALL
+unsup	CBI
 done	COM
 done	CP
 done	CPC
 done	CPI
 done	CPSE
 done	DEC
-	EICALL       --- Do any current devices provide this?
-	EIJMP        --- Do any current devices provide this?
-	ELPM_Z       --- Do any current devices provide this?
-	ELPM_Z_incr  --- Do any current devices provide this?
-	ELPM         --- Do any current devices provide this?
+unsup	EICALL
+unsup	EIJMP
+unsup	ELPM_Z
+unsup	ELPM_Z_incr
+unsup	ELPM
 done	EOR  (CLR)
-	ESPM         --- Do any current devices provide this?
-	FMUL         --- I don't even understand how this works yet, anyone know?
-	FMULS        --- I don't even understand how this works yet, anyone know?
-	FMULSU       --- I don't even understand how this works yet, anyone know?
+unsup	ESPM
+unsup	FMUL
+unsup	FMULS
+unsup	FMULSU
 done	ICALL
 done	IJMP
 	IN       --- heavily dependent on io functionality (yuck!)
 done	INC
-done	JMP
+unsup	JMP
 done	LDD_Y
 done	LDD_Z
 done	LDI  (SER)
@@ -52,15 +48,15 @@ done	LD_Y_decr
 done	LD_Y_incr
 done	LD_Z_incr
 done	LD_Z_decr
-done	LPM_Z
+unsup	LPM_Z
 done	LPM
-done	LPM_Z_incr
+unsup	LPM_Z_incr
 done	LSR
 done	MOV
-done	MOVW
-done	MUL
-done	MULS
-done	MULSU
+unsup	MOVW
+unsup	MUL
+unsup	MULS
+unsup	MULSU
 done	NEG
 done	NOP
 done	OR
@@ -75,14 +71,14 @@ done	RJMP
 done	ROR
 done	SBC
 done	SBCI
-	SBI       --- heavily dependent on io functionality (yuck!)
-	SBIC      --- heavily dependent on io functionality (yuck!)
-	SBIS      --- heavily dependent on io functionality (yuck!)
+unsup	SBI
+unsup	SBIC
+unsup	SBIS
 done	SBIW
 done	SBRC
 done	SBRS
-	SLEEP     --- This will require a special test case to use a small asm program
-	SPM       --- This will require a special test case to use a small asm program
+unsup	SLEEP
+unsup	SPM
 done	STD_Y
 done	STD_Z
 done	STS
@@ -96,4 +92,4 @@ done	ST_Z_incr
 done	SUB
 done	SUBI
 done	SWAP
-	WDR       --- This will require a special test case to use a small asm program
+unsup	WDR
