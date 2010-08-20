@@ -25,12 +25,18 @@
 
 enum {
 	PORT_STATE_DISCONNECTED = 0,
-	PORT_STATE_LOW_SPEED,
-	PORT_STATE_FULL_SPEED
+	PORT_STATE_BUS_RESET,
+	PORT_STATE_RUNNING
 };
 
-static char port_a_stat;
-static char port_b_stat;
+struct port_status {
+	char state;
+	char fs;
+	unsigned long int unreset_frame;
+};
+
+static struct port_status port_a;
+static struct port_status port_b;
 
 static const char banner[] PROGMEM = "softusb-ohci v"VERSION"\n";
 static const char connect_fs[] PROGMEM = "full speed device on port ";
@@ -66,12 +72,13 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 	unsigned long int i;
 
 	i = 0;
-	timeout = 0xffff;
-	while(!rio8(SIE_RX_PENDING));
+	timeout = 0xfff;
+	while(!rio8(SIE_RX_PENDING)) {
 		if(timeout-- == 0)
 			return 0;
+	}
 	while(1) {
-		timeout = 0xffff;
+		timeout = 0xfff;
 		while(!rio8(SIE_RX_PENDING)) {
 			if(!rio8(SIE_RX_ACTIVE))
 				return i;
@@ -85,91 +92,186 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 	}
 }
 
+static void set_address()
+{
+	unsigned char usb_buffer[11];
+	unsigned long int len;
+
+	/* Set Address (1) */
+	/* SETUP */
+	make_usb_token(0x2d, 0x000, usb_buffer);
+	usb_tx(usb_buffer, 3);
+	/* DATA0 */
+	usb_buffer[ 0] = 0xc3; usb_buffer[ 1] = 0x00; usb_buffer[ 2] = 0x05; usb_buffer[ 3] = 0x01;
+	usb_buffer[ 4] = 0x00; usb_buffer[ 5] = 0x00; usb_buffer[ 6] = 0x00; usb_buffer[ 7] = 0x00;
+	usb_buffer[ 8] = 0x00; usb_buffer[ 9] = 0xeb; usb_buffer[10] = 0x25;
+	usb_tx(usb_buffer, 11);
+	/* ACK */
+	len = usb_rx(usb_buffer, 11);
+	if((len != 1) || (usb_buffer[0] != 0xd2)) return;
+	/* IN */
+	make_usb_token(0x69, 0x000, usb_buffer);
+	usb_tx(usb_buffer, 3);
+	/* DATA1 */
+	len = usb_rx(usb_buffer, 11);
+	if((len != 3) || (usb_buffer[0] != 0x4b)) return;
+	/* ACK */
+	usb_buffer[0] = 0xd2;
+	usb_tx(usb_buffer, 1);
+}
+
+static void set_configuration()
+{
+	unsigned char usb_buffer[11];
+	unsigned long int len;
+
+	/* Set Configuration (1) */
+	/* SETUP */
+	make_usb_token(0x2d, 0x001, usb_buffer);
+	usb_tx(usb_buffer, 3);
+	/* DATA0 */
+	usb_buffer[ 0] = 0x4b; usb_buffer[ 1] = 0x00; usb_buffer[ 2] = 0x09; usb_buffer[ 3] = 0x01;
+	usb_buffer[ 4] = 0x00; usb_buffer[ 5] = 0x00; usb_buffer[ 6] = 0x00; usb_buffer[ 7] = 0x00;
+	usb_buffer[ 8] = 0x00; usb_buffer[ 9] = 0x27; usb_buffer[10] = 0x25;
+	usb_tx(usb_buffer, 11);
+	/* ACK */
+	len = usb_rx(usb_buffer, 11);
+	if((len != 1) || (usb_buffer[0] != 0xd2)) return;
+	/* IN */
+	make_usb_token(0x69, 0x001, usb_buffer);
+	usb_tx(usb_buffer, 3);
+	/* DATA1 */
+	len = usb_rx(usb_buffer, 11);
+	if((len != 3) || (usb_buffer[0] != 0x4b)) return;
+	/* ACK */
+	usb_buffer[0] = 0xd2;
+	usb_tx(usb_buffer, 1);
+}
+
+static void poll()
+{
+	unsigned char usb_buffer[11];
+	unsigned long int len;
+
+	/* IN */
+	make_usb_token(0x69, 0x081, usb_buffer);
+	usb_tx(usb_buffer, 3);
+	/* DATAx */
+	len = usb_rx(usb_buffer, 11);
+	if(len < 7) return;
+	/* ACK */
+	usb_buffer[0] = 0xd2;
+	usb_tx(usb_buffer, 1);
+	/* dump */
+	dump_hex(&usb_buffer[1], 4);
+}
+
+static void port_service(struct port_status *p, char name)
+{
+	while(rio8(SIE_TX_BUSY));
+	/* writing SIE_SEL_TX here fucks up port A... why? */
+	if(name == 'A') {
+		//wio8(SIE_SEL_TX, 0x01);
+		wio8(SIE_SEL_RX, 0);
+	} else {
+		//wio8(SIE_SEL_TX, 0x02);
+		wio8(SIE_SEL_RX, 1);
+	}
+
+	switch(p->state) {
+		case PORT_STATE_DISCONNECTED: {
+			char linestat;
+			if(name == 'A')
+				linestat = rio8(SIE_LINE_STATUS_A);
+			else
+				linestat = rio8(SIE_LINE_STATUS_B);
+			if(linestat != 0x00) {
+				if(linestat == 0x01) {
+					print_string(connect_fs); print_char(name); print_char('\n');
+					p->fs = 1;
+				}
+				if(linestat == 0x02) {
+					print_string(connect_ls); print_char(name); print_char('\n');
+					p->fs = 0;
+				}
+				if(name == 'A')
+					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x01);
+				else
+					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x02);
+				p->state = PORT_STATE_BUS_RESET;
+				p->unreset_frame = (frame_nr + 50) & 0x7ff;
+			}
+			break;
+		}
+		case PORT_STATE_BUS_RESET:
+			switch(frame_nr - p->unreset_frame) {
+				case 0:
+					if(name == 'A')
+						wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x02);
+					else
+						wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
+					break;
+				case 10:
+					set_address();
+					break;
+				case 11:
+					set_configuration();
+					p->state = PORT_STATE_RUNNING;
+					break;
+			}
+			break;
+		case PORT_STATE_RUNNING: {
+			char discon;
+			if(name == 'A')
+				discon = rio8(SIE_DISCON_A);
+			else
+				discon = rio8(SIE_DISCON_B);
+			if(discon) {
+				print_string(disconnect); print_char(name); print_char('\n');
+				p->state = PORT_STATE_DISCONNECTED;
+			} else
+				poll();
+			break;
+		}
+	}
+}
+
 int main()
 {
-	unsigned char usb_buffer[32];
-	unsigned long int x;
-
-	frame_nr = 1;
-	wio8(SIE_SEL_TX, 3);
-	wio8(SIE_TX_LOW_SPEED, 1);
-	wio8(SIE_LOW_SPEED, 3);
+	unsigned char mask;
+	
 	print_string(banner);
 	
-	wio8(SIE_TX_BUSRESET, 1);
-	wio8(TIMER0, 0);
-	while((rio8(TIMER2) < 0x24) || (rio8(TIMER1) < 0x9b));
-	wio8(TIMER0, 0);
-	wio8(SIE_TX_BUSRESET, 0);
+	/* we only support low speed operation */
+	wio8(SIE_TX_LOW_SPEED, 1);
+	wio8(SIE_LOW_SPEED, 3);
 
+	wio8(TIMER0, 0);
 	while(1) {
 		/* wait for the next frame */
 		while((rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70));
 		wio8(TIMER0, 0);
 
-		/* send SOF */
-		//make_usb_token(0xa5, frame_nr, usb_buffer);
-		//usb_tx(usb_buffer, 3);
-		wio8(SIE_GENERATE_EOP, 1);
-		
-		if((frame_nr & 0xff) == 0xff) {
-			usb_buffer[0] = 0x2d;
-			usb_buffer[1] = 0x00;
-			usb_buffer[2] = 0x10;
-			usb_tx(usb_buffer, 3);
-			usb_buffer[0] = 0xc3;
-			usb_buffer[1] = 0x80;
-			usb_buffer[2] = 0x06;
-			usb_buffer[3] = 0x00;
-			usb_buffer[4] = 0x01;
-			usb_buffer[5] = 0x00;
-			usb_buffer[6] = 0x00;
-			usb_buffer[7] = 0x40;
-			usb_buffer[8] = 0x00;
-			usb_buffer[9] = 0xdd;
-			usb_buffer[10] = 0x94;
-			usb_tx(usb_buffer, 11);
-			x = usb_rx(usb_buffer, sizeof(usb_buffer));
-			dump_hex(usb_buffer, x);
-		}
-		if((frame_nr & 0xff) == 0x00) {
-			usb_buffer[0] = 0x69;
-			usb_buffer[1] = 0x00;
-			usb_buffer[2] = 0x10;
-			usb_tx(usb_buffer, 3);
-			x = usb_rx(usb_buffer, sizeof(usb_buffer));
-			dump_hex(usb_buffer, x);
-		}
-
-		/* handle connections */
-		/*if(port_a_stat == PORT_STATE_DISCONNECTED) {
-			if(SIE_LINE_STATUS_A == 0x01) {
-				print_string(connect_fs); print_char('A'); print_char('\n');
-				port_a_stat = PORT_STATE_FULL_SPEED;
-			}
-			if(SIE_LINE_STATUS_A == 0x02) {
-				print_string(connect_ls); print_char('A'); print_char('\n');
-				port_a_stat = PORT_STATE_LOW_SPEED;
-			}
-		} else if(SIE_DISCON_A) {
-			print_string(disconnect); print_char('A'); print_char('\n');
-			port_a_stat = PORT_STATE_DISCONNECTED;
-		}
-		if(port_b_stat == PORT_STATE_DISCONNECTED) {
-			if(SIE_LINE_STATUS_B == 0x01) {
-				print_string(connect_fs); print_char('B'); print_char('\n');
-				port_b_stat = PORT_STATE_FULL_SPEED;
-			}
-			if(SIE_LINE_STATUS_B == 0x02) {
-				print_string(connect_ls); print_char('B'); print_char('\n');
-				port_b_stat = PORT_STATE_LOW_SPEED;
-			}
-		} else if(SIE_DISCON_B) {
-			print_string(disconnect); print_char('B'); print_char('\n');
-			port_b_stat = PORT_STATE_DISCONNECTED;
+		/*if(rio8(SIE_LINE_STATUS_A) != 0x00) {
+			print_hex(rio8(SIE_LINE_STATUS_A));
+			print_char('\n');
 		}*/
+
+		/* send keepalive */
+		mask = 0;
+		if(port_a.state != PORT_STATE_DISCONNECTED)
+			mask |= 0x01;
+		if(port_b.state != PORT_STATE_DISCONNECTED)
+			mask |= 0x02;
+		wio8(SIE_SEL_TX, mask);
+		wio8(SIE_GENERATE_EOP, 1);
+
+		port_service(&port_a, 'A');
+		port_service(&port_b, 'B');
+
 		debug_service();
 		frame_nr = (frame_nr + 1) & 0x7ff;
+		
 	}
 	return 0;
 }

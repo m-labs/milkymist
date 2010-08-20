@@ -67,7 +67,7 @@ reg irq_flip;
 always @(posedge usb_clk) begin
 	if(usb_rst)
 		irq_flip <= 1'b0;
-	else if(io_we && (io_a == 6'h14))
+	else if(io_we && (io_a == 6'h15))
 		irq_flip <= ~irq_flip;
 end
 

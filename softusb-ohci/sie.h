@@ -31,14 +31,15 @@
 #define SIE_TX_DATA		0x06
 #define SIE_TX_PENDING		0x07
 #define SIE_TX_VALID		0x08
-#define SIE_TX_BUSRESET		0x09
+#define SIE_TX_BUSY		0x09
+#define SIE_TX_BUSRESET		0x0a
 
-#define SIE_RX_DATA		0x0a
-#define SIE_RX_PENDING		0x0b
-#define SIE_RX_ACTIVE		0x0c
+#define SIE_RX_DATA		0x0b
+#define SIE_RX_PENDING		0x0c
+#define SIE_RX_ACTIVE		0x0d
 
-#define SIE_TX_LOW_SPEED	0x0d
-#define SIE_LOW_SPEED		0x0e
-#define SIE_GENERATE_EOP	0x0f
+#define SIE_TX_LOW_SPEED	0x0e
+#define SIE_LOW_SPEED		0x0f
+#define SIE_GENERATE_EOP	0x10
 
 #endif /* __SIE_H */

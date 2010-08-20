@@ -42,9 +42,10 @@ module softusb_phy(
 
 	input [7:0] tx_data,
 	input tx_valid,
-	output tx_ready,
+	output tx_ready, /* data acknowledgment */
+	output tx_busy, /* busy generating EOP, sending data, etc. */
 
-	input generate_reset,
+	input [1:0] generate_reset,
 
 	output [7:0] rx_data,
 	output rx_valid,
@@ -103,14 +104,14 @@ softusb_tx tx(
 	.tx_valid(tx_valid),
 	.tx_ready(tx_ready),
 
-	.generate_reset(generate_reset),
-
 	.txp(txp),
 	.txm(txm),
 	.txoe(txoe),
 	.low_speed(tx_low_speed),
 	.generate_eop(generate_eop)
 );
+
+assign tx_busy = txoe;
 
 /* RX section */
 
@@ -139,15 +140,15 @@ softusb_rx rx(
 
 /* Tri-state enables and drivers */
 
-wire txoe_a = txoe & port_sel_tx[0];
-wire txoe_b = txoe & port_sel_tx[1];
+wire txoe_a = (txoe & port_sel_tx[0])|generate_reset[0];
+wire txoe_b = (txoe & port_sel_tx[1])|generate_reset[1];
 
 assign usba_oe_n = ~txoe_a;
-assign usba_vp = txoe_a ? txp : 1'bz;
-assign usba_vm = txoe_a ? txm : 1'bz;
+assign usba_vp = txoe_a ? (generate_reset[0] ? 1'b0 : txp) : 1'bz;
+assign usba_vm = txoe_a ? (generate_reset[0] ? 1'b0 : txm) : 1'bz;
 assign usbb_oe_n = ~txoe_b;
-assign usbb_vp = txoe_b ? txp : 1'bz;
-assign usbb_vm = txoe_b ? txm : 1'bz;
+assign usbb_vp = txoe_b ? (generate_reset[1] ? 1'b0 : txp) : 1'bz;
+assign usbb_vm = txoe_b ? (generate_reset[1] ? 1'b0 : txm) : 1'bz;
 
 /* Assert USB disconnect if we see SE0 for at least 2.5us */
 

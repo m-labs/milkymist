@@ -23,8 +23,6 @@ module softusb_tx(
 	input tx_valid,
 	output reg tx_ready,
 
-	input generate_reset,
-
 	output reg txp,
 	output reg txm,
 	output reg txoe,
@@ -114,19 +112,18 @@ always @(posedge usb_clk) begin
 			txp_r <= ~low_speed; /* return to J */
 			txm_r <= low_speed;
 		end else begin
-			case({generate_reset, generate_se0, generate_j})
-				3'b000: begin
+			case({generate_se0, generate_j})
+				2'b00: begin
 					if(~sr_out) begin
 						txp_r <= ~txp_r;
 						txm_r <= ~txm_r;
 					end
 				end
-				3'b100,
-				3'b010: begin
+				2'b10: begin
 					txp_r <= 1'b0;
 					txm_r <= 1'b0;
 				end
-				3'b001: begin
+				2'b01: begin
 					txp_r <= ~low_speed;
 					txm_r <= low_speed;
 				end
@@ -208,7 +205,7 @@ always @(*) begin
 
 	case(state)
 		IDLE: begin
-			txoe_ctl = generate_reset;
+			txoe_ctl = 1'b0;
 			if(generate_eop_pending)
 				next_state = GEOP1;
 			else begin
