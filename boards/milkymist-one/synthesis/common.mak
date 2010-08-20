@@ -13,7 +13,7 @@ build/system-routed.ncd: build/system.ncd
 	cd build && par -ol high -w system.ncd system-routed.ncd
 
 build/system.bit: build/system-routed.ncd
-	cd build && bitgen -w system-routed.ncd system.bit
+	cd build && bitgen -g LCK_cycle:6 -w system-routed.ncd system.bit
 
 build/system-routed.xdl: build/system-routed.ncd
 	cd build && xdl -ncd2xdl system-routed.ncd system-routed.xdl
