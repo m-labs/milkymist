@@ -60,9 +60,35 @@ static void usb_tx(unsigned char *buf, unsigned long int len)
 	wio8(SIE_TX_VALID, 0);
 }
 
+static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
+{
+	unsigned long int timeout;
+	unsigned long int i;
+
+	i = 0;
+	timeout = 0xffff;
+	while(!rio8(SIE_RX_PENDING));
+		if(timeout-- == 0)
+			return 0;
+	while(1) {
+		timeout = 0xffff;
+		while(!rio8(SIE_RX_PENDING)) {
+			if(!rio8(SIE_RX_ACTIVE))
+				return i;
+			if(timeout-- == 0)
+				return 0;
+		}
+		if(i == maxlen)
+			return 0;
+		buf[i] = rio8(SIE_RX_DATA);
+		i++;
+	}
+}
+
 int main()
 {
-	unsigned char usb_buffer[11];
+	unsigned char usb_buffer[32];
+	unsigned long int x;
 
 	frame_nr = 1;
 	wio8(SIE_SEL_TX, 3);
@@ -78,12 +104,7 @@ int main()
 
 	while(1) {
 		/* wait for the next frame */
-		while((rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70)) {
-			if(rio8(SIE_RX_PENDING)) {
-				print_hex(rio8(SIE_RX_DATA));
-				print_char('\n');
-			}
-		}
+		while((rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70));
 		wio8(TIMER0, 0);
 
 		/* send SOF */
@@ -108,12 +129,16 @@ int main()
 			usb_buffer[9] = 0xdd;
 			usb_buffer[10] = 0x94;
 			usb_tx(usb_buffer, 11);
+			x = usb_rx(usb_buffer, sizeof(usb_buffer));
+			dump_hex(usb_buffer, x);
 		}
 		if((frame_nr & 0xff) == 0x00) {
 			usb_buffer[0] = 0x69;
 			usb_buffer[1] = 0x00;
 			usb_buffer[2] = 0x10;
 			usb_tx(usb_buffer, 3);
+			x = usb_rx(usb_buffer, sizeof(usb_buffer));
+			dump_hex(usb_buffer, x);
 		}
 
 		/* handle connections */

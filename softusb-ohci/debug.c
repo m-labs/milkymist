@@ -55,6 +55,17 @@ void print_hex(unsigned char h)
 	print_char(read_pgm_byte(&hextab[h & 0x0f]));
 }
 
+void dump_hex(unsigned char *buf, unsigned int len)
+{
+	unsigned int i;
+
+	for(i=0;i<len;i++) {
+		print_hex(buf[i]);
+		print_char(' ');
+	}
+	print_char('\n');
+}
+
 void print_bin(unsigned char h, unsigned char count)
 {
 	unsigned char i;
