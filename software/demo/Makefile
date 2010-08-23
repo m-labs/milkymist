@@ -48,7 +48,8 @@ apipe.o: ../../software/include/base/board.h ../../software/include/hal/brd.h
 apipe.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
 apipe.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
 apipe.o: ../../software/include/hw/pfpu.h ../../software/include/hal/time.h
-apipe.o: analyzer.h eval.h ../../software/include/hw/tmu.h cpustats.h rpipe.h
+apipe.o: ../../software/include/hal/dmx.h analyzer.h eval.h
+apipe.o: ../../software/include/hw/tmu.h cpustats.h rpipe.h
 apipe.o: ../../software/include/hal/tmu.h apipe.h
 cpustats.o: ../../software/include/base/stdio.h
 cpustats.o: ../../software/include/base/stdlib.h
@@ -84,8 +85,8 @@ main.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
 main.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
 main.o: ../../software/include/hw/pfpu.h ../../software/include/hal/tmu.h
 main.o: ../../software/include/hw/tmu.h ../../software/include/hal/vin.h
-main.o: ../../software/include/hal/usb.h apipe.h rpipe.h renderer.h
-main.o: cpustats.h memstats.h osd.h shell.h
+main.o: ../../software/include/hal/dmx.h ../../software/include/hal/usb.h
+main.o: apipe.h rpipe.h renderer.h cpustats.h memstats.h osd.h shell.h
 memstats.o: ../../software/include/base/board.h
 memstats.o: ../../software/include/hal/brd.h
 memstats.o: ../../software/include/hw/fmlmeter.h
@@ -117,9 +118,10 @@ rpipe.o: ../../software/include/base/irq.h
 rpipe.o: ../../software/include/base/system.h
 rpipe.o: ../../software/include/base/math.h
 rpipe.o: ../../software/include/hw/interrupts.h
-rpipe.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
-rpipe.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
-rpipe.o: renderer.h wave.h cpustats.h color.h line.h osd.h rpipe.h
+rpipe.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
+rpipe.o: ../../software/include/hw/common.h ../../software/include/hal/vga.h
+rpipe.o: ../../software/include/hal/dmx.h renderer.h wave.h cpustats.h
+rpipe.o: color.h line.h osd.h rpipe.h
 shell.o: ../../software/include/base/stdio.h
 shell.o: ../../software/include/base/stdlib.h
 shell.o: ../../software/include/base/string.h
@@ -139,8 +141,8 @@ shell.o: ../../software/include/hw/midi.h ../../software/include/hw/memcard.h
 shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
 shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
 shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
-shell.o: ../../software/include/hal/vin.h line.h wave.h rpipe.h cpustats.h
-shell.o: memstats.h shell.h renderer.h
+shell.o: ../../software/include/hal/vin.h ../../software/include/hal/usb.h
+shell.o: line.h wave.h rpipe.h cpustats.h memstats.h shell.h renderer.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h memstats.h

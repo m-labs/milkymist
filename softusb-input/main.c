@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC (OHCI firmware)
+ * Milkymist VJ SoC (USB firmware)
  * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
@@ -38,7 +38,7 @@ struct port_status {
 static struct port_status port_a;
 static struct port_status port_b;
 
-static const char banner[] PROGMEM = "softusb-ohci v"VERSION"\n";
+static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 static const char connect_fs[] PROGMEM = "full speed device on port ";
 static const char connect_ls[] PROGMEM = "low speed device on port ";
 static const char disconnect[] PROGMEM = "device disconnect on port ";

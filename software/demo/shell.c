@@ -43,6 +43,7 @@
 #include <hal/time.h>
 #include <hal/brd.h>
 #include <hal/vin.h>
+#include <hal/usb.h>
 
 #include "line.h"
 #include "wave.h"

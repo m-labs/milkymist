@@ -22,8 +22,8 @@
 
 #include <hal/usb.h>
 
-static const unsigned char ohci_firmware[] = {
-#include "softusb-ohci.h"
+static const unsigned char input_firmware[] = {
+#include "softusb-input.h"
 };
 
 static char hc_debug_buffer[256];
@@ -50,10 +50,10 @@ void usb_init()
 		usb_dmem[i] = 0;
 	for(i=0;i<SOFTUSB_PMEM_SIZE/2;i++)
 		usb_pmem[i] = 0;
-	nwords = (sizeof(ohci_firmware)+1)/2;
+	nwords = (sizeof(input_firmware)+1)/2;
 	for(i=0;i<nwords;i++)
-		usb_pmem[i] = ((unsigned int)(ohci_firmware[2*i]))
-			|((unsigned int)(ohci_firmware[2*i+1]) << 8);
+		usb_pmem[i] = ((unsigned int)(input_firmware[2*i]))
+			|((unsigned int)(input_firmware[2*i+1]) << 8);
 	printf("USB: starting host controller\n");
 	CSR_SOFTUSB_CONTROL = 0;
 

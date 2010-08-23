@@ -26,8 +26,8 @@ else
         echo "OK"
 fi
 
-echo -n "Building OHCI firmware..."
-cd $BASEDIR/softusb-ohci
+echo -n "Building USB firmware..."
+cd $BASEDIR/softusb-input
 echo >> $LOGFILE
 make >> $LOGFILE 2>&1
 if [ "$?" != 0 ] ; then

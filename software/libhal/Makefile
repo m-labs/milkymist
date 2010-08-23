@@ -9,26 +9,29 @@ libhal.a: $(OBJECTS)
 	$(AR) clr libhal.a $(OBJECTS)
 	$(RANLIB) libhal.a
 
-$(MMDIR)/softusb-ohci/softusb-ohci.bin:
-	$(MAKE) -C $(MMDIR)/softusb-ohci
+$(MMDIR)/softusb-input/softusb-input.bin:
+	$(MAKE) -C $(MMDIR)/softusb-input
 
-softusb-ohci.h: $(MMDIR)/softusb-ohci/softusb-ohci.bin
-	$(MAKE) -C $(MMDIR)/softusb-ohci
-	cat $(MMDIR)/softusb-ohci/softusb-ohci.bin | xxd -i - softusb-ohci.h
+softusb-input.h: $(MMDIR)/softusb-input/softusb-input.bin
+	$(MAKE) -C $(MMDIR)/softusb-input
+	cat $(MMDIR)/softusb-input/softusb-input.bin | xxd -i - softusb-input.h
 
 .PHONY: clean depend
 
-depend: softusb-ohci.h
+depend: softusb-input.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f *.o libhal.a .*~ *~ Makefile.bak softusb-ohci.h
+	rm -f *.o libhal.a .*~ *~ Makefile.bak softusb-input.h
 
 # DO NOT DELETE
 
 brd.o: ../../software/include/base/stdlib.h
 brd.o: ../../software/include/base/stdio.h
 brd.o: ../../software/include/base/board.h ../../software/include/hal/brd.h
+dmx.o: ../../software/include/base/stdio.h
+dmx.o: ../../software/include/base/stdlib.h ../../software/include/hw/dmx.h
+dmx.o: ../../software/include/hw/common.h ../../software/include/hal/dmx.h
 mem.o: ../../software/include/base/stdio.h
 mem.o: ../../software/include/base/stdlib.h
 mem.o: ../../software/include/base/malloc.h ../../software/include/hal/mem.h
@@ -59,7 +62,8 @@ usb.o: ../../software/include/hw/softusb.h ../../software/include/hw/common.h
 usb.o: ../../software/include/hw/sysctl.h
 usb.o: ../../software/include/hw/capabilities.h
 usb.o: ../../software/include/base/stdio.h
-usb.o: ../../software/include/base/stdlib.h softusb-ohci.h
+usb.o: ../../software/include/base/stdlib.h ../../software/include/hal/usb.h
+usb.o: softusb-input.h
 vga.o: ../../software/include/base/stdio.h
 vga.o: ../../software/include/base/stdlib.h ../../software/include/hw/vga.h
 vga.o: ../../software/include/hw/common.h ../../software/include/hal/vga.h

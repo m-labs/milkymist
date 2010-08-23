@@ -9,14 +9,14 @@ For the latest releases, binary distributions and more:
 
 
 [> Directory Structure
- /cores/        Cores library, with Verilog sources, test benches and documentation.
- /boards/       Top-level design files, constraint files and Makefiles
-                for supported FPGA boards.
- /software/     Software for the SoC: libraries, bootloader and proof-of-concept renderer.
- /softusb-ohci/ AVR firmware to implement OHCI on the softusb core (work in progress).
- /doc/          System documentation.
- /tools/        Small tools for developers.
- /patches/      Example patches.
+ /cores/         Cores library, with Verilog sources, test benches and documentation.
+ /boards/        Top-level design files, constraint files and Makefiles
+                 for supported FPGA boards.
+ /software/      Software for the SoC: libraries, bootloader and proof-of-concept renderer.
+ /softusb-input/ AVR firmware to implement input device support on the softusb core.
+ /doc/           System documentation.
+ /tools/         Small tools for developers.
+ /patches/       Example patches.
 
 
 [> Building tools
@@ -25,7 +25,7 @@ You will need:
  - Bourne Again Shell (bash),
  - Xilinx ISE 12.2 for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
- - AVR toolchain for building the USB OHCI firmware,
+ - AVR toolchain for building the USB firmware,
  - SRecord,
  - xxd,
  - mtools,

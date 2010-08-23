@@ -18,7 +18,7 @@ cd $BASEDIR/software/libnet && make clean
 cd $BASEDIR/software/bios && make clean
 cd $BASEDIR/software/demo && make clean
 
-cd $BASEDIR/softusb-ohci && make clean
+cd $BASEDIR/softusb-input && make clean
 
 cd $BASEDIR/boards/milkymist-one/synthesis && make -f common.mak clean
 cd $BASEDIR/boards/milkymist-one/flash && make clean
