@@ -16,25 +16,12 @@
  */
 
 #include "progmem.h"
-
-#define REG_DEBUG *((volatile char *)0x1000)
-
-static char debug_buffer[256];
-static unsigned char debug_consume;
-static unsigned char debug_produce;
-
-void debug_service()
-{
-	if((debug_consume != debug_produce) && (REG_DEBUG == 0x00)) {
-		REG_DEBUG = debug_buffer[debug_consume];
-		debug_consume++;
-	}
-}
+#include "comloc.h"
 
 void print_char(char c)
 {
-	debug_buffer[debug_produce] = c;
-	debug_produce++;
+	COMLOC_DEBUG(COMLOC_DEBUG_PRODUCE) = c;
+	COMLOC_DEBUG_PRODUCE++;
 }
 
 void print_string(const char *s) /* in program memory */

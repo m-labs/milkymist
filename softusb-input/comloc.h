@@ -15,13 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __DEBUG_H
-#define __DEBUG_H
+#ifndef __COMLOC_H
+#define __COMLOC_H
 
-void print_char(char c);
-void print_string(const char *s);
-void print_hex(unsigned char h);
-void dump_hex(unsigned char *buf, unsigned int len);
-void print_bin(unsigned char h, unsigned char count);
+#define COMLOC(x)	(*(char *)(x))
+#define COMLOCV(x)	(*(volatile char *)(x))
 
-#endif
+#define COMLOC_DEBUG_PRODUCE	COMLOC(0x1000)
+#define COMLOC_DEBUG(offset)	COMLOC(0x1001+offset)
+#define COMLOC_MEVT_PRODUCE	COMLOC(0x1101)
+#define COMLOC_MEVT(offset)	COMLOC(0x1102+offset)
+
+#endif /* __COMLOC_H */

@@ -17,6 +17,7 @@
 
 #include "../software/include/base/version.h"
 #include "progmem.h"
+#include "comloc.h"
 #include "io.h"
 #include "debug.h"
 #include "sie.h"
@@ -26,7 +27,8 @@
 enum {
 	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_BUS_RESET,
-	PORT_STATE_RUNNING
+	PORT_STATE_RUNNING,
+	PORT_STATE_UNSUPPORTED
 };
 
 struct port_status {
@@ -148,8 +150,6 @@ static void set_configuration()
 	usb_tx(usb_buffer, 1);
 }
 
-#define REG_NMSG *((volatile unsigned char *)0x1001)
-
 static void poll()
 {
 	unsigned char usb_buffer[11];
@@ -166,13 +166,12 @@ static void poll()
 	usb_buffer[0] = 0xd2;
 	usb_tx(usb_buffer, 1);
 	/* send to host */
-	m = REG_NMSG;
-	*((volatile unsigned char *)0x1002+4*m) = usb_buffer[1];
-	*((volatile unsigned char *)0x1003+4*m) = usb_buffer[2];
-	*((volatile unsigned char *)0x1004+4*m) = usb_buffer[3];
-	*((volatile unsigned char *)0x1005+4*m) = usb_buffer[4];
-	m = (m + 1) & 0x0f;
-	REG_NMSG = m;
+	m = COMLOC_MEVT_PRODUCE;
+	COMLOC_MEVT(4*m+0) = usb_buffer[1];
+	COMLOC_MEVT(4*m+1) = usb_buffer[2];
+	COMLOC_MEVT(4*m+2) = usb_buffer[3];
+	COMLOC_MEVT(4*m+3) = usb_buffer[4];
+	COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
 }
 
 static void port_service(struct port_status *p, char name)
@@ -194,15 +193,14 @@ static void port_service(struct port_status *p, char name)
 				linestat = rio8(SIE_LINE_STATUS_A);
 			else
 				linestat = rio8(SIE_LINE_STATUS_B);
-			if(linestat != 0x00) {
-				if(linestat == 0x01) {
-					print_string(connect_fs); print_char(name); print_char('\n');
-					p->fs = 1;
-				}
-				if(linestat == 0x02) {
-					print_string(connect_ls); print_char(name); print_char('\n');
-					p->fs = 0;
-				}
+			if(linestat == 0x01) {
+				print_string(connect_fs); print_char(name); print_char('\n');
+				p->fs = 1;
+				p->state = PORT_STATE_UNSUPPORTED;
+			}
+			if(linestat == 0x02) {
+				print_string(connect_ls); print_char(name); print_char('\n');
+				p->fs = 0;
 				if(name == 'A')
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x01);
 				else
@@ -229,7 +227,8 @@ static void port_service(struct port_status *p, char name)
 					break;
 			}
 			break;
-		case PORT_STATE_RUNNING: {
+		case PORT_STATE_RUNNING:
+		case PORT_STATE_UNSUPPORTED: {
 			char discon;
 			if(name == 'A')
 				discon = rio8(SIE_DISCON_A);
@@ -238,7 +237,8 @@ static void port_service(struct port_status *p, char name)
 			if(discon) {
 				print_string(disconnect); print_char(name); print_char('\n');
 				p->state = PORT_STATE_DISCONNECTED;
-			} else
+			}
+			if(p->state == PORT_STATE_RUNNING)
 				poll();
 			break;
 		}
@@ -261,11 +261,6 @@ int main()
 		while((rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70));
 		wio8(TIMER0, 0);
 
-		/*if(rio8(SIE_LINE_STATUS_A) != 0x00) {
-			print_hex(rio8(SIE_LINE_STATUS_A));
-			print_char('\n');
-		}*/
-
 		/* send keepalive */
 		mask = 0;
 		if(port_a.state != PORT_STATE_DISCONNECTED)
@@ -278,9 +273,7 @@ int main()
 		port_service(&port_a, 'A');
 		port_service(&port_b, 'B');
 
-		debug_service();
 		frame_nr = (frame_nr + 1) & 0x7ff;
-		
 	}
 	return 0;
 }
