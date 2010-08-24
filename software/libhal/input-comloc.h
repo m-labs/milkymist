@@ -15,15 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __COMLOC_H
-#define __COMLOC_H
+#ifndef __INPUT_COMLOC_H
+#define __INPUT_COMLOC_H
+
+#include <hw/softusb.h>
 
 #define COMLOC(x)	(*(unsigned char *)(x))
 #define COMLOCV(x)	(*(volatile unsigned char *)(x))
 
-#define COMLOC_DEBUG_PRODUCE	COMLOC(0x1000)
-#define COMLOC_DEBUG(offset)	COMLOC(0x1001+offset)
-#define COMLOC_MEVT_PRODUCE	COMLOC(0x1101)
-#define COMLOC_MEVT(offset)	COMLOC(0x1102+offset)
+#define COMLOC_DEBUG_PRODUCE	COMLOCV(SOFTUSB_DMEM_BASE+0x1000)
+#define COMLOC_DEBUG(offset)	COMLOCV(SOFTUSB_DMEM_BASE+0x1001+offset)
+#define COMLOC_MEVT_PRODUCE	COMLOCV(SOFTUSB_DMEM_BASE+0x1101)
+#define COMLOC_MEVT(offset)	COMLOCV(SOFTUSB_DMEM_BASE+0x1102+offset)
 
-#endif /* __COMLOC_H */
+#endif /* __INPUT_COMLOC_H */

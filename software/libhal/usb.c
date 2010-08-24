@@ -21,16 +21,18 @@
 #include <stdio.h>
 
 #include <hal/usb.h>
+#include "input-comloc.h"
 
 static const unsigned char input_firmware[] = {
 #include "softusb-input.h"
 };
 
-static char hc_debug_buffer[256];
-static int hc_debug_buffer_len;
+static char debug_buffer[256];
+static int debug_len;
+static int debug_consume;
 
 static mouse_event_cb mouse_cb;
-static int hc_msg_consume;
+static int mouse_consume;
 
 void usb_init()
 {
@@ -57,51 +59,47 @@ void usb_init()
 	printf("USB: starting host controller\n");
 	CSR_SOFTUSB_CONTROL = 0;
 
-	hc_debug_buffer_len = 0;
-	hc_msg_consume = 0;
+	debug_len = 0;
+	debug_consume = 0;
+	mouse_consume = 0;
 	mouse_cb = NULL;
 }
 
 static void flush_debug_buffer()
 {
-	hc_debug_buffer[hc_debug_buffer_len] = 0;
-	printf("USB: HC: %s\n", hc_debug_buffer);
-	hc_debug_buffer_len = 0;
+	debug_buffer[debug_len] = 0;
+	printf("USB: HC: %s\n", debug_buffer);
+	debug_len = 0;
 }
-
-#define HCREG_DEBUG	*((volatile unsigned char *)(SOFTUSB_DMEM_BASE+0x1000))
-#define HCREG_NMSG	*((volatile unsigned char *)(SOFTUSB_DMEM_BASE+0x1001))
 
 void usb_service()
 {
 	char c;
-	int m;
 
 	if(!(CSR_CAPABILITIES & CAP_USB))
 		return;
 
-	c = HCREG_DEBUG;
-	if(c != 0x00) {
+	while(debug_consume != COMLOC_DEBUG_PRODUCE) {
+		c = COMLOC_DEBUG(debug_consume);
 		if(c == '\n')
 			flush_debug_buffer();
 		else {
-			hc_debug_buffer[hc_debug_buffer_len] = c;
-			hc_debug_buffer_len++;
-			if(hc_debug_buffer_len == (sizeof(hc_debug_buffer)-1))
+			debug_buffer[debug_len] = c;
+			debug_len++;
+			if(debug_len == (sizeof(debug_buffer)-1))
 				flush_debug_buffer();
 		}
-		HCREG_DEBUG = 0;
+		debug_consume = (debug_consume + 1) & 0xff;
 	}
 
-	m = HCREG_NMSG;
-	while(hc_msg_consume != m) {
+	while(mouse_consume != COMLOC_MEVT_PRODUCE) {
 		if(mouse_cb != NULL)
 			mouse_cb(
-				*((unsigned char *)(SOFTUSB_DMEM_BASE+0x1002+4*hc_msg_consume)),
-				*((char *)(SOFTUSB_DMEM_BASE+0x1003+4*hc_msg_consume)),
-				*((char *)(SOFTUSB_DMEM_BASE+0x1004+4*hc_msg_consume)),
-				*((unsigned char *)(SOFTUSB_DMEM_BASE+0x1005+4*hc_msg_consume)));
-		hc_msg_consume = (hc_msg_consume + 1) & 0x0f;
+				COMLOC_MEVT(4*mouse_consume+0),
+				(char)COMLOC_MEVT(4*mouse_consume+1),
+				(char)COMLOC_MEVT(4*mouse_consume+2),
+				COMLOC_MEVT(4*mouse_consume+3));
+		mouse_consume = (mouse_consume + 1) & 0x0f;
 	}
 }
 
