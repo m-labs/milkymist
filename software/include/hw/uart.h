@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,5 +22,6 @@
 
 #define CSR_UART_RXTX 		MMPTR(0xe0000000)
 #define CSR_UART_DIVISOR	MMPTR(0xe0000004)
+#define CSR_UART_THRU		MMPTR(0xe0000008)
 
 #endif /* __HW_UART_H */
