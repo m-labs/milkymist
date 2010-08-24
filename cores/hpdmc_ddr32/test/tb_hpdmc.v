@@ -37,7 +37,7 @@ wire sdram_cs_n;
 wire sdram_we_n;
 wire sdram_cas_n;
 wire sdram_ras_n;
-wire [3:0] sdram_dqm;
+wire [3:0] sdram_dm;
 wire [12:0] sdram_adr;
 wire [1:0] sdram_ba;
 wire [31:0] sdram_dq;
@@ -54,7 +54,7 @@ ddr sdram1(
 	.Cas_n(sdram_cas_n),
 	.We_n(sdram_we_n),
 	
-	.Dm(sdram_dqm[3:2]),
+	.Dm(sdram_dm[3:2]),
 	.Dqs(sdram_dqs[3:2]),
 	.Dq(sdram_dq[31:16])
 );
@@ -70,7 +70,7 @@ ddr sdram0(
 	.Cas_n(sdram_cas_n),
 	.We_n(sdram_we_n),
 	
-	.Dm(sdram_dqm[1:0]),
+	.Dm(sdram_dm[1:0]),
 	.Dqs(sdram_dqs[1:0]),
 	.Dq(sdram_dq[15:0])
 );
@@ -115,7 +115,7 @@ hpdmc dut(
 	.sdram_we_n(sdram_we_n),
 	.sdram_cas_n(sdram_cas_n),
 	.sdram_ras_n(sdram_ras_n),
-	.sdram_dqm(sdram_dqm),
+	.sdram_dm(sdram_dm),
 	.sdram_adr(sdram_adr),
 	.sdram_ba(sdram_ba),
 	.sdram_dq(sdram_dq),

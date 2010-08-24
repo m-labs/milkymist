@@ -69,7 +69,7 @@ module hpdmc #(
 	output reg [12:0] sdram_adr,
 	output reg [1:0] sdram_ba,
 	
-	output [3:0] sdram_dqm,
+	output [3:0] sdram_dm,
 	inout [31:0] sdram_dq,
 	inout [3:0] sdram_dqs,
 	
@@ -280,13 +280,13 @@ hpdmc_ddrio ddrio(
 	.direction(direction),
 	.direction_r(direction_r),
 	/* Bit meaning is the opposite between
-	 * the FML selection signal and SDRAM DQM pins.
+	 * the FML selection signal and SDRAM DM pins.
 	 */
 	.mo(~fml_sel),
 	.do(fml_di),
 	.di(fml_do),
 	
-	.sdram_dqm(sdram_dqm),
+	.sdram_dm(sdram_dm),
 	.sdram_dq(sdram_dq),
 	.sdram_dqs(sdram_dqs),
 	

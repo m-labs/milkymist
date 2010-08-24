@@ -27,7 +27,7 @@ module hpdmc_ddrio(
 	input [63:0] do,
 	output [63:0] di,
 	
-	output [3:0] sdram_dqm,
+	output [3:0] sdram_dm,
 	inout [31:0] sdram_dq,
 	inout [3:0] sdram_dqs,
 	
@@ -85,11 +85,11 @@ hpdmc_iddr32 iddr_dq(
 );
 
 /*******/
-/* DQM */
+/* DM */
 /*******/
 
-hpdmc_oddr4 oddr_dqm(
-	.Q(sdram_dqm),
+hpdmc_oddr4 oddr_dm(
+	.Q(sdram_dm),
 	.C0(sys_clk),
 	.C1(sys_clk_n),
 	.CE(1'b1),

@@ -49,7 +49,7 @@ module ddram #(
 	output sdram_ras_n,
 	output [12:0] sdram_adr,
 	output [1:0] sdram_ba,
-	output [3:0] sdram_dqm,
+	output [3:0] sdram_dm,
 	inout [31:0] sdram_dq,
 	inout [3:0] sdram_dqs
 );
@@ -179,7 +179,7 @@ hpdmc #(
 	.sdram_we_n(sdram_we_n),
 	.sdram_cas_n(sdram_cas_n),
 	.sdram_ras_n(sdram_ras_n),
-	.sdram_dqm(sdram_dqm),
+	.sdram_dm(sdram_dm),
 	.sdram_adr(sdram_adr),
 	.sdram_ba(sdram_ba),
 	.sdram_dq(sdram_dq),

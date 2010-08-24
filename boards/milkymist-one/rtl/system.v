@@ -872,7 +872,7 @@ ddram #(
 	.sdram_we_n(sdram_we_n),
 	.sdram_cas_n(sdram_cas_n),
 	.sdram_ras_n(sdram_ras_n),
-	.sdram_dqm(sdram_dm),
+	.sdram_dm(sdram_dm),
 	.sdram_adr(sdram_adr),
 	.sdram_ba(sdram_ba),
 	.sdram_dq(sdram_dq),
