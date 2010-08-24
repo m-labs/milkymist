@@ -292,45 +292,45 @@ wire		cpuibus_ack,
 //------------------------------------------------------------------
 // Wishbone slave wires
 //------------------------------------------------------------------
-wire [31:0]	brg_adr,
-		norflash_adr,
-		csrbrg_adr,
-		usb_adr;
+wire [31:0]	norflash_adr,
+		usb_adr,
+		brg_adr,
+		csrbrg_adr;
 
 wire [2:0]	brg_cti;
 
-wire [31:0]	brg_dat_r,
-		brg_dat_w,
-		norflash_dat_r,
+wire [31:0]	norflash_dat_r,
 		norflash_dat_w,
-		csrbrg_dat_r,
-		csrbrg_dat_w,
 		usb_dat_r,
-		usb_dat_w;
+		usb_dat_w,
+		brg_dat_r,
+		brg_dat_w,
+		csrbrg_dat_r,
+		csrbrg_dat_w;
 
-wire [3:0]	brg_sel,
-		norflash_sel,
-		usb_sel;
+wire [3:0]	norflash_sel,
+		usb_sel,
+		brg_sel;
 
-wire		brg_we,
-		csrbrg_we,
-		norflash_we,
-		usb_we;
+wire		norflash_we,
+		usb_we,
+		brg_we,
+		csrbrg_we;
 
-wire		brg_cyc,
-		norflash_cyc,
-		csrbrg_cyc,
-		usb_cyc;
+wire		norflash_cyc,
+		usb_cyc,
+		brg_cyc,
+		csrbrg_cyc;
 
-wire		brg_stb,
-		norflash_stb,
-		csrbrg_stb,
-		usb_stb;
+wire		norflash_stb,
+		usb_stb,
+		brg_stb,
+		csrbrg_stb;
 
-wire		brg_ack,
-		norflash_ack,
-		csrbrg_ack,
-		usb_ack;
+wire		norflash_ack,
+		usb_ack,
+		brg_ack,
+		csrbrg_ack;
 
 //---------------------------------------------------------------------------
 // Wishbone switch
@@ -473,10 +473,10 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_ethernet,
 		csr_dr_fmlmeter,
 		csr_dr_videoin,
-		csr_dr_ir,
 		csr_dr_midi,
 		csr_dr_dmx_tx,
 		csr_dr_dmx_rx,
+		csr_dr_ir,
 		csr_dr_usb;
 
 //------------------------------------------------------------------
@@ -631,10 +631,10 @@ csrbrg csrbrg(
 		|csr_dr_ethernet
 		|csr_dr_fmlmeter
 		|csr_dr_videoin
-		|csr_dr_ir
 		|csr_dr_midi
 		|csr_dr_dmx_tx
 		|csr_dr_dmx_rx
+		|csr_dr_ir
 		|csr_dr_usb
 	)
 );
@@ -680,11 +680,11 @@ fmlbrg #(
 //---------------------------------------------------------------------------
 // Interrupts
 //---------------------------------------------------------------------------
+wire uartrx_irq;
+wire uarttx_irq;
 wire gpio_irq;
 wire timer0_irq;
 wire timer1_irq;
-wire uartrx_irq;
-wire uarttx_irq;
 wire ac97crrequest_irq;
 wire ac97crreply_irq;
 wire ac97dmar_irq;
@@ -694,17 +694,17 @@ wire tmu_irq;
 wire ethernetrx_irq;
 wire ethernettx_irq;
 wire videoin_irq;
-wire ir_irq;
 wire midirx_irq;
 wire miditx_irq;
+wire ir_irq;
 wire usb_irq;
 
 wire [31:0] cpu_interrupt;
 assign cpu_interrupt = {14'd0,
 	usb_irq,
+	ir_irq,
 	miditx_irq,
 	midirx_irq,
-	ir_irq,
 	videoin_irq,
 	ethernettx_irq,
 	ethernetrx_irq,
@@ -714,11 +714,11 @@ assign cpu_interrupt = {14'd0,
 	ac97dmar_irq,
 	ac97crreply_irq,
 	ac97crrequest_irq,
-	uarttx_irq,
-	uartrx_irq,
 	timer1_irq,
 	timer0_irq,
-	gpio_irq
+	gpio_irq,
+	uarttx_irq,
+	uartrx_irq
 };
 
 //---------------------------------------------------------------------------
@@ -921,7 +921,7 @@ vga #(
 //---------------------------------------------------------------------------
 `ifdef ENABLE_MEMORYCARD
 memcard #(
-	.csr_addr(4'h7)
+	.csr_addr(4'h4)
 ) memcard (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -952,7 +952,7 @@ BUFG b_ac97(
 	.O(ac97_clk_b)
 );
 ac97 #(
-	.csr_addr(4'h4)
+	.csr_addr(4'h5)
 ) ac97 (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -1007,7 +1007,7 @@ assign ac97bus_dat_w = 32'bx;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_PFPU
 pfpu #(
-	.csr_addr(4'h5)
+	.csr_addr(4'h6)
 ) pfpu (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -1042,7 +1042,7 @@ assign pfpubus_stb = 1'b0;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_TMU
 tmu2 #(
-	.csr_addr(4'h6),
+	.csr_addr(4'h7),
 	.fml_depth(`SDRAM_DEPTH)
 ) tmu (
 	.sys_clk(sys_clk),
@@ -1126,7 +1126,7 @@ BUFG b_phy_rx_clk(
 	.O(phy_rx_clk_b)
 );
 minimac #(
-	.csr_addr(4'h9)
+	.csr_addr(4'h8)
 ) ethernet (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -1194,7 +1194,7 @@ always @(posedge clk50) phy_clk <= ~phy_clk;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_FMLMETER
 fmlmeter #(
-	.csr_addr(4'ha)
+	.csr_addr(4'h9)
 ) fmlmeter (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -1216,7 +1216,7 @@ assign csr_dr_fmlmeter = 32'd0;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_VIDEOIN
 bt656cap #(
-	.csr_addr(4'hb),
+	.csr_addr(4'ha),
 	.fml_depth(`SDRAM_DEPTH)
 ) videoin (
 	.sys_clk(sys_clk),
@@ -1256,7 +1256,7 @@ assign videoin_sdc = 1'b0;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_MIDI
 uart #(
-	.csr_addr(4'hd),
+	.csr_addr(4'hb),
 	.clk_freq(`CLOCK_FREQUENCY),
 	.baud(31250)
 ) midi (
@@ -1286,7 +1286,7 @@ assign midi_tx = 1'b1;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_DMX
 dmx_tx #(
-	.csr_addr(4'he),
+	.csr_addr(4'hc),
 	.clk_freq(`CLOCK_FREQUENCY)
 ) dmx_tx (
 	.sys_clk(sys_clk),
@@ -1302,7 +1302,7 @@ dmx_tx #(
 );
 assign dmxa_de = 1'b1;
 dmx_rx #(
-	.csr_addr(4'hf),
+	.csr_addr(4'hd),
 	.clk_freq(`CLOCK_FREQUENCY)
 ) dmx_rx (
 	.sys_clk(sys_clk),
@@ -1331,7 +1331,7 @@ assign dmxb_d = 1'b0;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_IR
 rc5 #(
-	.csr_addr(4'hc),
+	.csr_addr(4'he),
 	.clk_freq(`CLOCK_FREQUENCY)
 ) ir (
 	.sys_clk(sys_clk),
@@ -1396,7 +1396,7 @@ BUFG usb_b_p(
 );
 
 softusb #(
-	.csr_addr(4'hd)
+	.csr_addr(4'hf)
 ) usb (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),

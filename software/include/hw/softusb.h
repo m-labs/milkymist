@@ -20,7 +20,7 @@
 
 #include <hw/common.h>
 
-#define CSR_SOFTUSB_CONTROL	MMPTR(0xe000d000)
+#define CSR_SOFTUSB_CONTROL	MMPTR(0xe000f000)
 
 #define SOFTUSB_CONTROL_RESET	(0x1)
 

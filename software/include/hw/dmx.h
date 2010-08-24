@@ -20,9 +20,9 @@
 
 #include <hw/common.h>
 
-#define CSR_DMX_TX(x)		MMPTR(0xe000e000+4*(x))
-#define CSR_DMX_THRU		MMPTR(0xe000e800)
+#define CSR_DMX_TX(x)		MMPTR(0xe000c000+4*(x))
+#define CSR_DMX_THRU		MMPTR(0xe000c800)
 
-#define CSR_DMX_RX(x)		MMPTR(0xe000f000+4*(x))
+#define CSR_DMX_RX(x)		MMPTR(0xe000d000+4*(x))
 
 #endif /* __HW_DMX_H */
