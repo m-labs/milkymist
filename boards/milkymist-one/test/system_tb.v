@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ system system(
 	.flash_adr(flash_adr),
 	.flash_d(flash_d),
 
-	.uart_rxd(),
-	.uart_txd()
+	.uart_rx(),
+	.uart_tx()
 );
 
 endmodule

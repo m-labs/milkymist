@@ -803,8 +803,8 @@ uart #(
 	.rx_irq(uartrx_irq),
 	.tx_irq(uarttx_irq),
 	
-	.uart_rxd(uart_rx),
-	.uart_txd(uart_tx)
+	.uart_rx(uart_rx),
+	.uart_tx(uart_tx)
 );
 
 //---------------------------------------------------------------------------
@@ -1271,8 +1271,8 @@ uart #(
 	.rx_irq(midirx_irq),
 	.tx_irq(miditx_irq),
 
-	.uart_rxd(midi_rx),
-	.uart_txd(midi_tx)
+	.uart_rx(midi_rx),
+	.uart_tx(midi_tx)
 );
 `else
 assign csr_dr_midi = 32'd0;

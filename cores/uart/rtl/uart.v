@@ -31,8 +31,8 @@ module uart #(
 	output rx_irq,
 	output tx_irq,
 
-	input uart_rxd,
-	output uart_txd
+	input uart_rx,
+	output uart_tx
 );
 
 reg [15:0] divisor;
@@ -44,8 +44,8 @@ uart_transceiver transceiver(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
-	.uart_rxd(uart_rxd),
-	.uart_txd(uart_txd),
+	.uart_rx(uart_rx),
+	.uart_tx(uart_tx),
 
 	.divisor(divisor),
 
