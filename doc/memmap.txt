@@ -1,0 +1,29 @@
+[> Milkymist(tm) One memory map
+-------------------------------
+
+Peripheral			WB base (L1 cached/uncached)
+============================================================
+NOR flash			0x00000000 / 0x80000000
+SoftUSB shared memory		0x20000000 / 0xa0000000
+FML bridge (SDRAM)		0x40000000 / 0xc0000000
+CSR bridge			0x60000000 / 0xe0000000
+
+
+Peripheral			CSR base	IRQ(s)
+============================================================
+UART				0x0000		0, 1
+System controller		0x1000		2, 3, 4
+DDR SDRAM configuration		0x2000		None
+VGA				0x3000		None
+Memory card			0x4000		None
+AC97				0x5000		5, 6, 7, 8
+PFPU				0x6000		9
+TMU				0x7000		10
+Ethernet			0x8000		11, 12
+FML meter			0x9000		None
+Video input			0xa000		13
+MIDI				0xb000		14, 15
+DMX TX				0xc000		None
+DMX RX				0xd000		None
+IR				0xe000		16
+USB				0xf000		17
