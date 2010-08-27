@@ -149,6 +149,7 @@ static void i2c_start_cond()
 		CSR_VGA_DDC = VGA_DDC_SDAOE|VGA_DDC_SDAOUT;
 		i2c_delay();
 		CSR_VGA_DDC |= VGA_DDC_SDC;
+		i2c_delay();
 	}
 	/* SCL is high, set SDA from 1 to 0 */
 	CSR_VGA_DDC = VGA_DDC_SDAOE|VGA_DDC_SDC;
