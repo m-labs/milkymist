@@ -42,3 +42,35 @@ __attribute__((noreturn)) void reboot()
 	CSR_SYSTEM_ID = 1; /* Writing to CSR_SYSTEM_ID causes a system reset */
 	while(1);
 }
+
+static void icap_write(int val, unsigned int w)
+{
+	while(!(CSR_ICAP & ICAP_READY));
+	if(!val)
+		w |= ICAP_CE|ICAP_WRITE;
+	CSR_ICAP = w;
+}
+
+__attribute__((noreturn)) void reconf()
+{
+	uart_force_sync(1); /* flush UART buffers */
+	irq_setmask(0);
+	irq_enable(0);
+	icap_write(0, 0xffff); /* dummy word */
+	icap_write(0, 0xffff); /* dummy word */
+	icap_write(0, 0xffff); /* dummy word */
+	icap_write(0, 0xffff); /* dummy word */
+	icap_write(1, 0xaa99); /* sync word part 1 */
+	icap_write(1, 0x5566); /* sync word part 2 */
+	icap_write(1, 0x30a1); /* write to command register */
+	icap_write(1, 0x0000); /* null command */
+	icap_write(1, 0x30a1); /* write to command register */
+	icap_write(1, 0x000e); /* reboot command */
+	icap_write(1, 0x2000); /* NOP */
+	icap_write(1, 0x2000); /* NOP */
+	icap_write(1, 0x2000); /* NOP */
+	icap_write(1, 0x2000); /* NOP */
+	icap_write(0, 0x1111); /* NULL */
+	icap_write(0, 0xffff); /* dummy word */
+	while(1);
+}

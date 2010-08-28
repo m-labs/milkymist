@@ -242,6 +242,7 @@ static void help()
 	puts("stop       - stop renderer");
 	puts("stats      - print system stats");
 	puts("reboot     - system reset");
+	puts("reconf     - reload FPGA configuration");
 }
 
 static void cpucfg()
@@ -774,6 +775,7 @@ static void do_command(char *c)
 		} else if(strcmp(command, "stop") == 0) renderer_stop();
 		else if(strcmp(command, "stats") == 0) stats();
 		else if(strcmp(command, "reboot") == 0) reboot();
+		else if(strcmp(command, "reconf") == 0) reconf();
 		else if(strcmp(command, "help") == 0) help();
 
 		/* Test functions and hacks */

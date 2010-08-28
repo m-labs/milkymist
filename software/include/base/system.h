@@ -20,5 +20,6 @@
 
 void flush_bridge_cache();
 __attribute__((noreturn)) void reboot();
+__attribute__((noreturn)) void reconf();
 
 #endif /* __SYSTEM_H */

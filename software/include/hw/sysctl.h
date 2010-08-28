@@ -35,6 +35,13 @@
 #define TIMER_ENABLE		(0x01)
 #define TIMER_AUTORESTART	(0x02)
 
+#define CSR_ICAP		MMPTR(0xe0001034)
+
+#define ICAP_READY		(0x01)
+
+#define ICAP_CE			(0x10000)
+#define ICAP_WRITE		(0x20000)
+
 #define CSR_CAPABILITIES	MMPTR(0xe0001038)
 #define CSR_SYSTEM_ID		MMPTR(0xe000103c)
 
