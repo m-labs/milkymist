@@ -129,18 +129,19 @@ always @(posedge clk) begin
 	write_r <= icap_en_n;
 end
 
-parameter IDLE =	4'd0;
-parameter DUMMY =	4'd1;
-parameter SYNC1 =	4'd2;
-parameter SYNC2 =	4'd3;
-parameter GENERAL1_C =	4'd4;
-parameter GENERAL1_D =	4'd5;
-parameter GENERAL2_C =	4'd6;
-parameter GENERAL2_D =	4'd7;
-parameter CMD =		4'd8;
-parameter IPROG =	4'd9;
-parameter NOP =		4'd10;
-parameter LOOP =	4'd11;
+parameter IDLE =		4'd0;
+parameter DUMMY =		4'd1;
+parameter SYNC1 =		4'd2;
+parameter SYNC2 =		4'd3;
+parameter GENERAL1_C =		4'd4;
+parameter GENERAL1_D =		4'd5;
+parameter GENERAL2_C =		4'd6;
+parameter GENERAL2_D_RESCUE =	4'd7;
+parameter GENERAL2_D_REGULAR =	4'd8;
+parameter CMD =			4'd9;
+parameter IPROG =		4'd10;
+parameter NOP =			4'd11;
+parameter LOOP =		4'd12;
 
 reg [3:0] state;
 reg [3:0] next_state;
@@ -150,15 +151,23 @@ initial state <= IDLE;
 always @(posedge clk)
 	state <= next_state;
 
+reg rescue;
+reg next_rescue;
+always @(posedge clk)
+	rescue <= next_rescue;
+
 always @(*) begin
 	d = 16'hxxxx;
 	icap_en_n = 1'b1;
-	
+
+	next_rescue = rescue;
+
 	next_state = state;
 
 	case(state)
 		IDLE: begin
-			if(btn1)
+			next_rescue = btn1_r;
+			if(btn2_r)
 				next_state = DUMMY;
 		end
 		DUMMY: begin
@@ -189,9 +198,17 @@ always @(*) begin
 		GENERAL2_C: begin
 			d = 16'h3281;
 			icap_en_n = 1'b0;
-			next_state = GENERAL2_D;
+			if(rescue)
+				next_state = GENERAL2_D_RESCUE;
+			else
+				next_state = GENERAL2_D_REGULAR;
 		end
-		GENERAL2_D: begin
+		GENERAL2_D_RESCUE: begin
+			d = 16'h000A;
+			icap_en_n = 1'b0;
+			next_state = CMD;
+		end
+		GENERAL2_D_REGULAR: begin
 			d = 16'h006E;
 			icap_en_n = 1'b0;
 			next_state = CMD;
