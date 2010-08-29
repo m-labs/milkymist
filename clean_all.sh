@@ -21,6 +21,7 @@ cd $BASEDIR/software/demo && make clean
 cd $BASEDIR/softusb-input && make clean
 
 cd $BASEDIR/boards/milkymist-one/synthesis && make -f common.mak clean
+cd $BASEDIR/boards/milkymist-one/standby && make clean
 cd $BASEDIR/boards/milkymist-one/flash && make clean
 
 cd $BASEDIR/doc && make clean

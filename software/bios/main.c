@@ -374,10 +374,13 @@ static int test_user_abort()
 	return 1;
 }
 
+int rescue;
+
 extern unsigned int _edata;
 
 static void crcbios()
 {
+	unsigned int offset_bios;
 	unsigned int length;
 	unsigned int expected_crc;
 	unsigned int actual_crc;
@@ -388,9 +391,10 @@ static void crcbios()
 	 * We also use the address of _edata to know the length
 	 * of our code.
 	 */
+	offset_bios = rescue ? FLASH_OFFSET_RESCUE_BIOS : FLASH_OFFSET_REGULAR_BIOS;
 	expected_crc = _edata;
-	length = (unsigned int)&_edata - FLASH_OFFSET_BIOS;
-	actual_crc = crc32((unsigned char *)FLASH_OFFSET_BIOS, length);
+	length = (unsigned int)&_edata - offset_bios;
+	actual_crc = crc32((unsigned char *)offset_bios, length);
 	if(expected_crc == actual_crc)
 		printf("I: BIOS CRC passed (%08x)\n", actual_crc);
 	else {
@@ -453,14 +457,12 @@ int main(int i, char **c)
 
 	brd_desc = get_board_desc();
 
-	/* Check for double baud rate */
-	if(brd_desc != NULL) {
-		if(CSR_GPIO_IN & GPIO_BTN2)
-			CSR_UART_DIVISOR = brd_desc->clk_frequency/230400/16;
-	}
-
 	/* Display a banner as soon as possible to show that the system is alive */
+	CSR_GPIO_OUT = GPIO_LED1;
 	putsnonl(banner);
+	rescue = !((unsigned int)main > FLASH_OFFSET_REGULAR_BIOS);
+	if(rescue)
+		printf("I: Booting in rescue mode\n");
 	
 	crcbios();
 	display_board();

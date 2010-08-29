@@ -1,32 +1,31 @@
 BOARD_DIR=../rtl
 CORES_DIR=../../../cores
 
+include common.mak
+
 include ../sources.mak
 SRC=$(BOARD_SRC) $(CORES_SRC)
 
-all: build/system.bit
+$(BUILDDIR)/system.ucf: common.ucf synplify.ucf
+	cat common.ucf synplify.ucf > $(BUILDDIR)/system.ucf
 
-build/system.ucf: common.ucf synplify.ucf
-	cat common.ucf synplify.ucf > build/system.ucf
-
-build/loadsources.tcl: $(SRC)
-	rm -f build/loadsources.tcl
+$(BUILDDIR)/loadsources.tcl: $(SRC)
+	rm -f $(BUILDDIR)/loadsources.tcl
 	for i in `echo $^`; do \
-	    echo "add_file -verilog -lib work \"../$$i\"" >> build/loadsources.tcl; \
+	    echo "add_file -verilog -lib work \"../$$i\"" >> $(BUILDDIR)/loadsources.tcl; \
 	done
 
-build/system_ucf.tcl: build/system.ucf
-	cd build && ucf2mgc system.ucf
+$(BUILDDIR)/system_ucf.tcl: $(BUILDDIR)/system.ucf
+	cd $(BUILDDIR) && ucf2mgc system.ucf
 
-build/synplicity.ucf: build/system.edf
+$(BUILDDIR)/synplicity.ucf: $(BUILDDIR)/system.edf
 
-build/synplify.prj: synplify.prj
-	cp synplify.prj build/synplify.prj
+$(BUILDDIR)/synplify.prj: synplify.prj
+	cp synplify.prj $(BUILDDIR)/synplify.prj
 
-build/system.edf: build/loadsources.tcl build/synplify.prj build/system_ucf.tcl
-	cd build && synplify_pro -batch synplify.prj
+$(BUILDDIR)/system.edf: $(BUILDDIR)/loadsources.tcl $(BUILDDIR)/synplify.prj $(BUILDDIR)/system_ucf.tcl
+	cd $(BUILDDIR) && synplify_pro -batch synplify.prj
 
-build/system.ngd: build/system.edf build/synplicity.ucf
-	cd build && ngdbuild -uc synplicity.ucf system.edf
+$(BUILDDIR)/system.ngd: $(BUILDDIR)/system.edf $(BUILDDIR)/synplicity.ucf
+	cd $(BUILDDIR) && ngdbuild -uc synplicity.ucf system.edf
 
-include common.mak

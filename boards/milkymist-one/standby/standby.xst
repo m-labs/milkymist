@@ -1,0 +1,8 @@
+run
+-ifn standby.prj
+-top standby
+-ifmt MIXED
+-opt_mode SPEED
+-opt_level 1
+-ofn standby.ngc
+-p xc6slx45-fgg484-2

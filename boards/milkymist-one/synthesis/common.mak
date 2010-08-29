@@ -1,27 +1,35 @@
-timing: build/system-routed.twr
+ifeq ($(RESCUE),1)
+	BUILDDIR=build-rescue
+else
+	BUILDDIR=build
+endif
 
-usage: build/system-routed.xdl
-	../../../tools/xdlanalyze.pl build/system-routed.xdl 0
+all: $(BUILDDIR)/system.bit
 
-load: build/system.bit
-	cd build && impact -batch ../load.cmd
+timing: $(BUILDDIR)/system-routed.twr
 
-build/system.ncd: build/system.ngd
-	cd build && map -ol high -w system.ngd
+usage: $(BUILDDIR)/system-routed.xdl
+	../../../tools/xdlanalyze.pl $(BUILDDIR)/system-routed.xdl 0
 
-build/system-routed.ncd: build/system.ncd
-	cd build && par -ol high -w system.ncd system-routed.ncd
+load: $(BUILDDIR)/system.bit
+	cd $(BUILDDIR) && impact -batch ../load.cmd
 
-build/system.bit: build/system-routed.ncd
-	cd build && bitgen -g LCK_cycle:6 -w system-routed.ncd system.bit
+$(BUILDDIR)/system.ncd: $(BUILDDIR)/system.ngd
+	cd $(BUILDDIR) && map -ol high -w system.ngd
 
-build/system-routed.xdl: build/system-routed.ncd
-	cd build && xdl -ncd2xdl system-routed.ncd system-routed.xdl
+$(BUILDDIR)/system-routed.ncd: $(BUILDDIR)/system.ncd
+	cd $(BUILDDIR) && par -ol high -w system.ncd system-routed.ncd
 
-build/system-routed.twr: build/system-routed.ncd
-	cd build && trce -e 100 system-routed.ncd system.pcf
+$(BUILDDIR)/system.bit: $(BUILDDIR)/system-routed.ncd
+	cd $(BUILDDIR) && bitgen -g LCK_cycle:6 -w system-routed.ncd system.bit
+
+$(BUILDDIR)/system-routed.xdl: $(BUILDDIR)/system-routed.ncd
+	cd $(BUILDDIR) && xdl -ncd2xdl system-routed.ncd system-routed.xdl
+
+$(BUILDDIR)/system-routed.twr: $(BUILDDIR)/system-routed.ncd
+	cd $(BUILDDIR) && trce -e 100 system-routed.ncd system.pcf
 
 clean:
-	rm -rf build/*
+	rm -rf build/* build-rescue/*
 
 .PHONY: timing usage load clean

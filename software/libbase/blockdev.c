@@ -252,32 +252,14 @@ static int memcard_readblock(unsigned int block, void *buffer)
 	return 1;
 }
 
-static int current_devnr;
-
 int bd_init(int devnr)
 {
-	current_devnr = devnr;
-	switch(devnr) {
-		case BLOCKDEV_FLASH:
-			return 1;
-		case BLOCKDEV_MEMORY_CARD:
-			return memcard_init();
-		default:
-			return 0;
-	}
+	return memcard_init();
 }
 
 int bd_readblock(unsigned int block, void *buffer)
 {
-	switch(current_devnr) {
-		case BLOCKDEV_FLASH:
-			memcpy(buffer, (char *)(FLASH_OFFSET_USERFS + block*512), 512);
-			return 1;
-		case BLOCKDEV_MEMORY_CARD:
-			return memcard_readblock(block, buffer);
-		default:
-			return 0;
-	}
+	return memcard_readblock(block, buffer);
 }
 
 void bd_done()
@@ -286,5 +268,5 @@ void bd_done()
 
 int bd_has_part_table(int devnr)
 {
-	return 0;
+	return 1;
 }

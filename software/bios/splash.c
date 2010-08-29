@@ -25,10 +25,12 @@ static int splash_hres;
 static int splash_vres;
 static unsigned short splash_fb[640*480] __attribute__((aligned(32)));;
 
+extern int rescue;
+
 void splash_display()
 {
 	int i;
-	unsigned short *splash_src = (unsigned short *)FLASH_OFFSET_SPLASH;
+	unsigned short *splash_src = rescue ? (unsigned short *)FLASH_OFFSET_RESCUE_SPLASH : (unsigned short *)FLASH_OFFSET_REGULAR_SPLASH;
 	
 	printf("I: Displaying splash screen...");
 

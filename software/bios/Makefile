@@ -4,7 +4,7 @@ include $(MMDIR)/software/include.mak
 OBJECTS=crt0.o main.o boot.o splash.o
 SEGMENTS=-j .text -j .data -j .rodata
 
-all: bios.bin
+all: bios.bin bios-rescue.bin
 
 %.bin: %.elf
 	$(MAKE) -C $(MMDIR)/tools
@@ -13,19 +13,20 @@ all: bios.bin
 	$(MMDIR)/tools/crc32 $@ write
 
 bios.elf: linker.ld $(OBJECTS)
-	$(MAKE) -C $(MMDIR)/software/libhpdmc
-	$(MAKE) -C $(MMDIR)/software/libbase
-	$(MAKE) -C $(MMDIR)/software/libnet
 	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lhpdmc -lbase-light -lnet
 	chmod -x $@
 
-.PHONY: clean depend bios.elf
+bios-rescue.elf: linker-rescue.ld $(OBJECTS)
+	$(LD) $(LDFLAGS) -T linker-rescue.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lhpdmc -lbase-light -lnet
+	chmod -x $@
+
+.PHONY: clean depend
 
 depend:
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f *.o bios.elf bios.bin .*~ *~ Makefile.bak
+	rm -f *.o bios.elf bios.bin bios-rescue.elf bios-rescue.bin .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 

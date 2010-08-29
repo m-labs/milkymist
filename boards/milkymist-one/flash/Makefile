@@ -1,55 +1,84 @@
 MMDIR=../../..
 
-all: bitstream.mcs bios.mcs splash.mcs userfs.mcs
+all: bitstream.mcs bios.mcs splash.mcs
+all-rescue: bitstream-rescue.mcs bios-rescue.mcs splash-rescue.mcs
+all-prod: standby.mcs all all-rescue
 
-bitstream.mcs:
+flash-rescue: flash-bitstream-rescue flash-bios-rescue flash-splash-rescue
+flash-regular: flash-bitstream flash-bios flash-splash
+flash-prod: flash-standby flash-rescue flash-regular
+
+clean:
+	rm -rf impact-sucks
+	rm -f bitstream-rescue.mcs bitstream-rescue.prm bitstream-rescue.cfi
+	rm -f bios-rescue.mcs
+	rm -f splash-rescue.raw splash-rescue.mcs
+	rm -f bitstream.mcs bitstream.prm bitstream.cfi
+	rm -f bios.mcs
+	rm -f splash.raw splash.mcs
+	rm -f standby.mcs standby.prm standby.cfi
+
+.PHONY: flash-rescue flash-bitstream-rescue flash-bios-rescue flash-splash-rescue flash-regular flash-bitstream flash-bios flash-splash flash-prod all-rescue all-prod clean
+
+# rescue images
+
+bitstream-rescue.mcs: # WARNING: promgen multiplies address by 2!!!
+	$(MAKE) -C ../synthesis -f Makefile.xst RESCUE=1
+	promgen -w -p mcs -o bitstream-rescue.mcs -s 32768 -u 0x00050000 ../synthesis/build-rescue/system.bit -bpi_dc parallel -data_width 16
+
+bios-rescue.mcs:
+	$(MAKE) -C $(MMDIR)/software/bios
+	srec_cat -Output bios-rescue.mcs -Intel $(MMDIR)/software/bios/bios-rescue.bin -Binary -offset 0x00220000 --byte-swap 2
+
+splash-rescue.mcs: splash-rescue.raw
+	srec_cat -Output splash-rescue.mcs -Intel splash-rescue.raw -Binary -offset 0x00240000 --byte-swap 2
+
+splash-rescue.raw: splash-rescue.png
+	$(MMDIR)/tools/makeraw splash-rescue.png
+
+# regular images
+
+bitstream.mcs: # WARNING: promgen multiplies address by 2!!!
 	$(MAKE) -C ../synthesis -f Makefile.xst
-	promgen -w -p mcs -o bitstream.mcs -s 32768 -u 0x00000000 ../synthesis/build/system.bit -bpi_dc parallel -data_width 16
+	promgen -w -p mcs -o bitstream.mcs -s 32768 -u 0x00370000 ../synthesis/build/system.bit -bpi_dc parallel -data_width 16
 
 bios.mcs:
 	$(MAKE) -C $(MMDIR)/software/bios
-	srec_cat -Output bios.mcs -Intel $(MMDIR)/software/bios/bios.bin -Binary -offset 0x00180000 --byte-swap 2
+	srec_cat -Output bios.mcs -Intel $(MMDIR)/software/bios/bios.bin -Binary -offset 0x00860000 --byte-swap 2
+
 
 splash.mcs: splash.raw
-	srec_cat -Output splash.mcs -Intel splash.raw -Binary -offset 0x001C0000 --byte-swap 2
+	srec_cat -Output splash.mcs -Intel splash.raw -Binary -offset 0x00880000 --byte-swap 2
 
-userfs.mcs: userfs.bin
-	srec_cat -Output userfs.mcs -Intel userfs.bin -Binary -offset 0x00260000 --byte-swap 2
 
 splash.raw: splash.png
 	$(MMDIR)/tools/makeraw splash.png
 
-userfs.bin:
-	$(MAKE) -C $(MMDIR)/software/demo
-	srec_cat -Output userfs.bin -Binary /dev/null -Binary -fill 0xFF 0x000000 0x300000
-	/sbin/mkdosfs -F 16 -s 1 userfs.bin
-	mcopy -i userfs.bin $(MMDIR)/patches/* $(MMDIR)/software/demo/boot.bin ::
+# standby bitstream
 
-# Run the Xilinx crapware in a separate directory that we can simply rm -rf
-# to get rid of the garbage it puts all over the filesystem.
-flash_bitstream: bitstream.mcs
-	mkdir -p impact_sucks
-	cd impact_sucks && impact -batch ../flash_bitstream.cmd
+standby.mcs: # WARNING: promgen multiplies address by 2!!!
+	$(MAKE) -C ../standby
+	promgen -w -p mcs -o standby.mcs -s 32768 -u 0x00000000 ../standby/build/standby.bit -bpi_dc parallel -data_width 16
 
-flash_bios: bios.mcs
-	mkdir -p impact_sucks
-	cd impact_sucks && impact -batch ../flash_bios.cmd
+# flash targets
 
-flash_splash: splash.mcs
-	mkdir -p impact_sucks
-	cd impact_sucks && impact -batch ../flash_splash.cmd
+flash-bitstream-rescue: bitstream-rescue.mcs
+	./flash-mcs.sh bitstream-rescue.mcs
 
-flash_userfs: userfs.mcs
-	mkdir -p impact_sucks
-	cd impact_sucks && impact -batch ../flash_userfs.cmd
+flash-bios-rescue: bios-rescue.mcs
+	./flash-mcs.sh bios-rescue.mcs
 
-flash_all: flash_bitstream flash_bios flash_splash flash_userfs
+flash-splash-rescue: splash-rescue.mcs
+	./flash-mcs.sh splash-rescue.mcs
 
-clean:
-	rm -rf impact_sucks
-	rm -f bitstream.mcs bitstream.prm bitstream.cfi
-	rm -f bios.mcs
-	rm -f splash.raw splash.mcs
-	rm -f userfs.bin userfs.mcs
+flash-bitstream: bitstream.mcs
+	./flash-mcs.sh bitstream.mcs
 
-.PHONY: flash_bitstream flash_bios flash_splash flash_userfs flash_all clean
+flash-bios: bios.mcs
+	./flash-mcs.sh bios.mcs
+
+flash-splash: splash.mcs
+	./flash-mcs.sh splash.mcs
+
+flash-standby: standby.mcs
+	./flash-mcs.sh standby.mcs
