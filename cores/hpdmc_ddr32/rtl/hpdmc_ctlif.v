@@ -93,8 +93,8 @@ always @(posedge sys_clk) begin
 		tim_rp <= 3'd2;
 		tim_rcd <= 3'd2;
 		tim_cas <= 1'b0;
-		tim_refi <= 11'd740;
-		tim_rfc <= 4'd8;
+		tim_refi <= 11'd620;
+		tim_rfc <= 4'd6;
 		tim_wr <= 2'd2;
 	end else begin
 		sdram_cs_n <= 1'b1;
