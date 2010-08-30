@@ -27,6 +27,9 @@ bitstream-rescue.mcs: # WARNING: promgen multiplies address by 2!!!
 	promgen -w -p mcs -o bitstream-rescue.mcs -s 32768 -u 0x00050000 ../synthesis/build-rescue/system.bit -bpi_dc parallel -data_width 16
 
 bios-rescue.mcs:
+	$(MAKE) -C $(MMDIR)/software/libhpdmc
+	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libnet
 	$(MAKE) -C $(MMDIR)/software/bios
 	srec_cat -Output bios-rescue.mcs -Intel $(MMDIR)/software/bios/bios-rescue.bin -Binary -offset 0x00220000 --byte-swap 2
 

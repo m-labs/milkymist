@@ -24,6 +24,9 @@ module standby(
 	output led1,
 	output led2,
 
+	output flash_ce_n,
+	output flash_oe_n,
+	output flash_we_n,
 	output flash_rst_n,
 	output sdram_clk_p,
 	output sdram_clk_n,
@@ -204,12 +207,12 @@ always @(*) begin
 				next_state = GENERAL2_D_REGULAR;
 		end
 		GENERAL2_D_RESCUE: begin
-			d = 16'h000A;
+			d = 16'h0005;
 			icap_en_n = 1'b0;
 			next_state = CMD;
 		end
 		GENERAL2_D_REGULAR: begin
-			d = 16'h006E;
+			d = 16'h0037;
 			icap_en_n = 1'b0;
 			next_state = CMD;
 		end
@@ -236,7 +239,10 @@ end
 assign led1 = 1'b0;
 assign led2 = 1'b0;
 
-assign flash_rst_n = 1'b0;
+assign flash_ce_n = 1'b1;
+assign flash_oe_n = 1'b1;
+assign flash_we_n = 1'b1;
+assign flash_rst_n = 1'b1;
 assign sdram_clk_p = 1'b0;
 assign sdram_clk_n = 1'b1;
 assign vga_psave_n = 1'b0;
