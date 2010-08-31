@@ -19,7 +19,6 @@
 #define __BLOCKDEV_H
 
 enum {
-	BLOCKDEV_FLASH,
 	BLOCKDEV_MEMORY_CARD
 };
 

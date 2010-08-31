@@ -24,11 +24,13 @@
 #include <sfl.h>
 #include <blockdev.h>
 #include <fatfs.h>
+#include <string.h>
 
 #include <net/microudp.h>
 #include <net/tftp.h>
 
 #include <hw/hpdmc.h>
+#include <hw/flash.h>
 
 #include "boot.h"
 
@@ -314,4 +316,35 @@ void fsboot(int devnr)
 	fatfs_done();
 	printf("I: Booting...\n");
 	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
+}
+
+extern int rescue;
+
+void flashboot()
+{
+	unsigned int *flashbase;
+	unsigned int length;
+	unsigned int crc;
+	unsigned int got_crc;
+
+	printf("I: Booting from flash...\n");
+	if(rescue)
+		flashbase = (unsigned int *)FLASH_OFFSET_RESCUE_APP;
+	else
+		flashbase = (unsigned int *)FLASH_OFFSET_REGULAR_APP;
+	length = *flashbase++;
+	crc = *flashbase++;
+	if(length > 4*1024*1024) {
+		printf("E: Invalid flash boot image length\n");
+		return;
+	}
+	printf("I: Loading %d bytes from flash...\n", length);
+	memcpy((void *)SDRAM_BASE, flashbase, length);
+	got_crc = crc32((unsigned char *)SDRAM_BASE, length);
+	if(crc != got_crc) {
+		printf("E: CRC failed (expected %08x, got %08x)\n", crc, got_crc);
+		return;
+	}
+	printf("I: Booting...\n");
+	boot(0, 0, 0, SDRAM_BASE);
 }

@@ -209,18 +209,9 @@ static int lscb(const char *filename, const char *longname, void *param)
 	return 1;
 }
 
-static int get_dev(const char *dev)
-{
-	if(dev == NULL)
-		return BLOCKDEV_FLASH;
-	if(*dev == 'm')
-		return BLOCKDEV_MEMORY_CARD;
-	return BLOCKDEV_FLASH;
-}
-
 static void ls(char *dev)
 {
-	if(!fatfs_init(get_dev(dev))) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD)) return;
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
@@ -239,7 +230,7 @@ static void load(char *filename, char *addr, char *dev)
 		printf("incorrect address\n");
 		return;
 	}
-	if(!fatfs_init(get_dev(dev))) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD)) return;
 	fatfs_load(filename, (char *)addr2, 16*1024*1024, NULL);
 	fatfs_done();
 }
@@ -301,8 +292,8 @@ static void help()
 	puts("crc        - compute CRC32 of a part of the address space");
 	puts("ls         - list files on the filesystem");
 	puts("load       - load a file from the filesystem");
-	puts("serialboot - boot via SFL");
 	puts("netboot    - boot via TFTP");
+	puts("serialboot - boot via SFL");
 	puts("fsboot     - boot from the filesystem");
 	puts("mdior      - read MDIO register");
 	puts("mdiow      - write MDIO register");
@@ -340,10 +331,11 @@ static void do_command(char *c)
 	
 	else if(strcmp(token, "ls") == 0) ls(get_token(&c));
 	else if(strcmp(token, "load") == 0) load(get_token(&c), get_token(&c), get_token(&c));
-	
-	else if(strcmp(token, "serialboot") == 0) serialboot();
+
 	else if(strcmp(token, "netboot") == 0) netboot();
-	else if(strcmp(token, "fsboot") == 0) fsboot(get_dev(get_token(&c)));
+	else if(strcmp(token, "serialboot") == 0) serialboot();
+	else if(strcmp(token, "fsboot") == 0) fsboot(BLOCKDEV_MEMORY_CARD);
+	else if(strcmp(token, "flashboot") == 0) flashboot();
 
 	else if(strcmp(token, "mdior") == 0) mdior(get_token(&c));
 	else if(strcmp(token, "mdiow") == 0) mdiow(get_token(&c), get_token(&c));
@@ -441,12 +433,18 @@ static const char banner[] =
 
 static void boot_sequence()
 {
-	splash_display();
 	if(test_user_abort()) {
-		serialboot();
-		fsboot(BLOCKDEV_MEMORY_CARD);
-		fsboot(BLOCKDEV_FLASH);
-		netboot();
+		if(rescue) {
+			netboot();
+			serialboot();
+			fsboot(BLOCKDEV_MEMORY_CARD);
+			flashboot();
+		} else {
+			fsboot(BLOCKDEV_MEMORY_CARD);
+			flashboot();
+			netboot();
+			serialboot();
+		}
 		printf("E: No boot medium found\n");
 	}
 }
@@ -467,7 +465,8 @@ int main(int i, char **c)
 	crcbios();
 	display_board();
 	display_capabilities();
-	
+	splash_display();
+
 	boot_sequence();
 
 	splash_showerr();

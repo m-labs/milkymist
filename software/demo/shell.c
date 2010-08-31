@@ -159,18 +159,9 @@ static int lscb(const char *filename, const char *longname, void *param)
 	return 1;
 }
 
-static int get_dev(const char *dev)
-{
-	if(dev == NULL)
-		return BLOCKDEV_FLASH;
-	if(*dev == 'm')
-		return BLOCKDEV_MEMORY_CARD;
-	return BLOCKDEV_FLASH;
-}
-
 static void ls(const char *dev)
 {
-	if(!fatfs_init(get_dev(dev))) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD) return;
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
@@ -196,7 +187,7 @@ static void render(const char *filename, const char *dev)
 		return;
 	}
 
-	if(!fatfs_init(get_dev(dev))) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD) return;
 	if(!fatfs_load(filename, buffer, sizeof(buffer), &size)) return;
 	fatfs_done();
 	buffer[size] = 0;
@@ -283,7 +274,7 @@ static void loadpic(const char *filename)
 		return;
 	}
 
-	if(!fatfs_init(BLOCKDEV_FLASH)) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD)) return;
 	if(!fatfs_load(filename, (void *)vga_backbuffer, vga_hres*vga_vres*2, &size)) return;
 	fatfs_done();
 

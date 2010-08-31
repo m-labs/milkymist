@@ -9,16 +9,18 @@ flash-regular: flash-bitstream flash-bios flash-splash
 flash-prod: flash-standby flash-rescue flash-regular
 
 clean:
-	rm -rf impact-sucks
+	rm -rf impact_sucks
 	rm -f bitstream-rescue.mcs bitstream-rescue.prm bitstream-rescue.cfi
 	rm -f bios-rescue.mcs
 	rm -f splash-rescue.raw splash-rescue.mcs
+	rm -f demo-rescue.mcs
 	rm -f bitstream.mcs bitstream.prm bitstream.cfi
 	rm -f bios.mcs
 	rm -f splash.raw splash.mcs
+	rm -f demo.mcs
 	rm -f standby.mcs standby.prm standby.cfi
 
-.PHONY: flash-rescue flash-bitstream-rescue flash-bios-rescue flash-splash-rescue flash-regular flash-bitstream flash-bios flash-splash flash-prod all-rescue all-prod clean
+.PHONY: flash-rescue flash-bitstream-rescue flash-bios-rescue flash-splash-rescue flash-demo-rescue flash-regular flash-bitstream flash-bios flash-splash flash-demo flash-prod all-rescue all-prod clean
 
 # rescue images
 
@@ -38,6 +40,15 @@ splash-rescue.mcs: splash-rescue.raw
 
 splash-rescue.raw: splash-rescue.png
 	$(MMDIR)/tools/makeraw splash-rescue.png
+
+demo-rescue.mcs:
+	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libhal
+	$(MAKE) -C $(MMDIR)/software/libnet
+	$(MAKE) -C $(MMDIR)/software/libfpvm
+	$(MAKE) -C $(MMDIR)/software/libmath
+	$(MAKE) -C $(MMDIR)/software/demo
+	srec_cat -Output demo-rescue.mcs -Intel $(MMDIR)/software/demo/boot.fbi -Binary -offset 0x002E0000 --byte-swap 2
 
 # regular images
 
@@ -59,6 +70,15 @@ splash.mcs: splash.raw
 splash.raw: splash.png
 	$(MMDIR)/tools/makeraw splash.png
 
+demo.mcs:
+	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libhal
+	$(MAKE) -C $(MMDIR)/software/libnet
+	$(MAKE) -C $(MMDIR)/software/libfpvm
+	$(MAKE) -C $(MMDIR)/software/libmath
+	$(MAKE) -C $(MMDIR)/software/demo
+	srec_cat -Output demo.mcs -Intel $(MMDIR)/software/demo/boot.fbi -Binary -offset 0x00920000 --byte-swap 2
+
 # standby bitstream
 
 standby.mcs: # WARNING: promgen multiplies address by 2!!!
@@ -76,6 +96,9 @@ flash-bios-rescue: bios-rescue.mcs
 flash-splash-rescue: splash-rescue.mcs
 	./flash-mcs.sh splash-rescue.mcs
 
+flash-demo-rescue: demo-rescue.mcs
+	./flash-mcs.sh demo-rescue.mcs
+
 flash-bitstream: bitstream.mcs
 	./flash-mcs.sh bitstream.mcs
 
@@ -84,6 +107,9 @@ flash-bios: bios.mcs
 
 flash-splash: splash.mcs
 	./flash-mcs.sh splash.mcs
+
+flash-demo: demo.mcs
+	./flash-mcs.sh demo.mcs
 
 flash-standby: standby.mcs
 	./flash-mcs.sh standby.mcs
