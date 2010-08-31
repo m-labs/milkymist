@@ -4,7 +4,7 @@ include $(MMDIR)/software/include.mak
 OBJECTS=crt0.o isr.o tick.o wave.o analyzer.o eval.o line.o apipe.o rpipe.o renderer.o cpustats.o memstats.o shell.o vera20_tff.o font.o osd.o main.o
 SEGMENTS=-j .text -j .data -j .rodata
 
-all: boot.bin
+all: boot.bin boot.fbi
 
 bandfilters.h: bandfilters.sce
 	scilab -nw -nwni -nogui -nb -f bandfilters.sce
@@ -20,7 +20,9 @@ logo.h: logo.raw
 	$(MAKE) -C $(MMDIR)/tools
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	chmod -x $@
-	$(MMDIR)/tools/crc32 $@
+
+%.fbi: %.bin
+	$(MMDIR)/tools/crc32 $< write $@
 
 boot.elf: linker.ld $(OBJECTS)
 	$(MAKE) -C $(MMDIR)/software/libbase
@@ -36,7 +38,7 @@ depend: bandfilters.h logo.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f $(OBJECTS) bandfilters.h logo.raw logo.h boot.elf boot.bin .*~ *~ Makefile.bak
+	rm -f $(OBJECTS) bandfilters.h logo.raw logo.h boot.elf boot.bin boot.fbi .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 

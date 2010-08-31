@@ -95,16 +95,14 @@ static unsigned int crc32(const unsigned char *buffer, unsigned int len)
 
 int main(int argc, char *argv[])
 {
-	int fd;
+	int fd, fd_out;
 	unsigned char *buffer;
 	unsigned int length;
 	unsigned int crc;
 	
-	if(
-	     (argc != 2)
-	 && ((argc != 3) && !strcmp(argv[2], "write"))
-	) {
-		fprintf(stderr, "Usage: crc32 <filename> [write]\n");
+	if(((argc != 2) && (argc != 3) && (argc != 4))
+		|| ((argc > 2) && strcmp(argv[2], "write"))) {
+		fprintf(stderr, "Usage: crc32 <filename> [write] [dest]\n");
 		return 1;
 	}
 	
@@ -125,15 +123,13 @@ int main(int argc, char *argv[])
 	}
 	crc = crc32(buffer, length);
 	printf("CRC32 (%s): %08x\n", argv[1], crc);
-	munmap(buffer, length);
-	close(fd);
-	
+
 	if(argc == 3) {
 		/* Write the CRC32 in big endian at the end of the file */
 		char b[4];
-		
-		fd = open(argv[1], O_WRONLY|O_APPEND);
-		if(fd == -1) {
+
+		fd_out = open(argv[1], O_WRONLY|O_APPEND);
+		if(fd_out == -1) {
 			perror("open");
 			return 1;
 		}
@@ -141,9 +137,35 @@ int main(int argc, char *argv[])
 		b[1] = (crc & 0x00ff0000) >> 16;
 		b[2] = (crc & 0x0000ff00) >> 8;
 		b[3] = (crc & 0x000000ff) >> 0;
-		write(fd, &b[0], 4);
-		close(fd);
+		write(fd_out, &b[0], 4);
+		close(fd_out);
 	}
-	
+
+	if(argc == 4) {
+		/* Write a new file prepended with the size and CRC */
+		char b[4];
+
+		fd_out = open(argv[3], O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+		if(fd_out == -1) {
+			perror("open");
+			return 1;
+		}
+		b[0] = (length & 0xff000000) >> 24;
+		b[1] = (length & 0x00ff0000) >> 16;
+		b[2] = (length & 0x0000ff00) >> 8;
+		b[3] = (length & 0x000000ff) >> 0;
+		write(fd_out, &b[0], 4);
+		b[0] = (crc & 0xff000000) >> 24;
+		b[1] = (crc & 0x00ff0000) >> 16;
+		b[2] = (crc & 0x0000ff00) >> 8;
+		b[3] = (crc & 0x000000ff) >> 0;
+		write(fd_out, &b[0], 4);
+		write(fd_out, buffer, length);
+		close(fd_out);
+	}
+
+	munmap(buffer, length);
+	close(fd);
+
 	return 0;
 }
