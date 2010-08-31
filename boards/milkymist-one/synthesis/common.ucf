@@ -327,6 +327,20 @@ NET "exp(*)" PULLDOWN;
 
 # ==== Timing fixes ====
 NET "sys_clk" TNM_NET = "GRPsys";
+
+NET "ddram/dqs_clk" TNM_NET = "GRPdqs";
+TIMESPEC "TSdqs_async1" = FROM "GRPsys" TO "GRPdqs" TIG;
+TIMESPEC "TSdqs_async2" = FROM "GRPdqs" TO "GRPsys" TIG;
+
+INST "sdram_adr(*)" TNM = "GRPsdramout";
+INST "sdram_ba(*)" TNM = "GRPsdramout";
+INST "sdram_cas_n" TNM = "GRPsdramout";
+INST "sdram_cke" TNM = "GRPsdramout";
+INST "sdram_cs_n" TNM = "GRPsdramout";
+INST "sdram_ras_n" TNM = "GRPsdramout";
+INST "sdram_we_n" TNM = "GRPsdramout";
+TIMESPEC "TSsdramout" = FROM FFS TO "GRPsdramout" 9 ns;
+
 NET "vga/vga_iclk" TNM_NET = "GRPvga";
 TIMESPEC "TSvga_async1" = FROM "GRPsys" TO "GRPvga" TIG;
 TIMESPEC "TSvga_async2" = FROM "GRPvga" TO "GRPsys" TIG;

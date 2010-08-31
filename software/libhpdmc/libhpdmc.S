@@ -67,25 +67,29 @@ _sdram_init:
 	PRINT(nl)
 	PRINT(nl)
 
-// HACK for Milkymist One
-#if 0
-	/* wait for the PLLs to lock */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+
+	/* wait for the PLLs to lock */
 	mvu	r3, (HPDMC_PLL1_LOCKED|HPDMC_PLL2_LOCKED)
 wait_pll:
 	lw	r2, (r1+0)
 	and	r2, r2, r3
 	bne	r2, r3, wait_pll
-	
-	/* set IDELAY=0, wait for DQS generator ready */
+
+	/* calibrate and set IDELAY=0 */
+	mvu	r2, (HPDMC_IDELAY_CAL)
+	sw	(r1+0), r2
+	mvu	r1, 20
+	calli	delay
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
 	mvu	r2, (HPDMC_IDELAY_RST)
 	sw	(r1+0), r2
-wait_dqs_start:
-	lw	r2, (r1+0)
-	andi	r2, r2, (HPDMC_DQSDELAY_RDY)
-	be	r2, r0, wait_dqs_start
-#endif
+	mvu	r1, 20
+	calli	delay
+	sw	(r1+0), r2
+
 	xor	r25, r25, r25
 	xor	r24, r24, r24
 
@@ -202,18 +206,14 @@ send_init:
 
 	bi	send_init_return
 
-/*
- * TODO: proper dynamic autocalibration:
- * scan IDELAY/DQS and memtest,
- * then place in the middle of the working zone.
- */
 /* clobbers: r1, r2, r3, r4 */
 autocalibrate:
-	mvu	r24, 58 /* DQS phase, change this number for your board */
+	mvhi	r24, 0xffff
+	ori	r24, r24, -16 /* DQS phase, change this number for your board */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
 	xor	r2, r2, r2
-	mvu	r3, (HPDMC_DQSDELAY_CE|HPDMC_DQSDELAY_INC)
+	mvu	r3, (HPDMC_DQSDELAY_CE)
 	be	r2, r24, dqs_loop_end
 dqs_loop:
 	sw	(r1+0), r3
@@ -221,9 +221,18 @@ dqs_loop_wait:
 	lw	r4, (r1+0)
 	andi	r4, r4, (HPDMC_DQSDELAY_RDY)
 	be	r4, r0, dqs_loop_wait
-	addi	r2, r2, 1
+	addi	r2, r2, -1
 	bne	r2, r24, dqs_loop
 dqs_loop_end:
+	mvu	r25, 10 /* input delay, change this number for your board */
+	xor	r2, r2, r2
+	mvu	r3, (HPDMC_IDELAY_CE|HPDMC_IDELAY_INC)
+	be	r2, r25, idelay_loop_end
+idelay_loop:
+	sw	(r1+0), r3
+	addi	r2, r2, 1
+	bne	r2, r25, idelay_loop
+idelay_loop_end:
 	bi	autocalibrate_success_return
 
 #ifdef FEAT_MANUAL_CALIBRATION
@@ -258,14 +267,16 @@ mancal_loop:
 	be	r1, r2, small_test
 	mvu	r2, 'T'
 	be	r1, r2, big_test
+	mvu	r2, 'c'
+	be	r1, r2, iodelay_calibrate
+	mvu	r2, 'r'
+	be	r1, r2, iodelay_reset
 	mvu	r2, 'p'
 	be	r1, r2, disp_pattern
 	mvu	r2, 'b'
 	be	r1, r2, boot
 	bi mancal_loop
 inc_input_delay:
-	mvu	r1, 29
-	be	r25, r1, mancal_loop
 	addi	r25, r25, 1
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
@@ -273,7 +284,6 @@ inc_input_delay:
 	sw	(r1+0), r2
 	bi	mancal_loop
 dec_input_delay:
-	be	r25, r0, mancal_loop
 	addi	r25, r25, -1
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
@@ -281,8 +291,6 @@ dec_input_delay:
 	sw	(r1+0), r2
 	bi	mancal_loop
 inc_dqs_phase:
-	mvu	r1, 255
-	be	r24, r1, mancal_loop
 	addi	r24, r24, 1
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
@@ -290,7 +298,6 @@ inc_dqs_phase:
 	sw	(r1+0), r2
 	bi	wait_dqs
 dec_dqs_phase:
-	be	r24, r0, mancal_loop
 	addi	r24, r24, -1
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
@@ -316,6 +323,19 @@ after_test:
 	bi	mancal_loop
 print_test_fail:
 	PRINT(memtestfailed)
+	bi	mancal_loop
+iodelay_calibrate:
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_IDELAY_CAL)
+	sw	(r1+0), r2
+	bi	mancal_loop
+iodelay_reset:
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_IDELAY_RST)
+	sw	(r1+0), r2
+	xor	r25, r25, r25
 	bi	mancal_loop
 disp_pattern:
 	mvu	r1, 640
@@ -408,7 +428,7 @@ testfail:
 	ret
 
 #ifndef FEAT_NO_OUTPUT
-/* printint - prints an integer 0-999
+/* printint - prints an integer between -999 and 999
  *
  * inputs:	r1 - input
  * outputs:	none
@@ -417,7 +437,20 @@ testfail:
 printint:
 	mvhi	r2, hi(CSR_UART_RXTX)
 	ori	r2, r2, lo(CSR_UART_RXTX)
+
+	bge	r1, r0, positive
+	xnor	r1, r0, r1
+	addi	r1, r1, 1
 	
+	mvu	r3, '-'
+	sw	(r2+0), r3
+writeintwait0:
+	rcsr	r3, IP
+	andi	r3, r3, IRQ_UARTTX
+	be	r3, r0, writeintwait0
+	wcsr	IP, r3
+
+positive:
 	mvu	r4, 100
 	divu	r3, r1, r4
 	modu	r1, r1, r4
@@ -494,7 +527,7 @@ autocalfail: .string "Autocalibration failed, entering manual mode.\n"
 autocalok: .string "Autocalibration OK, testing memory...\n"
 continueboot: .string "All SDRAM initialization completed, boot continuing.\n\n"
 testfailmsg: .string "Memory test failed, entering manual mode.\n"
-manualkeys: .string "\nu: inc. input delay // d: dec. input delay\nU: inc. DQS phase   // D: dec. DQS phase\nt: test (small)     // T: test (large)\np: display pattern\nb: boot\n"
+manualkeys: .string "\nu: inc. input delay // d: dec. input delay\nU: inc. DQS phase   // D: dec. DQS phase\nt: test (small)     // T: test (large)\nc: calibrate IODELAY2s\nr: reset IODELAY2s\np: display pattern\nb: boot\n"
 memtestfailed: .string "Memory test failed.\n"
 memtestpassed: .string "Memory test passed.\n"
 spacer: .string " -- "

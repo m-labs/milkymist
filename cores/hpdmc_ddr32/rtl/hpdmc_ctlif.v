@@ -53,6 +53,7 @@ module hpdmc_ctlif #(
 	output reg idelay_rst,
 	output reg idelay_ce,
 	output reg idelay_inc,
+	output reg idelay_cal,
 	
 	output reg dqs_psen,
 	output reg dqs_psincdec,
@@ -138,9 +139,10 @@ always @(posedge sys_clk) begin
 						idelay_rst <= csr_di[0];
 						idelay_ce <= csr_di[1];
 						idelay_inc <= csr_di[2];
+						idelay_cal <= csr_di[3];
 						
-						dqs_psen <= csr_di[3];
-						dqs_psincdec <= csr_di[4];
+						dqs_psen <= csr_di[4];
+						dqs_psincdec <= csr_di[5];
 					end
 				endcase
 			end
@@ -148,7 +150,7 @@ always @(posedge sys_clk) begin
 				2'b00: csr_do <= {sdram_cke, sdram_rst, bypass};
 				2'b01: csr_do <= {sdram_ba, sdram_adr, 4'h0};
 				2'b10: csr_do <= {tim_wr, tim_rfc, tim_refi, tim_cas, tim_rcd, tim_rp};
-				2'b11: csr_do <= {pll_stat2, psready, 5'd0};
+				2'b11: csr_do <= {pll_stat2, psready, 6'd0};
 			endcase
 		end
 	end

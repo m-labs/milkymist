@@ -81,7 +81,7 @@ module hpdmc #(
 	input [1:0] pll_stat
 );
 
-/* Register all control signals, leaving the possibility to use IOB registers */
+/* Register all control signals. */
 wire sdram_cke_r;
 wire sdram_cs_n_r;
 wire sdram_we_n_r;
@@ -139,6 +139,7 @@ wire [1:0] tim_wr;
 wire idelay_rst;
 wire idelay_ce;
 wire idelay_inc;
+wire idelay_cal;
 
 hpdmc_ctlif #(
 	.csr_addr(csr_addr)
@@ -172,6 +173,7 @@ hpdmc_ctlif #(
 	.idelay_rst(idelay_rst),
 	.idelay_ce(idelay_ce),
 	.idelay_inc(idelay_inc),
+	.idelay_cal(idelay_cal),
 	
 	.dqs_psen(dqs_psen),
 	.dqs_psincdec(dqs_psincdec),
@@ -292,7 +294,8 @@ hpdmc_ddrio ddrio(
 	
 	.idelay_rst(idelay_rst),
 	.idelay_ce(idelay_ce),
-	.idelay_inc(idelay_inc)
+	.idelay_inc(idelay_inc),
+	.idelay_cal(idelay_cal)
 );
 
 endmodule

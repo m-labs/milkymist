@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,16 +46,17 @@
 
 #define CSR_HPDMC_IODELAY	MMPTR(0xe000200C)
 
-#define HPDMC_IDELAY_RST	(0x01)
-#define HPDMC_IDELAY_CE		(0x02)
-#define HPDMC_IDELAY_INC	(0x04)
+#define HPDMC_IDELAY_RST	(0x001)
+#define HPDMC_IDELAY_CE		(0x002)
+#define HPDMC_IDELAY_INC	(0x004)
+#define HPDMC_IDELAY_CAL	(0x008)
 
-#define HPDMC_DQSDELAY_CE	(0x08)
-#define HPDMC_DQSDELAY_INC	(0x10)
-#define HPDMC_DQSDELAY_RDY	(0x20)
+#define HPDMC_DQSDELAY_CE	(0x010)
+#define HPDMC_DQSDELAY_INC	(0x020)
+#define HPDMC_DQSDELAY_RDY	(0x040)
 
-#define HPDMC_PLL1_LOCKED	(0x40)
-#define HPDMC_PLL2_LOCKED	(0x80)
+#define HPDMC_PLL1_LOCKED	(0x080)
+#define HPDMC_PLL2_LOCKED	(0x100)
 
 #define SDRAM_BASE		(0x40000000)
 

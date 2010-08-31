@@ -46,9 +46,11 @@ bitstream.mcs: # WARNING: promgen multiplies address by 2!!!
 	promgen -w -p mcs -o bitstream.mcs -s 32768 -u 0x00370000 ../synthesis/build/system.bit -bpi_dc parallel -data_width 16
 
 bios.mcs:
+	$(MAKE) -C $(MMDIR)/software/libhpdmc
+	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libnet
 	$(MAKE) -C $(MMDIR)/software/bios
 	srec_cat -Output bios.mcs -Intel $(MMDIR)/software/bios/bios.bin -Binary -offset 0x00860000 --byte-swap 2
-
 
 splash.mcs: splash.raw
 	srec_cat -Output splash.mcs -Intel splash.raw -Binary -offset 0x00880000 --byte-swap 2

@@ -33,7 +33,8 @@ module hpdmc_ddrio(
 	
 	input idelay_rst,
 	input idelay_ce,
-	input idelay_inc
+	input idelay_inc,
+	input idelay_cal
 );
 
 /******/
@@ -73,13 +74,27 @@ hpdmc_oddr32 oddr_dq(
 	.S(1'b0)
 );
 
+wire [31:0] sdram_dq_in_delayed;
+
+hpdmc_idelay32 idelay(
+	.IDATAIN(sdram_dq_in),
+	.DATAOUT(sdram_dq_in_delayed),
+	.INC(idelay_inc),
+	.CE(idelay_ce),
+	.RST(idelay_rst),
+	.CAL(idelay_cal),
+	.CLK(sys_clk),
+	.IOCLK0(sys_clk),
+	.IOCLK1(sys_clk_n)
+);
+
 hpdmc_iddr32 iddr_dq(
 	.Q0(di[31:0]),
 	.Q1(di[63:32]),
 	.C0(sys_clk),
 	.C1(sys_clk_n),
 	.CE(1'b1),
-	.D(sdram_dq_in),
+	.D(sdram_dq_in_delayed),
 	.R(1'b0),
 	.S(1'b0)
 );

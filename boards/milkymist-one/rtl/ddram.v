@@ -95,6 +95,7 @@ wire psen;
 wire psincdec;
 wire psdone;
 wire locked2;
+wire dqs_clk0;
 DCM_SP #(
 	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
@@ -110,10 +111,10 @@ DCM_SP #(
 	.PHASE_SHIFT(0),
 	.STARTUP_WAIT("TRUE")
 ) clkgen_dqs (
-	.CLK0(dqs_clk_dcm),
-	.CLK90(),
-	.CLK180(dqs_clk_n_dcm),
-	.CLK270(),
+	.CLK0(dqs_clk0),
+	.CLK90(dqs_clk_dcm),
+	.CLK180(),
+	.CLK270(dqs_clk_n_dcm),
 
 	.CLK2X(),
 	.CLK2X180(),
@@ -122,7 +123,7 @@ DCM_SP #(
 	.CLKFX(),
 	.CLKFX180(),
 	.LOCKED(locked2),
-	.CLKFB(dqs_clk),
+	.CLKFB(dqs_clk0),
 	.CLKIN(sys_clk),
 	.RST(sys_rst),
 	
