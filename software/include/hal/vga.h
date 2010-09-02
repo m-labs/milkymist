@@ -24,9 +24,16 @@ extern unsigned short int *vga_frontbuffer;
 extern unsigned short int *vga_backbuffer;
 extern unsigned short int *vga_lastbuffer;
 
+enum {
+	VGA_MODE_640_480 = 0,
+	VGA_MODE_800_600,
+	VGA_MODE_1024_768
+};
+
 void vga_init();
 void vga_disable();
 void vga_swap_buffers();
 int vga_read_edid(char *buffer);
+void vga_set_mode(int mode);
 
 #endif /* __HAL_VGA_H */

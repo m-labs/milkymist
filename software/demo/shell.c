@@ -161,7 +161,7 @@ static int lscb(const char *filename, const char *longname, void *param)
 
 static void ls(const char *dev)
 {
-	if(!fatfs_init(BLOCKDEV_MEMORY_CARD) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD)) return;
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 }
@@ -187,12 +187,25 @@ static void render(const char *filename, const char *dev)
 		return;
 	}
 
-	if(!fatfs_init(BLOCKDEV_MEMORY_CARD) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD)) return;
 	if(!fatfs_load(filename, buffer, sizeof(buffer), &size)) return;
 	fatfs_done();
 	buffer[size] = 0;
 
 	renderer_start(buffer);
+}
+
+static void vmode(const char *mode)
+{
+	char *c;
+	int mode2;
+	
+	mode2 = strtoul(mode, &c, 0);
+	if(*c != 0) {
+		printf("incorrect mode\n");
+		return;
+	}
+	vga_set_mode(mode2);
 }
 
 static void stats()
@@ -764,6 +777,7 @@ static void do_command(char *c)
 			renderer_istart();
 			irender = 1;
 		} else if(strcmp(command, "stop") == 0) renderer_stop();
+		else if(strcmp(command, "vmode") == 0) vmode(param1);
 		else if(strcmp(command, "stats") == 0) stats();
 		else if(strcmp(command, "reboot") == 0) reboot();
 		else if(strcmp(command, "reconf") == 0) reconf();

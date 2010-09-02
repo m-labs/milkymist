@@ -222,7 +222,7 @@ static void init_ui()
 	patchlist_page = 0;
 	patchlist_pending = -1;
 
-	if(!fatfs_init(BLOCKDEV_FLASH)) return;
+	if(!fatfs_init(BLOCKDEV_MEMORY_CARD)) return;
 	fatfs_list_files(lscb, NULL);
 	fatfs_done();
 
@@ -246,7 +246,7 @@ void osd_service()
 
 		n = patchlist_pending;
 		patchlist_pending = -1;
-		if(!fatfs_init(BLOCKDEV_FLASH)) return;
+		if(!fatfs_init(BLOCKDEV_MEMORY_CARD)) return;
 		if(!fatfs_load(patchlist_filenames[n], buffer, sizeof(buffer), &size)) return;
 		fatfs_done();
 		buffer[size] = 0;

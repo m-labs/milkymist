@@ -53,7 +53,7 @@ wire preset_full, preset_empty;
 assign data_out = mem[read_index];
 
 always @(posedge clk_write) begin
-	if (write_en & !full)
+	if(write_en & !full)
 		mem[write_index] <= data_in;
 end
 

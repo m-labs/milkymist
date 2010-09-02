@@ -888,7 +888,7 @@ vga #(
 ) vga (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	
+
 	.csr_a(csr_a),
 	.csr_we(csr_we),
 	.csr_di(csr_dw),

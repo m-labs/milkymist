@@ -28,9 +28,9 @@
  * Buffers must be aligned to the start of an FML burst
  * which is 4x64 bits, that is, 256 bits, or 32 bytes.
  */
-static unsigned short int framebufferA[640*480] __attribute__((aligned(32)));
-static unsigned short int framebufferB[640*480] __attribute__((aligned(32)));
-static unsigned short int framebufferC[640*480] __attribute__((aligned(32)));
+static unsigned short int framebufferA[1024*768] __attribute__((aligned(32)));
+static unsigned short int framebufferB[1024*768] __attribute__((aligned(32)));
+static unsigned short int framebufferC[1024*768] __attribute__((aligned(32)));
 
 int vga_hres;
 int vga_vres;
@@ -43,25 +43,21 @@ static int i2c_init();
 
 void vga_init()
 {
-	vga_hres = 640;
-	vga_vres = 480;
-	
 	vga_frontbuffer = framebufferA;
 	vga_backbuffer = framebufferB;
 	vga_lastbuffer = framebufferC;
-	
+
 	CSR_VGA_BASEADDRESS = (unsigned int)vga_frontbuffer;
 
-	/* by default, VGA core puts out 640x480@60Hz */
-	CSR_VGA_RESET = 0;
-
-	printf("VGA: initialized at resolution %dx%d\n", vga_hres, vga_vres);
 	printf("VGA: framebuffers at 0x%08x 0x%08x 0x%08x\n",
 		(unsigned int)&framebufferA, (unsigned int)&framebufferB, (unsigned int)&framebufferC);
+
 	if(i2c_init())
 		printf("VGA: DDC I2C bus initialized\n");
 	else
 		printf("VGA: DDC I2C bus initialization problem\n");
+
+	vga_set_mode(VGA_MODE_640_480);
 }
 
 void vga_disable()
@@ -222,4 +218,51 @@ int vga_read_edid(char *buffer)
 	i2c_stop_cond();
 
 	return 1;
+}
+
+// FIXME: change pixel clock as well. This function won't work without!
+void vga_set_mode(int mode)
+{
+	CSR_VGA_RESET = VGA_RESET;
+	switch(mode) {
+		case VGA_MODE_640_480:
+			vga_hres = 640;
+			vga_vres = 480;
+			CSR_VGA_HRES = 640;
+			CSR_VGA_HSYNC_START = 656;
+			CSR_VGA_HSYNC_END = 752;
+			CSR_VGA_HSCAN = 799;
+			CSR_VGA_VRES = 480;
+			CSR_VGA_VSYNC_START = 491;
+			CSR_VGA_VSYNC_END = 493;
+			CSR_VGA_VSCAN = 523;
+			break;
+		case VGA_MODE_800_600:
+			vga_hres = 800;
+			vga_vres = 600;
+			CSR_VGA_HRES = 800;
+			CSR_VGA_HSYNC_START = 848;
+			CSR_VGA_HSYNC_END = 976;
+			CSR_VGA_HSCAN = 1040;
+			CSR_VGA_VRES = 600;
+			CSR_VGA_VSYNC_START = 637;
+			CSR_VGA_VSYNC_END = 643;
+			CSR_VGA_VSCAN = 666;
+			break;
+		case VGA_MODE_1024_768:
+			vga_hres = 1024;
+			vga_vres = 768;
+			CSR_VGA_HRES = 1024;
+			CSR_VGA_HSYNC_START = 1040;
+			CSR_VGA_HSYNC_END = 1184;
+			CSR_VGA_HSCAN = 1344;
+			CSR_VGA_VRES = 768;
+			CSR_VGA_VSYNC_START = 771;
+			CSR_VGA_VSYNC_END = 777;
+			CSR_VGA_VSCAN = 806;
+			break;
+	}
+	CSR_VGA_BURST_COUNT = vga_hres*vga_vres/16;
+	printf("VGA: mode set to %dx%d\n", vga_hres, vga_vres);
+	CSR_VGA_RESET = 0;
 }

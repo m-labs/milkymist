@@ -23,7 +23,7 @@ module vga #(
 ) (
 	input sys_clk,
 	input sys_rst,
-	
+
 	/* Configuration interface */
 	input [13:0] csr_a,
 	input csr_we,
