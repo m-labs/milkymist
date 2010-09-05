@@ -55,11 +55,59 @@ module ddram #(
 );
 
 `ifndef SIMULATION
-wire dqs_clk_dcm;
-wire dqs_clk_n_dcm;
-wire dqs_clk;
-wire dqs_clk_n;
-wire locked1 = 1'b1;
+wire clk_psen;
+wire clk_psincdec;
+wire clk_psdone;
+
+wire ck_phased_dcm;
+wire ck_phased_n_dcm;
+wire ck_phased;
+wire ck_phased_n;
+DCM_SP #(
+	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
+
+	.CLKFX_DIVIDE(2),		// 1 to 32
+	.CLKFX_MULTIPLY(2),		// 2 to 32
+
+	.CLKIN_DIVIDE_BY_2("FALSE"),
+	.CLKIN_PERIOD(`CLOCK_PERIOD),
+	.CLKOUT_PHASE_SHIFT("VARIABLE"),
+	.CLK_FEEDBACK("1X"),
+	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
+	.DUTY_CYCLE_CORRECTION("TRUE"),
+	.PHASE_SHIFT(0),
+	.STARTUP_WAIT("TRUE")
+) clkgen_ck (
+	.CLK0(ck_phased_dcm),
+	.CLK90(),
+	.CLK180(ck_phased_n_dcm),
+	.CLK270(),
+
+	.CLK2X(),
+	.CLK2X180(),
+
+	.CLKDV(),
+	.CLKFX(),
+	.CLKFX180(),
+	.LOCKED(locked1),
+	.CLKFB(ck_phased),
+	.CLKIN(sys_clk),
+	.RST(sys_rst),
+
+	.PSEN(clk_psen),
+	.PSINCDEC(clk_psincdec),
+	.PSDONE(clk_psdone),
+	.PSCLK(sys_clk)
+);
+
+BUFG ck_b1(
+	.I(ck_phased_dcm),
+	.O(ck_phased)
+);
+BUFG ck_b2(
+	.I(ck_phased_n_dcm),
+	.O(ck_phased_n)
+);
 
 ODDR2 #(
 	.DDR_ALIGNMENT("NONE"),
@@ -67,8 +115,8 @@ ODDR2 #(
 	.SRTYPE("SYNC")
 ) clock_forward_p (
 	.Q(sdram_clk_p),
-	.C0(sys_clk),
-	.C1(sys_clk_n),
+	.C0(ck_phased),
+	.C1(ck_phased_n),
 	.CE(1'b1),
 	.D0(1'b1),
 	.D1(1'b0),
@@ -82,8 +130,8 @@ ODDR2 #(
 	.SRTYPE("SYNC")
 ) clock_forward_n (
 	.Q(sdram_clk_n),
-	.C0(sys_clk),
-	.C1(sys_clk_n),
+	.C0(ck_phased),
+	.C1(ck_phased_n),
 	.CE(1'b1),
 	.D0(1'b0),
 	.D1(1'b1),
@@ -91,9 +139,14 @@ ODDR2 #(
 	.S(1'b0)
 );
 
-wire psen;
-wire psincdec;
-wire psdone;
+wire dqs_clk_dcm;
+wire dqs_clk_n_dcm;
+wire dqs_clk;
+wire dqs_clk_n;
+
+wire dqs_psen;
+wire dqs_psincdec;
+wire dqs_psdone;
 wire locked2;
 wire dqs_clk0;
 DCM_SP #(
@@ -127,9 +180,9 @@ DCM_SP #(
 	.CLKIN(sys_clk),
 	.RST(sys_rst),
 	
-	.PSEN(psen),
-	.PSINCDEC(psincdec),
-	.PSDONE(psdone),
+	.PSEN(dqs_psen),
+	.PSINCDEC(dqs_psincdec),
+	.PSDONE(dqs_psdone),
 	.PSCLK(sys_clk)
 );
 BUFG b1(
@@ -186,9 +239,13 @@ hpdmc #(
 	.sdram_dq(sdram_dq),
 	.sdram_dqs(sdram_dqs),
 	
-	.dqs_psen(psen),
-	.dqs_psincdec(psincdec),
-	.dqs_psdone(psdone),
+	.dqs_psen(dqs_psen),
+	.dqs_psincdec(dqs_psincdec),
+	.dqs_psdone(dqs_psdone),
+
+	.clk_psen(clk_psen),
+	.clk_psincdec(clk_psincdec),
+	.clk_psdone(clk_psdone),
 
 	.pll_stat({locked2, locked1})
 );

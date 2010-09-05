@@ -46,7 +46,7 @@ always @(posedge sys_clk) begin
 		read_safe <= 1'b1;
 	end else begin
 		if(read) begin
-			read_safe_counter <= 3'd4;
+			read_safe_counter <= 3'd5; // FIXME: 3'd4 fails, why?
 			read_safe <= 1'b0;
 		end else if(write) begin
 			/* after a write, read is unsafe for 5 cycles (4 transfers + tWTR=1) */

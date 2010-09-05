@@ -37,6 +37,7 @@
 
 /*
  * GLOBAL VARIABLES
+ * r26: CLK phase
  * r25: Input delay
  * r24: DQS phase
  * r23: return address
@@ -90,6 +91,7 @@ wait_pll:
 	calli	delay
 	sw	(r1+0), r2
 
+	xor	r26, r26, r26
 	xor	r25, r25, r25
 	xor	r24, r24, r24
 
@@ -209,7 +211,7 @@ send_init:
 /* clobbers: r1, r2, r3, r4 */
 autocalibrate:
 	mvhi	r24, 0xffff
-	ori	r24, r24, -16 /* DQS phase, change this number for your board */
+	ori	r24, r24, -52 /* DQS phase, change this number for your board */
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
 	xor	r2, r2, r2
@@ -224,7 +226,21 @@ dqs_loop_wait:
 	addi	r2, r2, -1
 	bne	r2, r24, dqs_loop
 dqs_loop_end:
-	mvu	r25, 10 /* input delay, change this number for your board */
+	mvhi	r26, 0xffff
+	ori	r26, r26, -85 /* CLK phase, change this number for your board */
+	xor	r2, r2, r2
+	mvu	r3, (HPDMC_CLKDELAY_CE)
+	be	r2, r26, clk_loop_end
+clk_loop:
+	sw	(r1+0), r3
+clk_loop_wait:
+	lw	r4, (r1+0)
+	andi	r4, r4, (HPDMC_CLKDELAY_RDY)
+	be	r4, r0, clk_loop_wait
+	addi	r2, r2, -1
+	bne	r2, r26, clk_loop
+clk_loop_end:
+	mvu	r25, 30 /* input delay, change this number for your board */
 	xor	r2, r2, r2
 	mvu	r3, (HPDMC_IDELAY_CE|HPDMC_IDELAY_INC)
 	be	r2, r25, idelay_loop_end
@@ -253,16 +269,23 @@ mancal_loop:
 	PRINT(spacer)
 	mv	r1, r24
 	calli	printint
+	PRINT(spacer)
+	mv	r1, r26
+	calli	printint
 	PRINT(nl)
 	calli	getkey
-	mvu	r2, 'u'
+	mvu	r2, 'a'
 	be	r1, r2, inc_input_delay
-	mvu	r2, 'd'
+	mvu	r2, 'z'
 	be	r1, r2, dec_input_delay
-	mvu	r2, 'U'
+	mvu	r2, 'q'
 	be	r1, r2, inc_dqs_phase
-	mvu	r2, 'D'
+	mvu	r2, 's'
 	be	r1, r2, dec_dqs_phase
+	mvu	r2, 'w'
+	be	r1, r2, inc_clk_phase
+	mvu	r2, 'x'
+	be	r1, r2, dec_clk_phase
 	mvu	r2, 't'
 	be	r1, r2, small_test
 	mvu	r2, 'T'
@@ -307,6 +330,24 @@ wait_dqs:
 	lw	r2, (r1+0)
 	andi	r2, r2, HPDMC_DQSDELAY_RDY
 	be	r2, r0, wait_dqs
+	bi	mancal_loop
+inc_clk_phase:
+	addi	r26, r26, 1
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_CLKDELAY_CE|HPDMC_CLKDELAY_INC)
+	sw	(r1+0), r2
+	bi	wait_clk
+dec_clk_phase:
+	addi	r26, r26, -1
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_CLKDELAY_CE)
+	sw	(r1+0), r2
+wait_clk:
+	lw	r2, (r1+0)
+	andi	r2, r2, HPDMC_CLKDELAY_RDY
+	be	r2, r0, wait_clk
 	bi	mancal_loop
 small_test:
 	xor	r1, r1, r1
@@ -527,7 +568,7 @@ autocalfail: .string "Autocalibration failed, entering manual mode.\n"
 autocalok: .string "Autocalibration OK, testing memory...\n"
 continueboot: .string "All SDRAM initialization completed, boot continuing.\n\n"
 testfailmsg: .string "Memory test failed, entering manual mode.\n"
-manualkeys: .string "\nu: inc. input delay // d: dec. input delay\nU: inc. DQS phase   // D: dec. DQS phase\nt: test (small)     // T: test (large)\nc: calibrate IODELAY2s\nr: reset IODELAY2s\np: display pattern\nb: boot\n"
+manualkeys: .string "\na: inc. input delay // z: dec. input delay\nq: inc. DQS phase   // s: dec. DQS phase\nw: inc. CLK phase   // x: dec. CLK phase\nt: test (small)     // T: test (large)\nc: calibrate IODELAY2s\nr: reset IODELAY2s\np: display pattern\nb: boot\n"
 memtestfailed: .string "Memory test failed.\n"
 memtestpassed: .string "Memory test passed.\n"
 spacer: .string " -- "

@@ -21,5 +21,6 @@
 void serialboot();
 void netboot();
 void fsboot(int devnr);
+void flashboot();
 
 #endif /* __BOOT_H */

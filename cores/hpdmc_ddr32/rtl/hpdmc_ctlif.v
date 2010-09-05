@@ -59,15 +59,27 @@ module hpdmc_ctlif #(
 	output reg dqs_psincdec,
 	input dqs_psdone,
 
+	output reg clk_psen,
+	output reg clk_psincdec,
+	input clk_psdone,
+
 	input [1:0] pll_stat
 );
 
-reg psready;
+reg dqs_psready;
 always @(posedge sys_clk) begin
 	if(dqs_psdone)
-		psready <= 1'b1;
+		dqs_psready <= 1'b1;
 	else if(dqs_psen)
-		psready <= 1'b0;
+		dqs_psready <= 1'b0;
+end
+
+reg clk_psready;
+always @(posedge sys_clk) begin
+	if(clk_psdone)
+		clk_psready <= 1'b1;
+	else if(clk_psen)
+		clk_psready <= 1'b0;
 end
 
 wire csr_selected = csr_a[13:10] == csr_addr;
@@ -106,9 +118,12 @@ always @(posedge sys_clk) begin
 		idelay_rst <= 1'b0;
 		idelay_ce <= 1'b0;
 		idelay_inc <= 1'b0;
-			
+
 		dqs_psen <= 1'b0;
 		dqs_psincdec <= 1'b0;
+
+		clk_psen <= 1'b0;
+		clk_psincdec <= 1'b0;
 		
 		csr_do <= 32'd0;
 		if(csr_selected) begin
@@ -143,6 +158,13 @@ always @(posedge sys_clk) begin
 						
 						dqs_psen <= csr_di[4];
 						dqs_psincdec <= csr_di[5];
+						// bit 6 is dqs_psready
+						
+						clk_psen <= csr_di[7];
+						clk_psincdec <= csr_di[8];
+						// bit 9 is clk_psready
+						
+						// bits 10-11 are pll_stat2
 					end
 				endcase
 			end
@@ -150,7 +172,7 @@ always @(posedge sys_clk) begin
 				2'b00: csr_do <= {sdram_cke, sdram_rst, bypass};
 				2'b01: csr_do <= {sdram_ba, sdram_adr, 4'h0};
 				2'b10: csr_do <= {tim_wr, tim_rfc, tim_refi, tim_cas, tim_rcd, tim_rp};
-				2'b11: csr_do <= {pll_stat2, psready, 6'd0};
+				2'b11: csr_do <= {pll_stat2, clk_psready, 2'd0, dqs_psready, 6'd0};
 			endcase
 		end
 	end

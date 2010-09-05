@@ -1105,24 +1105,14 @@ assign fml_tmuw_dw = 64'bx;
 // Ethernet
 //---------------------------------------------------------------------------
 `ifdef ENABLE_ETHERNET
-wire phy_tx_clk_b0;
 wire phy_tx_clk_b;
-BUFIO2 b_phy_tx_clk0(
-	.I(phy_tx_clk),
-	.DIVCLK(phy_tx_clk_b0)
-);
 BUFG b_phy_tx_clk(
-	.I(phy_tx_clk_b0),
+	.I(phy_tx_clk),
 	.O(phy_tx_clk_b)
 );
-wire phy_rx_clk_b0;
 wire phy_rx_clk_b;
-BUFIO2 b_phy_rx_clk0(
-	.I(phy_rx_clk),
-	.DIVCLK(phy_rx_clk_b0)
-);
 BUFG b_phy_rx_clk(
-	.I(phy_rx_clk_b0),
+	.I(phy_rx_clk),
 	.O(phy_rx_clk_b)
 );
 minimac #(
@@ -1215,6 +1205,11 @@ assign csr_dr_fmlmeter = 32'd0;
 // Video Input
 //---------------------------------------------------------------------------
 `ifdef ENABLE_VIDEOIN
+wire videoin_llc_b;
+BUFG b_videoin(
+	.I(videoin_llc),
+	.O(videoin_llc_b)
+);
 bt656cap #(
 	.csr_addr(4'ha),
 	.fml_depth(`SDRAM_DEPTH)
@@ -1234,7 +1229,7 @@ bt656cap #(
 	.fml_ack(fml_videoin_ack),
 	.fml_do(fml_videoin_dw),
 
-	.vid_clk(videoin_llc),
+	.vid_clk(videoin_llc_b),
 	.p(videoin_p),
 	.sda(videoin_sda),
 	.sdc(videoin_sdc)

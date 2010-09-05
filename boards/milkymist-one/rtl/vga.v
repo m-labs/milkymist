@@ -86,7 +86,7 @@ DCM_SP #(
 
 	.CLKDV(),
 	.CLKFX(vga_iclk_dcm),
-	.CLKFX180(vga_iclk_n_dcm),
+	.CLKFX180(),
 	.LOCKED(),
 	.CLKFB(),
 	.CLKIN(sys_clk),
@@ -94,13 +94,9 @@ DCM_SP #(
 
 	.PSEN(1'b0)
 );
-BUFG b_p(
+BUFG b(
 	.I(vga_iclk_dcm),
 	.O(vga_iclk)
-);
-BUFG b_n(
-	.I(vga_iclk_n_dcm),
-	.O(vga_iclk_n)
 );
 
 ODDR2 #(
@@ -110,7 +106,7 @@ ODDR2 #(
 ) clock_forward (
 	.Q(vga_clk),
 	.C0(vga_iclk),
-	.C1(vga_iclk_n),
+	.C1(~vga_iclk),
 	.CE(1'b1),
 	.D0(1'b1),
 	.D1(1'b0),

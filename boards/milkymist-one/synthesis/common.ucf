@@ -255,16 +255,6 @@ NET "phy_rx_clk" MAXSKEW = 1.0 ns;
 NET "phy_rx_clk" PERIOD = 40 ns HIGH 14 ns;
 NET "phy_tx_clk" PERIOD = 40 ns HIGH 14 ns;
 
-NET "phy_rx_data(0)" IOBDELAY = NONE;
-NET "phy_rx_data(1)" IOBDELAY = NONE;
-NET "phy_rx_data(2)" IOBDELAY = NONE;
-NET "phy_rx_data(3)" IOBDELAY = NONE;
-
-NET "phy_dv" IOBDELAY = NONE;
-NET "phy_rx_er" IOBDELAY = NONE;
-#NET "phy_crs" IOBDELAY = NONE;
-#NET "phy_col" IOBDELAY = NONE;
-
 # ==== Video input ====
 NET "videoin_p(0)" LOC = Y18;
 NET "videoin_p(1)" LOC = T16;

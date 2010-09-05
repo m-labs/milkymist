@@ -78,6 +78,11 @@ module hpdmc #(
 	output dqs_psincdec,
 	input dqs_psdone,
 
+	/* Interface to the DCM generating off chip clock */
+	output clk_psen,
+	output clk_psincdec,
+	input clk_psdone,
+
 	input [1:0] pll_stat
 );
 
@@ -178,6 +183,10 @@ hpdmc_ctlif #(
 	.dqs_psen(dqs_psen),
 	.dqs_psincdec(dqs_psincdec),
 	.dqs_psdone(dqs_psdone),
+
+	.clk_psen(clk_psen),
+	.clk_psincdec(clk_psincdec),
+	.clk_psdone(clk_psdone),
 
 	.pll_stat(pll_stat)
 );

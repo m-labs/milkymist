@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +76,8 @@ hpdmc_oddr32 oddr_dq(
 
 wire [31:0] sdram_dq_in_delayed;
 
+`define ENABLE_IDELAY
+`ifdef ENABLE_IDELAY
 hpdmc_idelay32 idelay(
 	.IDATAIN(sdram_dq_in),
 	.DATAOUT(sdram_dq_in_delayed),
@@ -87,6 +89,9 @@ hpdmc_idelay32 idelay(
 	.IOCLK0(sys_clk),
 	.IOCLK1(sys_clk_n)
 );
+`else
+assign sdram_dq_in_delayed = sdram_dq_in;
+`endif
 
 hpdmc_iddr32 iddr_dq(
 	.Q0(di[31:0]),
