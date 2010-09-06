@@ -989,7 +989,7 @@ ac97 #(
 ) ac97 (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	.ac97_clk(ac97_clk),
+	.ac97_clk(ac97_clk_b),
 	.ac97_rst_n(ac97_rst_n),
 	
 	.ac97_sin(ac97_sin),
