@@ -15,6 +15,4 @@ INST "ddram/clkgen_dqs" LOC = DCM_X0Y5;
 INST "ddram/clkgen_ck" LOC = DCM_X0Y7;
 INST "vga/clkgen_vga" LOC = DCM_X0Y1;
 
-NET "ac97_clk" CLOCK_DEDICATED_ROUTE = FALSE;
-
 CONFIG STEPPING = "ES";

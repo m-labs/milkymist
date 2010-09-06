@@ -248,7 +248,7 @@ NET "phy_clk" LOC = M20 | IOSTANDARD = LVCMOS33;
 NET "phy_rx_clk" TNM_NET = "GRPphy_rx_clk";
 NET "phy_tx_clk" TNM_NET = "GRPphy_tx_clk";
 TIMESPEC "TSphy_tx_clk" = FROM "GRPphy_tx_clk" TO "PADS" 10 ns;
-TIMESPEC "TSphy_rx_clk" = FROM "PADS" TO "GRPphy_rx_clk" 6 ns;
+TIMESPEC "TSphy_rx_clk" = FROM "PADS" TO "GRPphy_rx_clk" 6.002 ns;
 
 NET "phy_tx_clk" MAXSKEW = 1.0 ns;
 NET "phy_rx_clk" MAXSKEW = 1.0 ns;

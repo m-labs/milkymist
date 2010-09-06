@@ -946,9 +946,42 @@ assign mc_clk = 1'b0;
 // AC97
 //---------------------------------------------------------------------------
 `ifdef ENABLE_AC97
+wire ac97_clk_dcm;
 wire ac97_clk_b;
+DCM_SP #(
+	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
+
+	.CLKFX_DIVIDE(2),		// 1 to 32
+	.CLKFX_MULTIPLY(2),		// 2 to 32
+
+	.CLKIN_DIVIDE_BY_2("FALSE"),
+	.CLKIN_PERIOD(81.4),
+	.CLKOUT_PHASE_SHIFT("NONE"),
+	.CLK_FEEDBACK("1X"),
+	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
+	.DUTY_CYCLE_CORRECTION("TRUE"),
+	.PHASE_SHIFT(0),
+	.STARTUP_WAIT("TRUE")
+) ac97_route_thru (
+	.CLK0(ac97_clk_dcm),
+	.CLK90(),
+	.CLK180(),
+	.CLK270(),
+
+	.CLK2X(),
+	.CLK2X180(),
+
+	.CLKDV(),
+	.CLKFX(),
+	.CLKFX180(),
+	.LOCKED(),
+	.CLKFB(ac97_clk_b),
+	.CLKIN(ac97_clk),
+	.RST(1'b0),
+	.PSEN(1'b0)
+);
 BUFG b_ac97(
-	.I(ac97_clk),
+	.I(ac97_clk_dcm),
 	.O(ac97_clk_b)
 );
 ac97 #(
@@ -956,7 +989,7 @@ ac97 #(
 ) ac97 (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	.ac97_clk(ac97_clk_b),
+	.ac97_clk(ac97_clk),
 	.ac97_rst_n(ac97_rst_n),
 	
 	.ac97_sin(ac97_sin),
