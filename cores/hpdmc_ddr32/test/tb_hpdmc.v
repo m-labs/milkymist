@@ -17,7 +17,7 @@
 
 `timescale 1ns / 1ps
 
-//`define ENABLE_VCD
+`define ENABLE_VCD
 `define TEST_SOMETRANSFERS
 //`define TEST_RANDOMTRANSFERS
 
@@ -27,10 +27,6 @@ module tb_hpdmc();
 reg clk;
 initial clk = 1'b0;
 always #5 clk = ~clk;
-
-/* DQS clock is phased out by 90 degrees, resulting in 2.5ns delay */
-reg dqs_clk;
-always @(clk) #2.5 dqs_clk = clk;
 
 wire sdram_cke;
 wire sdram_cs_n;
@@ -93,8 +89,6 @@ wire [63:0] fml_do;
 hpdmc dut(
 	.sys_clk(clk),
 	.sys_clk_n(~clk),
-	.dqs_clk(dqs_clk),
-	.dqs_clk_n(~dqs_clk),
 	.sys_rst(rst),
 
 	.csr_a(csr_a),
@@ -119,12 +113,12 @@ hpdmc dut(
 	.sdram_adr(sdram_adr),
 	.sdram_ba(sdram_ba),
 	.sdram_dq(sdram_dq),
-	.sdram_dqs(sdram_dqs),
-	
-	.dqs_psen(),
-	.dqs_psincdec(),
-	.dqs_psdone(1'b1)
+	.sdram_dqs(sdram_dqs)
 );
+pulldown(sdram_dqs[0]);
+pulldown(sdram_dqs[1]);
+pulldown(sdram_dqs[2]);
+pulldown(sdram_dqs[3]);
 
 task waitclock;
 begin
@@ -255,7 +249,8 @@ always begin
 	/* The controller already comes up in Bypass mode with CKE disabled. */
 	
 	/* Wait 200us */
-	#200000;
+	//#200000;
+	#200;
 	
 	/* Bring CKE high */
 	csrwrite(32'h00, 32'h07);

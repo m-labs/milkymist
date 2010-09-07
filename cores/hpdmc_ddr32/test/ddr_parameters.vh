@@ -25,7 +25,7 @@
 *
 ****************************************************************************************/
 
-`define sg75E
+`define sg5B
 `define x16
 
     // Timing parameters based on Speed Grade 04/07

@@ -130,41 +130,22 @@ always @(posedge sys_clk) begin
 	end
 end
 
-/* during a 4-word write, we drive the pins for 5 cycles 
- * and 1 cycle in advance (first word is invalid)
- * so that we remove glitches on DQS without resorting
- * to asynchronous logic.
- */
-
-/* direction must be glitch-free, as it directly drives the
- * tri-state enable for DQ and DQS.
- */
-reg write_d;
-reg [2:0] counter_writedirection;
+reg [1:0] counter_writedirection;
 always @(posedge sys_clk) begin
 	if(sdram_rst) begin
-		counter_writedirection <= 3'd0;
-		direction <= 1'b0;
+		counter_writedirection <= 2'd0;
 	end else begin
-		if(write_d) begin
-			counter_writedirection <= 3'b101;
-			direction <= 1'b1;
-		end else begin
-			if(counter_writedirection == 3'b001)
-				direction <= 1'b0;
-			if(direction)
-				counter_writedirection <= counter_writedirection - 3'd1;
-		end
+		if(write)
+			counter_writedirection <= 2'd3;
+		else if(|counter_writedirection)
+			counter_writedirection <= counter_writedirection - 2'd1;
 	end
 end
 
-assign direction_r = write_d|(|counter_writedirection);
-
+reg direction0;
 always @(posedge sys_clk) begin
-	if(sdram_rst)
-		write_d <= 1'b0;
-	else
-		write_d <= write;
+	direction0 <= ~(write | (|counter_writedirection));
+	direction <= direction0;
 end
 
 /* Counters that prevent a busy bank from being precharged */
@@ -198,8 +179,7 @@ hpdmc_banktimer banktimer2(
 	.tim_wr(tim_wr),
 	
 	.read(read & concerned_bank[2]),
-	.write(write & concerned_bank[2]),
-	.precharge_safe(precharge_safe[2])
+	.write(write & concerned_bank[2]),	.precharge_safe(precharge_safe[2])
 );
 hpdmc_banktimer banktimer3(
 	.sys_clk(sys_clk),

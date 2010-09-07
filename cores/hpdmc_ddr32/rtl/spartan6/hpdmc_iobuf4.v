@@ -15,38 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * Verilog code that really should be replaced with a generate
- * statement, but it does not work with some free simulators.
- * So I put it in a module so as not to make other code unreadable,
- * and keep compatibility with as many simulators as possible.
- */
-
-module hpdmc_obuft4(
+module hpdmc_iobuf4(
 	input [3:0] T,
 	input [3:0] I,
-	output [3:0] O
+	output [3:0] O,
+	inout [3:0] IO
 );
 
-OBUFT obuft0(
+IOBUF iobuf0(
 	.T(T[0]),
 	.I(I[0]),
-	.O(O[0])
+	.O(O[0]),
+	.IO(IO[0])
 );
-OBUFT obuft1(
+IOBUF iobuf1(
 	.T(T[1]),
 	.I(I[1]),
-	.O(O[1])
+	.O(O[1]),
+	.IO(IO[1])
 );
-OBUFT obuft2(
+IOBUF iobuf2(
 	.T(T[2]),
 	.I(I[2]),
-	.O(O[2])
+	.O(O[2]),
+	.IO(IO[2])
 );
-OBUFT obuft3(
+IOBUF iobuf3(
 	.T(T[3]),
 	.I(I[3]),
-	.O(O[3])
+	.O(O[3]),
+	.IO(IO[3])
 );
 
 endmodule

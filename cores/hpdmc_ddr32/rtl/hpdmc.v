@@ -30,14 +30,6 @@ module hpdmc #(
 ) (
 	input sys_clk,
 	input sys_clk_n,
-	/*
-	 * Clock used to generate DQS.
-	 * Typically sys_clk phased out by 90 degrees,
-	 * as data is sent synchronously to sys_clk.
-	 */
-	input dqs_clk,
-	input dqs_clk_n,
-	
 	input sys_rst,
 	
 	/* Control interface */
@@ -71,19 +63,7 @@ module hpdmc #(
 	
 	output [3:0] sdram_dm,
 	inout [31:0] sdram_dq,
-	inout [3:0] sdram_dqs,
-	
-	/* Interface to the DCM generating DQS */
-	output dqs_psen,
-	output dqs_psincdec,
-	input dqs_psdone,
-
-	/* Interface to the DCM generating off chip clock */
-	output clk_psen,
-	output clk_psincdec,
-	input clk_psdone,
-
-	input [1:0] pll_stat
+	inout [3:0] sdram_dqs
 );
 
 /* Register all control signals. */
@@ -178,17 +158,7 @@ hpdmc_ctlif #(
 	.idelay_rst(idelay_rst),
 	.idelay_ce(idelay_ce),
 	.idelay_inc(idelay_inc),
-	.idelay_cal(idelay_cal),
-	
-	.dqs_psen(dqs_psen),
-	.dqs_psincdec(dqs_psincdec),
-	.dqs_psdone(dqs_psdone),
-
-	.clk_psen(clk_psen),
-	.clk_psincdec(clk_psincdec),
-	.clk_psdone(clk_psdone),
-
-	.pll_stat(pll_stat)
+	.idelay_cal(idelay_cal)
 );
 
 /* SDRAM management unit */
@@ -260,7 +230,6 @@ hpdmc_busif #(
 
 /* Data path controller */
 wire direction;
-wire direction_r;
 
 hpdmc_datactl datactl(
 	.sys_clk(sys_clk),
@@ -275,7 +244,6 @@ hpdmc_datactl datactl(
 	
 	.ack(data_ack),
 	.direction(direction),
-	.direction_r(direction_r),
 	
 	.tim_cas(tim_cas),
 	.tim_wr(tim_wr)
@@ -285,11 +253,8 @@ hpdmc_datactl datactl(
 hpdmc_ddrio ddrio(
 	.sys_clk(sys_clk),
 	.sys_clk_n(sys_clk_n),
-	.dqs_clk(dqs_clk),
-	.dqs_clk_n(dqs_clk_n),
-	
+
 	.direction(direction),
-	.direction_r(direction_r),
 	/* Bit meaning is the opposite between
 	 * the FML selection signal and SDRAM DM pins.
 	 */
