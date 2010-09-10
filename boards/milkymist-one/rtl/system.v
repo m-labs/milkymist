@@ -946,9 +946,14 @@ assign mc_clk = 1'b0;
 // AC97
 //---------------------------------------------------------------------------
 `ifdef ENABLE_AC97
+wire ac97_clk_bio;
 wire ac97_clk_b;
-BUFG b_ac97(
+BUFIO2 bio_ac97(
 	.I(ac97_clk),
+	.DIVCLK(ac97_clk_bio)
+);
+BUFG b_ac97(
+	.I(ac97_clk_bio),
 	.O(ac97_clk_b)
 );
 ac97 #(
