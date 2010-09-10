@@ -15,13 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * Verilog code that really should be replaced with a generate
- * statement, but it does not work with some free simulators.
- * So I put it in a module so as not to make other code unreadable,
- * and keep compatibility with as many simulators as possible.
- */
-
 module hpdmc_idelay32(
 	input [31:0] IDATAIN,
 	output [31:0] DATAOUT,

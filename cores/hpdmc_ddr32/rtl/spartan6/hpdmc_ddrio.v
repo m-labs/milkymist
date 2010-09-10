@@ -41,6 +41,7 @@ module hpdmc_ddrio(
 wire [31:0] sdram_dq_t;
 wire [31:0] sdram_dq_out;
 wire [31:0] sdram_dq_in;
+wire [31:0] sdram_dq_in_delayed;
 
 hpdmc_iobuf32 iobuf_dq(
 	.T(sdram_dq_t),
@@ -71,13 +72,25 @@ hpdmc_oddr32 oddr_dq(
 	.S(1'b0)
 );
 
+hpdmc_idelay32 dq_delay(
+	.IDATAIN(sdram_dq_in),
+	.DATAOUT(sdram_dq_in_delayed),
+	.INC(idelay_inc),
+	.CE(idelay_ce),
+	.RST(idelay_rst),
+	.CAL(idelay_cal),
+	.CLK(sys_clk),
+	.IOCLK0(sys_clk),
+	.IOCLK1(sys_clk_n)
+);
+
 hpdmc_iddr32 iddr_dq(
 	.Q0(di[31:0]),
 	.Q1(di[63:32]),
 	.C0(sys_clk),
 	.C1(sys_clk_n),
 	.CE(1'b1),
-	.D(sdram_dq_in),
+	.D(sdram_dq_in_delayed),
 	.R(1'b0),
 	.S(1'b0)
 );
@@ -104,6 +117,7 @@ hpdmc_oddr4 oddr_dm(
 wire [3:0] sdram_dqs_t;
 wire [3:0] sdram_dqs_out;
 wire [3:0] sdram_dqs_in_undelayed;
+wire [3:0] sdram_dqs_in; /* TODO: use this for clocking input regs */
 
 hpdmc_iobuf4 iobuf_dqs(
 	.T(sdram_dqs_t),
@@ -114,7 +128,6 @@ hpdmc_iobuf4 iobuf_dqs(
 
 wire [3:0] sdram_dqs_t_undelayed;
 wire [3:0] sdram_dqs_out_undelayed;
-wire [3:0] sdram_dqs_in;
 
 hpdmc_iodelay4 dqs_delay(
 	.IDATAIN(sdram_dqs_in_undelayed),

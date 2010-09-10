@@ -103,10 +103,12 @@ NET "sdram_dm(1)" LOC = E3;
 NET "sdram_dm(2)" LOC = F3;
 NET "sdram_dm(3)" LOC = G4;
 
-NET "sdram_dqs(0)" LOC = F1 | PULLDOWN;
-NET "sdram_dqs(1)" LOC = F2 | PULLDOWN;
-NET "sdram_dqs(2)" LOC = H5 | PULLDOWN;
-NET "sdram_dqs(3)" LOC = H6 | PULLDOWN;
+NET "sdram_dqs(0)" LOC = F1;
+NET "sdram_dqs(1)" LOC = F2;
+NET "sdram_dqs(2)" LOC = H5;
+NET "sdram_dqs(3)" LOC = H6;
+
+NET "sdram_dqs(*)" PULLDOWN;
 
 NET "sdram_dq(0)" LOC = Y2;
 NET "sdram_dq(1)" LOC = W3;
@@ -317,10 +319,6 @@ NET "exp(*)" PULLDOWN;
 
 # ==== Timing fixes ====
 NET "sys_clk" TNM_NET = "GRPsys";
-
-#NET "ddram/dqs_clk" TNM_NET = "GRPdqs";
-#TIMESPEC "TSdqs_async1" = FROM "GRPsys" TO "GRPdqs" TIG;
-#TIMESPEC "TSdqs_async2" = FROM "GRPdqs" TO "GRPsys" TIG;
 
 INST "sdram_adr(*)" TNM = "GRPsdramout";
 INST "sdram_ba(*)" TNM = "GRPsdramout";
