@@ -201,7 +201,7 @@ send_init:
 autocalibrate:
 	mvhi	r1, hi(CSR_HPDMC_IODELAY)
 	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
-	mvu	r24, 30 /* input delay, change this number for your board */
+	mvu	r24, 19 /* input delay, change this number for your board */
 	xor	r2, r2, r2
 	mvu	r3, (HPDMC_IDELAY_CE|HPDMC_IDELAY_INC)
 	be	r2, r24, idelay_loop_end
@@ -479,7 +479,7 @@ autocalfail: .string "Autocalibration failed, entering manual mode.\n"
 autocalok: .string "Autocalibration OK, testing memory...\n"
 continueboot: .string "All SDRAM initialization completed, boot continuing.\n\n"
 testfailmsg: .string "Memory test failed, entering manual mode.\n"
-manualkeys: .string "\nu: inc. DQS delay // d: dec. DQS delay\nt: test (small)   // T: test (large)\nc: calibrate IODELAY2s\nr: reset IODELAY2s\np: display pattern\nb: boot\n"
+manualkeys: .string "\nu: inc. DQ delay  // d: dec. DQ delay\nt: test (small)   // T: test (large)\nc: calibrate IODELAY2s\nr: reset IODELAY2s\np: display pattern\nb: boot\n"
 memtestfailed: .string "Memory test failed.\n"
 memtestpassed: .string "Memory test passed.\n"
 nl: .string "\n"
