@@ -69,7 +69,7 @@ per_frame_7=ob_g = if(above(wave_g,1),1,if(above(wave_g,0), abs(wave_g),0));
 per_frame_8=ob_b = if(above(wave_b,1),1,if(above(wave_b,0), abs(wave_b),0));
 per_frame_9=ib_g = wave_g;
 per_frame_10=ib_r = sin(time);
-per_frame_11=kick = above(bass_att,kick)*2 + (1-above(bass_att,kick))*((kick-1.3)*0.96+1.3);
+per_frame_11=kick = if(above(bass_att,kick), 2, kick*0.96);
 per_frame_12=dx_r = equal(kick,2)*0.018*sin(6*time) + (1-equal(kick,2))*dx_r;
 per_frame_13=dy_r = equal(kick,2)*0.015*sin(7*time) + (1-equal(kick,2))*dy_r;
 per_frame_14=dy = dy + 2*dy_r * 0.5*sin(0.8*time);
