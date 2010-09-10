@@ -15,20 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HW_CAPABILITIES
-#define __HW_CAPABILITIES
+#ifndef __HW_MEMTEST_H
+#define __HW_MEMTEST_H
 
-#define CAP_MEMORYCARD		(0x00000001)
-#define CAP_AC97		(0x00000002)
-#define CAP_PFPU		(0x00000004)
-#define CAP_TMU			(0x00000008)
-#define CAP_ETHERNET		(0x00000010)
-#define CAP_FMLMETER		(0x00000020)
-#define CAP_VIDEOIN		(0x00000040)
-#define CAP_MIDI		(0x00000080)
-#define CAP_DMX			(0x00000100)
-#define CAP_IR			(0x00000200)
-#define CAP_USB			(0x00000400)
-#define CAP_MEMTEST		(0x00000800)
+#include <hw/common.h>
 
-#endif /* __HW_CAPABILITIES */
+#define CSR_MEMTEST_BCOUNT 	MMPTR(0xe0007000)
+#define CSR_MEMTEST_ERRORS 	MMPTR(0xe0007004)
+#define CSR_MEMTEST_ADDRESS 	MMPTR(0xe0007008)
+#define CSR_MEMTEST_WRITE 	MMPTR(0xe000700C)
+
+#endif /* __HW_MEMTEST_H */

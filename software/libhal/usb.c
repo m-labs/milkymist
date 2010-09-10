@@ -42,7 +42,7 @@ void usb_init()
 	unsigned int *usb_pmem = (unsigned int *)SOFTUSB_PMEM_BASE;
 
 	if(!(CSR_CAPABILITIES & CAP_USB)) {
-		printf("USB: not supported, skipping initialization\n");
+		printf("USB: not supported by SoC, giving up.\n");
 		return;
 	}
 

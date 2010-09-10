@@ -496,7 +496,8 @@ wire			fml_brg_stb,
 			fml_tmuw_stb,
 			fml_videoin_stb;
 
-wire			fml_brg_we;
+wire			fml_brg_we,
+			fml_tmur_we;
 
 wire			fml_brg_ack,
 			fml_vga_ack,
@@ -506,9 +507,11 @@ wire			fml_brg_ack,
 			fml_videoin_ack;
 
 wire [7:0]		fml_brg_sel,
+			fml_tmur_sel,
 			fml_tmuw_sel;
 
 wire [63:0]		fml_brg_dw,
+			fml_tmur_dw,
 			fml_tmuw_dw,
 			fml_videoin_dw;
 
@@ -556,12 +559,13 @@ fmlarb #(
 	.m1_do(fml_brg_dr),
 
 	/* TMU, pixel read DMA (texture) */
+	/* Also used as memory test port */
 	.m2_adr(fml_tmur_adr),
 	.m2_stb(fml_tmur_stb),
-	.m2_we(1'b0),
+	.m2_we(fml_tmur_we),
 	.m2_ack(fml_tmur_ack),
-	.m2_sel(8'bx),
-	.m2_di(64'bx),
+	.m2_sel(fml_tmur_sel),
+	.m2_di(fml_tmur_dw),
 	.m2_do(fml_tmur_dr),
 
 	/* TMU, pixel write DMA */
@@ -1085,6 +1089,42 @@ tmu2 #(
 );
 
 `else
+`ifdef ENABLE_MEMTEST
+memtest #(
+	.csr_addr(4'h7),
+	.fml_depth(`SDRAM_DEPTH)
+) memtest (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_tmu),
+	
+	.fml_adr(fml_tmur_adr),
+	.fml_stb(fml_tmur_stb),
+	.fml_we(fml_tmur_we),
+	.fml_ack(fml_tmur_ack),
+	.fml_di(fml_tmur_dr),
+	.fml_sel(fml_tmur_sel),
+	.fml_do(fml_tmur_dw)
+);
+assign tmu_irq = 1'b0;
+
+assign tmumbus_adr = 32'hx;
+assign tmumbus_cti = 3'bxxx;
+assign tmumbus_cyc = 1'b0;
+assign tmumbus_stb = 1'b0;
+
+assign fml_tmudr_adr = {`SDRAM_DEPTH{1'bx}};
+assign fml_tmudr_stb = 1'b0;
+
+assign fml_tmuw_adr = {`SDRAM_DEPTH{1'bx}};
+assign fml_tmuw_stb = 1'b0;
+assign fml_tmuw_sel = 8'bx;
+assign fml_tmuw_dw = 64'bx;
+`else
 assign csr_dr_tmu = 32'd0;
 
 assign tmu_irq = 1'b0;
@@ -1096,6 +1136,9 @@ assign tmumbus_stb = 1'b0;
 
 assign fml_tmur_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmur_stb = 1'b0;
+assign fml_tmur_we = 1'bx;
+assign fml_tmur_sel = 8'bx;
+assign fml_tmur_dw = 64'bx;
 
 assign fml_tmudr_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmudr_stb = 1'b0;
@@ -1104,6 +1147,7 @@ assign fml_tmuw_adr = {`SDRAM_DEPTH{1'bx}};
 assign fml_tmuw_stb = 1'b0;
 assign fml_tmuw_sel = 8'bx;
 assign fml_tmuw_dw = 64'bx;
+`endif
 `endif
 
 //---------------------------------------------------------------------------

@@ -19,6 +19,8 @@
 #include <irq.h>
 #include <hw/ac97.h>
 #include <hw/interrupts.h>
+#include <hw/sysctl.h>
+#include <hw/capabilities.h>
 
 #include <hal/snd.h>
 
@@ -39,6 +41,11 @@ void snd_init()
 {
 	unsigned int codec_id;
 	unsigned int mask;
+	
+	if(!(CSR_CAPABILITIES & CAP_AC97)) {
+		printf("SND: AC97 not supported by SoC, giving up.\n");
+		return;
+	}
 	
 	snd_cr_request = 0;
 	snd_cr_reply = 0;

@@ -449,6 +449,7 @@ static void display_capabilities()
 	display_capability("DMX       ", cap & CAP_DMX);
 	display_capability("IR        ", cap & CAP_IR);
 	display_capability("USB       ", cap & CAP_USB);
+	display_capability("Memtester ", cap & CAP_MEMTEST);
 }
 
 static const char banner[] =

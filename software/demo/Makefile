@@ -140,11 +140,12 @@ shell.o: ../../software/include/hw/interrupts.h
 shell.o: ../../software/include/hw/minimac.h
 shell.o: ../../software/include/hw/bt656cap.h ../../software/include/hw/rc5.h
 shell.o: ../../software/include/hw/midi.h ../../software/include/hw/memcard.h
-shell.o: ../../software/include/hal/vga.h ../../software/include/hal/snd.h
-shell.o: ../../software/include/hw/ac97.h ../../software/include/hal/tmu.h
-shell.o: ../../software/include/hal/time.h ../../software/include/hal/brd.h
-shell.o: ../../software/include/hal/vin.h ../../software/include/hal/usb.h
-shell.o: line.h wave.h rpipe.h cpustats.h memstats.h shell.h renderer.h
+shell.o: ../../software/include/hw/memtest.h ../../software/include/hal/vga.h
+shell.o: ../../software/include/hal/snd.h ../../software/include/hw/ac97.h
+shell.o: ../../software/include/hal/tmu.h ../../software/include/hal/time.h
+shell.o: ../../software/include/hal/brd.h ../../software/include/hal/vin.h
+shell.o: ../../software/include/hal/usb.h line.h wave.h rpipe.h cpustats.h
+shell.o: memstats.h shell.h renderer.h
 tick.o: ../../software/include/hal/time.h rpipe.h
 tick.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
 tick.o: ../../software/include/hw/common.h cpustats.h memstats.h

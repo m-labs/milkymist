@@ -36,6 +36,7 @@
 #include <hw/rc5.h>
 #include <hw/midi.h>
 #include <hw/memcard.h>
+#include <hw/memtest.h>
 
 #include <hal/vga.h>
 #include <hal/snd.h>
@@ -733,6 +734,25 @@ static void mouse()
 	usb_set_mouse_cb(NULL);
 }
 
+#define MEMTEST_LEN (32*1024*1024)
+static unsigned int memtest_buffer[MEMTEST_LEN/4] __attribute__((aligned(32)));
+static void memtest()
+{
+	printf("Filling buffer...\n");
+	CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
+	CSR_MEMTEST_ERRORS = 0;
+	CSR_MEMTEST_WRITE = 1;
+	CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32;
+	while(CSR_MEMTEST_BCOUNT > 0);
+	printf("Reading buffer...\n");
+	CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
+	CSR_MEMTEST_ERRORS = 0;
+	CSR_MEMTEST_WRITE = 0;
+	CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32;
+	while(CSR_MEMTEST_BCOUNT > 0);
+	printf("Errors: %d\n", CSR_MEMTEST_ERRORS);
+}
+
 static char *get_token(char **str)
 {
 	char *c, *d;
@@ -799,6 +819,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
 		else if(strcmp(command, "readblock") == 0) readblock(param1);
 		else if(strcmp(command, "mouse") == 0) mouse();
+		else if(strcmp(command, "memtest") == 0) memtest();
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}

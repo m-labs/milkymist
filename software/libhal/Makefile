@@ -45,6 +45,8 @@ snd.o: ../../software/include/base/stdio.h
 snd.o: ../../software/include/base/stdlib.h ../../software/include/base/irq.h
 snd.o: ../../software/include/hw/ac97.h ../../software/include/hw/common.h
 snd.o: ../../software/include/hw/interrupts.h
+snd.o: ../../software/include/hw/sysctl.h
+snd.o: ../../software/include/hw/capabilities.h
 snd.o: ../../software/include/hal/snd.h
 time.o: ../../software/include/base/stdio.h
 time.o: ../../software/include/base/stdlib.h

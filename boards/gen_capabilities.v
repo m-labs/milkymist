@@ -32,9 +32,11 @@ wire midi;
 wire dmx;
 wire ir;
 wire usb;
+wire memtest;
 
 assign capabilities = {
-	21'd0,
+	20'd0,
+	memtest,
 	usb,
 	ir,
 	dmx,
@@ -112,6 +114,12 @@ assign ir = 1'b0;
 assign usb = 1'b1;
 `else
 assign usb = 1'b0;
+`endif
+
+`ifdef ENABLE_MEMTEST
+assign memtest = 1'b1;
+`else
+assign memtest = 1'b0;
 `endif
 
 endmodule
