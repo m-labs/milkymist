@@ -3,7 +3,7 @@ INST "b2" LOC = BUFGMUX_X2Y1;
 INST "b_videoin" LOC = BUFGMUX_X3Y15;
 INST "vga/b" LOC = BUFGMUX_X2Y9;
 INST "b_phy_rx_clk" LOC = BUFGMUX_X3Y5;
-INST "b_phy_tx_clk" LOC = BUFGMUX_X3Y8;
+INST "b_phy_tx_clk" LOC = BUFGMUX_X2Y4;
 INST "b_ac97" LOC = BUFGMUX_X2Y3;
 
 INST "clkgen_sys" LOC = DCM_X0Y0;
