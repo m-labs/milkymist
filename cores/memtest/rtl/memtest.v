@@ -61,15 +61,20 @@ always @(posedge sys_clk)
 reg [31:0] remaining_bursts;
 always @(posedge sys_clk) begin
 	rand_rst <= 1'b0;
-	if(csr_selected & (csr_a[2:0] == 3'd0) & csr_we) begin
-		rand_rst <= 1'b1;
-		remaining_bursts <= csr_di;
-		fml_stb <= 1'b1;
+	if(sys_rst) begin
+		remaining_bursts <= 32'd0;
+		fml_stb <= 1'b0;
 	end else begin
-		if(fml_ack) begin
-			remaining_bursts <= remaining_bursts - 32'd1;
-			if(remaining_bursts == 32'd1)
-				fml_stb <= 1'b0;
+		if(csr_selected & (csr_a[2:0] == 3'd0) & csr_we) begin
+			rand_rst <= 1'b1;
+			remaining_bursts <= csr_di;
+			fml_stb <= 1'b1;
+		end else begin
+			if(fml_ack) begin
+				remaining_bursts <= remaining_bursts - 32'd1;
+				if(remaining_bursts == 32'd1)
+					fml_stb <= 1'b0;
+			end
 		end
 	end
 end

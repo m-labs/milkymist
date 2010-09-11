@@ -33,6 +33,11 @@
 `define ENABLE_IR
 `define ENABLE_USB
 
+/* only available when TMU is disabled */
+`ifndef ENABLE_TMU
+`define ENABLE_MEMTEST
+`endif
+
 /*
  * System clock frequency in Hz.
  */

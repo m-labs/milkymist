@@ -734,6 +734,7 @@ static void mouse()
 	usb_set_mouse_cb(NULL);
 }
 
+#ifdef WITH_MEMTEST
 #define MEMTEST_LEN (32*1024*1024)
 static unsigned int memtest_buffer[MEMTEST_LEN/4] __attribute__((aligned(32)));
 static void memtest()
@@ -752,6 +753,43 @@ static void memtest()
 	while(CSR_MEMTEST_BCOUNT > 0);
 	printf("Errors: %d\n", CSR_MEMTEST_ERRORS);
 }
+
+#define LMEMTEST_RUNS 1000
+static void lmemtest()
+{
+	int i;
+	int p;
+	unsigned int total_errors;
+	struct timestamp t0, t1, t;
+	unsigned int length;
+	
+	total_errors = 0;
+	
+	flush_bridge_cache();
+	while(!readchar_nonblock()) {
+		time_get(&t0);
+		for(i=0;i<LMEMTEST_RUNS;i++) {
+			p = i & 1;
+			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer + 32*p;
+			CSR_MEMTEST_ERRORS = 0;
+			CSR_MEMTEST_WRITE = 1;
+			CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32 - 1;
+			while(CSR_MEMTEST_BCOUNT > 0);
+			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer + 32*p;
+			CSR_MEMTEST_ERRORS = 0;
+			CSR_MEMTEST_WRITE = 0;
+			CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32 - 1;
+			while(CSR_MEMTEST_BCOUNT > 0);
+			total_errors += CSR_MEMTEST_ERRORS;
+		}
+		time_get(&t1);
+		time_diff(&t, &t1, &t0);
+		length = 2*(MEMTEST_LEN/1024/1024)*LMEMTEST_RUNS;
+		if(t.sec != 0)
+			printf("%d MB in %d s (%d MB/s), cumulative errors: %d\n", length, t.sec, length/t.sec, total_errors);
+	}
+}
+#endif
 
 static char *get_token(char **str)
 {
@@ -819,7 +857,10 @@ static void do_command(char *c)
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
 		else if(strcmp(command, "readblock") == 0) readblock(param1);
 		else if(strcmp(command, "mouse") == 0) mouse();
+#ifdef WITH_MEMTEST
 		else if(strcmp(command, "memtest") == 0) memtest();
+		else if(strcmp(command, "lmemtest") == 0) lmemtest();
+#endif
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}
