@@ -72,9 +72,9 @@ always @(posedge usb_clk) begin
 			sr_out <= tx_data[0];
 			bitcount <= 3'd0;
 			if(tx_data[0])
-				onecount = onecount + 3'd1;
+				onecount <= onecount + 3'd1;
 			else
-				onecount = 3'd0;
+				onecount <= 3'd0;
 			sr <= tx_data[7:1];
 		end else if(~sr_done) begin
 			if(onecount == 3'd6) begin
