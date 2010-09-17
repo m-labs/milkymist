@@ -18,7 +18,8 @@
 
 module softusb_ram #(
 	parameter pmem_width = 11,
-	parameter dmem_width = 13
+	parameter dmem_width = 13,
+	parameter initprog = ""
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -60,7 +61,7 @@ wire [31:0] wb_dat_o_prog;
 softusb_dpram #(
 	.depth(pmem_width),
 	.width(16),
-	.initfile("trx.rom")
+	.initfile(initprog)
 ) program (
 	.clk(sys_clk),
 	.clk2(usb_clk),

@@ -18,7 +18,8 @@
 module softusb #(
 	parameter csr_addr = 4'h0,
 	parameter pmem_width = 11,
-	parameter dmem_width = 13
+	parameter dmem_width = 13,
+	parameter initprog = ""
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -129,7 +130,8 @@ wire [7:0] dmem_dw;
 
 softusb_ram #(
 	.pmem_width(pmem_width),
-	.dmem_width(dmem_width)
+	.dmem_width(dmem_width),
+	.initprog(initprog)
 ) ram (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
