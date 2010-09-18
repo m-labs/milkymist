@@ -248,11 +248,6 @@ always @(posedge sys_clk) begin
 	end
 end
 
-/*always @(posedge sys_clk) begin
-	if(datamem_we_wb)
-		$display("DATAMEM WE WB state=%d bcounter=%b data=%x sel=%x", state, bcounter_next, wb_dat_i, wb_sel_i);
-end*/
-
 always @(*) begin
 	tagmem_we = 1'b0;
 	di_valid = 1'b0;
