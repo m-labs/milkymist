@@ -131,7 +131,7 @@ always @(posedge sys_clk)
  */
 
 wire [cache_depth-3-1:0] datamem_a;
-wire [7:0] datamem_we;
+reg [7:0] datamem_we;
 wire [63:0] datamem_di;
 wire [63:0] datamem_do;
 
@@ -152,48 +152,59 @@ fmlbrg_datamem #(
 	.do2(datamem_do2)
 );
 
-reg [2:0] bcounter;
-reg [2:0] bcounter_next;
+reg [1:0] bcounter;
+reg [1:0] bcounter_next;
 always @(posedge sys_clk) begin
 	if(sys_rst)
-		bcounter <= 3'd0;
-	else begin
+		bcounter <= 2'd0;
+	else
 		bcounter <= bcounter_next;
-	end
 end
 
-reg [2:0] bcounter_sel;
+reg [1:0] bcounter_sel;
 
-localparam BCOUNTER_RESET	= 3'd0;
-localparam BCOUNTER_KEEP	= 3'd1;
-localparam BCOUNTER_LOAD	= 3'd2;
-localparam BCOUNTER_INC		= 3'd3;
-localparam BCOUNTER_2		= 3'd4;
+localparam BCOUNTER_RESET	= 2'd0;
+localparam BCOUNTER_KEEP	= 2'd1;
+localparam BCOUNTER_LOAD	= 2'd2;
+localparam BCOUNTER_INC		= 2'd3;
 
 always @(*) begin
 	case(bcounter_sel)
-		BCOUNTER_RESET: bcounter_next <= 3'd0;
+		BCOUNTER_RESET: bcounter_next <= 2'd0;
 		BCOUNTER_KEEP: bcounter_next <= bcounter;
-		BCOUNTER_LOAD: bcounter_next <= offset[4:2];
-		BCOUNTER_INC: bcounter_next <= bcounter + 3'd1;
-		BCOUNTER_2: bcounter_next <= bcounter + 3'd2;
+		BCOUNTER_LOAD: bcounter_next <= offset[4:3];
+		BCOUNTER_INC: bcounter_next <= bcounter + 2'd1;
 		default: bcounter_next <= 3'bxxx;
 	endcase
 end
 
-assign datamem_a = {index, bcounter_next[2:1]};
+assign datamem_a = {index, bcounter_next};
 
 assign datamem_a2 = {dcb_index, dcb_offset[4:3]};
+
+reg wordsel;
+reg next_wordsel;
+always @(posedge sys_clk)
+	wordsel <= next_wordsel;
 
 reg datamem_we_wb;
 reg datamem_we_fml;
 
-assign datamem_we = {8{datamem_we_fml}}
-	|({8{datamem_we_wb &  bcounter_next[0]}} & {4'h0, wb_sel_i})
-	|({8{datamem_we_wb & ~bcounter_next[0]}} & {wb_sel_i, 4'h0});
+always @(*) begin
+	if(datamem_we_fml)
+		datamem_we = 8'hff;
+	else if(datamem_we_wb) begin
+		if(wordsel)
+			datamem_we = {4'h0, wb_sel_i};
+		else
+			datamem_we = {wb_sel_i, 4'h0};
+	end else
+		datamem_we = 8'h00;
+end
+
 assign datamem_di = datamem_we_wb ? {wb_dat_i, wb_dat_i} : fml_di;
 
-assign wb_dat_o = bcounter_next[0] ? datamem_do[31:0] : datamem_do[63:32];
+assign wb_dat_o = wordsel ? datamem_do[31:0] : datamem_do[63:32];
 assign fml_do = datamem_do;
 assign fml_sel = 8'hff;
 assign dcb_dat = datamem_do2;
@@ -210,7 +221,8 @@ reg [3:0] next_state;
 
 parameter IDLE			= 4'd0;
 parameter TEST_HIT		= 4'd1;
-parameter WRITE_HIT		= 4'd2;
+
+parameter WB_BURST		= 4'd2;
 
 parameter EVICT			= 4'd3;
 parameter EVICT2		= 4'd4;
@@ -229,12 +241,17 @@ parameter INVALIDATE		= 4'd14;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
-		state = IDLE;
+		state <= IDLE;
 	else begin
 		//$display("state: %d -> %d", state, next_state);
-		state = next_state;
+		state <= next_state;
 	end
 end
+
+/*always @(posedge sys_clk) begin
+	if(datamem_we_wb)
+		$display("DATAMEM WE WB state=%d bcounter=%b data=%x sel=%x", state, bcounter_next, wb_dat_i, wb_sel_i);
+end*/
 
 always @(*) begin
 	tagmem_we = 1'b0;
@@ -242,7 +259,8 @@ always @(*) begin
 	di_dirty = 1'b0;
 	
 	bcounter_sel = BCOUNTER_KEEP;
-		
+	next_wordsel = 1'bx;
+	
 	datamem_we_wb = 1'b0;
 	datamem_we_fml = 1'b0;
 	
@@ -256,6 +274,7 @@ always @(*) begin
 	case(state)
 		IDLE: begin
 			bcounter_sel = BCOUNTER_LOAD;
+			next_wordsel = wb_adr_i[2];
 			if(wb_cyc_i & wb_stb_i) begin
 				if(wb_adr_i[invalidate_bit])
 					next_state = TEST_INVALIDATE;
@@ -264,6 +283,7 @@ always @(*) begin
 			end
 		end
 		TEST_HIT: begin
+			next_wordsel = ~wordsel;
 			if(cache_hit) begin
 				wb_ack_o = 1'b1;
 				if(wb_we_i) begin
@@ -272,7 +292,10 @@ always @(*) begin
 					tagmem_we = 1'b1;
 					datamem_we_wb = 1'b1;
 				end
-				next_state = IDLE; // TODO: check WB burst
+				if(wb_cti_i == 3'b010)
+					next_state = WB_BURST;
+				else
+					next_state = IDLE;
 			end else begin
 				if(do_dirty)
 					next_state = EVICT;
@@ -281,25 +304,36 @@ always @(*) begin
 			end
 		end
 		
+		WB_BURST: begin
+			next_wordsel = ~wordsel;
+			if(wordsel ^ wb_we_i)
+				bcounter_sel = BCOUNTER_INC;
+			if(wb_we_i)
+				datamem_we_wb = 1'b1;
+			wb_ack_o = 1'b1;
+			if(wb_cti_i != 3'b010)
+				next_state = IDLE;
+		end
+		
 		EVICT: begin
 			fml_stb = 1'b1;
 			fml_we = 1'b1;
 			if(fml_ack) begin
-				bcounter_sel = BCOUNTER_2;
+				bcounter_sel = BCOUNTER_INC;
 				next_state = EVICT2;
 			end else
 				bcounter_sel = BCOUNTER_RESET;
 		end
 		EVICT2: begin
-			bcounter_sel = BCOUNTER_2;
+			bcounter_sel = BCOUNTER_INC;
 			next_state = EVICT3;
 		end
 		EVICT3: begin
-			bcounter_sel = BCOUNTER_2;
+			bcounter_sel = BCOUNTER_INC;
 			next_state = EVICT4;
 		end
 		EVICT4: begin
-			bcounter_sel = BCOUNTER_2;
+			bcounter_sel = BCOUNTER_INC;
 			if(wb_adr_i[invalidate_bit])
 				next_state = INVALIDATE;
 			else
@@ -328,17 +362,17 @@ always @(*) begin
 		end
 		REFILL2: begin
 			datamem_we_fml = 1'b1;
-			bcounter_sel = BCOUNTER_2;
+			bcounter_sel = BCOUNTER_INC;
 			next_state = REFILL3;
 		end
 		REFILL3: begin
 			datamem_we_fml = 1'b1;
-			bcounter_sel = BCOUNTER_2;
+			bcounter_sel = BCOUNTER_INC;
 			next_state = REFILL4;
 		end
 		REFILL4: begin
 			datamem_we_fml = 1'b1;
-			bcounter_sel = BCOUNTER_2;
+			bcounter_sel = BCOUNTER_INC;
 			next_state = IDLE;
 		end
 		
