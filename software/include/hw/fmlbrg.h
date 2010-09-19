@@ -20,6 +20,6 @@
 
 #define FMLBRG_FLUSH_BASE	(0xc8000000)
 #define FMLBRG_LINE_LENGTH	(32)
-#define FMLBRG_LINE_COUNT	(1024)
+#define FMLBRG_LINE_COUNT	(512)
 
 #endif /* __HW_FMLBRG_H */

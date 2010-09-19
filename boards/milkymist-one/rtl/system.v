@@ -152,8 +152,8 @@ wire sys_clk_n_dcm;
 DCM_SP #(
 	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
-	.CLKFX_DIVIDE(3),		// 1 to 32
-	.CLKFX_MULTIPLY(5),		// 2 to 32
+	.CLKFX_DIVIDE(5),		// 1 to 32
+	.CLKFX_MULTIPLY(8),		// 2 to 32
 
 	.CLKIN_DIVIDE_BY_2("FALSE"),
 	.CLKIN_PERIOD(20.0),

@@ -24,7 +24,6 @@ struct board_desc {
 	unsigned int id;
 	char name[BOARD_NAME_LEN];
 	unsigned int clk_frequency;
-	unsigned int sdram_size;
 	unsigned int ethernet_phyadr;
 };
 
