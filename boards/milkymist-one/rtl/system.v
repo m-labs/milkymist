@@ -335,14 +335,7 @@ wire		norflash_ack,
 //---------------------------------------------------------------------------
 // Wishbone switch
 //---------------------------------------------------------------------------
-conbus #(
-	/* MSB (Bit 31) is ignored by conbus */
-	.s_addr_w(2),
-	.s0_addr(2'b00),	// norflash     0x00000000 (shadow @0x80000000)
-	.s1_addr(2'b01),	// USB          0x20000000 (shadow @0xa0000000)
-	.s2_addr(2'b10),	// FML bridge   0x40000000 (shadow @0xc0000000)
-	.s3_addr(2'b11)		// CSR bridge   0x60000000 (shadow @0xe0000000)
-) conbus (
+xbar xbar(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
@@ -421,39 +414,52 @@ conbus #(
 	.s0_dat_i(norflash_dat_r),
 	.s0_dat_o(norflash_dat_w),
 	.s0_adr_o(norflash_adr),
+	.s0_cti_o(),
 	.s0_sel_o(norflash_sel),
 	.s0_we_o(norflash_we),
 	.s0_cyc_o(norflash_cyc),
 	.s0_stb_o(norflash_stb),
 	.s0_ack_i(norflash_ack),
 	// Slave 1
-	.s1_dat_i(usb_dat_r),
-	.s1_dat_o(usb_dat_w),
-	.s1_adr_o(usb_adr),
+	.s1_dat_i(),
+	.s1_dat_o(),
+	.s1_adr_o(),
 	.s1_cti_o(),
-	.s1_sel_o(usb_sel),
-	.s1_we_o(usb_we),
-	.s1_cyc_o(usb_cyc),
-	.s1_stb_o(usb_stb),
-	.s1_ack_i(usb_ack),
+	.s1_sel_o(),
+	.s1_we_o(),
+	.s1_cyc_o(),
+	.s1_stb_o(),
+	.s1_ack_i(1'b0),
 	// Slave 2
-	.s2_dat_i(brg_dat_r),
-	.s2_dat_o(brg_dat_w),
-	.s2_adr_o(brg_adr),
-	.s2_cti_o(brg_cti),
-	.s2_sel_o(brg_sel),
-	.s2_we_o(brg_we),
-	.s2_cyc_o(brg_cyc),
-	.s2_stb_o(brg_stb),
-	.s2_ack_i(brg_ack),
+	.s2_dat_i(usb_dat_r),
+	.s2_dat_o(usb_dat_w),
+	.s2_adr_o(usb_adr),
+	.s2_cti_o(),
+	.s2_sel_o(usb_sel),
+	.s2_we_o(usb_we),
+	.s2_cyc_o(usb_cyc),
+	.s2_stb_o(usb_stb),
+	.s2_ack_i(usb_ack),
 	// Slave 3
 	.s3_dat_i(csrbrg_dat_r),
 	.s3_dat_o(csrbrg_dat_w),
 	.s3_adr_o(csrbrg_adr),
+	.s3_cti_o(),
+	.s3_sel_o(),
 	.s3_we_o(csrbrg_we),
 	.s3_cyc_o(csrbrg_cyc),
 	.s3_stb_o(csrbrg_stb),
-	.s3_ack_i(csrbrg_ack)
+	.s3_ack_i(csrbrg_ack),
+	// Slave 4
+	.s4_dat_i(brg_dat_r),
+	.s4_dat_o(brg_dat_w),
+	.s4_adr_o(brg_adr),
+	.s4_cti_o(brg_cti),
+	.s4_sel_o(brg_sel),
+	.s4_we_o(brg_we),
+	.s4_cyc_o(brg_cyc),
+	.s4_stb_o(brg_stb),
+	.s4_ack_i(brg_ack)
 );
 
 //------------------------------------------------------------------
