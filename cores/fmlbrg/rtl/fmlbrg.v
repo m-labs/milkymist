@@ -174,7 +174,7 @@ always @(*) begin
 		BCOUNTER_KEEP: bcounter_next <= bcounter;
 		BCOUNTER_LOAD: bcounter_next <= offset[4:3];
 		BCOUNTER_INC: bcounter_next <= bcounter + 2'd1;
-		default: bcounter_next <= 3'bxxx;
+		default: bcounter_next <= 2'bxx;
 	endcase
 end
 
