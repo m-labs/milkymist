@@ -15,7 +15,7 @@ load: $(BUILDDIR)/system.bit
 	cd $(BUILDDIR) && impact -batch ../load.cmd
 
 $(BUILDDIR)/system.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -w system.ngd
+	cd $(BUILDDIR) && map -ol high -t 60 -w system.ngd
 
 $(BUILDDIR)/system-routed.ncd: $(BUILDDIR)/system.ncd
 	cd $(BUILDDIR) && par -ol high -w system.ncd system-routed.ncd
@@ -33,17 +33,17 @@ $(BUILDDIR)/system-routed.twr: $(BUILDDIR)/system-routed.ncd
 mppr: $(BUILDDIR)/system-routed0.ncd $(BUILDDIR)/system-routed1.ncd $(BUILDDIR)/system-routed2.ncd $(BUILDDIR)/system-routed3.ncd $(BUILDDIR)/system-routed4.ncd $(BUILDDIR)/system-routed5.ncd
 
 $(BUILDDIR)/system0.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -xt 0 -w system.ngd -o system0.ncd
+	cd $(BUILDDIR) && map -ol high -t 1 -w system.ngd -o system0.ncd
 $(BUILDDIR)/system1.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -xt 1 -w system.ngd -o system1.ncd
+	cd $(BUILDDIR) && map -ol high -t 20 -w system.ngd -o system1.ncd
 $(BUILDDIR)/system2.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -xt 2 -w system.ngd -o system2.ncd
+	cd $(BUILDDIR) && map -ol high -t 40 -w system.ngd -o system2.ncd
 $(BUILDDIR)/system3.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -xt 3 -w system.ngd -o system3.ncd
+	cd $(BUILDDIR) && map -ol high -t 60 -w system.ngd -o system3.ncd
 $(BUILDDIR)/system4.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -xt 4 -w system.ngd -o system4.ncd
+	cd $(BUILDDIR) && map -ol high -t 80 -w system.ngd -o system4.ncd
 $(BUILDDIR)/system5.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -xt 5 -w system.ngd -o system5.ncd
+	cd $(BUILDDIR) && map -ol high -t 99 -w system.ngd -o system5.ncd
 
 $(BUILDDIR)/system-routed0.ncd: $(BUILDDIR)/system0.ncd
 	cd $(BUILDDIR) && par -ol high -w system0.ncd system-routed0.ncd > par0
