@@ -27,8 +27,6 @@ wire   jtck;
 output jrstn;
 wire   jrstn;
 
-assign reg_d = 8'hxx;
-assign reg_addr_d = 3'bxxx;
 assign reg_update = 1'b0;
 assign reg_q = 8'hxx;
 assign reg_addr_q = 3'bxxx;
