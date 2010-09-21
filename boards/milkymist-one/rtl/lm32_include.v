@@ -114,17 +114,17 @@
 `define LM32_SHIFT_OP_RIGHT             1'b0
 `define LM32_SHIFT_OP_LEFT              1'b1
 
-// Currently always enabled
-`define CFG_BUS_ERRORS_ENABLED
+// Bus errors
+//`define CFG_BUS_ERRORS_ENABLED
 
 // Enable Debugging
-//`define CFG_JTAG_ENABLED
+`define CFG_JTAG_ENABLED
 //`define CFG_JTAG_UART_ENABLED
-//`define CFG_DEBUG_ENABLED
+`define CFG_DEBUG_ENABLED
 //`define CFG_HW_DEBUG_ENABLED
 //`define CFG_ROM_DEBUG_ENABLED
-//`define CFG_BREAKPOINTS 32'h4
-//`define CFG_WATCHPOINTS 32'h4
+`define CFG_BREAKPOINTS 32'h4
+`define CFG_WATCHPOINTS 32'h4
 
 // Derive macro that indicates whether we have single-stepping or not
 `ifdef CFG_ROM_DEBUG_ENABLED
@@ -335,7 +335,6 @@
 
 // Whether to include context registers for debug exceptions
 // in addition to standard exception handling registers
-// Bizarre - Removing this increases LUT count!
 `define CFG_DEBUG_EXCEPTIONS_ENABLED
 
 // Wishbone defines 

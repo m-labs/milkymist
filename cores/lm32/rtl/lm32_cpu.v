@@ -1820,7 +1820,9 @@ assign stall_d =   (stall_x == `TRUE)
                    ) 
 		|| (   (   (eret_d == `TRUE)
 			|| (scall_d == `TRUE)
+`ifdef CFG_BUS_ERRORS_ENABLED
 			|| (bus_error_d == `TRUE)
+`endif
 		       )
 		    && (   (load_q_x == `TRUE)
 			|| (load_q_m == `TRUE)
