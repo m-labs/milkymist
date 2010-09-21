@@ -125,6 +125,15 @@
 // Currently always enabled
 `define CFG_BUS_ERRORS_ENABLED
 
+// Enable Debugging
+//`define CFG_JTAG_ENABLED
+//`define CFG_JTAG_UART_ENABLED
+//`define CFG_DEBUG_ENABLED
+//`define CFG_HW_DEBUG_ENABLED
+//`define CFG_ROM_DEBUG_ENABLED
+//`define CFG_BREAKPOINTS 32'h4
+//`define CFG_WATCHPOINTS 32'h4
+
 // Derive macro that indicates whether we have single-stepping or not
 `ifdef CFG_ROM_DEBUG_ENABLED
 `define LM32_SINGLE_STEP_ENABLED

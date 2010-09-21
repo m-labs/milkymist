@@ -293,6 +293,7 @@ wire		cpuibus_ack,
 // Wishbone slave wires
 //------------------------------------------------------------------
 wire [31:0]	norflash_adr,
+		monitor_adr,
 		usb_adr,
 		brg_adr,
 		csrbrg_adr;
@@ -301,6 +302,8 @@ wire [2:0]	brg_cti;
 
 wire [31:0]	norflash_dat_r,
 		norflash_dat_w,
+		monitor_dat_r,
+		monitor_dat_w,
 		usb_dat_r,
 		usb_dat_w,
 		brg_dat_r,
@@ -309,26 +312,28 @@ wire [31:0]	norflash_dat_r,
 		csrbrg_dat_w;
 
 wire [3:0]	norflash_sel,
+		monitor_sel,
 		usb_sel,
 		brg_sel;
 
 wire		norflash_we,
+		monitor_we,
 		usb_we,
 		brg_we,
 		csrbrg_we;
 
 wire		norflash_cyc,
-		usb_cyc,
+		monitor_cyc,
 		brg_cyc,
 		csrbrg_cyc;
 
 wire		norflash_stb,
-		usb_stb,
+		monitor_stb,
 		brg_stb,
 		csrbrg_stb;
 
 wire		norflash_ack,
-		usb_ack,
+		monitor_ack,
 		brg_ack,
 		csrbrg_ack;
 
@@ -793,6 +798,27 @@ norflash16 #(
 );
 
 assign flash_ce_n = 1'b0;
+
+//---------------------------------------------------------------------------
+// Monitor ROM / RAM
+//---------------------------------------------------------------------------
+`ifdef CFG_ROM_DEBUG_ENABLED
+monitor #(
+	.monitor_filename("../../../cores/monitor/src/monitor.rom")
+) (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.wb_adr_i(monitor_adr),
+	.wb_dat_o(monitor_dat_r),
+	.wb_dat_i(monitor_dat_w),
+	.wb_sel_i(monitor_sel),
+	.wb_stb_i(monitor_stb),
+	.wb_cyc_i(monitor_cyc),
+	.wb_ack_o(monitor_ack),
+	.wb_we_i(monitor_we)
+);
+`endif
 
 //---------------------------------------------------------------------------
 // UART
