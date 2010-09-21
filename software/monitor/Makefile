@@ -1,4 +1,4 @@
-MMDIR=../../..
+MMDIR=../..
 include $(MMDIR)/software/include.mak
 
 OBJECTS=monitor.o

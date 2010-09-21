@@ -116,7 +116,6 @@ initial begin
 	wbread(32'h00000600);
 
 	$finish;
-
 end
 
 endmodule

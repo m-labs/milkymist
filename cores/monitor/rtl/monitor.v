@@ -16,9 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module monitor #(
-	parameter monitor_filename = "monitor.rom"
-) (
+module monitor(
 	input sys_clk,
 	input sys_rst,
 
@@ -32,10 +30,10 @@ module monitor #(
 	input wb_we_i
 );
 
-parameter s_idle    = 0;
-parameter s_readout = 1;
-parameter s_write   = 2;
-parameter s_ack     = 3;
+parameter s_idle    = 2'd0;
+parameter s_readout = 2'd1;
+parameter s_write   = 2'd2;
+parameter s_ack     = 2'd3;
 
 reg [31:0] wdata;
 reg [1:0] state;
@@ -45,32 +43,26 @@ wire ram_we;
 
 /* 2kb ram */
 reg [31:0] mem[0:511];
-initial $readmemh(monitor_filename, mem);
+initial $readmemh("monitor.rom", mem);
 
 /* write protect */
 assign ram_we = (wb_adr_i[10:9] == 2'b11);
 
 assign wb_dat_o = dat_o;
-//assign dat_o = mem[wb_adr_i[10:2]];
 
 always @(posedge sys_clk)
-begin
 	dat_o <= mem[wb_adr_i[10:2]];
-end
 
-always @(posedge sys_clk or posedge sys_rst)
-begin
-    if (sys_rst)
-    begin
-        wb_ack_o <= 0;
-		wdata <= 0;
+always @(posedge sys_clk or posedge sys_rst) begin
+	if(sys_rst) begin	
+		wb_ack_o <= 1'b0;
+		wdata <= 32'd0;
 		state <= s_idle;
-    end else begin
-		case (state)
+	end else begin
+		case(state)
 			s_idle: begin
-				if (wb_stb_i & wb_cyc_i) begin
+				if(wb_stb_i & wb_cyc_i)
 					state <= s_readout;
-				end
 			end
 			s_readout: begin
 				/* read/modify */
@@ -78,25 +70,25 @@ begin
 				wdata[15:8]  <= wb_sel_i[1] ? wb_dat_i[15:8]  : dat_o[15:8];
 				wdata[23:16] <= wb_sel_i[2] ? wb_dat_i[23:16] : dat_o[23:16];
 				wdata[31:24] <= wb_sel_i[3] ? wb_dat_i[31:24] : dat_o[31:24];
-				if (wb_we_i & ram_we) begin
+				if(wb_we_i & ram_we) begin
 					state <= s_write;
 				end else begin
-					wb_ack_o <= 1;
+					wb_ack_o <= 1'b1;
 					state <= s_ack;
 				end
 			end
 			s_write: begin
 				/* write */
 				mem[wb_adr_i[10:2]] <= wdata;
-				wb_ack_o <= 1;
+				wb_ack_o <= 1'b1;
 				state <= s_ack;
 			end
 			s_ack: begin
-				wb_ack_o <= 0;
+				wb_ack_o <= 1'b0;
 				state <= s_idle;
 			end
 		endcase
-    end
+	end
 end
 
 endmodule

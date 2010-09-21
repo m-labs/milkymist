@@ -16,6 +16,7 @@
  */
 
 `include "setup.v"
+`include "lm32_include.v"
 
 module system(
 	input clk50,
@@ -426,15 +427,15 @@ xbar xbar(
 	.s0_stb_o(norflash_stb),
 	.s0_ack_i(norflash_ack),
 	// Slave 1
-	.s1_dat_i(),
-	.s1_dat_o(),
-	.s1_adr_o(),
+	.s1_dat_i(monitor_dat_r),
+	.s1_dat_o(monitor_dat_w),
+	.s1_adr_o(monitor_adr),
 	.s1_cti_o(),
-	.s1_sel_o(),
-	.s1_we_o(),
-	.s1_cyc_o(),
-	.s1_stb_o(),
-	.s1_ack_i(1'b0),
+	.s1_sel_o(monitor_sel),
+	.s1_we_o(monitor_we),
+	.s1_cyc_o(monitor_cyc),
+	.s1_stb_o(monitor_stb),
+	.s1_ack_i(monitor_ack),
 	// Slave 2
 	.s2_dat_i(usb_dat_r),
 	.s2_dat_o(usb_dat_w),
@@ -803,9 +804,7 @@ assign flash_ce_n = 1'b0;
 // Monitor ROM / RAM
 //---------------------------------------------------------------------------
 `ifdef CFG_ROM_DEBUG_ENABLED
-monitor #(
-	.monitor_filename("../../../cores/monitor/src/monitor.rom")
-) (
+monitor(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
@@ -818,6 +817,9 @@ monitor #(
 	.wb_ack_o(monitor_ack),
 	.wb_we_i(monitor_we)
 );
+`else
+assign monitor_dat_r = 32'bx;
+assign monitor_ack = 1'b0;
 `endif
 
 //---------------------------------------------------------------------------
