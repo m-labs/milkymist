@@ -53,7 +53,7 @@ assign wb_dat_o = dat_o;
 always @(posedge sys_clk)
 	dat_o <= mem[wb_adr_i[10:2]];
 
-always @(posedge sys_clk or posedge sys_rst) begin
+always @(posedge sys_clk) begin
 	if(sys_rst) begin	
 		wb_ack_o <= 1'b0;
 		wdata <= 32'd0;
