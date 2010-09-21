@@ -99,15 +99,7 @@
 `define LM32_BA_REG                     `LM32_REG_IDX_WIDTH'd31
 
 // Range of Program Counter. Two LSBs are always 0. 
-// `ifdef CFG_ICACHE_ENABLED
-// `define LM32_PC_WIDTH                   (clogb2(`CFG_ICACHE_LIMIT-`CFG_ICACHE_BASE_ADDRESS)-2)
-// `else
-// `ifdef CFG_IWB_ENABLED
 `define LM32_PC_WIDTH                   (`LM32_WORD_WIDTH-2)
-// `else
-// `define LM32_PC_WIDTH                   `LM32_IROM_ADDRESS_WIDTH
-// `endif
-// `endif
 `define LM32_PC_RNG                     (`LM32_PC_WIDTH+2-1):2
 
 // Range of an instruction
