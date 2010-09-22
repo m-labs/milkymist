@@ -2641,7 +2641,7 @@ begin
         registers[28] <= {`LM32_WORD_WIDTH{1'b0}};
         registers[29] <= {`LM32_WORD_WIDTH{1'b0}};
         registers[30] <= {`LM32_WORD_WIDTH{1'b0}};
-        registers[31] <= {`LM32_WORD_WIDTH{1'b0}}; 
+        registers[31] <= {`LM32_WORD_WIDTH{1'b0}};
         end
     else begin
         if (reg_write_enable_q_w == `TRUE)

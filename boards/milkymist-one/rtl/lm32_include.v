@@ -39,10 +39,10 @@
 
 `ifdef RESCUE
 `define CFG_EBA_RESET 32'h00220000
-`define CFG_DEBA_RESET 32'h00220000
+`define CFG_DEBA_RESET 32'h10000000
 `else
 `define CFG_EBA_RESET 32'h00860000
-`define CFG_DEBA_RESET 32'h00860000
+`define CFG_DEBA_RESET 32'h10000000
 `endif
 
 `define CFG_PL_MULTIPLY_ENABLED
@@ -63,6 +63,15 @@
 `define CFG_DCACHE_BYTES_PER_LINE  16
 `define CFG_DCACHE_BASE_ADDRESS    32'h0
 `define CFG_DCACHE_LIMIT           32'h7fffffff
+
+// Enable Debugging
+//`define CFG_JTAG_ENABLED
+//`define CFG_JTAG_UART_ENABLED
+//`define CFG_DEBUG_ENABLED
+//`define CFG_HW_DEBUG_ENABLED
+//`define CFG_ROM_DEBUG_ENABLED
+//`define CFG_BREAKPOINTS 32'h0
+//`define CFG_WATCHPOINTS 32'h0
 
 //
 // End of common configuration options
@@ -116,15 +125,6 @@
 
 // Bus errors
 //`define CFG_BUS_ERRORS_ENABLED
-
-// Enable Debugging
-`define CFG_JTAG_ENABLED
-//`define CFG_JTAG_UART_ENABLED
-`define CFG_DEBUG_ENABLED
-//`define CFG_HW_DEBUG_ENABLED
-//`define CFG_ROM_DEBUG_ENABLED
-`define CFG_BREAKPOINTS 32'h4
-`define CFG_WATCHPOINTS 32'h4
 
 // Derive macro that indicates whether we have single-stepping or not
 `ifdef CFG_ROM_DEBUG_ENABLED
@@ -329,13 +329,6 @@
 
 // Use a synchronous reset
 `define CFG_RESET_SENSITIVITY
-
-// V.T. Srce
-`define SRCE
-
-// Whether to include context registers for debug exceptions
-// in addition to standard exception handling registers
-`define CFG_DEBUG_EXCEPTIONS_ENABLED
 
 // Wishbone defines 
 // Refer to Wishbone System-on-Chip Interconnection Architecture
