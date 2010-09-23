@@ -711,6 +711,7 @@ static int mouse_x, mouse_y;
 
 static void mouse_cb(unsigned char buttons, char dx, char dy, unsigned char wheel)
 {
+	//printf("%d %d\n", dx, dy);
 	mouse_x += dx;
 	mouse_y += dy;
 	if(mouse_x < 0)

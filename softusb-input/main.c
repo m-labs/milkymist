@@ -28,6 +28,8 @@
 enum {
 	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_BUS_RESET,
+	PORT_STATE_SET_ADDRESS,
+	PORT_STATE_GET_DEVICE_DESCRIPTOR,
 	PORT_STATE_RUNNING,
 	PORT_STATE_UNSUPPORTED
 };
@@ -56,10 +58,19 @@ static void make_usb_token(unsigned char pid, unsigned long int elevenbits, unsi
 	out[2] |= usb_crc5(out[1], out[2]) << 3;
 }
 
+//#define DUMP
+
 static void usb_tx(unsigned char *buf, unsigned long int len)
 {
 	unsigned long int i;
 
+#ifdef DUMP
+	print_char('>');
+	print_char(' ');
+	for(i=0;i<len;i++)
+		print_hex(buf[i]);
+	print_char('\n');
+#endif
 	wio8(SIE_TX_DATA, 0x80); /* send SYNC */
 	while(rio8(SIE_TX_PENDING));
 	for(i=0;i<len;i++) {
@@ -83,8 +94,17 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 	while(1) {
 		timeout = 0xfff;
 		while(!rio8(SIE_RX_PENDING)) {
-			if(!rio8(SIE_RX_ACTIVE))
+			if(!rio8(SIE_RX_ACTIVE)) {
+#ifdef DUMP
+				unsigned long int j;
+				print_char('<');
+				print_char(' ');
+				for(j=0;j<i;j++)
+					print_hex(buf[j]);
+				print_char('\n');
+#endif
 				return i;
+}
 			if(timeout-- == 0)
 				return 0;
 		}
@@ -154,7 +174,11 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 			usb_tx(usb_buffer, chunklen+3);
 			/* get ACK from device */
 			rxlen = usb_rx(usb_buffer, 11);
-			if((rxlen != 1) || (usb_buffer[0] != 0xd2)) return -1;
+			if((rxlen != 1) || (usb_buffer[0] != 0xd2)) {
+				if((rxlen == 1) && (usb_buffer[0] == 0x5a))
+					continue; /* NAK: retry */
+				return -1;
+			}
 			
 			transferred += chunklen;
 			payload += chunklen;
@@ -168,8 +192,11 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 			usb_tx(usb_buffer, 3);
 			/* get DATAx packet */
 			rxlen = usb_rx(usb_buffer, 11);
-			if((rxlen < 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b)))
+			if((rxlen < 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b))) {
+				if((rxlen == 1) && (usb_buffer[0] == 0x5a))
+					continue; /* NAK: retry */
 				return -1;
+			}
 			chunklen = rxlen - 3; /* strip token and CRC */
 			if(chunklen > (maxlen - transferred))
 				chunklen = maxlen - transferred;
@@ -208,22 +235,6 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 	}
 	
 	return transferred;
-}
-
-static void set_address()
-{
-	struct setup_packet p;
-	
-	p.bmRequestType = 0x00;
-	p.bRequest = 0x05;
-	p.wValue[0] = 0x01;
-	p.wValue[1] = 0x00;
-	p.wIndex[0] = 0x00;
-	p.wIndex[1] = 0x00;
-	p.wLength[0] = 0x00;
-	p.wLength[1] = 0x00;
-	
-	control_transfer(0x00, &p, 1, NULL, 0);
 }
 
 static void set_configuration()
@@ -266,6 +277,20 @@ static void poll()
 	COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
 }
 
+static void check_discon(struct port_status *p, char name)
+{
+	char discon;
+
+	if(name == 'A')
+		discon = rio8(SIE_DISCON_A);
+	else
+		discon = rio8(SIE_DISCON_B);
+	if(discon) {
+		print_string(disconnect); print_char(name); print_char('\n');
+		p->state = PORT_STATE_DISCONNECTED;
+	}
+}
+
 static void port_service(struct port_status *p, char name)
 {
 	switch(p->state) {
@@ -293,37 +318,66 @@ static void port_service(struct port_status *p, char name)
 			break;
 		}
 		case PORT_STATE_BUS_RESET:
-			switch(frame_nr - p->unreset_frame) {
-				case 0:
-					if(name == 'A')
-						wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x02);
-					else
-						wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
-					break;
-				case 10:
-					set_address();
-					break;
-				case 11:
-					set_configuration();
-					p->state = PORT_STATE_RUNNING;
-					break;
+			if(frame_nr == p->unreset_frame) {
+				if(name == 'A')
+					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x02);
+				else
+					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
 			}
+			if(frame_nr == (p->unreset_frame + 25))
+				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
 			break;
-		case PORT_STATE_RUNNING:
-		case PORT_STATE_UNSUPPORTED: {
-			char discon;
-			if(name == 'A')
-				discon = rio8(SIE_DISCON_A);
-			else
-				discon = rio8(SIE_DISCON_B);
-			if(discon) {
-				print_string(disconnect); print_char(name); print_char('\n');
-				p->state = PORT_STATE_DISCONNECTED;
-			}
-			if(p->state == PORT_STATE_RUNNING)
-				poll();
+		case PORT_STATE_SET_ADDRESS: {
+			struct setup_packet packet;
+			
+			check_discon(p, name);
+	
+			packet.bmRequestType = 0x00;
+			packet.bRequest = 0x05;
+			packet.wValue[0] = 0x01;
+			packet.wValue[1] = 0x00;
+			packet.wIndex[0] = 0x00;
+			packet.wIndex[1] = 0x00;
+			packet.wLength[0] = 0x00;
+			packet.wLength[1] = 0x00;
+
+			if(control_transfer(0x00, &packet, 1, NULL, 0) == 0)
+				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
 			break;
 		}
+		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
+			struct setup_packet packet;
+			unsigned char device_descriptor[18];
+	
+			check_discon(p, name);
+			
+			packet.bmRequestType = 0x80;
+			packet.bRequest = 0x06;
+			packet.wValue[0] = 0x00;
+			packet.wValue[1] = 0x01;
+			packet.wIndex[0] = 0x00;
+			packet.wIndex[1] = 0x00;
+			packet.wLength[0] = 0x40;
+			packet.wLength[1] = 0x00;
+
+			if(control_transfer(0x00, &packet, 0, device_descriptor, 18) >= 0) {
+				print_hex(device_descriptor[9]);
+				print_hex(device_descriptor[8]);
+				print_char('\n');
+				print_hex(device_descriptor[11]);
+				print_hex(device_descriptor[10]);
+				print_char('\n');
+				p->state = PORT_STATE_UNSUPPORTED;
+			}
+			break;
+		}
+		case PORT_STATE_RUNNING:
+			check_discon(p, name);
+			poll();
+			break;
+		case PORT_STATE_UNSUPPORTED:
+			check_discon(p, name);
+			break;
 	}
 }
 
