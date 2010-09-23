@@ -1,4 +1,4 @@
-SOURCES=crt0.S main.c debug.c crc.c
+SOURCES=crt0.S main.c debug.c crc.c libc.c
 
 all: softusb-input.bin
 

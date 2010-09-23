@@ -16,6 +16,7 @@
  */
 
 #include "../software/include/base/version.h"
+#include "libc.h"
 #include "progmem.h"
 #include "comloc.h"
 #include "io.h"
@@ -111,8 +112,6 @@ static inline unsigned char get_data_token(int *toggle)
 		return 0x4b;
 }
 
-void *memcpy(void *dest, const void *src, long int n); /* compiler built in */
-
 static long int control_transfer(unsigned char addr, struct setup_packet *p, int out, unsigned char *payload, long int maxlen)
 {
 	unsigned char usb_buffer[11];
@@ -136,6 +135,7 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 	if((rxlen != 1) || (usb_buffer[0] != 0xd2)) return -1;
 	
 	/* data phase */
+	transferred = 0;
 	if(out) {
 		while(1) {
 			chunklen = maxlen - transferred;
@@ -212,58 +212,34 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 
 static void set_address()
 {
-	unsigned char usb_buffer[11];
-	unsigned long int len;
-
-	/* Set Address (1) */
-	/* SETUP */
-	make_usb_token(0x2d, 0x000, usb_buffer);
-	usb_tx(usb_buffer, 3);
-	/* DATA0 */
-	usb_buffer[ 0] = 0xc3; usb_buffer[ 1] = 0x00; usb_buffer[ 2] = 0x05; usb_buffer[ 3] = 0x01;
-	usb_buffer[ 4] = 0x00; usb_buffer[ 5] = 0x00; usb_buffer[ 6] = 0x00; usb_buffer[ 7] = 0x00;
-	usb_buffer[ 8] = 0x00; usb_buffer[ 9] = 0xeb; usb_buffer[10] = 0x25;
-	usb_tx(usb_buffer, 11);
-	/* ACK */
-	len = usb_rx(usb_buffer, 11);
-	if((len != 1) || (usb_buffer[0] != 0xd2)) return;
-	/* IN */
-	make_usb_token(0x69, 0x000, usb_buffer);
-	usb_tx(usb_buffer, 3);
-	/* DATA1 */
-	len = usb_rx(usb_buffer, 11);
-	if((len != 3) || (usb_buffer[0] != 0x4b)) return;
-	/* ACK */
-	usb_buffer[0] = 0xd2;
-	usb_tx(usb_buffer, 1);
+	struct setup_packet p;
+	
+	p.bmRequestType = 0x00;
+	p.bRequest = 0x05;
+	p.wValue[0] = 0x01;
+	p.wValue[1] = 0x00;
+	p.wIndex[0] = 0x00;
+	p.wIndex[1] = 0x00;
+	p.wLength[0] = 0x00;
+	p.wLength[1] = 0x00;
+	
+	control_transfer(0x00, &p, 1, NULL, 0);
 }
 
 static void set_configuration()
 {
-	unsigned char usb_buffer[11];
-	unsigned long int len;
-
-	/* Set Configuration (1) */
-	/* SETUP */
-	make_usb_token(0x2d, 0x001, usb_buffer);
-	usb_tx(usb_buffer, 3);
-	/* DATA0 */
-	usb_buffer[ 0] = 0x4b; usb_buffer[ 1] = 0x00; usb_buffer[ 2] = 0x09; usb_buffer[ 3] = 0x01;
-	usb_buffer[ 4] = 0x00; usb_buffer[ 5] = 0x00; usb_buffer[ 6] = 0x00; usb_buffer[ 7] = 0x00;
-	usb_buffer[ 8] = 0x00; usb_buffer[ 9] = 0x27; usb_buffer[10] = 0x25;
-	usb_tx(usb_buffer, 11);
-	/* ACK */
-	len = usb_rx(usb_buffer, 11);
-	if((len != 1) || (usb_buffer[0] != 0xd2)) return;
-	/* IN */
-	make_usb_token(0x69, 0x001, usb_buffer);
-	usb_tx(usb_buffer, 3);
-	/* DATA1 */
-	len = usb_rx(usb_buffer, 11);
-	if((len != 3) || (usb_buffer[0] != 0x4b)) return;
-	/* ACK */
-	usb_buffer[0] = 0xd2;
-	usb_tx(usb_buffer, 1);
+	struct setup_packet p;
+	
+	p.bmRequestType = 0x00;
+	p.bRequest = 0x09;
+	p.wValue[0] = 0x01;
+	p.wValue[1] = 0x00;
+	p.wIndex[0] = 0x00;
+	p.wIndex[1] = 0x00;
+	p.wLength[0] = 0x00;
+	p.wLength[1] = 0x00;
+	
+	control_transfer(0x01, &p, 1, NULL, 0);
 }
 
 static void poll()
