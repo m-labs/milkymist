@@ -94,6 +94,122 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 	}
 }
 
+struct setup_packet {
+	unsigned char bmRequestType;
+	unsigned char bRequest;
+	unsigned char wValue[2];
+	unsigned char wIndex[2];
+	unsigned char wLength[2];
+} __attribute__((packed));
+
+static inline unsigned char get_data_token(int *toggle)
+{
+	*toggle = !(*toggle);
+	if(*toggle)
+		return 0xc3;
+	else
+		return 0x4b;
+}
+
+void *memcpy(void *dest, const void *src, long int n); /* compiler built in */
+
+static long int control_transfer(unsigned char addr, struct setup_packet *p, int out, unsigned char *payload, long int maxlen)
+{
+	unsigned char usb_buffer[11];
+	int toggle;
+	int rxlen;
+	long int transferred;
+	long int chunklen;
+	
+	toggle = 0;
+	
+	/* send SETUP token */
+	make_usb_token(0x2d, addr, usb_buffer);
+	usb_tx(usb_buffer, 3);
+	/* send setup packet */
+	usb_buffer[0] = get_data_token(&toggle);
+	memcpy(&usb_buffer[1], p, 8);
+	usb_crc16(&usb_buffer[1], 8, &usb_buffer[9]);
+	usb_tx(usb_buffer, 11);
+	/* get ACK token from device */
+	rxlen = usb_rx(usb_buffer, 11);
+	if((rxlen != 1) || (usb_buffer[0] != 0xd2)) return -1;
+	
+	/* data phase */
+	if(out) {
+		while(1) {
+			chunklen = maxlen - transferred;
+			if(chunklen == 0)
+				break;
+			if(chunklen > 8)
+				chunklen = 8;
+			
+			/* send OUT token */
+			make_usb_token(0xe1, addr, usb_buffer);
+			usb_tx(usb_buffer, 3);
+			/* send DATAx packet */
+			usb_buffer[0] = get_data_token(&toggle);
+			memcpy(&usb_buffer[1], payload, chunklen);
+			usb_crc16(&usb_buffer[1], chunklen, &usb_buffer[chunklen+1]);
+			usb_tx(usb_buffer, chunklen+3);
+			/* get ACK from device */
+			rxlen = usb_rx(usb_buffer, 11);
+			if((rxlen != 1) || (usb_buffer[0] != 0xd2)) return -1;
+			
+			transferred += chunklen;
+			payload += chunklen;
+			if(chunklen < 8)
+				break;
+		}
+	} else if(maxlen != 0) {
+		while(1) {
+			/* send IN token */
+			make_usb_token(0x69, addr, usb_buffer);
+			usb_tx(usb_buffer, 3);
+			/* get DATAx packet */
+			rxlen = usb_rx(usb_buffer, 11);
+			if((rxlen < 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b)))
+				return -1;
+			chunklen = rxlen - 3; /* strip token and CRC */
+			if(chunklen > (maxlen - transferred))
+				chunklen = maxlen - transferred;
+			memcpy(payload, &usb_buffer[1], chunklen);
+			
+			/* send ACK token */
+			usb_buffer[0] = 0xd2;
+			usb_tx(usb_buffer, 1);
+			
+			transferred += chunklen;
+			payload += chunklen;
+			if(chunklen < 8)
+				break;
+		}
+	}
+	
+	/* send IN/OUT token in the opposite direction to end transfer */
+	make_usb_token(out ? 0x69 : 0xe1, addr, usb_buffer);
+	usb_tx(usb_buffer, 3);
+	if(out) {
+		/* get DATAx packet */
+		rxlen = usb_rx(usb_buffer, 11);
+		if((rxlen != 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b)))
+			return -1;
+		/* send ACK token */
+		usb_buffer[0] = 0xd2;
+		usb_tx(usb_buffer, 1);
+	} else {
+		/* send DATAx packet */
+		usb_buffer[0] = get_data_token(&toggle);
+		usb_buffer[1] = usb_buffer[2] = 0x00; /* CRC is 0x0000 without data */
+		usb_tx(usb_buffer, 3);
+		/* get ACK token from device */
+		rxlen = usb_rx(usb_buffer, 11);
+		if((rxlen != 1) || (usb_buffer[0] != 0xd2)) return -1;
+	}
+	
+	return transferred;
+}
+
 static void set_address()
 {
 	unsigned char usb_buffer[11];
