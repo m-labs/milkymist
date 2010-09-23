@@ -19,5 +19,6 @@
 #define __CRC_H
 
 unsigned char usb_crc5(unsigned char b1, unsigned char b2);
+void usb_crc16(unsigned char *msg, unsigned char len, unsigned char *dest);
 
 #endif /* __CRC_H */

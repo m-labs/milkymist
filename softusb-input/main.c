@@ -176,16 +176,6 @@ static void poll()
 
 static void port_service(struct port_status *p, char name)
 {
-	while(rio8(SIE_TX_BUSY));
-	/* writing SIE_SEL_TX here fucks up port A... why? */
-	if(name == 'A') {
-		//wio8(SIE_SEL_TX, 0x01);
-		wio8(SIE_SEL_RX, 0);
-	} else {
-		//wio8(SIE_SEL_TX, 0x02);
-		wio8(SIE_SEL_RX, 1);
-	}
-
 	switch(p->state) {
 		case PORT_STATE_DISCONNECTED: {
 			char linestat;
@@ -270,7 +260,13 @@ int main()
 		wio8(SIE_SEL_TX, mask);
 		wio8(SIE_GENERATE_EOP, 1);
 
+		while(rio8(SIE_TX_BUSY));
+		wio8(SIE_SEL_RX, 0);
+		wio8(SIE_SEL_TX, 0x01);
 		port_service(&port_a, 'A');
+		while(rio8(SIE_TX_BUSY));
+		wio8(SIE_SEL_RX, 1);
+		wio8(SIE_SEL_TX, 0x02);
 		port_service(&port_b, 'B');
 
 		frame_nr = (frame_nr + 1) & 0x7ff;
