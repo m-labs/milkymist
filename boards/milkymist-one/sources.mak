@@ -20,7 +20,8 @@ LM32_SRC=							\
 	$(CORES_DIR)/lm32/rtl/lm32_top.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_debug.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_jtag.v			\
-	$(CORES_DIR)/lm32/rtl/jtag_cores.v
+	$(CORES_DIR)/lm32/rtl/jtag_cores.v			\
+	$(CORES_DIR)/lm32/rtl/jtag_tap_spartan6.v
 FMLARB_SRC=$(wildcard $(CORES_DIR)/fmlarb/rtl/*.v)
 FMLBRG_SRC=$(wildcard $(CORES_DIR)/fmlbrg/rtl/*.v)
 CSRBRG_SRC=$(wildcard $(CORES_DIR)/csrbrg/rtl/*.v)

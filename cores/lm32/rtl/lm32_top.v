@@ -293,16 +293,12 @@ lm32_cpu cpu (
 // JTAG cores 
 jtag_cores jtag_cores (
     // ----- Inputs -----
-`ifdef INCLUDE_LM32
     .reg_d                 (jtag_reg_d),
     .reg_addr_d            (jtag_reg_addr_d),
-`endif
     // ----- Outputs -----
-`ifdef INCLUDE_LM32
     .reg_update            (jtag_update),
     .reg_q                 (jtag_reg_q),
     .reg_addr_q            (jtag_reg_addr_q),
-`endif
     .jtck                  (jtck),
     .jrstn                 (jrstn)
     );

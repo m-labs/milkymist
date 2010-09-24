@@ -1,36 +1,60 @@
-// TODO
-
 module jtag_cores (
-    // ----- Inputs -------
-    reg_d,
-    reg_addr_d,
-    // ----- Outputs -------    
-    reg_update,
-    reg_q,
-    reg_addr_q,
-    jtck,
-    jrstn
+    input [7:0] reg_d,
+    input [2:0] reg_addr_d,
+    output reg_update,
+    output [7:0] reg_q,
+    output [2:0] reg_addr_q,
+    output jtck,
+    output jrstn
 );
 
-input [7:0] reg_d;
-input [2:0] reg_addr_d;
+wire sel;
+wire tck;
+wire tdi;
+wire tdo;
+wire shift;
+wire update;
+wire reset;
 
-output reg_update;
-wire   reg_update;
-output [7:0] reg_q;
-wire   [7:0] reg_q;
-output [2:0] reg_addr_q;
-wire   [2:0] reg_addr_q;
+jtag_tap jtag_tap (
+	.sel(sel),
+	.tck(tck),
+	.tdi(tdi),
+	.tdo(tdo),
+	.shift(shift),
+	.update(update),
+	.reset(reset)
+);
 
-output jtck;
-wire   jtck;
-output jrstn;
-wire   jrstn;
+reg [10:0] jtag_shift;
+reg [10:0] jtag_latched;
 
-assign reg_update = 1'b0;
-assign reg_q = 8'hxx;
-assign reg_addr_q = 3'bxxx;
-assign jtck = 1'b0;
-assign jrstn = 1'b1;
-    
+always @(posedge tck or posedge reset)
+begin
+	if(reset)
+		jtag_shift <= 11'b0;
+	else begin
+		if(shift)
+			jtag_shift <= {tdi, jtag_shift[10:1]};
+		else
+			jtag_shift <= {reg_d, reg_addr_d};
+	end
+end
+
+assign tdo = jtag_shift[0];
+
+always @(posedge reg_update or posedge reset)
+begin
+	if(reset)
+		jtag_latched <= 11'b0;
+	else
+		jtag_latched <= jtag_shift;
+end
+
+assign reg_update = update & sel;
+assign reg_q = jtag_latched[10:3];
+assign reg_addr_q = jtag_latched[2:0];
+assign jtck = tck;
+assign jrstn = ~reset;
+
 endmodule
