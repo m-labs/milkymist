@@ -66,28 +66,47 @@ _sdram_init:
 	PRINT(nl)
 	PRINT(nl)
 
-	mvhi	r1, hi(CSR_HPDMC_IODELAY)
-	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
-
-	/* calibrate and set IDELAY=0 */
-	mvu	r2, (HPDMC_IDELAY_CAL)
-	sw	(r1+0), r2
-	mvu	r1, 20
-	calli	delay
-	mvhi	r1, hi(CSR_HPDMC_IODELAY)
-	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
-	mvu	r2, (HPDMC_IDELAY_RST)
-	sw	(r1+0), r2
-	mvu	r1, 20
-	calli	delay
-	sw	(r1+0), r2
-
-	xor	r24, r24, r24
-
 	/* send init sequence */
 	bi send_init
 send_init_return:
 	PRINT(seqcomplete)
+
+	/* calibrate and set IDELAY=0 */
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_IDELAY_CAL)
+	sw	(r1+0), r2
+	/* the IODELAYs require some signal edges during calibration... 
+	 * make dummy memory transfers to keep them happy.
+	 */
+	mvu	r3, 500
+	mvhi	r4, hi(0xffffffff)
+	ori	r4, r4, lo(0xffffffff)
+dummyxfer:
+	mvhi	r1, hi(0xc8000000) /* L2 writeback/invalidate */
+	sw	(r1+0), r0
+	mvhi	r1, hi(0xc0000000) /* L2 fetch/make dirty */
+	sw	(r1+0), r0
+	mvhi	r1, hi(0xc8000000) /* L2 writeback/invalidate */
+	sw	(r1+0), r0
+	mvhi	r1, hi(0xc0000000) /* L2 fetch/make dirty */
+	sw	(r1+0), r4
+	addi	r3, r3, -1
+	bne	r3, r0, dummyxfer
+	/* now reset IODELAYs */
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	mvu	r2, (HPDMC_IDELAY_RST)
+	sw	(r1+0), r2
+	mvu	r1, 200
+	calli	delay
+	mvhi	r1, hi(CSR_HPDMC_IODELAY)
+	ori	r1, r1, lo(CSR_HPDMC_IODELAY)
+	sw	(r1+0), r2
+	mvu	r1, 200
+	calli	delay
+
+	xor	r24, r24, r24
 
 #ifdef FEAT_PBC_MANUAL_CALIBRATION
 	/* if BTN3 is pushed, go into debug/manual mode */
