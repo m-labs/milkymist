@@ -43,11 +43,6 @@ struct port_status {
 static struct port_status port_a;
 static struct port_status port_b;
 
-static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
-static const char connect_fs[] PROGMEM = "full speed device on port ";
-static const char connect_ls[] PROGMEM = "low speed device on port ";
-static const char disconnect[] PROGMEM = "device disconnect on port ";
-
 static unsigned long int frame_nr;
 
 static void make_usb_token(unsigned char pid, unsigned long int elevenbits, unsigned char *out)
@@ -132,6 +127,12 @@ static inline unsigned char get_data_token(int *toggle)
 		return 0x4b;
 }
 
+static const char control_failed[] PROGMEM = "Control transfer failed:\n";
+static const char end_of_transfer[] PROGMEM = "(end of transfer)\n";
+static const char setup_reply[] PROGMEM = "SETUP reply:";
+static const char in_reply[] PROGMEM = "OUT/DATA reply:\n";
+static const char out_reply[] PROGMEM = "IN reply:\n";
+
 static long int control_transfer(unsigned char addr, struct setup_packet *p, int out, unsigned char *payload, long int maxlen)
 {
 	unsigned char usb_buffer[11];
@@ -152,7 +153,12 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 	usb_tx(usb_buffer, 11);
 	/* get ACK token from device */
 	rxlen = usb_rx(usb_buffer, 11);
-	if((rxlen != 1) || (usb_buffer[0] != 0xd2)) return -1;
+	if((rxlen != 1) || (usb_buffer[0] != 0xd2)) {
+		print_string(control_failed);
+		print_string(setup_reply);
+		dump_hex(usb_buffer, rxlen);
+		return -1;
+	}
 	
 	/* data phase */
 	transferred = 0;
@@ -175,8 +181,11 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 			/* get ACK from device */
 			rxlen = usb_rx(usb_buffer, 11);
 			if((rxlen != 1) || (usb_buffer[0] != 0xd2)) {
-				if((rxlen == 1) && (usb_buffer[0] == 0x5a))
+				if((rxlen > 0) && (usb_buffer[0] == 0x5a))
 					continue; /* NAK: retry */
+				print_string(control_failed);
+				print_string(out_reply);
+				dump_hex(usb_buffer, rxlen);
 				return -1;
 			}
 			
@@ -193,8 +202,11 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 			/* get DATAx packet */
 			rxlen = usb_rx(usb_buffer, 11);
 			if((rxlen < 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b))) {
-				if((rxlen == 1) && (usb_buffer[0] == 0x5a))
+				if((rxlen > 0) && (usb_buffer[0] == 0x5a))
 					continue; /* NAK: retry */
+				print_string(control_failed);
+				print_string(in_reply);
+				dump_hex(usb_buffer, rxlen);
 				return -1;
 			}
 			chunklen = rxlen - 3; /* strip token and CRC */
@@ -214,13 +226,21 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 	}
 	
 	/* send IN/OUT token in the opposite direction to end transfer */
+retry:
 	make_usb_token(out ? 0x69 : 0xe1, addr, usb_buffer);
 	usb_tx(usb_buffer, 3);
 	if(out) {
 		/* get DATAx packet */
 		rxlen = usb_rx(usb_buffer, 11);
-		if((rxlen != 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b)))
+		if((rxlen != 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b))) {
+			if((rxlen > 0) && (usb_buffer[0] == 0x5a))
+				goto retry; /* NAK: retry */
+			print_string(control_failed);
+			print_string(end_of_transfer);
+			print_string(in_reply);
+			dump_hex(usb_buffer, rxlen);
 			return -1;
+		}
 		/* send ACK token */
 		usb_buffer[0] = 0xd2;
 		usb_tx(usb_buffer, 1);
@@ -231,7 +251,15 @@ static long int control_transfer(unsigned char addr, struct setup_packet *p, int
 		usb_tx(usb_buffer, 3);
 		/* get ACK token from device */
 		rxlen = usb_rx(usb_buffer, 11);
-		if((rxlen != 1) || (usb_buffer[0] != 0xd2)) return -1;
+		if((rxlen != 1) || (usb_buffer[0] != 0xd2)) {
+			if((rxlen > 0) && (usb_buffer[0] == 0x5a))
+				goto retry; /* NAK: retry */
+			print_string(control_failed);
+			print_string(end_of_transfer);
+			print_string(out_reply);
+			dump_hex(usb_buffer, rxlen);
+			return -1;
+		}
 	}
 	
 	return transferred;
@@ -277,6 +305,10 @@ static void poll()
 	COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
 }
 
+static const char connect_fs[] PROGMEM = "full speed device on port ";
+static const char connect_ls[] PROGMEM = "low speed device on port ";
+static const char disconnect[] PROGMEM = "device disconnect on port ";
+
 static void check_discon(struct port_status *p, char name)
 {
 	char discon;
@@ -313,7 +345,7 @@ static void port_service(struct port_status *p, char name)
 				else
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x02);
 				p->state = PORT_STATE_BUS_RESET;
-				p->unreset_frame = (frame_nr + 50) & 0x7ff;
+				p->unreset_frame = (frame_nr + 350) & 0x7ff;
 			}
 			break;
 		}
@@ -324,7 +356,7 @@ static void port_service(struct port_status *p, char name)
 				else
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
 			}
-			if(frame_nr == (p->unreset_frame + 25))
+			if(frame_nr == ((p->unreset_frame + 125) & 0x7ff))
 				p->state = PORT_STATE_SET_ADDRESS;
 			break;
 		case PORT_STATE_SET_ADDRESS: {
@@ -379,6 +411,8 @@ static void port_service(struct port_status *p, char name)
 			break;
 	}
 }
+
+static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 
 int main()
 {
