@@ -334,7 +334,7 @@ void flashboot()
 		flashbase = (unsigned int *)FLASH_OFFSET_REGULAR_APP;
 	length = *flashbase++;
 	crc = *flashbase++;
-	if(length > 4*1024*1024) {
+	if((length < 32) || (length > 4*1024*1024)) {
 		printf("E: Invalid flash boot image length\n");
 		return;
 	}
