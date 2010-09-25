@@ -986,7 +986,6 @@ assign mc_clk = 1'b0;
 //---------------------------------------------------------------------------
 // AC97
 //---------------------------------------------------------------------------
-`ifdef ENABLE_AC97
 wire ac97_clk_bio;
 wire ac97_clk_b;
 BUFIO2 bio_ac97(
@@ -997,6 +996,7 @@ BUFG b_ac97(
 	.I(ac97_clk_bio),
 	.O(ac97_clk_b)
 );
+`ifdef ENABLE_AC97
 ac97 #(
 	.csr_addr(4'h5)
 ) ac97 (
@@ -1190,7 +1190,6 @@ assign fml_tmuw_dw = 64'bx;
 //---------------------------------------------------------------------------
 // Ethernet
 //---------------------------------------------------------------------------
-`ifdef ENABLE_ETHERNET
 wire phy_tx_clk_b;
 BUFG b_phy_tx_clk(
 	.I(phy_tx_clk),
@@ -1201,6 +1200,7 @@ BUFG b_phy_rx_clk(
 	.I(phy_rx_clk),
 	.O(phy_rx_clk_b)
 );
+`ifdef ENABLE_ETHERNET
 minimac #(
 	.csr_addr(4'h8)
 ) ethernet (
@@ -1290,12 +1290,12 @@ assign csr_dr_fmlmeter = 32'd0;
 //---------------------------------------------------------------------------
 // Video Input
 //---------------------------------------------------------------------------
-`ifdef ENABLE_VIDEOIN
 wire videoin_llc_b;
 BUFG b_videoin(
 	.I(videoin_llc),
 	.O(videoin_llc_b)
 );
+`ifdef ENABLE_VIDEOIN
 bt656cap #(
 	.csr_addr(4'ha),
 	.fml_depth(`SDRAM_DEPTH)
@@ -1435,7 +1435,6 @@ assign ir_irq = 1'b0;
 //---------------------------------------------------------------------------
 // USB
 //---------------------------------------------------------------------------
-`ifdef ENABLE_USB
 wire usb_clk_dcm;
 wire usb_clk;
 DCM_SP #(
@@ -1475,7 +1474,7 @@ BUFG usb_b_p(
 	.I(usb_clk_dcm),
 	.O(usb_clk)
 );
-
+`ifdef ENABLE_USB
 softusb #(
 	.csr_addr(4'hf)
 ) usb (
@@ -1528,6 +1527,17 @@ assign usbb_spd = 1'b0;
 assign usbb_oe_n = 1'b0;
 assign usbb_vp = 1'bz;
 assign usbb_vm = 1'bz;
+
+// HACK: we need to put something on usb_clk, otherwise the net is
+// optimized away and the tool later complain about invalid clock
+// constraints. Attribute KEEP on usb_clk won't work for some reason.
+(* LOCK_PINS="ALL" *)
+FD workaround(
+	.C(usb_clk),
+	.D(1'b0),
+	.Q()
+);
+
 `endif
 
 endmodule
