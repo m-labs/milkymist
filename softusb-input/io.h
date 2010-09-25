@@ -18,8 +18,6 @@
 #ifndef __IO_H
 #define __IO_H
 
-#define HOST8(x)	(*(volatile unsigned char *)((x) + 0x200))
-
 #define CPPSUCKS(x) #x
 
 #define rio8(addr)						\

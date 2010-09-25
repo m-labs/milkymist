@@ -64,7 +64,6 @@ reg rx_pending;
 
 reg tx_low_speed;
 reg [1:0] low_speed;
-reg generate_eop;
 
 always @(posedge usb_clk) begin
 	if(usb_rst) begin
@@ -76,11 +75,9 @@ always @(posedge usb_clk) begin
 		rx_pending <= 1'b0;
 		tx_low_speed <= 1'b0;
 		low_speed <= 2'b00;
-		generate_eop <= 1'b0;
 		io_do <= 8'd0;
 	end else begin
 		io_do <= 8'd0;
-		generate_eop <= 1'b0;
 		case(io_a)
 			6'h00: io_do <= line_state_a;
 			6'h01: io_do <= line_state_b;
@@ -122,7 +119,7 @@ always @(posedge usb_clk) begin
 				6'h0a: generate_reset <= io_di[1:0];
 				6'h0e: tx_low_speed <= io_di[0];
 				6'h0f: low_speed <= io_di[1:0];
-				6'h10: generate_eop <= 1'b1;
+				// 6'h10 is Generate EOP, handled separately
 			endcase
 		end
 		if(tx_ready)
@@ -175,7 +172,7 @@ softusb_phy phy(
 
 	.tx_low_speed(tx_low_speed),
 	.low_speed(low_speed),
-	.generate_eop(generate_eop)
+	.generate_eop(io_we & (io_a == 6'h10))
 );
 
 endmodule

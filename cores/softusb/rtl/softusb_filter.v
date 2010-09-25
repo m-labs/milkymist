@@ -44,21 +44,4 @@ always @(posedge usb_clk) begin
 	vm_s <= vm_s0;
 end
 
-/* glitch filter */
-/*reg rcv_s2;
-reg vp_s2;
-reg vm_s2;
-always @(posedge usb_clk) begin
-	rcv_s2 <= rcv_s1;
-	vp_s2 <= vp_s1;
-	vm_s2 <= vm_s1;
-
-	if(rcv_s2 == rcv_s1)
-		rcv_s <= rcv_s2;
-	if(vp_s2 == vp_s1)
-		vp_s <= vp_s2;
-	if(vm_s2 == vm_s1)
-		vm_s <= vm_s2;
-end*/
-
 endmodule

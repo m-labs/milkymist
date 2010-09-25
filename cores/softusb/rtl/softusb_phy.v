@@ -43,7 +43,7 @@ module softusb_phy(
 	input [7:0] tx_data,
 	input tx_valid,
 	output tx_ready, /* data acknowledgment */
-	output tx_busy, /* busy generating EOP, sending data, etc. */
+	output reg tx_busy, /* busy generating EOP, sending data, etc. */
 
 	input [1:0] generate_reset,
 
@@ -111,7 +111,19 @@ softusb_tx tx(
 	.generate_eop(generate_eop)
 );
 
-assign tx_busy = txoe;
+reg txoe_r;
+always @(posedge usb_clk) begin
+	if(usb_rst) begin
+		txoe_r <= 1'b0;
+		tx_busy <= 1'b0;
+	end else begin
+		txoe_r <= txoe;
+		if(txoe_r & ~txoe)
+			tx_busy <= 1'b0;
+		if(generate_eop | tx_valid)
+			tx_busy <= 1'b1;
+	end
+end
 
 /* RX section */
 
@@ -158,7 +170,7 @@ always @(posedge usb_clk) begin
 	if(usb_rst)
 		usba_discon_cnt <= 7'd0;
 	else begin
-		if(line_state_a != 7'd0)
+		if(line_state_a != 2'h0)
 			usba_discon_cnt <= 7'd0;
 		else if(~usba_discon)
 			usba_discon_cnt <= usba_discon_cnt + 7'd1;
