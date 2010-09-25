@@ -41,9 +41,6 @@ module softusb_sie(
 wire [1:0] line_state_a;
 wire [1:0] line_state_b;
 
-wire discon_a;
-wire discon_b;
-
 reg port_sel_rx;
 reg [1:0] port_sel_tx;
 
@@ -81,8 +78,8 @@ always @(posedge usb_clk) begin
 		case(io_a)
 			6'h00: io_do <= line_state_a;
 			6'h01: io_do <= line_state_b;
-			6'h02: io_do <= discon_a;
-			6'h03: io_do <= discon_b;
+			// 6'h02: free
+			// 6'h03: free
 
 			6'h04: io_do <= port_sel_rx;
 			6'h05: io_do <= port_sel_tx;
@@ -149,9 +146,6 @@ softusb_phy phy(
 	.usbb_rcv(usbb_rcv),
 	.usbb_vp(usbb_vp),
 	.usbb_vm(usbb_vm),
-
-	.usba_discon(discon_a),
-	.usbb_discon(discon_b),
 
 	.line_state_a(line_state_a),
 	.line_state_b(line_state_b),

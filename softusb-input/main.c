@@ -282,9 +282,9 @@ static void check_discon(struct port_status *p, char name)
 	char discon;
 
 	if(name == 'A')
-		discon = rio8(SIE_DISCON_A);
+		discon = rio8(SIE_LINE_STATUS_A) == 0x00;
 	else
-		discon = rio8(SIE_DISCON_B);
+		discon = rio8(SIE_LINE_STATUS_B) == 0x00;
 	if(discon) {
 		print_string(disconnect); print_char(name); print_char('\n');
 		p->state = PORT_STATE_DISCONNECTED;

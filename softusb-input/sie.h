@@ -22,8 +22,6 @@
 
 #define SIE_LINE_STATUS_A	0x00
 #define SIE_LINE_STATUS_B	0x01
-#define SIE_DISCON_A		0x02
-#define SIE_DISCON_B		0x03
 
 #define SIE_SEL_RX		0x04
 #define SIE_SEL_TX		0x05

@@ -31,9 +31,6 @@ module softusb_phy(
 	inout usbb_vp,
 	inout usbb_vm,
 
-	output usba_discon,
-	output usbb_discon,
-
 	output [1:0] line_state_a,
 	output [1:0] line_state_b,
 
@@ -161,50 +158,6 @@ assign usba_vm = txoe_a ? (generate_reset[0] ? 1'b0 : txm) : 1'bz;
 assign usbb_oe_n = ~txoe_b;
 assign usbb_vp = txoe_b ? (generate_reset[1] ? 1'b0 : txp) : 1'bz;
 assign usbb_vm = txoe_b ? (generate_reset[1] ? 1'b0 : txm) : 1'bz;
-
-/* Assert USB disconnect if we see SE0 for at least 2.5us */
-
-reg txoe_a_r0;
-reg txoe_b_r0;
-reg txoe_a_r1;
-reg txoe_b_r1;
-reg txoe_a_r2;
-reg txoe_b_r2;
-
-always @(posedge usb_clk) begin
-	txoe_a_r0 <= txoe_a;
-	txoe_b_r0 <= txoe_b;
-	txoe_a_r1 <= txoe_a_r0;
-	txoe_b_r1 <= txoe_b_r0;
-	txoe_a_r2 <= txoe_a_r1;
-	txoe_b_r2 <= txoe_b_r1;
-end
-
-reg [6:0] usba_discon_cnt;
-assign usba_discon = (usba_discon_cnt == 7'd127);
-always @(posedge usb_clk) begin
-	if(usb_rst)
-		usba_discon_cnt <= 7'd0;
-	else if(~txoe_a & ~txoe_a_r0 & ~txoe_a_r1 & ~txoe_a_r2) begin
-		if(line_state_a != 2'h0)
-			usba_discon_cnt <= 7'd0;
-		else if(~usba_discon)
-			usba_discon_cnt <= usba_discon_cnt + 7'd1;
-	end
-end
-
-reg [6:0] usbb_discon_cnt;
-assign usbb_discon = (usbb_discon_cnt == 7'd127);
-always @(posedge usb_clk) begin
-	if(usb_rst)
-		usbb_discon_cnt <= 7'd0;
-	else if(~txoe_b & ~txoe_b_r0 & ~txoe_b_r1 & ~txoe_b_r2) begin
-		if(line_state_b != 2'h0)
-			usbb_discon_cnt <= 7'd0;
-		else if(~usbb_discon)
-			usbb_discon_cnt <= usbb_discon_cnt + 7'd1;
-	end
-end
 
 assign usba_spd = ~low_speed[0];
 assign usbb_spd = ~low_speed[1];
