@@ -29,5 +29,6 @@ struct board_desc {
 
 const struct board_desc *get_board_desc_id(unsigned int id);
 const struct board_desc *get_board_desc();
+int get_pcb_revision();
 
 #endif /* __BOARD_H */

@@ -16,6 +16,7 @@
  */
 
 #include <hw/sysctl.h>
+#include <hw/gpio.h>
 #include <stdlib.h>
 #include <board.h>
 
@@ -43,3 +44,20 @@ const struct board_desc *get_board_desc()
 	return get_board_desc_id(CSR_SYSTEM_ID);
 }
 
+int get_pcb_revision()
+{
+	int r;
+	unsigned int io;
+	
+	io = CSR_GPIO_IN;
+	r = 0;
+	if(io & GPIO_PCBREV0)
+		r |= 0x1;
+	if(io & GPIO_PCBREV1)
+		r |= 0x2;
+	if(io & GPIO_PCBREV2)
+		r |= 0x4;
+	if(io & GPIO_PCBREV3)
+		r |= 0x8;
+	return r;
+}

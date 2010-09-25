@@ -135,7 +135,10 @@ module system(
 	input ir_rx,
 
 	// Expansion connector
-	input [11:0] exp
+	input [11:0] exp,
+	
+	// PCB revision
+	input [3:0] pcb_revision
 );
 
 //------------------------------------------------------------------
@@ -853,7 +856,7 @@ wire [31:0] capabilities;
 
 sysctl #(
 	.csr_addr(4'h1),
-	.ninputs(3),
+	.ninputs(7),
 	.noutputs(2),
 	.systemid(32'h4D4F4E45) /* MONE */
 ) sysctl (
@@ -869,7 +872,7 @@ sysctl #(
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_sysctl),
 
-	.gpio_inputs({btn3, btn2, btn1}),
+	.gpio_inputs({pcb_revision, btn3, btn2, btn1}),
 	.gpio_outputs({led2, led1}),
 
 	.capabilities(capabilities),

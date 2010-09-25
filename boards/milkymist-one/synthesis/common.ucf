@@ -314,6 +314,15 @@ NET "exp(*)" IOSTANDARD = LVCMOS33;
 # avoid floating signals
 NET "exp(*)" PULLDOWN;
 
+# ==== PCB revision ====
+NET "pcb_revision(0)" LOC = AA10;
+NET "pcb_revision(1)" LOC = AB10;
+NET "pcb_revision(2)" LOC = Y10;
+NET "pcb_revision(3)" LOC = Y12;
+
+NET "pcb_revision(*)" IOSTANDARD = LVCMOS33;
+NET "pcb_revision(*)" PULLDOWN;
+
 # ==== Timing fixes ====
 NET "sys_clk" TNM_NET = "GRPsys";
 

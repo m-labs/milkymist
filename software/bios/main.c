@@ -541,11 +541,16 @@ static void crcbios()
 
 static void display_board()
 {
+	int rev;
+
 	if(brd_desc == NULL) {
 		printf("E: Running on unknown board (ID=0x%08x), startup aborted.\n", CSR_SYSTEM_ID);
 		while(1);
 	}
-	printf("I: Running on %s\n", brd_desc->name);
+	rev = get_pcb_revision();
+	printf("I: Running on %s (PCB revision %d)\n", brd_desc->name, rev);
+	if(rev > 1)
+		printf("W: Unsupported PCB revision, please upgrade the BIOS\n");
 }
 
 #define display_capability(cap, val) if(val) printf("I: "cap": Yes\n"); else printf("I: "cap": No\n")
