@@ -325,13 +325,11 @@ static void port_service(struct port_status *p, char name)
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
 			}
 			if(frame_nr == (p->unreset_frame + 25))
-				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
+				p->state = PORT_STATE_SET_ADDRESS;
 			break;
 		case PORT_STATE_SET_ADDRESS: {
 			struct setup_packet packet;
 			
-			check_discon(p, name);
-	
 			packet.bmRequestType = 0x00;
 			packet.bRequest = 0x05;
 			packet.wValue[0] = 0x01;
@@ -343,13 +341,13 @@ static void port_service(struct port_status *p, char name)
 
 			if(control_transfer(0x00, &packet, 1, NULL, 0) == 0)
 				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
+			else
+				p->state = PORT_STATE_UNSUPPORTED;
 			break;
 		}
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
 			struct setup_packet packet;
 			unsigned char device_descriptor[18];
-	
-			check_discon(p, name);
 			
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
@@ -360,15 +358,16 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 0x40;
 			packet.wLength[1] = 0x00;
 
-			if(control_transfer(0x00, &packet, 0, device_descriptor, 18) >= 0) {
+			if(control_transfer(0x01, &packet, 0, device_descriptor, 18) >= 0) {
 				print_hex(device_descriptor[9]);
 				print_hex(device_descriptor[8]);
 				print_char('\n');
 				print_hex(device_descriptor[11]);
 				print_hex(device_descriptor[10]);
 				print_char('\n');
+				p->state = PORT_STATE_RUNNING;
+			} else
 				p->state = PORT_STATE_UNSUPPORTED;
-			}
 			break;
 		}
 		case PORT_STATE_RUNNING:

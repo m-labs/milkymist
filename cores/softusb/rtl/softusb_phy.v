@@ -164,12 +164,28 @@ assign usbb_vm = txoe_b ? (generate_reset[1] ? 1'b0 : txm) : 1'bz;
 
 /* Assert USB disconnect if we see SE0 for at least 2.5us */
 
+reg txoe_a_r0;
+reg txoe_b_r0;
+reg txoe_a_r1;
+reg txoe_b_r1;
+reg txoe_a_r2;
+reg txoe_b_r2;
+
+always @(posedge usb_clk) begin
+	txoe_a_r0 <= txoe_a;
+	txoe_b_r0 <= txoe_b;
+	txoe_a_r1 <= txoe_a_r0;
+	txoe_b_r1 <= txoe_b_r0;
+	txoe_a_r2 <= txoe_a_r1;
+	txoe_b_r2 <= txoe_b_r1;
+end
+
 reg [6:0] usba_discon_cnt;
 assign usba_discon = (usba_discon_cnt == 7'd127);
 always @(posedge usb_clk) begin
 	if(usb_rst)
 		usba_discon_cnt <= 7'd0;
-	else begin
+	else if(~txoe_a & ~txoe_a_r0 & ~txoe_a_r1 & ~txoe_a_r2) begin
 		if(line_state_a != 2'h0)
 			usba_discon_cnt <= 7'd0;
 		else if(~usba_discon)
@@ -182,7 +198,7 @@ assign usbb_discon = (usbb_discon_cnt == 7'd127);
 always @(posedge usb_clk) begin
 	if(usb_rst)
 		usbb_discon_cnt <= 7'd0;
-	else begin
+	else if(~txoe_b & ~txoe_b_r0 & ~txoe_b_r1 & ~txoe_b_r2) begin
 		if(line_state_b != 2'h0)
 			usbb_discon_cnt <= 7'd0;
 		else if(~usbb_discon)
