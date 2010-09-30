@@ -303,17 +303,21 @@ static void poll(int keyboard)
 	usb_buffer[0] = 0xd2;
 	usb_tx(usb_buffer, 1);
 	/* send to host */
-	m = COMLOC_MEVT_PRODUCE;
-	COMLOC_MEVT(4*m+0) = usb_buffer[1];
-	COMLOC_MEVT(4*m+1) = usb_buffer[2];
-	COMLOC_MEVT(4*m+2) = usb_buffer[3];
-	COMLOC_MEVT(4*m+3) = usb_buffer[4];
-	COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
+	if(keyboard) {
+		dump_hex(&usb_buffer[1], len-3);
+	} else {
+		m = COMLOC_MEVT_PRODUCE;
+		COMLOC_MEVT(4*m+0) = usb_buffer[1];
+		COMLOC_MEVT(4*m+1) = usb_buffer[2];
+		COMLOC_MEVT(4*m+2) = usb_buffer[3];
+		COMLOC_MEVT(4*m+3) = usb_buffer[4];
+		COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
+	}
 }
 
-static const char connect_fs[] PROGMEM = "full speed device on port ";
-static const char connect_ls[] PROGMEM = "low speed device on port ";
-static const char disconnect[] PROGMEM = "device disconnect on port ";
+static const char connect_fs[] PROGMEM = "Full speed device on port ";
+static const char connect_ls[] PROGMEM = "Low speed device on port ";
+static const char disconnect[] PROGMEM = "Device disconnect on port ";
 
 static void check_discon(struct port_status *p, char name)
 {
@@ -379,8 +383,8 @@ static const char keyboard[] PROGMEM = "keyboard\n";
 static void port_service(struct port_status *p, char name)
 {
 	if(p->state > PORT_STATE_BUS_RESET)
-		/* must be first so the line is sampled when no
-		 * transmission takes place
+		/* Must be first, so the line is sampled when no
+		 * transmission takes place.
 		 */
 		check_discon(p, name);
 	switch(p->state) {

@@ -54,7 +54,6 @@ void dump_hex(unsigned char *buf, unsigned int len)
 	} else {
 		for(i=0;i<len;i++) {
 			print_hex(buf[i]);
-			print_char(' ');
 			if(((i & 0x0f) == 0) && (i != 0))
 				print_char('\n');
 			else
