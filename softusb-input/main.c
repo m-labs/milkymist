@@ -40,6 +40,7 @@ struct port_status {
 	int state;
 	int fs;
 	int keyboard;
+	int retry_count;
 	unsigned long int unreset_frame;
 };
 
@@ -358,6 +359,15 @@ static int validate_configuration_descriptor(unsigned char *descriptor, int len,
 	return 0;
 }
 
+static const char retry_exceed[] PROGMEM = "Retry count exceeded, disabling device.\n";
+static void check_retry(struct port_status *p)
+{
+	if(p->retry_count++ > 20) {
+		print_string(retry_exceed);
+		p->state = PORT_STATE_UNSUPPORTED;
+	}
+}
+
 static const char vid[] PROGMEM = "VID: ";
 static const char pid[] PROGMEM = ", PID: ";
 
@@ -404,8 +414,10 @@ static void port_service(struct port_status *p, char name)
 				else
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
 			}
-			if(frame_nr == ((p->unreset_frame + 250) & 0x7ff))
+			if(frame_nr == ((p->unreset_frame + 250) & 0x7ff)) {
+				p->retry_count = 0;
 				p->state = PORT_STATE_SET_ADDRESS;
+			}
 			break;
 		case PORT_STATE_SET_ADDRESS: {
 			struct setup_packet packet;
@@ -419,8 +431,11 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 0x00;
 			packet.wLength[1] = 0x00;
 
-			if(control_transfer(0x00, &packet, 1, NULL, 0) == 0)
+			if(control_transfer(0x00, &packet, 1, NULL, 0) == 0) {
+				p->retry_count = 0;
 				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
+			}
+			check_retry(p);
 			break;
 		}
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
@@ -437,6 +452,7 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[1] = 0x00;
 
 			if(control_transfer(0x01, &packet, 0, device_descriptor, 18) >= 0) {
+				p->retry_count = 0;
 				print_string(vid);
 				print_hex(device_descriptor[9]);
 				print_hex(device_descriptor[8]);
@@ -450,9 +466,10 @@ static void port_service(struct port_status *p, char name)
 				if((device_descriptor[4] != 0) || (device_descriptor[5] != 0)) {
 					print_string(found); print_string(unsupported_device);
 					p->state = PORT_STATE_UNSUPPORTED;
-				} else
+				} else 
 					p->state = PORT_STATE_GET_CONFIGURATION_DESCRIPTOR;
 			}
+			check_retry(p);
 			break;
 		}
 		case PORT_STATE_GET_CONFIGURATION_DESCRIPTOR: {
@@ -471,6 +488,7 @@ static void port_service(struct port_status *p, char name)
 
 			len = control_transfer(0x01, &packet, 0, configuration_descriptor, 127);
 			if(len >= 0) {
+				p->retry_count = 0;
 				if(!validate_configuration_descriptor(configuration_descriptor, len, &p->keyboard)) {
 					print_string(found); print_string(unsupported_device);
 					p->state = PORT_STATE_UNSUPPORTED;
@@ -483,6 +501,7 @@ static void port_service(struct port_status *p, char name)
 					p->state = PORT_STATE_SET_CONFIGURATION;
 				}
 			}
+			check_retry(p);
 			break;
 		}
 		case PORT_STATE_SET_CONFIGURATION: {
@@ -497,8 +516,11 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 0x00;
 			packet.wLength[1] = 0x00;
 
-			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0)
+			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0) {
+				p->retry_count = 0;
 				p->state = PORT_STATE_RUNNING;
+			}
+			check_retry(p);
 			break;
 		}
 		case PORT_STATE_RUNNING:
