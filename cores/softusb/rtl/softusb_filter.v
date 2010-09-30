@@ -30,9 +30,6 @@ module softusb_filter(
 reg rcv_s0;
 reg vp_s0;
 reg vm_s0;
-reg rcv_s1;
-reg vp_s1;
-reg vm_s1;
 
 /* synchronizer */
 always @(posedge usb_clk) begin

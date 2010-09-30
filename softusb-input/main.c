@@ -55,9 +55,9 @@ static void make_usb_token(unsigned char pid, unsigned long int elevenbits, unsi
 
 //#define DUMP
 
-static void usb_tx(unsigned char *buf, unsigned long int len)
+static void usb_tx(unsigned char *buf, unsigned int len)
 {
-	unsigned long int i;
+	unsigned int i;
 
 #ifdef DUMP
 	print_char('>');
@@ -79,10 +79,10 @@ static const char transfer_start[] PROGMEM = "Transfer start: ";
 static const char timeout_error[] PROGMEM = "RX timeout error\n";
 static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
 
-static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
+static unsigned int usb_rx(unsigned char *buf, unsigned int maxlen)
 {
 	unsigned long int timeout;
-	unsigned long int i;
+	unsigned int i;
 
 	i = 0;
 	timeout = 0xfff;
@@ -107,7 +107,7 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 			}
 			if(!rio8(SIE_RX_ACTIVE)) {
 #ifdef DUMP
-				unsigned long int j;
+				unsigned int j;
 				print_char('<');
 				print_char(' ');
 				for(j=0;j<i;j++)
@@ -146,18 +146,18 @@ static inline unsigned char get_data_token(int *toggle)
 }
 
 static const char control_failed[] PROGMEM = "Control transfer failed:\n";
-static const char end_of_transfer[] PROGMEM = "(end of transfer)\n";
+static const char termination[] PROGMEM = "(termination)\n";
 static const char setup_reply[] PROGMEM = "SETUP reply:\n";
 static const char in_reply[] PROGMEM = "OUT/DATA reply:\n";
 static const char out_reply[] PROGMEM = "IN reply:\n";
 
-static long int control_transfer(unsigned char addr, struct setup_packet *p, int out, unsigned char *payload, long int maxlen)
+static int control_transfer(unsigned char addr, struct setup_packet *p, int out, unsigned char *payload, long int maxlen)
 {
 	unsigned char usb_buffer[11];
 	int toggle;
 	int rxlen;
-	long int transferred;
-	long int chunklen;
+	int transferred;
+	int chunklen;
 	
 	toggle = 0;
 	
@@ -254,7 +254,7 @@ retry:
 			if((rxlen > 0) && (usb_buffer[0] == 0x5a))
 				goto retry; /* NAK: retry */
 			print_string(control_failed);
-			print_string(end_of_transfer);
+			print_string(termination);
 			print_string(in_reply);
 			dump_hex(usb_buffer, rxlen);
 			return -1;
@@ -273,7 +273,7 @@ retry:
 			if((rxlen > 0) && (usb_buffer[0] == 0x5a))
 				goto retry; /* NAK: retry */
 			print_string(control_failed);
-			print_string(end_of_transfer);
+			print_string(termination);
 			print_string(out_reply);
 			dump_hex(usb_buffer, rxlen);
 			return -1;
@@ -302,7 +302,7 @@ static void set_configuration()
 static void poll()
 {
 	unsigned char usb_buffer[11];
-	unsigned long int len;
+	unsigned int len;
 	unsigned char m;
 
 	/* IN */
@@ -340,6 +340,9 @@ static void check_discon(struct port_status *p, char name)
 		p->state = PORT_STATE_DISCONNECTED;
 	}
 }
+
+static const char vid[] PROGMEM = "VID: ";
+static const char pid[] PROGMEM = ", PID: ";
 
 static void port_service(struct port_status *p, char name)
 {
@@ -411,9 +414,10 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[1] = 0x00;
 
 			if(control_transfer(0x01, &packet, 0, device_descriptor, 18) >= 0) {
+				print_string(vid);
 				print_hex(device_descriptor[9]);
 				print_hex(device_descriptor[8]);
-				print_char('\n');
+				print_string(pid);
 				print_hex(device_descriptor[11]);
 				print_hex(device_descriptor[10]);
 				print_char('\n');
