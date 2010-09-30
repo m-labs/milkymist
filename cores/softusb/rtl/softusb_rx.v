@@ -27,6 +27,7 @@ module softusb_rx(
 	output reg [7:0] rx_data,
 	output reg rx_valid,
 	output reg rx_active,
+	output reg rx_error,
 
 	input low_speed
 );
@@ -134,8 +135,10 @@ always @(posedge usb_clk) begin
 	if(rxreset) begin
 		rx_active = 1'b0;
 		rx_valid = 1'b0;
+		rx_error = 1'b0;
 	end else begin
 		rx_valid = 1'b0;
+		rx_error = 1'b0;
 		if(eop_detected)
 			rx_active = 1'b0;
 		else if(dpll_ce) begin
@@ -143,9 +146,11 @@ always @(posedge usb_clk) begin
 				if(onecount == 3'd6) begin
 					/* skip stuffed bits */
 					onecount = 3'd0;
-					if((lastrx & rx_corrected)|(~lastrx & ~rx_corrected))
+					if((lastrx & rx_corrected)|(~lastrx & ~rx_corrected)) begin
 						/* no transition? bitstuff error */
 						rx_active = 1'b0;
+						rx_error = 1'b1;
+					end
 					lastrx = ~lastrx;
 				end else begin
 					if(rx_corrected) begin

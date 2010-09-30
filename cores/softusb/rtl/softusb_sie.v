@@ -54,6 +54,8 @@ reg [1:0] generate_reset;
 wire [7:0] rx_data;
 wire rx_valid;
 wire rx_active;
+wire rx_error;
+reg rx_error_pending;
 wire tx_busy;
 
 reg [7:0] data_in;
@@ -69,6 +71,7 @@ always @(posedge usb_clk) begin
 		tx_valid <= 1'b0;
 		tx_pending <= 1'b0;
 		generate_reset <= 2'd0;
+		rx_error_pending <= 1'b0;
 		rx_pending <= 1'b0;
 		tx_low_speed <= 1'b0;
 		low_speed <= 2'b00;
@@ -78,45 +81,48 @@ always @(posedge usb_clk) begin
 		case(io_a)
 			6'h00: io_do <= line_state_a;
 			6'h01: io_do <= line_state_b;
-			// 6'h02: free
-			// 6'h03: free
 
-			6'h04: io_do <= port_sel_rx;
-			6'h05: io_do <= port_sel_tx;
+			6'h02: io_do <= port_sel_rx;
+			6'h03: io_do <= port_sel_tx;
 
-			6'h06: io_do <= tx_data;
-			6'h07: io_do <= tx_pending;
-			6'h08: io_do <= tx_valid;
-			6'h09: io_do <= tx_busy;
-			6'h0a: io_do <= generate_reset;
+			6'h04: io_do <= tx_data;
+			6'h05: io_do <= tx_pending;
+			6'h06: io_do <= tx_valid;
+			6'h07: io_do <= tx_busy;
+			6'h08: io_do <= generate_reset;
 
-			6'h0b: begin
+			6'h09: begin
 				io_do <= data_in;
 				if(io_re)
 					rx_pending <= 1'b0;
 			end
-			6'h0c: io_do <= rx_pending;
-			6'h0d: io_do <= rx_active;
+			6'h0a: io_do <= rx_pending;
+			6'h0b: io_do <= rx_active;
+			6'h0c: begin
+				io_do <= rx_error_pending;
+				if(io_re)
+					rx_error_pending <= 1'b0;
+			end
 			
-			6'h0e: io_do <= tx_low_speed;
-			6'h0f: io_do <= low_speed;
-			6'h10: io_do <= 8'hxx;
+			6'h0d: io_do <= tx_low_speed;
+			6'h0e: io_do <= low_speed;
+			6'h0f: io_do <= 8'hxx;
 		endcase
 		if(io_we) begin
 			$display("USB SIE W: a=%x dat=%x", io_a, io_di);
 			case(io_a)
-				6'h04: port_sel_rx <= io_di[0];
-				6'h05: port_sel_tx <= io_di[1:0];
-				6'h06: begin
+				6'h02: port_sel_rx <= io_di[0];
+				6'h03: port_sel_tx <= io_di[1:0];
+				6'h04: begin
 					tx_valid <= 1'b1;
 					tx_data <= io_di;
 					tx_pending <= 1'b1;
 				end
-				6'h08: tx_valid <= 1'b0;
-				6'h0a: generate_reset <= io_di[1:0];
-				6'h0e: tx_low_speed <= io_di[0];
-				6'h0f: low_speed <= io_di[1:0];
-				// 6'h10 is Generate EOP, handled separately
+				6'h06: tx_valid <= 1'b0;
+				6'h08: generate_reset <= io_di[1:0];
+				6'h0d: tx_low_speed <= io_di[0];
+				6'h0e: low_speed <= io_di[1:0];
+				// 6'h0f is Generate EOP, handled separately
 			endcase
 		end
 		if(tx_ready)
@@ -125,6 +131,8 @@ always @(posedge usb_clk) begin
 			data_in <= rx_data;
 			rx_pending <= 1'b1;
 		end
+		if(rx_error)
+			rx_error_pending <= 1'b1;
 
 		if(io_re) // must be at the end because of the delay!
 			#1 $display("USB SIE R: a=%x dat=%x", io_a, io_do);
@@ -163,10 +171,11 @@ softusb_phy phy(
 	.rx_data(rx_data),
 	.rx_valid(rx_valid),
 	.rx_active(rx_active),
+	.rx_error(rx_error),
 
 	.tx_low_speed(tx_low_speed),
 	.low_speed(low_speed),
-	.generate_eop(io_we & (io_a == 6'h10))
+	.generate_eop(io_we & (io_a == 6'h0f))
 );
 
 endmodule

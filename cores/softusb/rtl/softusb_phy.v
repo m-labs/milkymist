@@ -47,6 +47,7 @@ module softusb_phy(
 	output [7:0] rx_data,
 	output rx_valid,
 	output rx_active,
+	output rx_error,
 
 	input tx_low_speed,
 	input [1:0] low_speed,
@@ -143,6 +144,7 @@ softusb_rx rx(
 	.rx_data(rx_data),
 	.rx_valid(rx_valid),
 	.rx_active(rx_active),
+	.rx_error(rx_error),
 
 	.low_speed(port_sel_rx ? low_speed[1] : low_speed[0])
 );

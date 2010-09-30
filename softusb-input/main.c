@@ -88,10 +88,20 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 			print_char('\n');
 			return 0;
 		}
+		if(rio8(SIE_RX_ERROR)) {
+			print_char('B');
+			print_char('\n');
+			return 0;
+		}
 	}
 	while(1) {
 		timeout = 0x1fff;
 		while(!rio8(SIE_RX_PENDING)) {
+			if(rio8(SIE_RX_ERROR)) {
+				print_char('b');
+				print_char('\n');
+				return 0;
+			}
 			if(!rio8(SIE_RX_ACTIVE)) {
 #ifdef DUMP
 				unsigned long int j;
@@ -102,7 +112,7 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 				print_char('\n');
 #endif
 				return i;
-}
+			}
 			if(timeout-- == 0) {
 				print_char('t');
 				print_char('\n');
