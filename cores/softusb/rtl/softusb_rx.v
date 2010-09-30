@@ -246,10 +246,10 @@ always @(*) begin
 			else
 				fs_next_state = FS_IDLE;
 		end
-		K5: if(dpll_ce) begin
-			if(~rx_corrected)
-				startrx = 1'b1;
-			fs_next_state = FS_IDLE;
+		K5: begin
+			startrx = 1'b1;
+			if(dpll_ce)
+				fs_next_state = FS_IDLE;
 		end
 	endcase
 end
