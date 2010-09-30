@@ -333,7 +333,7 @@ INST "sdram_cke" TNM = "GRPsdramout";
 INST "sdram_cs_n" TNM = "GRPsdramout";
 INST "sdram_ras_n" TNM = "GRPsdramout";
 INST "sdram_we_n" TNM = "GRPsdramout";
-TIMESPEC "TSsdramout" = FROM FFS TO "GRPsdramout" 9 ns;
+TIMESPEC "TSsdramout" = FROM FFS TO "GRPsdramout" 9.052 ns;
 
 NET "vga/vga_iclk" TNM_NET = "GRPvga";
 TIMESPEC "TSvga_async1" = FROM "GRPsys" TO "GRPvga" TIG;

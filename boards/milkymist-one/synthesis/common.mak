@@ -15,7 +15,7 @@ load: $(BUILDDIR)/system.bit
 	cd $(BUILDDIR) && impact -batch ../load.cmd
 
 $(BUILDDIR)/system.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -t 1 -w system.ngd
+	cd $(BUILDDIR) && map -ol high -t 60 -w system.ngd
 
 $(BUILDDIR)/system-routed.ncd: $(BUILDDIR)/system.ncd
 	cd $(BUILDDIR) && par -ol high -w system.ncd system-routed.ncd
