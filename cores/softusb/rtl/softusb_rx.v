@@ -42,14 +42,22 @@ wire rx_corrected = rx ^ low_speed;
  */
 wire se0 = ~rxp & ~rxm;
 
+wire eop_state_ce;
 reg [2:0] eop_state;
 reg [2:0] eop_next_state;
 always @(posedge usb_clk) begin
 	if(rxreset)
 		eop_state <= 3'd0;
-	else
+	else if(eop_state_ce)
 		eop_state <= eop_next_state;
 end
+
+reg [2:0] eop_clkdiv_counter;
+assign eop_state_ce = ~low_speed | (eop_clkdiv_counter == 3'd0);
+initial eop_clkdiv_counter <= 3'd0;
+always @(posedge usb_clk)
+	eop_clkdiv_counter <= eop_clkdiv_counter + 3'd1;
+
 
 reg eop_detected;
 

@@ -81,13 +81,16 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 	unsigned long int i;
 
 	i = 0;
-	timeout = 0xfff;
+	timeout = 0x1fff;
 	while(!rio8(SIE_RX_PENDING)) {
-		if(timeout-- == 0)
+		if(timeout-- == 0) {
+			print_char('T');
+			print_char('\n');
 			return 0;
+		}
 	}
 	while(1) {
-		timeout = 0xfff;
+		timeout = 0x1fff;
 		while(!rio8(SIE_RX_PENDING)) {
 			if(!rio8(SIE_RX_ACTIVE)) {
 #ifdef DUMP
@@ -100,8 +103,11 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 #endif
 				return i;
 }
-			if(timeout-- == 0)
-				return 0;
+			if(timeout-- == 0) {
+				print_char('t');
+				print_char('\n');
+				return i;
+			}
 		}
 		if(i == maxlen)
 			return 0;
@@ -397,7 +403,7 @@ static void port_service(struct port_status *p, char name)
 				print_hex(device_descriptor[11]);
 				print_hex(device_descriptor[10]);
 				print_char('\n');
-				p->state = PORT_STATE_RUNNING;
+				p->state = PORT_STATE_UNSUPPORTED; // XXX
 			} else
 				p->state = PORT_STATE_UNSUPPORTED;
 			break;

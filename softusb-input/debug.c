@@ -42,20 +42,27 @@ void print_hex(unsigned char h)
 	print_char(read_pgm_byte(&hextab[h & 0x0f]));
 }
 
+static const char nodata[] PROGMEM = "(no data)\n";
+
 void dump_hex(unsigned char *buf, unsigned int len)
 {
 	unsigned int i;
 
-	for(i=0;i<len;i++) {
-		print_hex(buf[i]);
-		print_char(' ');
-		if(((i & 0x0f) == 0) && (i != 0))
-			print_char('\n');
-		else
+	if(len == 0) {
+		print_string(nodata);
+		return;
+	} else {
+		for(i=0;i<len;i++) {
+			print_hex(buf[i]);
 			print_char(' ');
+			if(((i & 0x0f) == 0) && (i != 0))
+				print_char('\n');
+			else
+				print_char(' ');
+		}
+		if(i & 0x0f)
+			print_char('\n');
 	}
-	if(i & 0x0f)
-		print_char('\n');
 }
 
 void print_bin(unsigned char h, unsigned char count)
