@@ -75,31 +75,34 @@ static void usb_tx(unsigned char *buf, unsigned long int len)
 	wio8(SIE_TX_VALID, 0);
 }
 
+static const char transfer_start[] PROGMEM = "Transfer start: ";
+static const char timeout_error[] PROGMEM = "RX timeout error\n";
+static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
+
 static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 {
 	unsigned long int timeout;
 	unsigned long int i;
 
 	i = 0;
-	timeout = 0x1fff;
+	timeout = 0xfff;
 	while(!rio8(SIE_RX_PENDING)) {
 		if(timeout-- == 0) {
-			print_char('T');
-			print_char('\n');
+			print_string(transfer_start);
+			print_string(timeout_error);
 			return 0;
 		}
 		if(rio8(SIE_RX_ERROR)) {
-			print_char('B');
-			print_char('\n');
+			print_string(transfer_start);
+			print_string(bitstuff_error);
 			return 0;
 		}
 	}
 	while(1) {
-		timeout = 0x1fff;
+		timeout = 0xfff;
 		while(!rio8(SIE_RX_PENDING)) {
 			if(rio8(SIE_RX_ERROR)) {
-				print_char('b');
-				print_char('\n');
+				print_string(bitstuff_error);
 				return 0;
 			}
 			if(!rio8(SIE_RX_ACTIVE)) {
@@ -114,9 +117,8 @@ static unsigned long int usb_rx(unsigned char *buf, unsigned int maxlen)
 				return i;
 			}
 			if(timeout-- == 0) {
-				print_char('t');
-				print_char('\n');
-				return i;
+				print_string(timeout_error);
+				return 0;
 			}
 		}
 		if(i == maxlen)
@@ -145,7 +147,7 @@ static inline unsigned char get_data_token(int *toggle)
 
 static const char control_failed[] PROGMEM = "Control transfer failed:\n";
 static const char end_of_transfer[] PROGMEM = "(end of transfer)\n";
-static const char setup_reply[] PROGMEM = "SETUP reply:";
+static const char setup_reply[] PROGMEM = "SETUP reply:\n";
 static const char in_reply[] PROGMEM = "OUT/DATA reply:\n";
 static const char out_reply[] PROGMEM = "IN reply:\n";
 
@@ -372,11 +374,13 @@ static void port_service(struct port_status *p, char name)
 				else
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
 			}
-			if(frame_nr == ((p->unreset_frame + 125) & 0x7ff))
+			if(frame_nr == ((p->unreset_frame + 250) & 0x7ff))
 				p->state = PORT_STATE_SET_ADDRESS;
 			break;
 		case PORT_STATE_SET_ADDRESS: {
 			struct setup_packet packet;
+			
+			check_discon(p, name);
 			
 			packet.bmRequestType = 0x00;
 			packet.bRequest = 0x05;
@@ -389,13 +393,13 @@ static void port_service(struct port_status *p, char name)
 
 			if(control_transfer(0x00, &packet, 1, NULL, 0) == 0)
 				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
-			else
-				p->state = PORT_STATE_UNSUPPORTED;
 			break;
 		}
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
 			struct setup_packet packet;
 			unsigned char device_descriptor[18];
+			
+			check_discon(p, name);
 			
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
@@ -414,8 +418,7 @@ static void port_service(struct port_status *p, char name)
 				print_hex(device_descriptor[10]);
 				print_char('\n');
 				p->state = PORT_STATE_UNSUPPORTED; // XXX
-			} else
-				p->state = PORT_STATE_UNSUPPORTED;
+			}
 			break;
 		}
 		case PORT_STATE_RUNNING:
