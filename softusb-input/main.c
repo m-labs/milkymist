@@ -30,13 +30,16 @@ enum {
 	PORT_STATE_BUS_RESET,
 	PORT_STATE_SET_ADDRESS,
 	PORT_STATE_GET_DEVICE_DESCRIPTOR,
+	PORT_STATE_GET_CONFIGURATION_DESCRIPTOR,
+	PORT_STATE_SET_CONFIGURATION,
 	PORT_STATE_RUNNING,
 	PORT_STATE_UNSUPPORTED
 };
 
 struct port_status {
-	char state;
-	char fs;
+	int state;
+	int fs;
+	int keyboard;
 	unsigned long int unreset_frame;
 };
 
@@ -283,23 +286,7 @@ retry:
 	return transferred;
 }
 
-static void set_configuration()
-{
-	struct setup_packet p;
-	
-	p.bmRequestType = 0x00;
-	p.bRequest = 0x09;
-	p.wValue[0] = 0x01;
-	p.wValue[1] = 0x00;
-	p.wIndex[0] = 0x00;
-	p.wIndex[1] = 0x00;
-	p.wLength[0] = 0x00;
-	p.wLength[1] = 0x00;
-	
-	control_transfer(0x01, &p, 1, NULL, 0);
-}
-
-static void poll()
+static void poll(int keyboard)
 {
 	unsigned char usb_buffer[11];
 	unsigned int len;
@@ -341,11 +328,51 @@ static void check_discon(struct port_status *p, char name)
 	}
 }
 
+static int validate_configuration_descriptor(unsigned char *descriptor, int len, int *keyboard)
+{
+	int offset;
+	
+	offset = 0;
+	while(offset < len) {
+		if(descriptor[offset+1] == 0x04) {
+			/* got an interface descriptor */
+			/* check for bInterfaceClass=3 and bInterfaceSubClass=1 (HID) */
+			if((descriptor[offset+5] != 0x03) || (descriptor[offset+6] != 0x01))
+				return 0;
+			/* check bInterfaceProtocol */
+			switch(descriptor[offset+7]) {
+				case 0x01:
+					*keyboard = 1;
+					return 1;
+				case 0x02:
+					*keyboard = 0;
+					return 1;
+				default:
+					/* unknown protocol, fail */
+					return 0;
+			}
+		}
+		offset += descriptor[offset+0];
+	}
+	/* no interface descriptor found, fail */
+	return 0;
+}
+
 static const char vid[] PROGMEM = "VID: ";
 static const char pid[] PROGMEM = ", PID: ";
 
+static const char found[] PROGMEM = "Found ";
+static const char unsupported_device[] PROGMEM = "unsupported device\n";
+static const char mouse[] PROGMEM = "mouse\n";
+static const char keyboard[] PROGMEM = "keyboard\n";
+
 static void port_service(struct port_status *p, char name)
 {
+	if(p->state > PORT_STATE_BUS_RESET)
+		/* must be first so the line is sampled when no
+		 * transmission takes place
+		 */
+		check_discon(p, name);
 	switch(p->state) {
 		case PORT_STATE_DISCONNECTED: {
 			char linestat;
@@ -383,8 +410,6 @@ static void port_service(struct port_status *p, char name)
 		case PORT_STATE_SET_ADDRESS: {
 			struct setup_packet packet;
 			
-			check_discon(p, name);
-			
 			packet.bmRequestType = 0x00;
 			packet.bRequest = 0x05;
 			packet.wValue[0] = 0x01;
@@ -402,15 +427,13 @@ static void port_service(struct port_status *p, char name)
 			struct setup_packet packet;
 			unsigned char device_descriptor[18];
 			
-			check_discon(p, name);
-			
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
 			packet.wValue[0] = 0x00;
 			packet.wValue[1] = 0x01;
 			packet.wIndex[0] = 0x00;
 			packet.wIndex[1] = 0x00;
-			packet.wLength[0] = 0x40;
+			packet.wLength[0] = 18;
 			packet.wLength[1] = 0x00;
 
 			if(control_transfer(0x01, &packet, 0, device_descriptor, 18) >= 0) {
@@ -421,16 +444,67 @@ static void port_service(struct port_status *p, char name)
 				print_hex(device_descriptor[11]);
 				print_hex(device_descriptor[10]);
 				print_char('\n');
-				p->state = PORT_STATE_UNSUPPORTED; // XXX
+				/* check for bDeviceClass=0 and bDeviceSubClass=0.
+				 * HID devices have those.
+				 */
+				if((device_descriptor[4] != 0) || (device_descriptor[5] != 0)) {
+					print_string(found); print_string(unsupported_device);
+					p->state = PORT_STATE_UNSUPPORTED;
+				} else
+					p->state = PORT_STATE_GET_CONFIGURATION_DESCRIPTOR;
 			}
 			break;
 		}
+		case PORT_STATE_GET_CONFIGURATION_DESCRIPTOR: {
+			struct setup_packet packet;
+			unsigned char configuration_descriptor[127];
+			int len;
+			
+			packet.bmRequestType = 0x80;
+			packet.bRequest = 0x06;
+			packet.wValue[0] = 0x00;
+			packet.wValue[1] = 0x02;
+			packet.wIndex[0] = 0x00;
+			packet.wIndex[1] = 0x00;
+			packet.wLength[0] = 127;
+			packet.wLength[1] = 0x00;
+
+			len = control_transfer(0x01, &packet, 0, configuration_descriptor, 127);
+			if(len >= 0) {
+				if(!validate_configuration_descriptor(configuration_descriptor, len, &p->keyboard)) {
+					print_string(found); print_string(unsupported_device);
+					p->state = PORT_STATE_UNSUPPORTED;
+				} else {
+					print_string(found);
+					if(p->keyboard)
+						print_string(keyboard);
+					else
+						print_string(mouse);
+					p->state = PORT_STATE_SET_CONFIGURATION;
+				}
+			}
+			break;
+		}
+		case PORT_STATE_SET_CONFIGURATION: {
+			struct setup_packet packet;
+			
+			packet.bmRequestType = 0x00;
+			packet.bRequest = 0x09;
+			packet.wValue[0] = 0x01;
+			packet.wValue[1] = 0x00;
+			packet.wIndex[0] = 0x00;
+			packet.wIndex[1] = 0x00;
+			packet.wLength[0] = 0x00;
+			packet.wLength[1] = 0x00;
+
+			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0)
+				p->state = PORT_STATE_RUNNING;
+			break;
+		}
 		case PORT_STATE_RUNNING:
-			check_discon(p, name);
-			poll();
+			poll(p->keyboard);
 			break;
 		case PORT_STATE_UNSUPPORTED:
-			check_discon(p, name);
 			break;
 	}
 }
