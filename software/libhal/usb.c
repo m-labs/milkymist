@@ -19,6 +19,7 @@
 #include <hw/sysctl.h>
 #include <hw/capabilities.h>
 #include <hw/interrupts.h>
+#include <uart.h>
 #include <irq.h>
 #include <stdio.h>
 
@@ -79,8 +80,15 @@ void usb_init()
 
 static void flush_debug_buffer()
 {
+	char debug_buffer_fmt[266];
+	int i;
+	
 	debug_buffer[debug_len] = 0;
-	printf("USB: HC: %s\n", debug_buffer);
+	/* send USB debug messages to UART only */
+	sprintf(debug_buffer_fmt, "USB: HC: %s\n", debug_buffer);
+	i = 0;
+	while(debug_buffer_fmt[i])
+		uart_write(debug_buffer_fmt[i++]);
 	debug_len = 0;
 }
 

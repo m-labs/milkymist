@@ -178,6 +178,7 @@ int renderer_start(char *patch_code)
 	if(!eval_schedule()) return 0;
 	apipe_start();
 	renderer_on = 1;
+	vga_set_console(0);
 #ifdef RENDERER_DEBUG
 	printf("RDR: started\n");
 #endif
@@ -202,6 +203,7 @@ int renderer_idone()
 	if(!eval_schedule()) return 0;
 	apipe_start();
 	renderer_on = 1;
+	vga_set_console(0);
 #ifdef RENDERER_DEBUG
 	printf("RDR: started\n");
 #endif

@@ -65,8 +65,11 @@ int main()
 	irq_enable(1);
 	uart_init();
 	vga_init();
+	vga_set_console(1);
 	banner();
 	brd_init();
+	usb_init();
+	ukb_init();
 	cpustats_init();
 	memstats_init();
 	time_init();
@@ -80,8 +83,6 @@ int main()
 	apipe_init();
 	rpipe_init();
 	osd_init();
-	usb_init();
-	ukb_init();
 	welcome();
 	shell_init();
 

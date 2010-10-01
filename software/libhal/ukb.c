@@ -82,7 +82,26 @@ static char get_base_key(unsigned char key)
 		case 0x5f: return '7';
 		case 0x60: return '8';
 		case 0x61: return '9';
+		case 0x54: return '/';
+		case 0x55: return '*';
+		case 0x56: return '-';
+		case 0x57: return '+';
+		case 0x1e: return '!';
+		case 0x1f: return '"';
+		case 0x21: return '$';
+		case 0x22: return '%';
+		case 0x23: return '&';
+		case 0x24: return '/';
+		case 0x25: return '(';
+		case 0x26: return ')';
+		case 0x27: return '=';
+		case 0x2d: return '?';
+		case 0x2e: return '\'';
+		case 0x38: return '-';
 		case 0x2a: return 0x08;
+		case 0x37:
+		case 0x63: return '.';
+		case 0x58:
 		case 0x28: return '\n';
 		case 0x29: return '\e';
 		default: return 0x00;
@@ -96,6 +115,8 @@ static char translate_key(unsigned char modifiers, unsigned char key)
 	if((modifiers & 0x02)||(modifiers & 0x20)) {
 		if((r >= 'a') && (r <= 'z'))
 			r -= 'a' - 'A';
+		if(r == '-')
+			r = '_';
 	}
 	return r;
 }

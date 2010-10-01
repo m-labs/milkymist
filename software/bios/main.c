@@ -591,10 +591,8 @@ int main(int i, char **c)
 		printf("I: Booting in rescue mode\n");
 	
 	splash_display();
-
 	boot_sequence();
-
-	splash_showerr();
+	vga_set_console(1);
 	while(1) {
 		putsnonl("\e[1mBIOS>\e[0m ");
 		readstr(buffer, 64);

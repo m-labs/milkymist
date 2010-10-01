@@ -43,6 +43,8 @@ struct port_status {
 	int keyboard;
 	int retry_count;
 	unsigned long int unreset_frame;
+	
+	char previous_keys[4];
 };
 
 static struct port_status port_a;
@@ -288,7 +290,7 @@ retry:
 	return transferred;
 }
 
-static void poll(int keyboard)
+static void poll(struct port_status *p)
 {
 	unsigned char usb_buffer[11];
 	unsigned int len;
@@ -303,29 +305,35 @@ static void poll(int keyboard)
 	usb_buffer[0] = 0xd2;
 	usb_tx(usb_buffer, 1);
 	/* send to host */
-	if(keyboard) {
-		m = COMLOC_KEVT_PRODUCE;
-		if((len >= 6) && (usb_buffer[3] != 0x00)) {
-			COMLOC_KEVT(2*m+0) = usb_buffer[1];
-			COMLOC_KEVT(2*m+1) = usb_buffer[3];
-			m = (m + 1) & 0x07;
+	if(p->keyboard) {
+		if(len >= 9) {
+			m = COMLOC_KEVT_PRODUCE;
+			if((usb_buffer[3] != 0x00) && (usb_buffer[3] != p->previous_keys[0])) {
+				COMLOC_KEVT(2*m+0) = usb_buffer[1];
+				COMLOC_KEVT(2*m+1) = usb_buffer[3];
+				m = (m + 1) & 0x07;
+			}
+			if((usb_buffer[4] != 0x00) && (usb_buffer[4] != p->previous_keys[1])) {
+				COMLOC_KEVT(2*m+0) = usb_buffer[1];
+				COMLOC_KEVT(2*m+1) = usb_buffer[4];
+				m = (m + 1) & 0x07;
+			}
+			if((usb_buffer[5] != 0x00) && (usb_buffer[5] != p->previous_keys[2])) {
+				COMLOC_KEVT(2*m+0) = usb_buffer[1];
+				COMLOC_KEVT(2*m+1) = usb_buffer[5];
+				m = (m + 1) & 0x07;
+			}
+			if((usb_buffer[6] != 0x00) && (usb_buffer[6] != p->previous_keys[3])) {
+				COMLOC_KEVT(2*m+0) = usb_buffer[1];
+				COMLOC_KEVT(2*m+1) = usb_buffer[6];
+				m = (m + 1) & 0x07;
+			}
+			p->previous_keys[0] = usb_buffer[3];
+			p->previous_keys[1] = usb_buffer[4];
+			p->previous_keys[2] = usb_buffer[5];
+			p->previous_keys[3] = usb_buffer[6];
+			COMLOC_KEVT_PRODUCE = m;
 		}
-		if((len >= 7) && (usb_buffer[4] != 0x00)) {
-			COMLOC_KEVT(2*m+0) = usb_buffer[1];
-			COMLOC_KEVT(2*m+1) = usb_buffer[4];
-			m = (m + 1) & 0x07;
-		}
-		if((len >= 8) && (usb_buffer[5] != 0x00)) {
-			COMLOC_KEVT(2*m+0) = usb_buffer[1];
-			COMLOC_KEVT(2*m+1) = usb_buffer[5];
-			m = (m + 1) & 0x07;
-		}
-		if((len >= 9) && (usb_buffer[6] != 0x00)) {
-			COMLOC_KEVT(2*m+0) = usb_buffer[1];
-			COMLOC_KEVT(2*m+1) = usb_buffer[6];
-			m = (m + 1) & 0x07;
-		}
-		COMLOC_KEVT_PRODUCE = m;
 	} else {
 		if(len >= 7) {
 			m = COMLOC_MEVT_PRODUCE;
@@ -433,6 +441,10 @@ static void port_service(struct port_status *p, char name)
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x02);
 				p->state = PORT_STATE_BUS_RESET;
 				p->unreset_frame = (frame_nr + 350) & 0x7ff;
+				p->previous_keys[0] = 0;
+				p->previous_keys[1] = 0;
+				p->previous_keys[2] = 0;
+				p->previous_keys[3] = 0;
 			}
 			break;
 		}
@@ -553,7 +565,7 @@ static void port_service(struct port_status *p, char name)
 			break;
 		}
 		case PORT_STATE_RUNNING:
-			poll(p->keyboard);
+			poll(p);
 			break;
 		case PORT_STATE_UNSUPPORTED:
 			break;

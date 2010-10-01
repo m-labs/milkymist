@@ -36,22 +36,3 @@ void splash_display()
 
 	printf("OK\n");
 }
-
-void splash_showerr()
-{
-	int x, y;
-	unsigned short color = 0xF800;
-
-	for(y=0;y<5;y++)
-		for(x=0;x<vga_hres;x++)
-			vga_frontbuffer[vga_hres*y+x] = color;
-	for(;y<(vga_vres-5);y++) {
-		for(x=0;x<5;x++)
-			vga_frontbuffer[vga_hres*y+x] = color;
-		for(x=vga_hres-5;x<vga_hres;x++)
-			vga_frontbuffer[vga_hres*y+x] = color;
-	}
-	for(;y<vga_vres;y++)
-		for(x=0;x<vga_hres;x++)
-			vga_frontbuffer[vga_hres*y+x] = color;
-}

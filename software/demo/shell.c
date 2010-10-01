@@ -241,6 +241,7 @@ static void help()
 {
 	puts("Milkymist demo firmware\n");
 	puts("Available commands:");
+	puts("cons       - switch console mode");
 	puts("ls         - list files on the memory card");
 	puts("render     - start rendering a patch");
 	puts("irender    - input patch equations interactively");
@@ -834,7 +835,8 @@ static void do_command(char *c)
 		param2 = get_token(&c);
 		param3 = get_token(&c);
 
-		if(strcmp(command, "mr") == 0) mr(param1, param2);
+		if(strcmp(command, "cons") == 0) vga_set_console(!vga_get_console());
+		else if(strcmp(command, "mr") == 0) mr(param1, param2);
 		else if(strcmp(command, "mw") == 0) mw(param1, param2, param3);
 		else if(strcmp(command, "ls") == 0) ls(param1);
 		else if(strcmp(command, "flush") == 0) flush_bridge_cache();
