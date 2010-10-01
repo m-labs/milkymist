@@ -20,6 +20,44 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+static console_write_hook write_hook;
+static console_read_hook read_hook;
+static console_read_nonblock_hook read_nonblock_hook;
+
+void console_set_write_hook(console_write_hook h)
+{
+	write_hook = h;
+}
+
+void console_set_read_hook(console_read_hook r, console_read_nonblock_hook rn)
+{
+	read_hook = r;
+	read_nonblock_hook = rn;
+}
+
+void writechar(char c)
+{
+	uart_write(c);
+	if(write_hook != NULL)
+		write_hook(c);
+}
+
+char readchar()
+{
+	while(1) {
+		if(uart_read_nonblock())
+			return uart_read();
+		if((read_nonblock_hook != NULL) && read_nonblock_hook())
+			return read_hook();
+	}
+}
+
+int readchar_nonblock()
+{
+	return (uart_read_nonblock()
+		|| ((read_nonblock_hook != NULL) && read_nonblock_hook()));
+}
+
 int puts(const char *s)
 {
 	while(*s) {

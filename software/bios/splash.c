@@ -16,14 +16,10 @@
  */
 
 #include <stdio.h>
-#include <hw/vga.h>
+#include <hal/vga.h>
 #include <hw/flash.h>
 
 #include "splash.h"
-
-static int splash_hres;
-static int splash_vres;
-static unsigned short splash_fb[640*480] __attribute__((aligned(32)));;
 
 extern int rescue;
 
@@ -34,14 +30,9 @@ void splash_display()
 	
 	printf("I: Displaying splash screen...");
 
-	splash_hres = 640;
-	splash_vres = 480;
-
-	for(i=0;i<splash_hres*splash_vres;i++)
-		splash_fb[i] = splash_src[i];
-
-	CSR_VGA_BASEADDRESS = (unsigned int)splash_fb;
-	CSR_VGA_RESET = 0;
+	for(i=0;i<vga_hres*vga_vres;i++)
+		vga_backbuffer[i] = splash_src[i];
+	vga_swap_buffers();
 
 	printf("OK\n");
 }
@@ -51,17 +42,16 @@ void splash_showerr()
 	int x, y;
 	unsigned short color = 0xF800;
 
-	if(splash_hres == 0) return;
 	for(y=0;y<5;y++)
-		for(x=0;x<splash_hres;x++)
-			splash_fb[splash_hres*y+x] = color;
-	for(;y<(splash_vres-5);y++) {
+		for(x=0;x<vga_hres;x++)
+			vga_frontbuffer[vga_hres*y+x] = color;
+	for(;y<(vga_vres-5);y++) {
 		for(x=0;x<5;x++)
-			splash_fb[splash_hres*y+x] = color;
-		for(x=splash_hres-5;x<splash_hres;x++)
-			splash_fb[splash_hres*y+x] = color;
+			vga_frontbuffer[vga_hres*y+x] = color;
+		for(x=vga_hres-5;x<vga_hres;x++)
+			vga_frontbuffer[vga_hres*y+x] = color;
 	}
-	for(;y<splash_vres;y++)
-		for(x=0;x<splash_hres;x++)
-			splash_fb[splash_hres*y+x] = color;
+	for(;y<vga_vres;y++)
+		for(x=0;x<vga_hres;x++)
+			vga_frontbuffer[vga_hres*y+x] = color;
 }

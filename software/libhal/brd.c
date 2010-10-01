@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <board.h>
+#include <hw/sysctl.h>
 
 #include <hal/brd.h>
 
@@ -25,10 +26,16 @@ const struct board_desc *brd_desc;
 
 void brd_init()
 {
+	int rev;
+	
 	brd_desc = get_board_desc();
+
 	if(brd_desc == NULL) {
-		printf("BRD: Fatal error, unknown board\n");
+		printf("BRD: Running on unknown board (ID=0x%08x), startup aborted.\n", CSR_SYSTEM_ID);
 		while(1);
 	}
-	printf("BRD: detected %s\n", brd_desc->name);
+	rev = get_pcb_revision();
+	printf("BRD: Running on %s (PCB revision %d)\n", brd_desc->name, rev);
+	if(rev > 1)
+		printf("BRD: Unsupported PCB revision, please upgrade!\n");
 }

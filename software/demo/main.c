@@ -20,7 +20,6 @@
 #include <uart.h>
 #include <system.h>
 #include <irq.h>
-#include <board.h>
 #include <version.h>
 
 #include <hal/brd.h>
@@ -44,11 +43,20 @@
 
 static void banner()
 {
-	putsnonl("\n\n\e[1m     |\\  /|'||      |\\  /|'   |\n"
+	printf("\n\n\e[1m     |\\  /|'||      |\\  /|'   |\n"
 			  "     | \\/ ||||_/\\  /| \\/ ||(~~|~\n"
 			  "     |    |||| \\ \\/ |    ||_) |\n"
 			  "                _/          v"VERSION"\n"
 			  "\e[0m           SoC demo program\n\n\n");
+}
+
+static void welcome()
+{
+	printf("\e[1mIMPORTANT: This program is proof of concept only,\n"
+	"IMPORTANT: and is not intended as a demonstration of the\n"
+	"IMPORTANT: usability of the final software.\e[0m\n"
+	"Questions/feedback: mail devel AT lists.milkymist.org\n"
+	"Have fun!\n");
 }
 
 int main()
@@ -56,13 +64,13 @@ int main()
 	irq_setmask(0);
 	irq_enable(1);
 	uart_async_init();
+	vga_init();
 	banner();
 	brd_init();
 	cpustats_init();
 	memstats_init();
 	time_init();
 	mem_init();
-	vga_init();
 	snd_init();
 	vin_init();
 	dmx_init();
@@ -74,6 +82,7 @@ int main()
 	osd_init();
 	usb_init();
 	shell_init();
+	welcome();
 
 	while(1) {
 		if(readchar_nonblock())

@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,17 @@
 
 #ifndef __CONSOLE_H
 #define __CONSOLE_H
+
+typedef void (*console_write_hook)(char);
+typedef char (*console_read_hook)();
+typedef int (*console_read_nonblock_hook)();
+
+void console_set_write_hook(console_write_hook h);
+void console_set_read_hook(console_read_hook r, console_read_nonblock_hook rn);
+
+void writechar(char c);
+char readchar();
+int readchar_nonblock();
 
 int puts(const char *s);
 void putsnonl(const char *s);

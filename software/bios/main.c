@@ -26,19 +26,19 @@
 #include <board.h>
 #include <version.h>
 #include <net/mdio.h>
-#include <hw/vga.h>
 #include <hw/fmlbrg.h>
 #include <hw/sysctl.h>
 #include <hw/capabilities.h>
 #include <hw/gpio.h>
-#include <hw/uart.h>
-#include <hw/hpdmc.h>
 #include <hw/flash.h>
+
+#include <hal/vga.h>
+#include <hal/brd.h>
+#include <hal/usb.h>
+#include <hal/ukb.h>
 
 #include "boot.h"
 #include "splash.h"
-
-const struct board_desc *brd_desc;
 
 enum {
 	CSR_IE = 1, CSR_IM, CSR_IP, CSR_ICC, CSR_DCC, CSR_CC, CSR_CFG, CSR_EBA,
@@ -210,26 +210,26 @@ static void crc(char *startaddr, char *len)
 /* processor registers */
 static int parse_csr(const char *csr)
 {
-	if (!strcmp(csr, "ie"))   return CSR_IE;
-	if (!strcmp(csr, "im"))   return CSR_IM;
-	if (!strcmp(csr, "ip"))   return CSR_IP;
-	if (!strcmp(csr, "icc"))  return CSR_ICC;
-	if (!strcmp(csr, "dcc"))  return CSR_DCC;
-	if (!strcmp(csr, "cc"))   return CSR_CC;
-	if (!strcmp(csr, "cfg"))  return CSR_CFG;
-	if (!strcmp(csr, "eba"))  return CSR_EBA;
-	if (!strcmp(csr, "dc"))   return CSR_DC;
-	if (!strcmp(csr, "deba")) return CSR_DEBA;
-	if (!strcmp(csr, "jtx"))  return CSR_JTX;
-	if (!strcmp(csr, "jrx"))  return CSR_JRX;
-	if (!strcmp(csr, "bp0"))  return CSR_BP0;
-	if (!strcmp(csr, "bp1"))  return CSR_BP1;
-	if (!strcmp(csr, "bp2"))  return CSR_BP2;
-	if (!strcmp(csr, "bp3"))  return CSR_BP3;
-	if (!strcmp(csr, "wp0"))  return CSR_WP0;
-	if (!strcmp(csr, "wp1"))  return CSR_WP1;
-	if (!strcmp(csr, "wp2"))  return CSR_WP2;
-	if (!strcmp(csr, "wp3"))  return CSR_WP3;
+	if(!strcmp(csr, "ie"))   return CSR_IE;
+	if(!strcmp(csr, "im"))   return CSR_IM;
+	if(!strcmp(csr, "ip"))   return CSR_IP;
+	if(!strcmp(csr, "icc"))  return CSR_ICC;
+	if(!strcmp(csr, "dcc"))  return CSR_DCC;
+	if(!strcmp(csr, "cc"))   return CSR_CC;
+	if(!strcmp(csr, "cfg"))  return CSR_CFG;
+	if(!strcmp(csr, "eba"))  return CSR_EBA;
+	if(!strcmp(csr, "dc"))   return CSR_DC;
+	if(!strcmp(csr, "deba")) return CSR_DEBA;
+	if(!strcmp(csr, "jtx"))  return CSR_JTX;
+	if(!strcmp(csr, "jrx"))  return CSR_JRX;
+	if(!strcmp(csr, "bp0"))  return CSR_BP0;
+	if(!strcmp(csr, "bp1"))  return CSR_BP1;
+	if(!strcmp(csr, "bp2"))  return CSR_BP2;
+	if(!strcmp(csr, "bp3"))  return CSR_BP3;
+	if(!strcmp(csr, "wp0"))  return CSR_WP0;
+	if(!strcmp(csr, "wp1"))  return CSR_WP1;
+	if(!strcmp(csr, "wp2"))  return CSR_WP2;
+	if(!strcmp(csr, "wp3"))  return CSR_WP3;
 
 	return 0;
 }
@@ -250,8 +250,7 @@ static void rcsr(char *csr)
 		return;
 	}
 
-	switch (csr2)
-	{
+	switch(csr2) {
 		case CSR_IE:   asm volatile ("rcsr %0,ie":"=r"(value)); break;
 		case CSR_IM:   asm volatile ("rcsr %0,im":"=r"(value)); break;
 		case CSR_IP:   asm volatile ("rcsr %0,ip":"=r"(value)); break;
@@ -289,8 +288,7 @@ static void wcsr(char *csr, char *value)
 		return;
 	}
 
-	switch (csr2)
-	{
+	switch(csr2) {
 		case CSR_IE:   asm volatile ("wcsr ie,%0"::"r"(value2)); break;
 		case CSR_IM:   asm volatile ("wcsr im,%0"::"r"(value2)); break;
 		case CSR_ICC:  asm volatile ("wcsr icc,%0"::"r"(value2)); break;
@@ -539,20 +537,6 @@ static void crcbios()
 	}
 }
 
-static void display_board()
-{
-	int rev;
-
-	if(brd_desc == NULL) {
-		printf("E: Running on unknown board (ID=0x%08x), startup aborted.\n", CSR_SYSTEM_ID);
-		while(1);
-	}
-	rev = get_pcb_revision();
-	printf("I: Running on %s (PCB revision %d)\n", brd_desc->name, rev);
-	if(rev > 1)
-		printf("W: Unsupported PCB revision, please upgrade the BIOS\n");
-}
-
 #define display_capability(cap, val) if(val) printf("I: "cap": Yes\n"); else printf("I: "cap": No\n")
 
 static void display_capabilities()
@@ -603,18 +587,23 @@ int main(int i, char **c)
 {
 	char buffer[64];
 
-	brd_desc = get_board_desc();
-
-	/* Display a banner as soon as possible to show that the system is alive */
 	CSR_GPIO_OUT = GPIO_LED1;
+	
+	irq_setmask(0);
+	irq_enable(1);
+	uart_init();
+	vga_init();
 	putsnonl(banner);
+	crcbios();
+	brd_init();
+	display_capabilities();
+	usb_init();
+	ukb_init();
+
 	rescue = !((unsigned int)main > FLASH_OFFSET_REGULAR_BIOS);
 	if(rescue)
 		printf("I: Booting in rescue mode\n");
 	
-	crcbios();
-	display_board();
-	display_capabilities();
 	splash_display();
 
 	boot_sequence();

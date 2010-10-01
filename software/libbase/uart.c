@@ -20,31 +20,104 @@
 #include <hw/uart.h>
 #include <hw/interrupts.h>
 
-void writechar(char c)
+/*
+ * Buffer sizes must be a power of 2 so that modulos can be computed
+ * with logical AND.
+ * RX functions are written in such a way that they do not require locking.
+ * TX functions already implement locking.
+ */
+
+#define UART_RINGBUFFER_SIZE_RX 4096
+#define UART_RINGBUFFER_MASK_RX (UART_RINGBUFFER_SIZE_RX-1)
+
+static char rx_buf[UART_RINGBUFFER_SIZE_RX];
+static volatile unsigned int rx_produce;
+static volatile unsigned int rx_consume;
+
+void uart_isr_rx()
 {
-	CSR_UART_RXTX = c;
-	while(!(irq_pending() & IRQ_UARTTX));
-	irq_ack(IRQ_UARTTX);
+	irq_ack(IRQ_UARTRX);
+	rx_buf[rx_produce] = CSR_UART_RXTX;
+	rx_produce = (rx_produce + 1) & UART_RINGBUFFER_MASK_RX;
 }
 
-char readchar()
+char uart_read()
 {
 	char c;
-
-	while(!(irq_pending() & IRQ_UARTRX));
-	irq_ack(IRQ_UARTRX);
-	c = CSR_UART_RXTX;
+	
+	while(rx_consume == rx_produce);
+	c = rx_buf[rx_consume];
+	rx_consume = (rx_consume + 1) & UART_RINGBUFFER_MASK_RX;
 	return c;
 }
 
-int readchar_nonblock()
+int uart_read_nonblock()
 {
-	if(irq_pending() & IRQ_UARTRX)
-		return 1;
-	else
-		return 0;
+	return (rx_consume != rx_produce);
+}
+
+#define UART_RINGBUFFER_SIZE_TX 131072
+#define UART_RINGBUFFER_MASK_TX (UART_RINGBUFFER_SIZE_TX-1)
+
+static char tx_buf[UART_RINGBUFFER_SIZE_TX];
+static unsigned int tx_produce;
+static unsigned int tx_consume;
+static volatile int tx_cts;
+
+static int force_sync;
+
+void uart_isr_tx()
+{
+	irq_ack(IRQ_UARTTX);
+	if(tx_produce != tx_consume) {
+		CSR_UART_RXTX = tx_buf[tx_consume];
+		tx_consume = (tx_consume + 1) & UART_RINGBUFFER_MASK_TX;
+	} else
+		tx_cts = 1;
+}
+
+void uart_write(char c)
+{
+	unsigned int oldmask = 0;
+	
+	/* Synchronization required because of CTS */
+	oldmask = irq_getmask();
+	irq_setmask(oldmask & (~IRQ_UARTTX));
+	if(force_sync) {
+		CSR_UART_RXTX = c;
+		while(!(irq_pending() & IRQ_UARTTX));
+		irq_ack(IRQ_UARTTX);
+	} else {
+		if(tx_cts) {
+			tx_cts = 0;
+			CSR_UART_RXTX = c;
+		} else {
+			tx_buf[tx_produce] = c;
+			tx_produce = (tx_produce + 1) & UART_RINGBUFFER_MASK_TX;
+		}
+	}
+	irq_setmask(oldmask);
+}
+
+void uart_init()
+{
+	unsigned int mask;
+	
+	rx_produce = 0;
+	rx_consume = 0;
+	tx_produce = 0;
+	tx_consume = 0;
+	tx_cts = 1;
+
+	irq_ack(IRQ_UARTRX|IRQ_UARTTX);
+
+	mask = irq_getmask();
+	mask |= IRQ_UARTRX|IRQ_UARTTX;
+	irq_setmask(mask);
 }
 
 void uart_force_sync(int f)
 {
+	if(f) while(!tx_cts);
+	force_sync = f;
 }

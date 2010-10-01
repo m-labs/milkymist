@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=crt0.o main.o boot.o splash.o
+OBJECTS=crt0.o isr.o main.o boot.o splash.o
 SEGMENTS=-j .text -j .data -j .rodata
 
 all: bios.bin bios-rescue.bin
@@ -13,11 +13,11 @@ all: bios.bin bios-rescue.bin
 	$(MMDIR)/tools/crc32 $@ write
 
 bios.elf: linker.ld $(OBJECTS)
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lhpdmc -lbase-light -lnet
+	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group
 	chmod -x $@
 
 bios-rescue.elf: linker-rescue.ld $(OBJECTS)
-	$(LD) $(LDFLAGS) -T linker-rescue.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libnet -lhpdmc -lbase-light -lnet
+	$(LD) $(LDFLAGS) -T linker-rescue.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group
 	chmod -x $@
 
 .PHONY: clean depend

@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,11 @@
 #include <irq.h>
 #include <uart.h>
 
-#include <hal/time.h>
-#include <hal/snd.h>
-#include <hal/pfpu.h>
-#include <hal/tmu.h>
 #include <hal/usb.h>
-
-#include "cpustats.h"
 
 void isr()
 {
 	unsigned int irqs;
-
-	cpustats_enter();
 
 	irqs = irq_pending() & irq_getmask();
 
@@ -40,26 +32,6 @@ void isr()
 	if(irqs & IRQ_UARTTX)
 		uart_isr_tx();
 
-	if(irqs & IRQ_TIMER0)
-		time_isr();
-
-	if(irqs & IRQ_AC97CRREQUEST)
-		snd_isr_crrequest();
-	if(irqs & IRQ_AC97CRREPLY)
-		snd_isr_crreply();
-	if(irqs & IRQ_AC97DMAR)
-		snd_isr_dmar();
-	if(irqs & IRQ_AC97DMAW)
-		snd_isr_dmaw();
-
-	if(irqs & IRQ_PFPU)
-		pfpu_isr();
-
-	if(irqs & IRQ_TMU)
-		tmu_isr();
-	
 	if(irqs & IRQ_USB)
 		usb_isr();
-
-	cpustats_leave();
 }

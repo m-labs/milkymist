@@ -25,6 +25,7 @@
 #include <blockdev.h>
 #include <fatfs.h>
 #include <string.h>
+#include <irq.h>
 
 #include <net/microudp.h>
 #include <net/tftp.h>
@@ -41,7 +42,7 @@ extern const struct board_desc *brd_desc;
  * put the values we want into the good registers because it has to respect
  * the LM32 calling conventions.
  */
-static void __attribute__((noinline)) __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr)
+static void __attribute__((noinline)) __attribute__((noreturn)) boot_helper(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr)
 {
 	asm volatile( /* Invalidate instruction cache */
 		"wcsr ICC, r0\n"
@@ -51,6 +52,14 @@ static void __attribute__((noinline)) __attribute__((noreturn)) boot(unsigned in
 		"nop\n"
 		"call r4\n"
 	);
+}
+
+static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr)
+{
+	uart_force_sync(1);
+	irq_setmask(0);
+	irq_enable(0);
+	boot_helper(r1, r2, r3, addr);
 }
 
 /* Note that we do not use the hw timer so that this function works
