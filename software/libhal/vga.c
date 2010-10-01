@@ -16,6 +16,7 @@
  */
 
 #include <stdio.h>
+#include <console.h>
 #include <hw/vga.h>
 
 #include <hal/vga.h>
@@ -41,6 +42,14 @@ unsigned short int *vga_lastbuffer;  /* < buffer displayed just before (or HW fi
 
 static int i2c_init();
 
+/* Text mode framebuffer */
+static unsigned short int framebuffer_text[1024*768] __attribute__((aligned(32)));
+static unsigned int cursor_pos;
+static unsigned int text_line_len;
+static int console_mode;
+
+static void write_hook(char c);
+
 void vga_init()
 {
 	vga_frontbuffer = framebufferA;
@@ -58,6 +67,7 @@ void vga_init()
 		printf("VGA: DDC I2C bus initialization problem\n");
 
 	vga_set_mode(VGA_MODE_640_480);
+	console_set_write_hook(write_hook);
 }
 
 void vga_disable()
@@ -69,20 +79,37 @@ void vga_swap_buffers()
 {
 	unsigned short int *p;
 
-	/*
-	 * Make sure last buffer swap has been executed.
-	 * Beware, DMA address registers of vgafb are incomplete
-	 * (only LSBs are present) so don't compare them directly
-	 * with CPU pointers.
-	 */
-	while(CSR_VGA_BASEADDRESS_ACT != CSR_VGA_BASEADDRESS);
+	if(!console_mode) {
+		/*
+		 * Make sure last buffer swap has been executed.
+		 * Beware, DMA address registers of vgafb are incomplete
+		 * (only LSBs are present) so don't compare them directly
+		 * with CPU pointers.
+		 */
+		while(CSR_VGA_BASEADDRESS_ACT != CSR_VGA_BASEADDRESS);
+	}
 
 	p = vga_frontbuffer;
 	vga_frontbuffer = vga_backbuffer;
 	vga_backbuffer = vga_lastbuffer;
 	vga_lastbuffer = p;
 	
-	CSR_VGA_BASEADDRESS = (unsigned int)vga_frontbuffer;
+	if(!console_mode)
+		CSR_VGA_BASEADDRESS = (unsigned int)vga_frontbuffer;
+}
+
+void vga_set_console(int console)
+{
+	console_mode = console;
+	if(console)
+		CSR_VGA_BASEADDRESS = (unsigned int)framebuffer_text;
+	else
+		CSR_VGA_BASEADDRESS = (unsigned int)vga_frontbuffer;
+}
+
+int vga_get_console()
+{
+	return console_mode;
 }
 
 /* DDC */
@@ -262,7 +289,54 @@ void vga_set_mode(int mode)
 			CSR_VGA_VSCAN = 806;
 			break;
 	}
+	cursor_pos = 0;
+	text_line_len = vga_hres/8;
 	CSR_VGA_BURST_COUNT = vga_hres*vga_vres/16;
 	printf("VGA: mode set to %dx%d\n", vga_hres, vga_vres);
 	CSR_VGA_RESET = 0;
+}
+
+extern const unsigned char fontdata_8x16[];
+#define FONT_HEIGHT 16
+
+static void bitblit(unsigned short int *framebuffer, short int fg, short int bg, int x, int y, unsigned char *origin)
+{
+	int dx, dy;
+	unsigned char line;
+	int fbi;
+	
+	for(dy=0;dy<FONT_HEIGHT;dy++) {
+		line = origin[dy];
+		for(dx=0;dx<8;dx++) {
+			fbi = vga_hres*(y+dy)+x+dx;
+			if(line & (0x80 >> dx))
+				framebuffer[fbi] = fg;
+			else
+				framebuffer[fbi] = bg;
+		}
+	}
+}
+
+static void scroll(unsigned short int *framebuffer)
+{
+	memmove(framebuffer, framebuffer+vga_hres*FONT_HEIGHT, 2*vga_hres*(vga_vres-FONT_HEIGHT));
+	memset(framebuffer+vga_hres*(vga_vres-FONT_HEIGHT), 0, 2*vga_hres*FONT_HEIGHT);
+	cursor_pos = 0;
+}
+
+#define MAKERGB565N(r, g, b) ((((r) & 0xf8) << 8) | (((g) & 0xfc) << 3) | (((b) & 0xf8) >> 3))
+
+static void write_hook(char c)
+{
+	unsigned char c2 = (unsigned char)c;
+	unsigned int c3 = c2;
+	
+	if(c == '\n')
+		scroll(framebuffer_text);
+	else {
+		bitblit(framebuffer_text, MAKERGB565N(192, 192, 192), MAKERGB565N(0, 0, 0), cursor_pos*8, vga_vres-FONT_HEIGHT, fontdata_8x16+c3*FONT_HEIGHT);
+		cursor_pos++;
+		if(cursor_pos >= text_line_len)
+			scroll(framebuffer_text);
+	}
 }

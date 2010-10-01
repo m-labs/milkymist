@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=brd.o dmx.o mem.o pfpu.o snd.o time.o tmu.o ukb.o usb.o vga.o vin.o
+OBJECTS=brd.o dmx.o font8x16.o mem.o pfpu.o snd.o time.o tmu.o ukb.o usb.o vga.o vin.o
 
 all: libhal.a
 

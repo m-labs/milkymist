@@ -30,6 +30,8 @@
 #include <net/microudp.h>
 #include <net/tftp.h>
 
+#include <hal/vga.h>
+
 #include <hw/hpdmc.h>
 #include <hw/flash.h>
 
@@ -56,6 +58,7 @@ static void __attribute__((noinline)) __attribute__((noreturn)) boot_helper(unsi
 
 static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr)
 {
+	vga_disable();
 	uart_force_sync(1);
 	irq_setmask(0);
 	irq_enable(0);

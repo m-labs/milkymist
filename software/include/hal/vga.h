@@ -33,6 +33,8 @@ enum {
 void vga_init();
 void vga_disable();
 void vga_swap_buffers();
+void vga_set_console(int console);
+int vga_get_console();
 int vga_read_edid(char *buffer);
 void vga_set_mode(int mode);
 

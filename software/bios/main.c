@@ -24,6 +24,7 @@
 #include <crc.h>
 #include <system.h>
 #include <board.h>
+#include <irq.h>
 #include <version.h>
 #include <net/mdio.h>
 #include <hw/fmlbrg.h>
@@ -386,31 +387,6 @@ static void mdiow(char *reg, char *value)
 	mdio_write(brd_desc->ethernet_phyadr, reg2, value2);
 }
 
-static void xmt()
-{
-	unsigned int testbuf[64000];
-	int i, j;
-	unsigned int r;
-	unsigned int got;
-
-	r = 0;
-	for(i=0;i<64000;i++) {
-		r = r*22695477 + 1;
-		testbuf[i] = r;
-	}
-
-	for(j=0;j<2000;j++) {
-		flush_bridge_cache();
-		r = 0;
-		for(i=0;i<64000;i++) {
-			r = r*22695477 + 1;
-			got = testbuf[i];
-			if(r != got)
-				printf("%08x / %08x [%08x]\n", got, r, got ^ r);
-		}
-	}
-}
-
 /* Init + command line */
 
 static void help()
@@ -419,6 +395,7 @@ static void help()
 	puts("It is used for system development and maintainance, and not");
 	puts("for regular operation.\n");
 	puts("Available commands:");
+	puts("cons       - switch console mode");
 	puts("flush      - flush FML bridge cache");
 	puts("mr         - read address space");
 	puts("mw         - write address space");
@@ -458,8 +435,8 @@ static void do_command(char *c)
 
 	token = get_token(&c);
 
-	if(strcmp(token, "flush") == 0) flush_bridge_cache();
-
+	if(strcmp(token, "cons") == 0) vga_set_console(!vga_get_console());
+	else if(strcmp(token, "flush") == 0) flush_bridge_cache();
 	else if(strcmp(token, "mr") == 0) mr(get_token(&c), get_token(&c));
 	else if(strcmp(token, "mw") == 0) mw(get_token(&c), get_token(&c), get_token(&c));
 	else if(strcmp(token, "mc") == 0) mc(get_token(&c), get_token(&c), get_token(&c));
@@ -479,8 +456,6 @@ static void do_command(char *c)
 	else if(strcmp(token, "reboot") == 0) reboot();
 	
 	else if(strcmp(token, "help") == 0) help();
-
-	else if(strcmp(token, "xmt") == 0) xmt();
 
 	else if(strcmp(token, "rcsr") == 0) rcsr(get_token(&c));
 	else if(strcmp(token, "wcsr") == 0) wcsr(get_token(&c), get_token(&c));
@@ -571,6 +546,7 @@ int main(int i, char **c)
 	irq_enable(1);
 	uart_init();
 	vga_init();
+	vga_set_console(1);
 	putsnonl(banner);
 	crcbios();
 	brd_init();
