@@ -732,13 +732,13 @@ static void keyboard_cb(unsigned char modifiers, unsigned char key)
 		printf("%x\n", key);
 }
 
-static void mouse()
+static void input()
 {
 	mouse_x = 0;
 	mouse_y = 0;
 	usb_set_mouse_cb(mouse_cb);
 	usb_set_keyboard_cb(keyboard_cb);
-	while(!readchar_nonblock());
+	while(!uart_read_nonblock());
 	usb_set_mouse_cb(NULL);
 	usb_set_keyboard_cb(NULL);
 }
@@ -865,7 +865,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "midirx") == 0) midirx();
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
 		else if(strcmp(command, "readblock") == 0) readblock(param1);
-		else if(strcmp(command, "mouse") == 0) mouse();
+		else if(strcmp(command, "input") == 0) input();
 #ifdef WITH_MEMTEST
 		else if(strcmp(command, "memtest") == 0) memtest();
 		else if(strcmp(command, "lmemtest") == 0) lmemtest();
