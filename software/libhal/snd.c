@@ -73,12 +73,9 @@ void snd_init()
 	snd_ac97_write(0x18, 0x0000); /* PCM out volume */
 	snd_ac97_write(0x1c, 0x0f0f); /* record gain */
 
-#ifdef USE_MIC
-	snd_ac97_write(0x0e, 0x0000); /* mic volume */
-#else
-	snd_ac97_write(0x10, 0x0000); /* line in volume */
-	snd_ac97_write(0x1a, 0x0404); /* record select */
-#endif
+	snd_ac97_write(0x0e, 0x0000); /* mic volume: max */
+	snd_ac97_write(0x10, 0x0000); /* line in volume: max */
+	snd_ac97_write(0x1a, 0x0505); /* record select: stero mix */
 
 	snd_play_empty();
 	snd_record_empty();
