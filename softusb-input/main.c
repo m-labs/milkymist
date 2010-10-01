@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "sie.h"
 #include "timer.h"
+#include "host.h"
 #include "crc.h"
 
 enum {
@@ -298,21 +299,45 @@ static void poll(int keyboard)
 	usb_tx(usb_buffer, 3);
 	/* DATAx */
 	len = usb_rx(usb_buffer, 11);
-	if(len < 7) return;
 	/* ACK */
 	usb_buffer[0] = 0xd2;
 	usb_tx(usb_buffer, 1);
 	/* send to host */
 	if(keyboard) {
-		dump_hex(&usb_buffer[1], len-3);
+		m = COMLOC_KEVT_PRODUCE;
+		if((len >= 6) && (usb_buffer[3] != 0x00)) {
+			COMLOC_KEVT(2*m+0) = usb_buffer[1];
+			COMLOC_KEVT(2*m+1) = usb_buffer[3];
+			m = (m + 1) & 0x07;
+		}
+		if((len >= 7) && (usb_buffer[4] != 0x00)) {
+			COMLOC_KEVT(2*m+0) = usb_buffer[1];
+			COMLOC_KEVT(2*m+1) = usb_buffer[4];
+			m = (m + 1) & 0x07;
+		}
+		if((len >= 8) && (usb_buffer[5] != 0x00)) {
+			COMLOC_KEVT(2*m+0) = usb_buffer[1];
+			COMLOC_KEVT(2*m+1) = usb_buffer[5];
+			m = (m + 1) & 0x07;
+		}
+		if((len >= 9) && (usb_buffer[6] != 0x00)) {
+			COMLOC_KEVT(2*m+0) = usb_buffer[1];
+			COMLOC_KEVT(2*m+1) = usb_buffer[6];
+			m = (m + 1) & 0x07;
+		}
+		COMLOC_KEVT_PRODUCE = m;
 	} else {
-		m = COMLOC_MEVT_PRODUCE;
-		COMLOC_MEVT(4*m+0) = usb_buffer[1];
-		COMLOC_MEVT(4*m+1) = usb_buffer[2];
-		COMLOC_MEVT(4*m+2) = usb_buffer[3];
-		COMLOC_MEVT(4*m+3) = usb_buffer[4];
-		COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
+		if(len >= 7) {
+			m = COMLOC_MEVT_PRODUCE;
+			COMLOC_MEVT(4*m+0) = usb_buffer[1];
+			COMLOC_MEVT(4*m+1) = usb_buffer[2];
+			COMLOC_MEVT(4*m+2) = usb_buffer[3];
+			COMLOC_MEVT(4*m+3) = usb_buffer[4];
+			COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
+		}
 	}
+	/* trigger host IRQ */
+	wio8(HOST_IRQ, 1);
 }
 
 static const char connect_fs[] PROGMEM = "Full speed device on port ";

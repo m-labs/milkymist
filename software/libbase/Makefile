@@ -34,7 +34,7 @@ blockdev.o: ../../software/include/base/string.h
 blockdev.o: ../../software/include/base/stdlib.h
 blockdev.o: ../../software/include/base/blockdev.h
 board.o: ../../software/include/hw/sysctl.h
-board.o: ../../software/include/hw/common.h
+board.o: ../../software/include/hw/common.h ../../software/include/hw/gpio.h
 board.o: ../../software/include/base/stdlib.h
 board.o: ../../software/include/base/board.h
 console.o: ../../software/include/base/uart.h

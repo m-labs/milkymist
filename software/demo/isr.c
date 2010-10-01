@@ -23,6 +23,7 @@
 #include <hal/snd.h>
 #include <hal/pfpu.h>
 #include <hal/tmu.h>
+#include <hal/usb.h>
 
 #include "cpustats.h"
 
@@ -56,6 +57,9 @@ void isr()
 
 	if(irqs & IRQ_TMU)
 		tmu_isr();
+	
+	if(irqs & IRQ_USB)
+		usb_isr();
 
 	cpustats_leave();
 }

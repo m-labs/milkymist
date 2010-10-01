@@ -63,7 +63,8 @@ tmu.o: ../../software/include/hal/tmu.h
 usb.o: ../../software/include/hw/softusb.h ../../software/include/hw/common.h
 usb.o: ../../software/include/hw/sysctl.h
 usb.o: ../../software/include/hw/capabilities.h
-usb.o: ../../software/include/base/stdio.h
+usb.o: ../../software/include/hw/interrupts.h
+usb.o: ../../software/include/base/irq.h ../../software/include/base/stdio.h
 usb.o: ../../software/include/base/stdlib.h ../../software/include/hal/usb.h
 usb.o: input-comloc.h softusb-input.h
 vga.o: ../../software/include/base/stdio.h

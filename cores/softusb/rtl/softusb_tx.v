@@ -66,6 +66,7 @@ always @(posedge usb_clk) begin
 	if(sr_rst) begin
 		sr_done <= 1'b1;
 		onecount <= 3'd0;
+		sr_out <= 1'b1;
 	end else if(gce) begin
 		if(sr_load) begin
 			sr_done <= 1'b0;

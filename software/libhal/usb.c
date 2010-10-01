@@ -18,6 +18,8 @@
 #include <hw/softusb.h>
 #include <hw/sysctl.h>
 #include <hw/capabilities.h>
+#include <hw/interrupts.h>
+#include <irq.h>
 #include <stdio.h>
 
 #include <hal/usb.h>
@@ -34,12 +36,16 @@ static int debug_consume;
 static mouse_event_cb mouse_cb;
 static int mouse_consume;
 
+static keyboard_event_cb keyboard_cb;
+static int keyboard_consume;
+
 void usb_init()
 {
 	int nwords;
 	int i;
 	unsigned int *usb_dmem = (unsigned int *)SOFTUSB_DMEM_BASE;
 	unsigned int *usb_pmem = (unsigned int *)SOFTUSB_PMEM_BASE;
+	unsigned int mask;
 
 	if(!(CSR_CAPABILITIES & CAP_USB)) {
 		printf("USB: not supported by SoC, giving up.\n");
@@ -63,6 +69,12 @@ void usb_init()
 	debug_consume = 0;
 	mouse_consume = 0;
 	mouse_cb = NULL;
+	keyboard_consume = 0;
+	keyboard_cb = NULL;
+	
+	mask = irq_getmask();
+	mask |= IRQ_USB;
+	irq_setmask(mask);
 }
 
 static void flush_debug_buffer()
@@ -72,12 +84,21 @@ static void flush_debug_buffer()
 	debug_len = 0;
 }
 
-void usb_service()
+void usb_set_mouse_cb(mouse_event_cb cb)
+{
+	mouse_cb = cb;
+}
+
+void usb_set_keyboard_cb(keyboard_event_cb cb)
+{
+	keyboard_cb = cb;
+}
+
+void usb_isr()
 {
 	char c;
 
-	if(!(CSR_CAPABILITIES & CAP_USB))
-		return;
+	irq_ack(IRQ_USB);
 
 	while(debug_consume != COMLOC_DEBUG_PRODUCE) {
 		c = COMLOC_DEBUG(debug_consume);
@@ -101,9 +122,13 @@ void usb_service()
 				COMLOC_MEVT(4*mouse_consume+3));
 		mouse_consume = (mouse_consume + 1) & 0x0f;
 	}
+	
+	while(keyboard_consume != COMLOC_KEVT_PRODUCE) {
+		if(keyboard_cb != NULL)
+			keyboard_cb(
+				COMLOC_KEVT(2*keyboard_consume+0),
+				COMLOC_KEVT(2*keyboard_consume+1));
+		keyboard_consume = (keyboard_consume + 1) & 0x07;
+	}
 }
 
-void usb_set_mouse_cb(mouse_event_cb cb)
-{
-	mouse_cb = cb;
-}

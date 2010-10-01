@@ -81,7 +81,6 @@ int main()
 		apipe_service();
 		rpipe_service();
 		osd_service();
-		usb_service();
 	}
 	
 	return 0;

@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist VJ SoC (USB firmware
+ * Copyright (C 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __HAL_USB_H
-#define __HAL_USB_H
+#ifndef __HOST_H
+#define __HOST_H
 
-typedef void (*mouse_event_cb)(unsigned char buttons, char dx, char dy, unsigned char wheel);
-typedef void (*keyboard_event_cb)(unsigned char modifiers, unsigned char key);
+#include "io.h"
 
-void usb_init();
-void usb_set_mouse_cb(mouse_event_cb cb);
-void usb_set_keyboard_cb(keyboard_event_cb cb);
+#define HOST_IRQ		0x15
 
-void usb_isr();
-
-#endif /* __HAL_USB_H */
+#endif /* __HOST_H */

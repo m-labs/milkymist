@@ -711,7 +711,6 @@ static int mouse_x, mouse_y;
 
 static void mouse_cb(unsigned char buttons, char dx, char dy, unsigned char wheel)
 {
-	//printf("%d %d\n", dx, dy);
 	mouse_x += dx;
 	mouse_y += dy;
 	if(mouse_x < 0)
@@ -725,14 +724,23 @@ static void mouse_cb(unsigned char buttons, char dx, char dy, unsigned char whee
 	vga_frontbuffer[vga_hres*mouse_y+mouse_x] = 0xffff;
 }
 
+static void keyboard_cb(unsigned char modifiers, unsigned char key)
+{
+	if(modifiers != 0x00)
+		printf("%x (mod:%x)\n", key, modifiers);
+	else
+		printf("%x\n", key);
+}
+
 static void mouse()
 {
 	mouse_x = 0;
 	mouse_y = 0;
 	usb_set_mouse_cb(mouse_cb);
-	while(!readchar_nonblock())
-		usb_service();
+	usb_set_keyboard_cb(keyboard_cb);
+	while(!readchar_nonblock());
 	usb_set_mouse_cb(NULL);
+	usb_set_keyboard_cb(NULL);
 }
 
 #ifdef WITH_MEMTEST

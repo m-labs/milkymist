@@ -71,7 +71,7 @@ isr.o: ../../software/include/hal/time.h ../../software/include/hal/snd.h
 isr.o: ../../software/include/hw/ac97.h ../../software/include/hw/common.h
 isr.o: ../../software/include/hal/pfpu.h ../../software/include/hw/pfpu.h
 isr.o: ../../software/include/hal/tmu.h ../../software/include/hw/tmu.h
-isr.o: cpustats.h
+isr.o: ../../software/include/hal/usb.h cpustats.h
 line.o: ../../software/include/base/stdlib.h
 line.o: ../../software/include/base/math.h color.h line.h
 main.o: ../../software/include/base/stdio.h

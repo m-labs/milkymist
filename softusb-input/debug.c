@@ -16,12 +16,17 @@
  */
 
 #include "progmem.h"
+#include "host.h"
 #include "comloc.h"
 
 void print_char(char c)
 {
-	COMLOC_DEBUG(COMLOC_DEBUG_PRODUCE) = c;
-	COMLOC_DEBUG_PRODUCE++;
+	unsigned char p;
+	p = COMLOC_DEBUG_PRODUCE;
+	COMLOC_DEBUG(p) = c;
+	p++;
+	COMLOC_DEBUG_PRODUCE = p;
+	wio8(HOST_IRQ, 1);
 }
 
 void print_string(const char *s) /* in program memory */
