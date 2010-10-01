@@ -76,36 +76,6 @@ void putsnonl(const char *s)
 	}
 }
 
-void readstr(char *s, int size)
-{
-	char c;
-	int ptr;
-	
-	ptr = 0;
-	while(1) {
-		c = readchar();
-		switch(c) {
-			case 0x7f:
-			case 0x08:
-				if(ptr > 0) {
-					ptr--;
-					putsnonl("\x08 \x08");
-				}
-				break;
-			case '\r':
-			case '\n':
-				s[ptr] = 0x00;
-				putsnonl("\n");
-				return;
-			default:
-				writechar(c);
-				s[ptr] = c;
-				ptr++;
-				break;
-		}
-	}
-}
-
 int printf(const char *fmt, ...)
 {
 	va_list args;

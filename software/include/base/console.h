@@ -31,6 +31,5 @@ int readchar_nonblock();
 
 int puts(const char *s);
 void putsnonl(const char *s);
-void readstr(char *s, int size);
 
 #endif /* __CONSOLE_H */

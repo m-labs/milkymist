@@ -904,6 +904,9 @@ void shell_input(char c)
 				putsnonl("\x08 \x08");
 			}
 			break;
+		case '\e':
+			vga_set_console(!vga_get_console());
+			break;
 		case '\r':
 		case '\n':
 			command_buffer[command_index] = 0x00;

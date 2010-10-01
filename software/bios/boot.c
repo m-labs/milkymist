@@ -77,9 +77,9 @@ static int check_ack()
 	timeout = 2000000;
 	recognized = 0;
 	while(timeout > 0) {
-		if(readchar_nonblock()) {
+		if(uart_read_nonblock()) {
 			char c;
-			c = readchar();
+			c = uart_read();
 			if(c == str[recognized]) {
 				recognized++;
 				if(recognized == SFL_MAGIC_LEN)
@@ -119,12 +119,12 @@ void serialboot()
 		int goodcrc;
 		
 		/* Grab one frame */
-		frame.length = readchar();
-		frame.crc[0] = readchar();
-		frame.crc[1] = readchar();
-		frame.cmd = readchar();
+		frame.length = uart_read();
+		frame.crc[0] = uart_read();
+		frame.crc[1] = uart_read();
+		frame.cmd = uart_read();
 		for(i=0;i<frame.length;i++)
-			frame.payload[i] = readchar();
+			frame.payload[i] = uart_read();
 		
 		/* Check CRC */
 		actualcrc = ((int)frame.crc[0] << 8)|(int)frame.crc[1];
@@ -135,7 +135,7 @@ void serialboot()
 				printf("E: Too many consecutive errors, aborting");
 				return;
 			}
-			writechar(SFL_ACK_CRCERROR);
+			uart_write(SFL_ACK_CRCERROR);
 			continue;
 		}
 		
@@ -143,7 +143,7 @@ void serialboot()
 		switch(frame.cmd) {
 			case SFL_CMD_ABORT:
 				failed = 0;
-				writechar(SFL_ACK_SUCCESS);
+				uart_write(SFL_ACK_SUCCESS);
 				return;
 			case SFL_CMD_LOAD: {
 				char *writepointer;
@@ -156,7 +156,7 @@ void serialboot()
 					|((unsigned int)frame.payload[3] << 0));
 				for(i=4;i<frame.length;i++)
 					*(writepointer++) = frame.payload[i];
-				writechar(SFL_ACK_SUCCESS);
+				uart_write(SFL_ACK_SUCCESS);
 				break;
 			}
 			case SFL_CMD_JUMP: {
@@ -167,7 +167,7 @@ void serialboot()
 					|((unsigned int)frame.payload[1] << 16)
 					|((unsigned int)frame.payload[2] << 8)
 					|((unsigned int)frame.payload[3] << 0);
-				writechar(SFL_ACK_SUCCESS);
+				uart_write(SFL_ACK_SUCCESS);
 				boot(cmdline_adr, initrdstart_adr, initrdend_adr, addr);
 				break;
 			}
@@ -177,7 +177,7 @@ void serialboot()
 					      |((unsigned int)frame.payload[1] << 16)
 					      |((unsigned int)frame.payload[2] << 8)
 					      |((unsigned int)frame.payload[3] << 0);
-				writechar(SFL_ACK_SUCCESS);
+				uart_write(SFL_ACK_SUCCESS);
 				break;
 			case SFL_CMD_INITRDSTART:
 				failed = 0;
@@ -185,7 +185,7 @@ void serialboot()
 					          |((unsigned int)frame.payload[1] << 16)
 					          |((unsigned int)frame.payload[2] << 8)
 					          |((unsigned int)frame.payload[3] << 0);
-				writechar(SFL_ACK_SUCCESS);
+				uart_write(SFL_ACK_SUCCESS);
 				break;
 			case SFL_CMD_INITRDEND:
 				failed = 0;
@@ -193,7 +193,7 @@ void serialboot()
 					        |((unsigned int)frame.payload[1] << 16)
 					        |((unsigned int)frame.payload[2] << 8)
 					        |((unsigned int)frame.payload[3] << 0);
-				writechar(SFL_ACK_SUCCESS);
+				uart_write(SFL_ACK_SUCCESS);
 				break;
 			default:
 				failed++;
@@ -201,7 +201,7 @@ void serialboot()
 					printf("E: Too many consecutive errors, aborting");
 					return;
 				}
-				writechar(SFL_ACK_UNKNOWN);
+				uart_write(SFL_ACK_UNKNOWN);
 				break;
 		}
 	}

@@ -470,11 +470,12 @@ static int test_user_abort()
 	char c;
 	
 	puts("I: Press Q to abort boot");
-	for(i=0;i<3500000;i++) {
+	for(i=0;i<4500000;i++) {
 		if(readchar_nonblock()) {
 			c = readchar();
-			if(c == 'Q') {
+			if((c == 'Q')||(c == '\e')) {
 				puts("I: Aborted boot on user request");
+				vga_set_console(1);
 				return 0;
 			}
 		}
@@ -536,6 +537,39 @@ static void boot_sequence()
 	}
 }
 
+static void readstr(char *s, int size)
+{
+	char c;
+	int ptr;
+	
+	ptr = 0;
+	while(1) {
+		c = readchar();
+		switch(c) {
+			case 0x7f:
+			case 0x08:
+				if(ptr > 0) {
+					ptr--;
+					putsnonl("\x08 \x08");
+				}
+				break;
+			case '\e':
+				vga_set_console(!vga_get_console());
+				break;
+			case '\r':
+			case '\n':
+				s[ptr] = 0x00;
+				putsnonl("\n");
+				return;
+			default:
+				writechar(c);
+				s[ptr] = c;
+				ptr++;
+				break;
+		}
+	}
+}
+
 int main(int i, char **c)
 {
 	char buffer[64];
@@ -546,7 +580,6 @@ int main(int i, char **c)
 	irq_enable(1);
 	uart_init();
 	vga_init();
-	vga_set_console(1);
 	putsnonl(banner);
 	crcbios();
 	brd_init();
