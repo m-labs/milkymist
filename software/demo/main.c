@@ -52,18 +52,18 @@ static void banner()
 
 static void welcome()
 {
-	printf("\e[1mIMPORTANT: This program is proof of concept only,\n"
+	printf("\n\e[1mIMPORTANT: This program is proof of concept only,\n"
 	"IMPORTANT: and is not intended as a demonstration of the\n"
 	"IMPORTANT: usability of the final software.\e[0m\n"
 	"Questions/feedback: mail devel AT lists.milkymist.org\n"
-	"Have fun!\n");
+	"Have fun!\n\n");
 }
 
 int main()
 {
 	irq_setmask(0);
 	irq_enable(1);
-	uart_async_init();
+	uart_init();
 	vga_init();
 	banner();
 	brd_init();
@@ -81,8 +81,9 @@ int main()
 	rpipe_init();
 	osd_init();
 	usb_init();
-	shell_init();
+	ukb_init();
 	welcome();
+	shell_init();
 
 	while(1) {
 		if(readchar_nonblock())

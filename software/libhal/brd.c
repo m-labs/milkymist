@@ -19,10 +19,32 @@
 #include <stdio.h>
 #include <board.h>
 #include <hw/sysctl.h>
+#include <hw/capabilities.h>
 
 #include <hal/brd.h>
 
 const struct board_desc *brd_desc;
+
+#define display_capability(cap, val) if(val) printf("BRD: "cap": Yes\n"); else printf("BRD: "cap": No\n")
+
+static void display_capabilities()
+{
+	unsigned int cap;
+
+	cap = CSR_CAPABILITIES;
+	display_capability("Mem. card ", cap & CAP_MEMORYCARD);
+	display_capability("AC'97     ", cap & CAP_AC97);
+	display_capability("PFPU      ", cap & CAP_PFPU);
+	display_capability("TMU       ", cap & CAP_TMU);
+	display_capability("Ethernet  ", cap & CAP_ETHERNET);
+	display_capability("FML meter ", cap & CAP_FMLMETER);
+	display_capability("Video in  ", cap & CAP_VIDEOIN);
+	display_capability("MIDI      ", cap & CAP_MIDI);
+	display_capability("DMX       ", cap & CAP_DMX);
+	display_capability("IR        ", cap & CAP_IR);
+	display_capability("USB       ", cap & CAP_USB);
+	display_capability("Memtester ", cap & CAP_MEMTEST);
+}
 
 void brd_init()
 {
@@ -38,4 +60,5 @@ void brd_init()
 	printf("BRD: Running on %s (PCB revision %d)\n", brd_desc->name, rev);
 	if(rev > 1)
 		printf("BRD: Unsupported PCB revision, please upgrade!\n");
+	display_capabilities();
 }

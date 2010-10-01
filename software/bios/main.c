@@ -28,7 +28,6 @@
 #include <net/mdio.h>
 #include <hw/fmlbrg.h>
 #include <hw/sysctl.h>
-#include <hw/capabilities.h>
 #include <hw/gpio.h>
 #include <hw/flash.h>
 
@@ -537,27 +536,6 @@ static void crcbios()
 	}
 }
 
-#define display_capability(cap, val) if(val) printf("I: "cap": Yes\n"); else printf("I: "cap": No\n")
-
-static void display_capabilities()
-{
-	unsigned int cap;
-
-	cap = CSR_CAPABILITIES;
-	display_capability("Mem. card ", cap & CAP_MEMORYCARD);
-	display_capability("AC'97     ", cap & CAP_AC97);
-	display_capability("PFPU      ", cap & CAP_PFPU);
-	display_capability("TMU       ", cap & CAP_TMU);
-	display_capability("Ethernet  ", cap & CAP_ETHERNET);
-	display_capability("FML meter ", cap & CAP_FMLMETER);
-	display_capability("Video in  ", cap & CAP_VIDEOIN);
-	display_capability("MIDI      ", cap & CAP_MIDI);
-	display_capability("DMX       ", cap & CAP_DMX);
-	display_capability("IR        ", cap & CAP_IR);
-	display_capability("USB       ", cap & CAP_USB);
-	display_capability("Memtester ", cap & CAP_MEMTEST);
-}
-
 static const char banner[] =
 	"\nMILKYMIST(tm) v"VERSION" BIOS\thttp://www.milkymist.org\n"
 	"(c) Copyright 2007, 2008, 2009, 2010 Sebastien Bourdeauducq\n\n"
@@ -596,7 +574,6 @@ int main(int i, char **c)
 	putsnonl(banner);
 	crcbios();
 	brd_init();
-	display_capabilities();
 	usb_init();
 	ukb_init();
 
