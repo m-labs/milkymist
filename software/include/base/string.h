@@ -32,7 +32,7 @@ size_t strlen(const char *s);
 size_t strnlen(const char *s, size_t count);
 int memcmp(const void *cs, const void *ct, size_t count);
 void *memset(void *s, int c, size_t count);
-void *memcpy(void *dest, const void *src, size_t n);
+void *memcpy(void *to, const void *from, size_t n);
 void *memmove(void *dest, const void *src, size_t count);
 char *strstr(const char *s1, const char *s2);
 

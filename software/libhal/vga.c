@@ -320,7 +320,8 @@ static void bitblit(unsigned short int *framebuffer, short int fg, short int bg,
 
 static void scroll(unsigned short int *framebuffer)
 {
-	memmove(framebuffer, framebuffer+vga_hres*FONT_HEIGHT, 2*vga_hres*(vga_vres-FONT_HEIGHT));
+	/* WARNING: may not work with all memcpy's! */
+	memcpy(framebuffer, framebuffer+vga_hres*FONT_HEIGHT, 2*vga_hres*(vga_vres-FONT_HEIGHT));
 	memset(framebuffer+vga_hres*(vga_vres-FONT_HEIGHT), 0, 2*vga_hres*FONT_HEIGHT);
 	cursor_pos = 0;
 }
@@ -340,7 +341,6 @@ static void raw_print(char c, unsigned short int bg)
 
 static void write_hook(char c)
 {
-	
 	unsigned short int color;
 	
 	if(escape_mode) {
