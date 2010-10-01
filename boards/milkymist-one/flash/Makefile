@@ -31,6 +31,7 @@ bitstream-rescue.mcs: # WARNING: promgen multiplies address by 2!!!
 bios-rescue.mcs:
 	$(MAKE) -C $(MMDIR)/software/libhpdmc
 	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libhal
 	$(MAKE) -C $(MMDIR)/software/libnet
 	$(MAKE) -C $(MMDIR)/software/bios
 	srec_cat -Output bios-rescue.mcs -Intel $(MMDIR)/software/bios/bios-rescue.bin -Binary -offset 0x00220000 --byte-swap 2
@@ -59,6 +60,7 @@ bitstream.mcs: # WARNING: promgen multiplies address by 2!!!
 bios.mcs:
 	$(MAKE) -C $(MMDIR)/software/libhpdmc
 	$(MAKE) -C $(MMDIR)/software/libbase
+	$(MAKE) -C $(MMDIR)/software/libhal
 	$(MAKE) -C $(MMDIR)/software/libnet
 	$(MAKE) -C $(MMDIR)/software/bios
 	srec_cat -Output bios.mcs -Intel $(MMDIR)/software/bios/bios.bin -Binary -offset 0x00860000 --byte-swap 2

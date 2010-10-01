@@ -16,6 +16,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <console.h>
 #include <hw/vga.h>
 
@@ -299,7 +300,7 @@ void vga_set_mode(int mode)
 extern const unsigned char fontdata_8x16[];
 #define FONT_HEIGHT 16
 
-static void bitblit(unsigned short int *framebuffer, short int fg, short int bg, int x, int y, unsigned char *origin)
+static void bitblit(unsigned short int *framebuffer, short int fg, short int bg, int x, int y, const unsigned char *origin)
 {
 	int dx, dy;
 	unsigned char line;
@@ -326,17 +327,56 @@ static void scroll(unsigned short int *framebuffer)
 
 #define MAKERGB565N(r, g, b) ((((r) & 0xf8) << 8) | (((g) & 0xfc) << 3) | (((b) & 0xf8) >> 3))
 
-static void write_hook(char c)
+static int escape_mode;
+static int highlight;
+
+static void raw_print(char c, unsigned short int bg)
 {
 	unsigned char c2 = (unsigned char)c;
 	unsigned int c3 = c2;
 	
-	if(c == '\n')
-		scroll(framebuffer_text);
-	else {
-		bitblit(framebuffer_text, MAKERGB565N(192, 192, 192), MAKERGB565N(0, 0, 0), cursor_pos*8, vga_vres-FONT_HEIGHT, fontdata_8x16+c3*FONT_HEIGHT);
-		cursor_pos++;
-		if(cursor_pos >= text_line_len)
+	bitblit(framebuffer_text, bg, MAKERGB565N(0, 0, 0), cursor_pos*8, vga_vres-FONT_HEIGHT, fontdata_8x16+c3*FONT_HEIGHT);
+}
+
+static void write_hook(char c)
+{
+	
+	unsigned short int color;
+	
+	if(escape_mode) {
+		switch(c) {
+			case '1':
+				highlight = 1;
+				break;
+			case '0':
+				highlight = 0;
+				break;
+			case 'm':
+			case '\n':
+				escape_mode = 0;
+				break;
+			default:
+				break;
+		}
+	} else {
+		if(c == '\n') {
+			raw_print(' ', MAKERGB565N(192, 192, 192));
 			scroll(framebuffer_text);
+		} else if(c == 0x08) {
+			if(cursor_pos > 0) {
+				raw_print(' ', MAKERGB565N(192, 192, 192));
+				cursor_pos--;
+			}
+		}
+		else if(c == '\e')
+			escape_mode = 1;
+		else {
+			color = highlight ? MAKERGB565N(255, 255, 255) : MAKERGB565N(192, 192, 192);
+			raw_print(c, color);
+			cursor_pos++;
+			if(cursor_pos >= (text_line_len-1))
+				scroll(framebuffer_text);
+		}
+		raw_print(0xdb, MAKERGB565N(192, 192, 192));
 	}
 }
