@@ -114,6 +114,22 @@ initial begin
 	wbwrite(32'h00000600, 32'h12345678);
 	wbread(32'h00000000);
 	wbread(32'h00000600);
+	
+	$display("Test byte enables");
+	wbwrite(32'h00000600, 32'h00000000);
+	wbread(32'h00000600);
+	wb_sel_i = 4'b0001;
+	wbwrite(32'h00000600, 32'haa55aa55);
+	wbread(32'h00000600);
+	wb_sel_i = 4'b0100;
+	wbwrite(32'h00000600, 32'haa55aa55);
+	wbread(32'h00000600);
+	wb_sel_i = 4'b0010;
+	wbwrite(32'h00000600, 32'haa55aa55);
+	wbread(32'h00000600);
+	wb_sel_i = 4'b1000;
+	wbwrite(32'h00000600, 32'haa55aa55);
+	wbread(32'h00000600);
 
 	$finish;
 end
