@@ -14,6 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+/* WARNING: This tool is little endian in 16-bit mode 
+ * and big endian in 32-bit mode. 
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -57,7 +61,7 @@ int main(int argc, char *argv[])
 	} else {
 		while(1) {
 			if(fread(w, 4, 1, fdi) <= 0) break;
-			fprintf(fdo, "%02hhx%02hhx%02hhx%02hhx\n", w[3], w[2], w[1], w[0]);
+			fprintf(fdo, "%02hhx%02hhx%02hhx%02hhx\n", w[0], w[1], w[2], w[3]);
 			pad--;
 		}
 	}
