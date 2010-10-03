@@ -14,8 +14,12 @@ usage: $(BUILDDIR)/system-routed.xdl
 load: $(BUILDDIR)/system.bit
 	cd $(BUILDDIR) && impact -batch ../load.cmd
 
-$(BUILDDIR)/system.ncd: $(BUILDDIR)/system.ngd
-	cd $(BUILDDIR) && map -ol high -t 60 -w system.ngd
+# yeah, we need different placer cost tables for normal and rescue...:(
+build/system.ncd: build/system.ngd
+	cd build && map -ol high -t 20 -w system.ngd
+	
+build-rescue/system.ncd: build-rescue/system.ngd
+	cd build-rescue && map -ol high -t 1 -w system.ngd
 
 $(BUILDDIR)/system-routed.ncd: $(BUILDDIR)/system.ncd
 	cd $(BUILDDIR) && par -ol high -w system.ncd system-routed.ncd
