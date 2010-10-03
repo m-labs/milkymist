@@ -169,7 +169,7 @@ save_all:
 	sw	(sp+116), r1
 
 	/* Save r0 (hardcoded to 0) */
-	//sw	(sp+144), r0
+	sw	(sp+0), r0
 
 	/* Save pointer to registers */
 	mv	r22, sp
