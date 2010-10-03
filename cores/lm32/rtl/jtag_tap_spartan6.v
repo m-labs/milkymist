@@ -1,6 +1,5 @@
 
 module jtag_tap(
-	output sel,
 	output tck,
 	output tdi,
 	input tdo,
@@ -8,6 +7,12 @@ module jtag_tap(
 	output update,
 	output reset
 );
+
+wire g_shift;
+wire g_update;
+
+assign shift = g_shift & sel;
+assign update = g_update & sel;
 
 BSCAN_SPARTAN6 #(
 	.JTAG_CHAIN(1)
@@ -17,11 +22,11 @@ BSCAN_SPARTAN6 #(
 	.RESET(reset),
 	.RUNTEST(),
 	.SEL(sel),
-	.SHIFT(shift),
+	.SHIFT(g_shift),
 	.TCK(),
 	.TDI(tdi),
 	.TMS(),
-	.UPDATE(update),
+	.UPDATE(g_update),
 	.TDO(tdo)
 );
 

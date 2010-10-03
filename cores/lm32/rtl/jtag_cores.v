@@ -8,7 +8,6 @@ module jtag_cores (
     output jrstn
 );
 
-wire sel;
 wire tck;
 wire tdi;
 wire tdo;
@@ -17,7 +16,6 @@ wire update;
 wire reset;
 
 jtag_tap jtag_tap (
-	.sel(sel),
 	.tck(tck),
 	.tdi(tdi),
 	.tdo(tdo),
@@ -51,7 +49,7 @@ begin
 		jtag_latched <= jtag_shift;
 end
 
-assign reg_update = update & sel;
+assign reg_update = update;
 assign reg_q = jtag_latched[10:3];
 assign reg_addr_q = jtag_latched[2:0];
 assign jtck = tck;
