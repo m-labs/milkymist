@@ -897,6 +897,8 @@ void shell_init()
 
 void shell_input(char c)
 {
+	char xc[2];
+	
 	cpustats_enter();
 	switch(c) {
 		case 0x7f:
@@ -919,7 +921,9 @@ void shell_input(char c)
 			break;
 		default:
 			if(command_index < (sizeof(command_buffer)-1)) {
-				writechar(c);
+				xc[0] = c;
+				xc[1] = 0;
+				putsnonl(xc);
 				command_buffer[command_index] = c;
 				command_index++;
 			}

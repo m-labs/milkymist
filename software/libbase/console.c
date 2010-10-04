@@ -19,6 +19,7 @@
 #include <console.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <irq.h>
 
 static console_write_hook write_hook;
 static console_read_hook read_hook;
@@ -35,7 +36,7 @@ void console_set_read_hook(console_read_hook r, console_read_nonblock_hook rn)
 	read_nonblock_hook = rn;
 }
 
-void writechar(char c)
+static void writechar(char c)
 {
 	uart_write(c);
 	if(write_hook != NULL)
@@ -60,20 +61,34 @@ int readchar_nonblock()
 
 int puts(const char *s)
 {
+	unsigned int oldmask;
+
+	oldmask = irq_getmask();
+	irq_setmask(0);
+
 	while(*s) {
 		writechar(*s);
 		s++;
 	}
 	writechar('\n');
+	
+	irq_setmask(oldmask);
 	return 1;
 }
 
 void putsnonl(const char *s)
 {
+	unsigned int oldmask;
+
+	oldmask = irq_getmask();
+	irq_setmask(0);
+	
 	while(*s) {
 		writechar(*s);
 		s++;
 	}
+	
+	irq_setmask(oldmask);
 }
 
 int printf(const char *fmt, ...)

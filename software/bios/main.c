@@ -539,13 +539,14 @@ static void boot_sequence()
 
 static void readstr(char *s, int size)
 {
-	char c;
+	char c[2];
 	int ptr;
 	
+	c[1] = 0;
 	ptr = 0;
 	while(1) {
-		c = readchar();
-		switch(c) {
+		c[0] = readchar();
+		switch(c[0]) {
 			case 0x7f:
 			case 0x08:
 				if(ptr > 0) {
@@ -562,7 +563,7 @@ static void readstr(char *s, int size)
 				putsnonl("\n");
 				return;
 			default:
-				writechar(c);
+				putsnonl(c);
 				s[ptr] = c;
 				ptr++;
 				break;
