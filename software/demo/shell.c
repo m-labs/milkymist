@@ -26,6 +26,7 @@
 #include <math.h>
 #include <irq.h>
 #include <board.h>
+#include <version.h>
 #include <hw/pfpu.h>
 #include <hw/tmu.h>
 #include <hw/sysctl.h>
@@ -247,6 +248,7 @@ static void help()
 	puts("irender    - input patch equations interactively");
 	puts("stop       - stop renderer");
 	puts("stats      - print system stats");
+	puts("version    - display version");
 	puts("reboot     - system reset");
 	puts("reconf     - reload FPGA configuration");
 }
@@ -839,6 +841,7 @@ static void do_command(char *c)
 		} else if(strcmp(command, "stop") == 0) renderer_stop();
 		else if(strcmp(command, "vmode") == 0) vmode(param1);
 		else if(strcmp(command, "stats") == 0) stats();
+		else if(strcmp(command, "version") == 0) puts(VERSION);
 		else if(strcmp(command, "reboot") == 0) reboot();
 		else if(strcmp(command, "reconf") == 0) reconf();
 		else if(strcmp(command, "help") == 0) help();

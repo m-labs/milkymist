@@ -411,7 +411,9 @@ static void help()
 	puts("fsboot     - boot from the filesystem");
 	puts("mdior      - read MDIO register");
 	puts("mdiow      - write MDIO register");
+	puts("version    - display version");
 	puts("reboot     - system reset");
+	puts("reconf     - reload FPGA configuration");
 }
 
 static char *get_token(char **str)
@@ -454,7 +456,9 @@ static void do_command(char *c)
 	else if(strcmp(token, "mdior") == 0) mdior(get_token(&c));
 	else if(strcmp(token, "mdiow") == 0) mdiow(get_token(&c), get_token(&c));
 
+	else if(strcmp(token, "version") == 0) puts(VERSION);
 	else if(strcmp(token, "reboot") == 0) reboot();
+	else if(strcmp(token, "reconf") == 0) reconf();
 	
 	else if(strcmp(token, "help") == 0) help();
 
@@ -565,7 +569,7 @@ static void readstr(char *s, int size)
 				return;
 			default:
 				putsnonl(c);
-				s[ptr] = c;
+				s[ptr] = c[0];
 				ptr++;
 				break;
 		}
