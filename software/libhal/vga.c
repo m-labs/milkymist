@@ -85,9 +85,6 @@ void vga_swap_buffers()
 	if(!console_mode) {
 		/*
 		 * Make sure last buffer swap has been executed.
-		 * Beware, DMA address registers of vgafb are incomplete
-		 * (only LSBs are present) so don't compare them directly
-		 * with CPU pointers.
 		 */
 		while(CSR_VGA_BASEADDRESS_ACT != CSR_VGA_BASEADDRESS);
 	}

@@ -26,7 +26,7 @@
 #include <hal/brd.h>
 #include <hal/tmu.h>
 
-#define TMU_TASKQ_SIZE 4 /* < must be a power of 2 */
+#define TMU_TASKQ_SIZE 8 /* < must be a power of 2 */
 #define TMU_TASKQ_MASK (TMU_TASKQ_SIZE-1)
 
 int tmu_ready;

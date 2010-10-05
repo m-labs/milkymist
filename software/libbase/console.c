@@ -65,7 +65,7 @@ int puts(const char *s)
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(0);
+	irq_setmask(IRQ_UARTRX); // HACK: prevent UART data loss
 
 	while(*s) {
 		writechar(*s);
