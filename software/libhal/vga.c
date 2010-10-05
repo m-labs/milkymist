@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <console.h>
+#include <system.h>
 #include <hw/vga.h>
 
+#include <hal/tmu.h>
 #include <hal/vga.h>
 
 /*
@@ -300,48 +302,121 @@ void vga_set_mode(int mode)
 extern const unsigned char fontdata_8x16[];
 #define FONT_HEIGHT 16
 
-static void bitblit(unsigned short int *framebuffer, short int fg, short int bg, int x, int y, const unsigned char *origin)
+static void bitblit(unsigned short int fg, int x, int y, const unsigned char *origin)
 {
 	int dx, dy;
-	unsigned char line;
+	unsigned short int line;
 	int fbi;
 	
 	for(dy=0;dy<FONT_HEIGHT;dy++) {
 		line = origin[dy];
-		for(dx=0;dx<8;dx++) {
-			fbi = vga_hres*(y+dy)+x+dx;
-			if(line & (0x80 >> dx))
-				framebuffer[fbi] = fg;
-			else
-				framebuffer[fbi] = bg;
+		fbi = vga_hres*(y+dy)+x;
+		for(dx=7;dx>=0;dx--) {
+			framebuffer_text[fbi+dx] = (line & 0x0001)*fg;
+			line >>= 1;
 		}
 	}
 }
 
-static void scroll(unsigned short int *framebuffer)
-{
-	/* WARNING: may not work with all memcpy's! */
-	memcpy(framebuffer, framebuffer+vga_hres*FONT_HEIGHT, 2*vga_hres*(vga_vres-FONT_HEIGHT));
-	memset(framebuffer+vga_hres*(vga_vres-FONT_HEIGHT), 0, 2*vga_hres*FONT_HEIGHT);
-	cursor_pos = 0;
-}
+static int wait_tmu;
+static struct tmu_vertex scroll_vertices[TMU_MESH_MAXSIZE][TMU_MESH_MAXSIZE] __attribute__((aligned(8)));
+static struct tmu_td scroll_td;
+
+static void write_hook(char c);
+static void raw_print(char c, unsigned short int bg);
+
+#define Q_RINGBUFFER_SIZE 131072
+#define Q_RINGBUFFER_MASK (Q_RINGBUFFER_SIZE-1)
+
+static char q_buf[Q_RINGBUFFER_SIZE];
+static unsigned int q_produce;
+static unsigned int q_consume;
 
 #define MAKERGB565N(r, g, b) ((((r) & 0xf8) << 8) | (((g) & 0xfc) << 3) | (((b) & 0xf8) >> 3))
+
+static void scroll_callback(struct tmu_td *td)
+{	
+	flush_cpu_dcache();
+	memset(framebuffer_text+vga_hres*(vga_vres-FONT_HEIGHT), 0, 2*vga_hres*FONT_HEIGHT);
+	cursor_pos = 0;
+	wait_tmu = 0;
+	raw_print(0xdb, MAKERGB565N(192, 192, 192));
+	while(q_consume != q_produce) {
+		write_hook(q_buf[q_consume]);
+		q_consume = (q_consume + 1) & Q_RINGBUFFER_MASK;
+		if(wait_tmu)
+			break;
+	}
+}
+
+static void scroll()
+{
+	if(tmu_ready) {
+		/* Hardware-accelerated scrolling */		
+		scroll_vertices[0][0].x = 0;
+		scroll_vertices[0][0].y = FONT_HEIGHT << TMU_FIXEDPOINT_SHIFT;
+		scroll_vertices[0][1].x = vga_hres << TMU_FIXEDPOINT_SHIFT;
+		scroll_vertices[0][1].y = FONT_HEIGHT << TMU_FIXEDPOINT_SHIFT;
+		scroll_vertices[1][0].x = 0;
+		scroll_vertices[1][0].y = vga_vres << TMU_FIXEDPOINT_SHIFT;
+		scroll_vertices[1][1].x = vga_hres << TMU_FIXEDPOINT_SHIFT;
+		scroll_vertices[1][1].y = vga_vres << TMU_FIXEDPOINT_SHIFT;
+		
+		scroll_td.flags = 0;
+		scroll_td.hmeshlast = 1;
+		scroll_td.vmeshlast = 1;
+		scroll_td.brightness = TMU_BRIGHTNESS_MAX;
+		scroll_td.chromakey = 0;
+		scroll_td.vertices = &scroll_vertices[0][0];
+		scroll_td.texfbuf = framebuffer_text;
+		scroll_td.texhres = vga_hres;
+		scroll_td.texvres = vga_vres;
+		scroll_td.texhmask = TMU_MASK_NOFILTER;
+		scroll_td.texvmask = TMU_MASK_NOFILTER;
+		scroll_td.dstfbuf = framebuffer_text;
+		scroll_td.dsthres = vga_hres;
+		scroll_td.dstvres = vga_vres;
+		scroll_td.dsthoffset = 0;
+		scroll_td.dstvoffset = 0;
+		scroll_td.dstsquarew = vga_hres;
+		scroll_td.dstsquareh = vga_vres-FONT_HEIGHT;
+		scroll_td.alpha = TMU_ALPHA_MAX;
+		scroll_td.callback = scroll_callback;
+		scroll_td.user = NULL;
+		
+		flush_bridge_cache();
+		tmu_submit_task(&scroll_td);
+		
+		wait_tmu = 1;
+	} else {
+		/* Software fallback */
+		/* WARNING: may not work with all memcpy's! */
+		memcpy(framebuffer_text, framebuffer_text+vga_hres*FONT_HEIGHT, 2*vga_hres*(vga_vres-FONT_HEIGHT));
+		memset(framebuffer_text+vga_hres*(vga_vres-FONT_HEIGHT), 0, 2*vga_hres*FONT_HEIGHT);
+		cursor_pos = 0;
+	}
+}
 
 static int escape_mode;
 static int highlight;
 
-static void raw_print(char c, unsigned short int bg)
+static void raw_print(char c, unsigned short int fg)
 {
 	unsigned char c2 = (unsigned char)c;
 	unsigned int c3 = c2;
 	
-	bitblit(framebuffer_text, bg, MAKERGB565N(0, 0, 0), cursor_pos*8, vga_vres-FONT_HEIGHT, fontdata_8x16+c3*FONT_HEIGHT);
+	bitblit(fg, cursor_pos*8, vga_vres-FONT_HEIGHT, fontdata_8x16+c3*FONT_HEIGHT);
 }
 
 static void write_hook(char c)
 {
 	unsigned short int color;
+	
+	if(wait_tmu) {
+		q_buf[q_produce] = c;
+		q_produce = (q_produce + 1) & Q_RINGBUFFER_MASK;
+		return;
+	}
 	
 	if(escape_mode) {
 		switch(c) {
@@ -361,7 +436,7 @@ static void write_hook(char c)
 	} else {
 		if(c == '\n') {
 			raw_print(' ', MAKERGB565N(192, 192, 192));
-			scroll(framebuffer_text);
+			scroll();
 		} else if(c == 0x08) {
 			if(cursor_pos > 0) {
 				raw_print(' ', MAKERGB565N(192, 192, 192));
@@ -375,8 +450,9 @@ static void write_hook(char c)
 			raw_print(c, color);
 			cursor_pos++;
 			if(cursor_pos >= (text_line_len-1))
-				scroll(framebuffer_text);
+				scroll();
 		}
-		raw_print(0xdb, MAKERGB565N(192, 192, 192));
+		if(!wait_tmu)
+			raw_print(0xdb, MAKERGB565N(192, 192, 192));
 	}
 }

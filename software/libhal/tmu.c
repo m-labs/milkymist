@@ -19,6 +19,8 @@
 #include <irq.h>
 #include <board.h>
 #include <hw/interrupts.h>
+#include <hw/sysctl.h>
+#include <hw/capabilities.h>
 #include <hw/tmu.h>
 
 #include <hal/brd.h>
@@ -38,6 +40,11 @@ static int cts;
 void tmu_init()
 {
 	unsigned int mask;
+	
+	if(!(CSR_CAPABILITIES & CAP_TMU)) {
+		printf("TMU: not supported by SoC, giving up.\n");
+		return;
+	}
 
 	produce = 0;
 	consume = 0;

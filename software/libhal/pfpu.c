@@ -100,12 +100,8 @@ void pfpu_isr()
 {
 	if(queue[consume]->update)
 		update_registers(queue[consume]->registers);
-	if(queue[consume]->invalidate) {
-		asm volatile( /* Invalidate Level-1 data cache */
-			"wcsr DCC, r0\n"
-			"nop\n"
-		);
-	}
+	if(queue[consume]->invalidate)
+		flush_cpu_dcache();
 	queue[consume]->callback(queue[consume]);
 	consume = (consume + 1) & PFPU_TASKQ_MASK;
 	level--;

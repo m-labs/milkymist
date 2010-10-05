@@ -367,10 +367,7 @@ static void pfputest()
 	else
 		printf("Timeout\n");
 
-	asm volatile( /* Invalidate Level-1 data cache */
-		"wcsr DCC, r0\n"
-		"nop\n"
-	);
+	flush_cpu_dcache();
 
 	printf("Result:\n");
 	for(y=0;y<10;y++) {

@@ -74,7 +74,7 @@ static void logo()
 	for(y=0;y<LOGO_H;y++)
 		for(x=0;x<LOGO_W;x++)
 			osd_fb[(x+OSD_W-LOGO_W-OSD_CORNER)+OSD_W*(y+OSD_CORNER)] = ((unsigned short *)logo_raw)[x+LOGO_W*y];
-	font_draw_string(&osd_font, OSD_W-LOGO_W-OSD_CORNER, OSD_H-font_get_height(&osd_font), 0, VERSION);
+	font_draw_string(&osd_font, OSD_W-LOGO_W-OSD_CORNER-16, OSD_H-font_get_height(&osd_font), 0, VERSION);
 }
 
 static void init_ui();

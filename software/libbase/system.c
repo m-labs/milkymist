@@ -22,6 +22,25 @@
 
 #include <system.h>
 
+void flush_cpu_icache()
+{
+	asm volatile(
+		"wcsr ICC, r0\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+	);
+}
+
+void flush_cpu_dcache()
+{
+	asm volatile(
+		"wcsr DCC, r0\n"
+		"nop\n"
+	);
+}
+
 void flush_bridge_cache()
 {
 	volatile char *flushbase = (char *)FMLBRG_FLUSH_BASE;

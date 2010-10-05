@@ -43,7 +43,7 @@ void snd_init()
 	unsigned int mask;
 	
 	if(!(CSR_CAPABILITIES & CAP_AC97)) {
-		printf("SND: AC97 not supported by SoC, giving up.\n");
+		printf("SND: not supported by SoC, giving up.\n");
 		return;
 	}
 	
@@ -253,10 +253,7 @@ static void record_start(short *buffer)
 
 void snd_isr_dmaw()
 {
-	asm volatile( /* Invalidate Level-1 data cache */
-		"wcsr DCC, r0\n"
-		"nop\n"
-	);
+	flush_cpu_dcache();
 
 	if(record_level == 0) {
 		printf("SND: stray DMAW irq\n");

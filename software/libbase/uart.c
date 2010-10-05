@@ -27,7 +27,7 @@
  * TX functions already implement locking.
  */
 
-#define UART_RINGBUFFER_SIZE_RX 4096
+#define UART_RINGBUFFER_SIZE_RX 8192
 #define UART_RINGBUFFER_MASK_RX (UART_RINGBUFFER_SIZE_RX-1)
 
 static char rx_buf[UART_RINGBUFFER_SIZE_RX];

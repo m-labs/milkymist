@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <irq.h>
+#include <hw/interrupts.h>
 
 static console_write_hook write_hook;
 static console_read_hook read_hook;
@@ -81,7 +82,7 @@ void putsnonl(const char *s)
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(0);
+	irq_setmask(IRQ_UARTRX); // HACK: prevent UART data loss
 	
 	while(*s) {
 		writechar(*s);

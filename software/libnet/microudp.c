@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <crc.h>
 #include <irq.h>
+#include <system.h>
 #include <hw/minimac.h>
 #include <hw/sysctl.h>
 #include <hw/interrupts.h>
@@ -349,10 +350,7 @@ static void process_frame()
 	unsigned int received_crc;
 	unsigned int computed_crc;
 
-	asm volatile( /* Invalidate Level-1 data cache */
-		"wcsr DCC, r0\n"
-		"nop\n"
-	);
+	flush_cpu_dcache();
 	for(i=0;i<7;i++)
 		if(rxbuffer->frame.eth_header.preamble[i] != 0x55) return;
 	if(rxbuffer->frame.eth_header.preamble[7] != 0xd5) return;
