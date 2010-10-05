@@ -49,6 +49,8 @@ struct tmu_td {
 	void *user; /* < for application use */
 };
 
+int tmu_ready;
+
 void tmu_init();
 void tmu_isr();
 int tmu_submit_task(struct tmu_td *td);

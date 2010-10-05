@@ -27,6 +27,8 @@
 #define TMU_TASKQ_SIZE 4 /* < must be a power of 2 */
 #define TMU_TASKQ_MASK (TMU_TASKQ_SIZE-1)
 
+int tmu_ready;
+
 static struct tmu_td *queue[TMU_TASKQ_SIZE];
 static unsigned int produce;
 static unsigned int consume;
@@ -50,6 +52,8 @@ void tmu_init()
 	irq_setmask(mask);
 
 	printf("TMU: texture mapping unit initialized\n");
+	
+	tmu_ready = 1;
 }
 
 static void tmu_start(struct tmu_td *td)
@@ -99,7 +103,7 @@ int tmu_submit_task(struct tmu_td *td)
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_TMU));
+	irq_setmask(0);
 
 	if(level >= TMU_TASKQ_SIZE) {
 		irq_setmask(oldmask);

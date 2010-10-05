@@ -41,6 +41,7 @@ void uart_isr_rx()
 	rx_produce = (rx_produce + 1) & UART_RINGBUFFER_MASK_RX;
 }
 
+/* Do not use in interrupt handlers! */
 char uart_read()
 {
 	char c;
@@ -80,9 +81,8 @@ void uart_write(char c)
 {
 	unsigned int oldmask = 0;
 	
-	/* Synchronization required because of CTS */
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_UARTTX));
+	irq_setmask(0);
 	if(force_sync) {
 		CSR_UART_RXTX = c;
 		while(!(irq_pending() & IRQ_UARTTX));

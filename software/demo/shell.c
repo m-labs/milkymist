@@ -447,7 +447,6 @@ static void tmutest()
 
 static void tmubench()
 {
-	unsigned int oldmask;
 	int i;
 	int zoom;
 	int x, y;
@@ -458,9 +457,6 @@ static void tmubench()
 	unsigned int t;
 	int hits, reqs;
 
-	/* Disable slowout */
-	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_TIMER1));
 	uart_force_sync(1);
 	
 	for(i=0;i<512*512;i++)
@@ -511,8 +507,6 @@ static void tmubench()
 		vga_swap_buffers();
 	}
 
-	irq_ack(IRQ_TIMER1);
-	irq_setmask(oldmask);
 	uart_force_sync(0);
 }
 

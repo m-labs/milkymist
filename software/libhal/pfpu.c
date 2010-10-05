@@ -123,7 +123,7 @@ int pfpu_submit_task(struct pfpu_td *td)
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_PFPU));
+	irq_setmask(0);
 
 	if(level >= PFPU_TASKQ_SIZE) {
 		irq_setmask(oldmask);

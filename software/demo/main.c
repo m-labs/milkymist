@@ -32,6 +32,7 @@
 #include <hal/vin.h>
 #include <hal/dmx.h>
 #include <hal/usb.h>
+#include <hal/ukb.h>
 
 #include "apipe.h"
 #include "rpipe.h"

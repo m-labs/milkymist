@@ -168,7 +168,7 @@ int snd_play_refill(short *buffer)
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_AC97DMAR));
+	irq_setmask(0);
 	
 	if(play_level >= PLAY_BUFQ_SIZE) {
 		irq_setmask(oldmask);
@@ -214,7 +214,7 @@ void snd_play_stop()
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_AC97DMAR));
+	irq_setmask(0);
 	CSR_AC97_DCTL = 0;
 	play_underrun = 0;
 	irq_ack(IRQ_AC97DMAR);
@@ -290,7 +290,7 @@ int snd_record_refill(short *buffer)
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_AC97DMAW));
+	irq_setmask(0);
 
 	if(record_level >= RECORD_BUFQ_SIZE) {
 		irq_setmask(oldmask);
@@ -334,7 +334,7 @@ void snd_record_stop()
 	unsigned int oldmask;
 
 	oldmask = irq_getmask();
-	irq_setmask(oldmask & (~IRQ_AC97DMAW));
+	irq_setmask(0);
 	CSR_AC97_UCTL = 0;
 	record_overrun = 0;
 	irq_ack(IRQ_AC97DMAW);
