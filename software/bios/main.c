@@ -33,6 +33,7 @@
 #include <hw/flash.h>
 
 #include <hal/vga.h>
+#include <hal/tmu.h>
 #include <hal/brd.h>
 #include <hal/usb.h>
 #include <hal/ukb.h>
@@ -584,6 +585,7 @@ int main(int i, char **c)
 	putsnonl(banner);
 	crcbios();
 	brd_init();
+	tmu_init(); /* < for hardware-accelerated scrolling */
 	usb_init();
 	ukb_init();
 

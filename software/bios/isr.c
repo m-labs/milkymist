@@ -20,6 +20,7 @@
 #include <uart.h>
 
 #include <hal/usb.h>
+#include <hal/tmu.h>
 
 void isr()
 {
@@ -31,6 +32,9 @@ void isr()
 		uart_isr_rx();
 	if(irqs & IRQ_UARTTX)
 		uart_isr_tx();
+		
+	if(irqs & IRQ_TMU)
+		tmu_isr();
 
 	if(irqs & IRQ_USB)
 		usb_isr();
