@@ -25,6 +25,7 @@ microudp.o: ../../software/include/base/stdio.h
 microudp.o: ../../software/include/base/stdlib.h
 microudp.o: ../../software/include/base/crc.h
 microudp.o: ../../software/include/base/irq.h
+microudp.o: ../../software/include/base/system.h
 microudp.o: ../../software/include/hw/minimac.h
 microudp.o: ../../software/include/hw/common.h
 microudp.o: ../../software/include/hw/sysctl.h

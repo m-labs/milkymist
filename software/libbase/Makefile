@@ -42,6 +42,8 @@ console.o: ../../software/include/base/console.h
 console.o: ../../software/include/base/stdio.h
 console.o: ../../software/include/base/stdlib.h
 console.o: ../../software/include/base/stdarg.h
+console.o: ../../software/include/base/irq.h
+console.o: ../../software/include/hw/interrupts.h
 crc16.o: ../../software/include/base/crc.h
 crc32.o: ../../software/include/base/crc.h
 fatfs.o: ../../software/include/base/stdlib.h
@@ -71,11 +73,6 @@ system.o: ../../software/include/hw/fmlbrg.h
 system.o: ../../software/include/hw/sysctl.h
 system.o: ../../software/include/hw/common.h
 system.o: ../../software/include/base/system.h
-uart-async.o: ../../software/include/base/uart.h
-uart-async.o: ../../software/include/base/irq.h
-uart-async.o: ../../software/include/hw/uart.h
-uart-async.o: ../../software/include/hw/common.h
-uart-async.o: ../../software/include/hw/interrupts.h
 uart.o: ../../software/include/base/uart.h ../../software/include/base/irq.h
 uart.o: ../../software/include/hw/uart.h ../../software/include/hw/common.h
 uart.o: ../../software/include/hw/interrupts.h

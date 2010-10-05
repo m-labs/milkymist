@@ -79,7 +79,7 @@ main.o: ../../software/include/base/stdlib.h
 main.o: ../../software/include/base/console.h
 main.o: ../../software/include/base/uart.h
 main.o: ../../software/include/base/system.h
-main.o: ../../software/include/base/irq.h ../../software/include/base/board.h
+main.o: ../../software/include/base/irq.h
 main.o: ../../software/include/base/version.h
 main.o: ../../software/include/hal/brd.h ../../software/include/hal/mem.h
 main.o: ../../software/include/hal/time.h ../../software/include/hal/vga.h
@@ -88,7 +88,8 @@ main.o: ../../software/include/hw/common.h ../../software/include/hal/pfpu.h
 main.o: ../../software/include/hw/pfpu.h ../../software/include/hal/tmu.h
 main.o: ../../software/include/hw/tmu.h ../../software/include/hal/vin.h
 main.o: ../../software/include/hal/dmx.h ../../software/include/hal/usb.h
-main.o: apipe.h rpipe.h renderer.h cpustats.h memstats.h osd.h shell.h
+main.o: ../../software/include/hal/ukb.h apipe.h rpipe.h renderer.h
+main.o: cpustats.h memstats.h osd.h shell.h
 memstats.o: ../../software/include/base/board.h
 memstats.o: ../../software/include/hal/brd.h
 memstats.o: ../../software/include/hw/fmlmeter.h
