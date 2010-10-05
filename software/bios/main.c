@@ -392,9 +392,8 @@ static void mdiow(char *reg, char *value)
 
 static void help()
 {
-	puts("This is the Milkymist BIOS debug shell.");
-	puts("It is used for system development and maintainance, and not");
-	puts("for regular operation.\n");
+	puts("Milkymist(tm) BIOS (bootloader)");
+	puts("Don't know what to do? Try 'flashboot'.\n");
 	puts("Available commands:");
 	puts("cons       - switch console mode");
 	puts("flush      - flush FML bridge cache");
@@ -409,6 +408,7 @@ static void help()
 	puts("netboot    - boot via TFTP");
 	puts("serialboot - boot via SFL");
 	puts("fsboot     - boot from the filesystem");
+	puts("flashboot  - boot from flash");
 	puts("mdior      - read MDIO register");
 	puts("mdiow      - write MDIO register");
 	puts("version    - display version");

@@ -240,7 +240,7 @@ static void stats()
 
 static void help()
 {
-	puts("Milkymist demo firmware\n");
+	puts("Milkymist(tm) demonstration program\n");
 	puts("Available commands:");
 	puts("cons       - switch console mode");
 	puts("ls         - list files on the memory card");
