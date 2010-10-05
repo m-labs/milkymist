@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
  * TX functions already implement locking.
  */
 
-#define UART_RINGBUFFER_SIZE_RX 8192
+#define UART_RINGBUFFER_SIZE_RX 4096
 #define UART_RINGBUFFER_MASK_RX (UART_RINGBUFFER_SIZE_RX-1)
 
 static char rx_buf[UART_RINGBUFFER_SIZE_RX];
@@ -79,7 +79,7 @@ void uart_isr_tx()
 
 void uart_write(char c)
 {
-	unsigned int oldmask = 0;
+	unsigned int oldmask;
 	
 	oldmask = irq_getmask();
 	irq_setmask(0);

@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <irq.h>
+#include <system.h>
 #include <hw/interrupts.h>
 #include <hw/pfpu.h>
 

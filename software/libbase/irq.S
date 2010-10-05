@@ -16,18 +16,12 @@
  */
 
 .section .text, "ax", @progbits
-.global irq_enable, irq_isenabled, irq_setmask, irq_getmask, irq_pending, irq_ack
+.global irq_enable, irq_isenabled, irq_setmask, irq_getmask, irq_pending
+.global irq_ack, irq_getie, irq_setie
 
 /* Parameter: 1=enable, 0=disable */
 irq_enable:
 	wcsr	IE, r1
-	ret
-
-/* No parameter */
-/* Return value: 1/0 */
-irq_isenabled:
-	rcsr	r1, IE
-	andi	r1, r1, 1
 	ret
 
 /* Parameter: the mask */
@@ -50,4 +44,15 @@ irq_pending:
 /* Parameter: the mask */
 irq_ack:
 	wcsr	IP, r1
+	ret
+
+/* No parameter */
+/* Return value: IE */
+irq_getie:
+	rcsr	r1, IE
+	ret
+
+/* Parameter: IE */
+irq_setie:
+	wcsr	IE, r1
 	ret

@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <irq.h>
+#include <system.h>
 #include <hw/ac97.h>
 #include <hw/interrupts.h>
 #include <hw/sysctl.h>

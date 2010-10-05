@@ -103,9 +103,15 @@ void serialboot()
 	struct sfl_frame frame;
 	int failed;
 	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
+	static const char str[SFL_MAGIC_LEN] = SFL_MAGIC_REQ;
+	char *c;
 	
 	printf("I: Attempting serial firmware loading\n");
-	putsnonl(SFL_MAGIC_REQ);
+	c = str;
+	while(*c) {
+		uart_write(*c);
+		c++;
+	}
 	if(!check_ack()) {
 		printf("E: Timeout\n");
 		return;

@@ -19,6 +19,8 @@
 #include <string.h>
 #include <console.h>
 #include <system.h>
+#include <irq.h>
+#include <hw/interrupts.h>
 #include <hw/vga.h>
 
 #include <hal/tmu.h>
@@ -333,6 +335,15 @@ static unsigned int q_consume;
 
 static void scroll_callback(struct tmu_td *td)
 {	
+	unsigned int oldmask;
+	unsigned int ie;
+	
+	/* HACK: allow nested UART RX interrupts to prevent data loss */
+	ie = irq_getie();
+	oldmask = irq_getmask();
+	irq_setmask(IRQ_UARTRX);
+	irq_enable(1);
+	
 	flush_cpu_dcache();
 	memset(framebuffer_text+vga_hres*(vga_vres-FONT_HEIGHT), 0, 2*vga_hres*FONT_HEIGHT);
 	cursor_pos = 0;
@@ -344,6 +355,9 @@ static void scroll_callback(struct tmu_td *td)
 		if(wait_tmu)
 			break;
 	}
+	
+	irq_setie(ie);
+	irq_setmask(oldmask);
 }
 
 static void scroll()
