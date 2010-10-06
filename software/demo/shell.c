@@ -179,13 +179,86 @@ static void edid()
 	dump_bytes((unsigned int *)buf, 256, 0);
 }
 
-static void render(const char *filename, const char *dev)
+static char patch_buf[8192];
+
+static void new()
+{
+	patch_buf[0] = 0;
+}
+
+static void del(const char *eqn)
+{
+	char *p, *p2;
+	char eqn2[256];
+	int l;
+	
+	strcpy(eqn2, eqn);
+	l = strlen(eqn2);
+	eqn2[l++] = '=';
+	eqn2[l] = 0;
+
+	p = patch_buf;
+	while(1) {
+		if(strncmp(p, eqn2, l) == 0) {
+			p2 = p;
+			while((*p2 != '\n') && (*p2 != 0))
+				p2++;
+			if(*p2 == '\n')
+				p2++;
+			memmove(p, p2, strlen(patch_buf)-(p2-patch_buf)+2);
+			return;
+		}
+		while(*p != '\n') {
+			p++;
+			if(*p == 0)
+				return;
+		}
+		p++;
+	}
+}
+
+static void add(const char *eqn)
+{
+	int l;
+	char *c;
+	
+	c = strchr(eqn, '=');
+	if(c == NULL) {
+		printf("Invalid equation\n");
+		return;
+	}
+	*c = 0;
+	del(eqn);
+	*c = '=';
+	
+	/* FIXME: check for overflows... */
+	l = strlen(patch_buf);
+	strcpy(&patch_buf[l], eqn);
+	l += strlen(eqn);
+	patch_buf[l] = '\n';
+	patch_buf[l+1] = 0;
+}
+
+static void print()
+{
+	puts(patch_buf);
+}
+
+static void renderb()
+{
+	char patch_buf_copy[8192];
+	
+	strcpy(patch_buf_copy, patch_buf);
+	renderer_start(patch_buf_copy);
+}
+
+static void renderf(const char *filename)
 {
 	char buffer[8192];
 	int size;
 
 	if(*filename == 0) {
-		printf("render <filename> [device]\n");
+		printf("renderf <filename>\n");
 		return;
 	}
 
@@ -240,17 +313,22 @@ static void stats()
 
 static void help()
 {
-	puts("Milkymist(tm) demonstration program\n");
+	puts("Milkymist(tm) demonstration program (PROOF OF CONCEPT ONLY!)\n");
 	puts("Available commands:");
-	puts("cons       - switch console mode");
-	puts("ls         - list files on the memory card");
-	puts("render     - start rendering a patch");
-	puts("irender    - input patch equations interactively");
-	puts("stop       - stop renderer");
-	puts("stats      - print system stats");
-	puts("version    - display version");
-	puts("reboot     - system reset");
-	puts("reconf     - reload FPGA configuration");
+	puts("cons        - switch console mode");
+	puts("ls          - list files on the memory card");
+	puts("new         - clear buffer");
+	puts("add     [a] - add an equation to buffer");
+	puts("del     [d] - delete an equation from buffer");
+	puts("print   [p] - print buffer");
+	puts("renderb [r] - render buffer");
+	puts("renderf     - render file");
+	puts("renderi     - render console input");
+	puts("stop        - stop renderer");
+	puts("stats       - print system stats");
+	puts("version     - display version");
+	puts("reboot      - system reset");
+	puts("reconf      - reload FPGA configuration");
 }
 
 static void cpucfg()
@@ -834,8 +912,17 @@ static void do_command(char *c)
 		else if(strcmp(command, "ls") == 0) ls(param1);
 		else if(strcmp(command, "flush") == 0) flush_bridge_cache();
 		else if(strcmp(command, "edid") == 0) edid();
-		else if(strcmp(command, "render") == 0) render(param1, param2);
-		else if(strcmp(command, "irender") == 0) {
+		else if(strcmp(command, "new") == 0) new();
+		else if(strcmp(command, "add") == 0) add(param1);
+		else if(strcmp(command, "a") == 0) add(param1);
+		else if(strcmp(command, "del") == 0) del(param1);
+		else if(strcmp(command, "d") == 0) del(param1);
+		else if(strcmp(command, "print") == 0) print();
+		else if(strcmp(command, "p") == 0) print();
+		else if(strcmp(command, "renderb") == 0) renderb();
+		else if(strcmp(command, "r") == 0) renderb();
+		else if(strcmp(command, "renderf") == 0) renderf(param1);
+		else if(strcmp(command, "renderi") == 0) {
 			renderer_istart();
 			irender = 1;
 		} else if(strcmp(command, "stop") == 0) renderer_stop();
