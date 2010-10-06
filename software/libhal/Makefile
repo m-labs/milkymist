@@ -41,12 +41,14 @@ mem.o: ../../software/include/base/malloc.h ../../software/include/hal/mem.h
 pfpu.o: ../../software/include/base/stdio.h
 pfpu.o: ../../software/include/base/stdlib.h
 pfpu.o: ../../software/include/base/irq.h
+pfpu.o: ../../software/include/base/system.h
 pfpu.o: ../../software/include/hw/interrupts.h
 pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 pfpu.o: ../../software/include/hal/pfpu.h
 snd.o: ../../software/include/base/stdio.h
 snd.o: ../../software/include/base/stdlib.h ../../software/include/base/irq.h
-snd.o: ../../software/include/hw/ac97.h ../../software/include/hw/common.h
+snd.o: ../../software/include/base/system.h ../../software/include/hw/ac97.h
+snd.o: ../../software/include/hw/common.h
 snd.o: ../../software/include/hw/interrupts.h
 snd.o: ../../software/include/hw/sysctl.h
 snd.o: ../../software/include/hw/capabilities.h
@@ -81,7 +83,8 @@ vga.o: ../../software/include/base/stdio.h
 vga.o: ../../software/include/base/stdlib.h
 vga.o: ../../software/include/base/string.h
 vga.o: ../../software/include/base/console.h
-vga.o: ../../software/include/base/system.h ../../software/include/hw/vga.h
+vga.o: ../../software/include/base/system.h ../../software/include/base/irq.h
+vga.o: ../../software/include/hw/interrupts.h ../../software/include/hw/vga.h
 vga.o: ../../software/include/hw/common.h ../../software/include/hal/tmu.h
 vga.o: ../../software/include/hw/tmu.h ../../software/include/hal/vga.h
 vin.o: ../../software/include/base/stdio.h

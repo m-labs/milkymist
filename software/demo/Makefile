@@ -103,8 +103,7 @@ osd.o: ../../software/include/base/system.h
 osd.o: ../../software/include/base/string.h
 osd.o: ../../software/include/base/stdlib.h
 osd.o: ../../software/include/base/fatfs.h
-osd.o: ../../software/include/base/blockdev.h font.h logo.h renderer.h
-osd.o: ../../software/include/base/version.h osd.h
+osd.o: ../../software/include/base/blockdev.h font.h logo.h renderer.h osd.h
 renderer.o: ../../software/include/base/stdio.h
 renderer.o: ../../software/include/base/stdlib.h
 renderer.o: ../../software/include/base/string.h
@@ -134,9 +133,11 @@ shell.o: ../../software/include/base/blockdev.h
 shell.o: ../../software/include/base/fatfs.h
 shell.o: ../../software/include/base/system.h
 shell.o: ../../software/include/base/math.h ../../software/include/base/irq.h
-shell.o: ../../software/include/base/board.h ../../software/include/hw/pfpu.h
-shell.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
-shell.o: ../../software/include/hw/sysctl.h ../../software/include/hw/gpio.h
+shell.o: ../../software/include/base/board.h
+shell.o: ../../software/include/base/version.h
+shell.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
+shell.o: ../../software/include/hw/tmu.h ../../software/include/hw/sysctl.h
+shell.o: ../../software/include/hw/gpio.h
 shell.o: ../../software/include/hw/interrupts.h
 shell.o: ../../software/include/hw/minimac.h
 shell.o: ../../software/include/hw/bt656cap.h ../../software/include/hw/rc5.h

@@ -30,6 +30,7 @@ static const unsigned char input_firmware[] = {
 #include "softusb-input.h"
 };
 
+static int debug_enable;
 static char debug_buffer[256];
 static int debug_len;
 static int debug_consume;
@@ -66,6 +67,7 @@ void usb_init()
 	printf("USB: starting host controller\n");
 	CSR_SOFTUSB_CONTROL = 0;
 
+	debug_enable = 1;
 	debug_len = 0;
 	debug_consume = 0;
 	mouse_consume = 0;
@@ -78,17 +80,24 @@ void usb_init()
 	irq_setmask(mask);
 }
 
+void usb_debug_enable(int en)
+{
+	debug_enable = en;
+}
+
 static void flush_debug_buffer()
 {
 	char debug_buffer_fmt[266];
 	int i;
 	
-	debug_buffer[debug_len] = 0;
-	/* send USB debug messages to UART only */
-	sprintf(debug_buffer_fmt, "USB: HC: %s\n", debug_buffer);
-	i = 0;
-	while(debug_buffer_fmt[i])
-		uart_write(debug_buffer_fmt[i++]);
+	if(debug_enable) {
+		debug_buffer[debug_len] = 0;
+		/* send USB debug messages to UART only */
+		sprintf(debug_buffer_fmt, "USB: HC: %s\n", debug_buffer);
+		i = 0;
+		while(debug_buffer_fmt[i])
+			uart_write(debug_buffer_fmt[i++]);
+	}
 	debug_len = 0;
 }
 

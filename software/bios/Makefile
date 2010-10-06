@@ -42,11 +42,13 @@ boot.o: ../../software/include/base/string.h
 boot.o: ../../software/include/base/irq.h
 boot.o: ../../software/include/net/microudp.h
 boot.o: ../../software/include/net/tftp.h ../../software/include/hal/vga.h
-boot.o: ../../software/include/hw/hpdmc.h ../../software/include/hw/common.h
-boot.o: ../../software/include/hw/flash.h boot.h
+boot.o: ../../software/include/hal/usb.h ../../software/include/hw/hpdmc.h
+boot.o: ../../software/include/hw/common.h ../../software/include/hw/flash.h
+boot.o: boot.h
 isr.o: ../../software/include/hw/interrupts.h
 isr.o: ../../software/include/base/irq.h ../../software/include/base/uart.h
-isr.o: ../../software/include/hal/usb.h
+isr.o: ../../software/include/hal/usb.h ../../software/include/hal/tmu.h
+isr.o: ../../software/include/hw/tmu.h ../../software/include/hw/common.h
 main.o: ../../software/include/base/stdio.h
 main.o: ../../software/include/base/stdlib.h
 main.o: ../../software/include/base/console.h
@@ -60,7 +62,8 @@ main.o: ../../software/include/base/version.h
 main.o: ../../software/include/net/mdio.h ../../software/include/hw/fmlbrg.h
 main.o: ../../software/include/hw/sysctl.h ../../software/include/hw/common.h
 main.o: ../../software/include/hw/gpio.h ../../software/include/hw/flash.h
-main.o: ../../software/include/hal/vga.h ../../software/include/hal/brd.h
+main.o: ../../software/include/hal/vga.h ../../software/include/hal/tmu.h
+main.o: ../../software/include/hw/tmu.h ../../software/include/hal/brd.h
 main.o: ../../software/include/hal/usb.h ../../software/include/hal/ukb.h
 main.o: boot.h splash.h
 splash.o: ../../software/include/base/stdio.h

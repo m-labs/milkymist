@@ -31,6 +31,7 @@
 #include <net/tftp.h>
 
 #include <hal/vga.h>
+#include <hal/usb.h>
 
 #include <hw/hpdmc.h>
 #include <hw/flash.h>
@@ -104,9 +105,12 @@ void serialboot()
 	int failed;
 	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
 	static const char str[SFL_MAGIC_LEN] = SFL_MAGIC_REQ;
-	char *c;
+	const char *c;
 	
 	printf("I: Attempting serial firmware loading\n");
+	
+	usb_debug_enable(0);
+	
 	c = str;
 	while(*c) {
 		uart_write(*c);
@@ -114,6 +118,7 @@ void serialboot()
 	}
 	if(!check_ack()) {
 		printf("E: Timeout\n");
+		usb_debug_enable(1);
 		return;
 	}
 	
@@ -139,6 +144,7 @@ void serialboot()
 			failed++;
 			if(failed == MAX_FAILED) {
 				printf("E: Too many consecutive errors, aborting");
+				usb_debug_enable(1);
 				return;
 			}
 			uart_write(SFL_ACK_CRCERROR);
@@ -150,6 +156,7 @@ void serialboot()
 			case SFL_CMD_ABORT:
 				failed = 0;
 				uart_write(SFL_ACK_SUCCESS);
+				usb_debug_enable(1);
 				return;
 			case SFL_CMD_LOAD: {
 				char *writepointer;
@@ -205,6 +212,7 @@ void serialboot()
 				failed++;
 				if(failed == MAX_FAILED) {
 					printf("E: Too many consecutive errors, aborting");
+					usb_debug_enable(1);
 					return;
 				}
 				uart_write(SFL_ACK_UNKNOWN);
