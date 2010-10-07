@@ -28,7 +28,6 @@ You will need:
  - AVR toolchain for building the USB firmware,
  - SRecord,
  - xxd,
- - mtools,
  - native Clang/LLVM toolchain,
  - libGD,
  - RE2C,
