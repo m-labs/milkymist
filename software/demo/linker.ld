@@ -35,6 +35,12 @@ SECTIONS
 		*(.sdata .sdata.* .gnu.linkonce.s.*)
 		_edata = .;
 	} > sdram
+	
+	.memtestbuf :
+	{
+		. = ALIGN(32*1024*1024);
+		*(.memtestbuf .memtestbuf.*)
+	} > sdram
 
 	.bss :
 	{

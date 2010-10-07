@@ -815,9 +815,8 @@ static void input()
 	usb_set_keyboard_cb(NULL);
 }
 
-#ifdef WITH_MEMTEST
 #define MEMTEST_LEN (32*1024*1024)
-static unsigned int memtest_buffer[MEMTEST_LEN/4] __attribute__((aligned(32)));
+static unsigned int memtest_buffer[MEMTEST_LEN/4] __attribute((section(".memtestbuf")));
 static void memtest()
 {
 	printf("Filling buffer...\n");
@@ -870,7 +869,6 @@ static void lmemtest()
 			printf("%d MB in %d s (%d MB/s), cumulative errors: %d\n", length, t.sec, length/t.sec, total_errors);
 	}
 }
-#endif
 
 static char *get_token(char **str)
 {
@@ -949,10 +947,8 @@ static void do_command(char *c)
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
 		else if(strcmp(command, "readblock") == 0) readblock(param1);
 		else if(strcmp(command, "input") == 0) input();
-#ifdef WITH_MEMTEST
 		else if(strcmp(command, "memtest") == 0) memtest();
 		else if(strcmp(command, "lmemtest") == 0) lmemtest();
-#endif
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);
 	}
