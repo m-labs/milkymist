@@ -90,8 +90,12 @@ begin
 end
 endtask
 
+parameter memsize = 32*1024*1024;
+reg [63:0] mem[0:memsize-1];
+
 integer burstcount;
 integer addr;
+integer we;
 initial burstcount = 0;
 always @(posedge sys_clk) begin
 	fml_ack = 1'b0;
@@ -99,8 +103,13 @@ always @(posedge sys_clk) begin
 		if(fml_stb & (($random % 5) == 0)) begin
 			burstcount = 1;
 			addr = fml_adr;
+			we = fml_we;
 			
-			$display("Starting   FML burst at address %x, data=%x", addr, fml_do);
+			//$display("Starting   FML burst at address %x, data=%x", addr, fml_do);
+			
+			fml_di = mem[addr/8];
+			if(we)
+				mem[addr/8] = fml_do;
 			
 			fml_ack = 1'b1;
 		end
@@ -108,7 +117,11 @@ always @(posedge sys_clk) begin
 		addr = addr + 8;
 		burstcount = burstcount + 1;
 
-		$display("Continuing FML burst at address %x, data=%x", addr, fml_do);
+		fml_di = mem[addr/8];
+		if(we)
+			mem[addr/8] = fml_do;
+
+		//$display("Continuing FML burst at address %x, data=%x", addr, fml_do);
 		
 		if(burstcount == 4)
 			burstcount = 0;
@@ -138,9 +151,13 @@ always begin
 	csrwrite(32'h4, 32'd0);
 	csrwrite(32'h8, 32'd0);
 	csrwrite(32'hc, 32'd1);
-	csrwrite(32'h0, 32'd10);
+	csrwrite(32'h0, 32'd209716);
 
-	#10000;
+	csrread(32'h0);
+	while(|csr_do) begin
+		#10000;
+		csrread(32'h0);
+	end
 	
 	$display("");
 	$display("READING");
@@ -148,9 +165,13 @@ always begin
 	csrwrite(32'h4, 32'd0);
 	csrwrite(32'h8, 32'd0);
 	csrwrite(32'hc, 32'd0);
-	csrwrite(32'h0, 32'd10);
+	csrwrite(32'h0, 32'd209716);
 	
-	#10000;
+	csrread(32'h0);
+	while(|csr_do) begin
+		#10000;
+		csrread(32'h0);
+	end
 	
 	csrread(32'h4); /* error count */
 

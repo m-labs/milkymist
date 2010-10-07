@@ -817,28 +817,42 @@ static void input()
 
 #define MEMTEST_LEN (32*1024*1024)
 static unsigned int memtest_buffer[MEMTEST_LEN/4] __attribute((section(".memtestbuf")));
-static void memtest()
+static void memtest(char *nb)
 {
+	char *c;
+	unsigned int n;
+	
+	if(*nb == 0) {
+		printf("memtest <nbursts>\n");
+		return;
+	}
+	n = strtoul(nb, &c, 0);
+	if(*c != 0) {
+		printf("incorrect count\n");
+		return;
+	}
+
 	printf("Filling buffer...\n");
 	CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
 	CSR_MEMTEST_ERRORS = 0;
 	CSR_MEMTEST_WRITE = 1;
-	CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32;
+	CSR_MEMTEST_BCOUNT = n; //MEMTEST_LEN/32;
 	while(CSR_MEMTEST_BCOUNT > 0);
 	printf("Reading buffer...\n");
 	CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
 	CSR_MEMTEST_ERRORS = 0;
 	CSR_MEMTEST_WRITE = 0;
-	CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32;
+	CSR_MEMTEST_BCOUNT = n;
 	while(CSR_MEMTEST_BCOUNT > 0);
 	printf("Errors: %d\n", CSR_MEMTEST_ERRORS);
 }
 
-#define LMEMTEST_RUNS 1000
+/* beyond this number, the address LFSR loops */
+#define LMEMTEST_BCOUNT 209715
+#define LMEMTEST_RUNS 200
 static void lmemtest()
 {
 	int i;
-	int p;
 	unsigned int total_errors;
 	struct timestamp t0, t1, t;
 	unsigned int length;
@@ -849,22 +863,21 @@ static void lmemtest()
 	while(!readchar_nonblock()) {
 		time_get(&t0);
 		for(i=0;i<LMEMTEST_RUNS;i++) {
-			p = i & 1;
-			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer + 32*p;
+			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
 			CSR_MEMTEST_ERRORS = 0;
 			CSR_MEMTEST_WRITE = 1;
-			CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32 - 1;
+			CSR_MEMTEST_BCOUNT = LMEMTEST_BCOUNT;
 			while(CSR_MEMTEST_BCOUNT > 0);
-			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer + 32*p;
+			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
 			CSR_MEMTEST_ERRORS = 0;
 			CSR_MEMTEST_WRITE = 0;
-			CSR_MEMTEST_BCOUNT = MEMTEST_LEN/32 - 1;
+			CSR_MEMTEST_BCOUNT = LMEMTEST_BCOUNT;
 			while(CSR_MEMTEST_BCOUNT > 0);
 			total_errors += CSR_MEMTEST_ERRORS;
 		}
 		time_get(&t1);
 		time_diff(&t, &t1, &t0);
-		length = 2*(MEMTEST_LEN/1024/1024)*LMEMTEST_RUNS;
+		length = 2*LMEMTEST_BCOUNT*32*LMEMTEST_RUNS/(1024*1024);
 		if(t.sec != 0)
 			printf("%d MB in %d s (%d MB/s), cumulative errors: %d\n", length, t.sec, length/t.sec, total_errors);
 	}
@@ -947,7 +960,7 @@ static void do_command(char *c)
 		else if(strcmp(command, "miditx") == 0) miditx(param1);
 		else if(strcmp(command, "readblock") == 0) readblock(param1);
 		else if(strcmp(command, "input") == 0) input();
-		else if(strcmp(command, "memtest") == 0) memtest();
+		else if(strcmp(command, "memtest") == 0) memtest(param1);
 		else if(strcmp(command, "lmemtest") == 0) lmemtest();
 
 		else if(strcmp(command, "") != 0) printf("Command not found: '%s'\n", command);

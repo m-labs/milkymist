@@ -52,13 +52,13 @@ memtest_prng64 prng_data(
 	.rand(rand)
 );
 
+wire [19:0] fml_adr_bot;
 memtest_prng20 prng_address(
 	.clk(sys_clk),
 	.rst(load_address),
 	.ce(fml_ack),
-	.rand(fml_adr[24:5])
+	.rand(fml_adr_bot)
 );
-assign fml_adr[4:0] = 5'd0;
 
 assign fml_sel = 8'hff;
 assign fml_do = rand;
@@ -118,7 +118,7 @@ always @(posedge sys_clk) begin
 	else if(load_address)
 		fml_adr_top <= csr_di[fml_depth-1:25];
 end
-assign fml_adr[fml_depth-1:25] = fml_adr_top;
+assign fml_adr = {fml_adr_top, fml_adr_bot, 5'd0};
 
 always @(posedge sys_clk) begin
 	if(csr_selected & (csr_a[2:0] == 3'd3) & csr_we)
