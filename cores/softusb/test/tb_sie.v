@@ -50,8 +50,6 @@ softusb_tx tx(
 	.tx_valid(tx_valid),
 	.tx_ready(tx_ready),
 
-	.generate_reset(1'b0),
-
 	.txp(txp),
 	.txm(txm),
 	.txoe(txoe),
