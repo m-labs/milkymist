@@ -848,8 +848,8 @@ static void memtest(char *nb)
 }
 
 /* beyond this number, the address LFSR loops */
-#define LMEMTEST_BCOUNT 209715
-#define LMEMTEST_RUNS 200
+#define LMEMTEST_BCOUNT 209715LL
+#define LMEMTEST_RUNS 200LL
 static void lmemtest()
 {
 	int i;
@@ -877,7 +877,7 @@ static void lmemtest()
 		}
 		time_get(&t1);
 		time_diff(&t, &t1, &t0);
-		length = 2*LMEMTEST_BCOUNT*32*LMEMTEST_RUNS/(1024*1024);
+		length = 2LL*LMEMTEST_BCOUNT*32LL*LMEMTEST_RUNS/(1024LL*1024LL);
 		if(t.sec != 0)
 			printf("%d MB in %d s (%d MB/s), cumulative errors: %d\n", length, t.sec, length/t.sec, total_errors);
 	}
