@@ -29,7 +29,7 @@ module memtest #(
 	output reg [31:0] csr_do,
 
 	/* Framebuffer FML 4x64 interface */
-	output reg [fml_depth-1:0] fml_adr,
+	output [fml_depth-1:0] fml_adr,
 	output reg fml_stb,
 	output reg fml_we,
 	input fml_ack,
@@ -38,21 +38,30 @@ module memtest #(
 	output [63:0] fml_do
 );
 
-reg rand_rst;
 wire rand_ce;
 wire [63:0] rand;
 
-memtest_prng64 prng64(
+wire csr_selected = csr_a[13:10] == csr_addr;
+wire load_nbursts = csr_selected & (csr_a[2:0] == 3'd0) & csr_we;
+wire load_address = csr_selected & (csr_a[2:0] == 3'd2) & csr_we;
+
+memtest_prng64 prng_data(
 	.clk(sys_clk),
-	.rst(rand_rst),
+	.rst(load_nbursts),
 	.ce(rand_ce),
 	.rand(rand)
 );
 
+memtest_prng20 prng_address(
+	.clk(sys_clk),
+	.rst(load_address),
+	.ce(fml_ack),
+	.rand(fml_adr[24:5])
+);
+assign fml_adr[4:0] = 5'd0;
+
 assign fml_sel = 8'hff;
 assign fml_do = rand;
-
-wire csr_selected = csr_a[13:10] == csr_addr;
 
 reg nomatch;
 always @(posedge sys_clk)
@@ -60,13 +69,11 @@ always @(posedge sys_clk)
 
 reg [31:0] remaining_bursts;
 always @(posedge sys_clk) begin
-	rand_rst <= 1'b0;
 	if(sys_rst) begin
 		remaining_bursts <= 32'd0;
 		fml_stb <= 1'b0;
 	end else begin
-		if(csr_selected & (csr_a[2:0] == 3'd0) & csr_we) begin
-			rand_rst <= 1'b1;
+		if(load_nbursts) begin
 			remaining_bursts <= csr_di;
 			fml_stb <= 1'b1;
 		end else begin
@@ -104,14 +111,14 @@ always @(posedge sys_clk) begin
 		errcount <= errcount + 32'd1;
 end
 
+reg [fml_depth-1-25:0] fml_adr_top;
 always @(posedge sys_clk) begin
 	if(sys_rst)
-		fml_adr <= 0;
-	else if(csr_selected & (csr_a[2:0] == 3'd2) & csr_we)
-		fml_adr <= csr_di;
-	else if(fml_ack)
-		fml_adr <= fml_adr + 32;
+		fml_adr_top <= 0;
+	else if(load_address)
+		fml_adr_top <= csr_di[fml_depth-1:25];
 end
+assign fml_adr[fml_depth-1:25] = fml_adr_top;
 
 always @(posedge sys_clk) begin
 	if(csr_selected & (csr_a[2:0] == 3'd3) & csr_we)

@@ -15,26 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module memtest_prng64(
+module memtest_prng20(
 	input clk,
 	input rst,
 	input ce,
-	output reg [63:0] rand
+	output reg [19:0] rand
 );
 
-reg [30:0] state;
+reg [19:0] state;
 
 reg o;
 integer i;
 always @(posedge clk) begin
 	if(rst) begin
-		state = 31'd0;
-		rand = 64'd0;
+		state = 20'd0;
+		rand = 20'd0;
 	end else if(ce) begin
-		for(i=0;i<64;i=i+1) begin
-			o = ~(state[30] ^ state[27]);
+		for(i=0;i<20;i=i+1) begin
+			o = ~(state[19] ^ state[16]);
 			rand[i] = o;
-			state = {state[29:0], o};
+			state = {state[18:0], o};
 		end
 	end
 end
