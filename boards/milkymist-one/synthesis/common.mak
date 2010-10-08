@@ -16,10 +16,12 @@ load: $(BUILDDIR)/system.bit
 
 # yeah, we need different placer cost tables for normal and rescue...:(
 build/system.ncd: build/system.ngd
-	cd build && map -ol high -t 20 -w system.ngd
-	
+	cd build && map -ol high -t 40 -w system.ngd
+
+# ISE 12.3 seems totally unable to meet timing for the rescue bitstream.
+# If it persists, revert to 12.2. Working cost tables were 20 and 1.
 build-rescue/system.ncd: build-rescue/system.ngd
-	cd build-rescue && map -ol high -t 1 -w system.ngd
+	cd build-rescue && map -ol high -w system.ngd
 
 $(BUILDDIR)/system-routed.ncd: $(BUILDDIR)/system.ncd
 	cd $(BUILDDIR) && par -ol high -w system.ncd system-routed.ncd
