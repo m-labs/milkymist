@@ -577,6 +577,7 @@ static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 int main()
 {
 	unsigned char mask;
+	unsigned int i;
 	
 	print_string(banner);
 	
@@ -600,9 +601,18 @@ int main()
 		wio8(SIE_GENERATE_EOP, 1);
 
 		while(rio8(SIE_TX_BUSY));
+		/*
+		 * wait extra time to allow the USB cable 
+		 * capacitance to discharge (otherwise some disconnects
+		 * aren't properly detected)
+		 */
+		for(i=0;i<128;i++)
+			asm("nop");
+		
 		wio8(SIE_SEL_RX, 0);
 		wio8(SIE_SEL_TX, 0x01);
 		port_service(&port_a, 'A');
+
 		while(rio8(SIE_TX_BUSY));
 		wio8(SIE_SEL_RX, 1);
 		wio8(SIE_SEL_TX, 0x02);
