@@ -61,19 +61,10 @@ static void make_usb_token(unsigned char pid, unsigned long int elevenbits, unsi
 	out[2] |= usb_crc5(out[1], out[2]) << 3;
 }
 
-//#define DUMP
-
 static void usb_tx(unsigned char *buf, unsigned int len)
 {
 	unsigned int i;
-
-#ifdef DUMP
-	print_char('>');
-	print_char(' ');
-	for(i=0;i<len;i++)
-		print_hex(buf[i]);
-	print_char('\n');
-#endif
+	
 	wio8(SIE_TX_DATA, 0x80); /* send SYNC */
 	while(rio8(SIE_TX_PENDING));
 	for(i=0;i<len;i++) {
@@ -113,17 +104,8 @@ static unsigned int usb_rx(unsigned char *buf, unsigned int maxlen)
 				print_string(bitstuff_error);
 				return 0;
 			}
-			if(!rio8(SIE_RX_ACTIVE)) {
-#ifdef DUMP
-				unsigned int j;
-				print_char('<');
-				print_char(' ');
-				for(j=0;j<i;j++)
-					print_hex(buf[j]);
-				print_char('\n');
-#endif
+			if(!rio8(SIE_RX_ACTIVE))
 				return i;
-			}
 			if(timeout-- == 0) {
 				print_string(timeout_error);
 				return 0;
@@ -291,6 +273,7 @@ retry:
 	return transferred;
 }
 
+static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
 static void poll(struct port_status *p)
 {
 	unsigned char usb_buffer[11];
@@ -302,8 +285,17 @@ static void poll(struct port_status *p)
 	usb_tx(usb_buffer, 3);
 	/* DATAx */
 	len = usb_rx(usb_buffer, 11);
-	if((len < 7) || (usb_buffer[0] != p->expected_data))
+	if(len < 7)
 		return;
+	if(usb_buffer[0] != p->expected_data) {
+		if((usb_buffer[0] == 0xc3) || (usb_buffer[0] == 0x4b)) {
+			/* ACK */
+			usb_buffer[0] = 0xd2;
+			usb_tx(usb_buffer, 1);
+			print_string(datax_mismatch);
+		}
+		return; /* drop */
+	}
 	/* ACK */
 	usb_buffer[0] = 0xd2;
 	usb_tx(usb_buffer, 1);
@@ -607,8 +599,8 @@ int main()
 			mask |= 0x02;
 		wio8(SIE_SEL_TX, mask);
 		wio8(SIE_GENERATE_EOP, 1);
-
 		while(rio8(SIE_TX_BUSY));
+
 		/*
 		 * wait extra time to allow the USB cable 
 		 * capacitance to discharge (otherwise some disconnects
@@ -620,8 +612,9 @@ int main()
 		wio8(SIE_SEL_RX, 0);
 		wio8(SIE_SEL_TX, 0x01);
 		port_service(&port_a, 'A');
-
+		
 		while(rio8(SIE_TX_BUSY));
+
 		wio8(SIE_SEL_RX, 1);
 		wio8(SIE_SEL_TX, 0x02);
 		port_service(&port_b, 'B');
