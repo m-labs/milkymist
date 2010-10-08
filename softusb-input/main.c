@@ -44,6 +44,7 @@ struct port_status {
 	int retry_count;
 	unsigned long int unreset_frame;
 	
+	unsigned char expected_data;
 	char previous_keys[4];
 };
 
@@ -301,9 +302,15 @@ static void poll(struct port_status *p)
 	usb_tx(usb_buffer, 3);
 	/* DATAx */
 	len = usb_rx(usb_buffer, 11);
+	if((len < 7) || (usb_buffer[0] != p->expected_data))
+		return;
 	/* ACK */
 	usb_buffer[0] = 0xd2;
 	usb_tx(usb_buffer, 1);
+	if(p->expected_data == 0xc3)
+		p->expected_data = 0x4b;
+	else
+		p->expected_data = 0xc3;
 	/* send to host */
 	if(p->keyboard) {
 		if(len >= 9) {
@@ -559,6 +566,7 @@ static void port_service(struct port_status *p, char name)
 
 			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0) {
 				p->retry_count = 0;
+				p->expected_data = 0xc3; /* start with DATA0 */
 				p->state = PORT_STATE_RUNNING;
 			}
 			check_retry(p);
