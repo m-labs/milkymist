@@ -601,9 +601,9 @@ int main()
 
 		/* send keepalive */
 		mask = 0;
-		if(port_a.state != PORT_STATE_DISCONNECTED)
+		if((port_a.state != PORT_STATE_DISCONNECTED) && (port_a.state != PORT_STATE_UNSUPPORTED))
 			mask |= 0x01;
-		if(port_b.state != PORT_STATE_DISCONNECTED)
+		if((port_b.state != PORT_STATE_DISCONNECTED) && (port_b.state != PORT_STATE_UNSUPPORTED))
 			mask |= 0x02;
 		wio8(SIE_SEL_TX, mask);
 		wio8(SIE_GENERATE_EOP, 1);
