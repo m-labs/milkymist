@@ -816,7 +816,7 @@ static void input()
 }
 
 #define MEMTEST_LEN (32*1024*1024)
-static unsigned int memtest_buffer[MEMTEST_LEN/4] __attribute((section(".memtestbuf")));
+extern void* _memtest_buffer;
 static void memtest(char *nb)
 {
 	char *c;
@@ -833,13 +833,13 @@ static void memtest(char *nb)
 	}
 
 	printf("Filling buffer...\n");
-	CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
+	CSR_MEMTEST_ADDRESS = (unsigned int)_memtest_buffer;
 	CSR_MEMTEST_ERRORS = 0;
 	CSR_MEMTEST_WRITE = 1;
 	CSR_MEMTEST_BCOUNT = n; //MEMTEST_LEN/32;
 	while(CSR_MEMTEST_BCOUNT > 0);
 	printf("Reading buffer...\n");
-	CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
+	CSR_MEMTEST_ADDRESS = (unsigned int)_memtest_buffer;
 	CSR_MEMTEST_ERRORS = 0;
 	CSR_MEMTEST_WRITE = 0;
 	CSR_MEMTEST_BCOUNT = n;
@@ -863,12 +863,12 @@ static void lmemtest()
 	while(!readchar_nonblock()) {
 		time_get(&t0);
 		for(i=0;i<LMEMTEST_RUNS;i++) {
-			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
+			CSR_MEMTEST_ADDRESS = (unsigned int)_memtest_buffer;
 			CSR_MEMTEST_ERRORS = 0;
 			CSR_MEMTEST_WRITE = 1;
 			CSR_MEMTEST_BCOUNT = LMEMTEST_BCOUNT;
 			while(CSR_MEMTEST_BCOUNT > 0);
-			CSR_MEMTEST_ADDRESS = (unsigned int)memtest_buffer;
+			CSR_MEMTEST_ADDRESS = (unsigned int)_memtest_buffer;
 			CSR_MEMTEST_ERRORS = 0;
 			CSR_MEMTEST_WRITE = 0;
 			CSR_MEMTEST_BCOUNT = LMEMTEST_BCOUNT;

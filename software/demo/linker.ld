@@ -39,6 +39,8 @@ SECTIONS
 	.memtestbuf :
 	{
 		. = ALIGN(32*1024*1024);
+		_memtest_buffer = . ;
+		. += 32*1024*1024;
 		*(.memtestbuf .memtestbuf.*)
 	} > sdram
 
