@@ -48,7 +48,7 @@ void pfpu_init()
 	mask = irq_getmask();
 	mask |= IRQ_PFPU;
 	irq_setmask(mask);
-	
+
 	printf("FPU: programmable floating point unit initialized\n");
 }
 
@@ -59,6 +59,7 @@ static void load_program(pfpu_instruction *program, int size)
 	volatile pfpu_instruction *pfpu_prog = (pfpu_instruction *)CSR_PFPU_CODEBASE;
 
 	for(page=0;page<(PFPU_PROGSIZE/PFPU_PAGESIZE);page++) {
+		CSR_PFPU_CODEPAGE = page;
 		for(word=0;word<PFPU_PAGESIZE;word++) {
 			if(size == 0) return;
 			pfpu_prog[word] = *program;
