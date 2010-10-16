@@ -62,7 +62,7 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 	fragment->tbindings[1].sym[3] = 0;
 
 	fragment->nrenamings = 0;
-	
+
 	fragment->next_sur = -3;
 	fragment->ninstructions = 0;
 
@@ -130,10 +130,10 @@ static int tbind(struct fpvm_fragment *fragment, const char *sym)
 	return fragment->next_sur--;
 }
 
-static int rename(struct fpvm_fragment *fragment, const char *sym, int reg)
+static int rename_reg(struct fpvm_fragment *fragment, const char *sym, int reg)
 {
 	int i;
-	
+
 	for(i=0;i<fragment->nrenamings;i++)
 		if(strcmp(sym, fragment->renamings[i].sym) == 0) {
 			fragment->renamings[i].reg = reg;
@@ -266,18 +266,18 @@ static int add_inv_sqrt(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 
 	reg_y = fragment->next_sur--;
 	reg_y2 = fragment->next_sur--;
-	
+
 	if(!add_isn(fragment, FPVM_OPCODE_QUAKE, reg_in, 0, reg_y)) return 0;
 	if(!add_inv_sqrt_step(fragment, reg_y, reg_in, reg_y2)) return 0;
 	if(!add_inv_sqrt_step(fragment, reg_y2, reg_in, reg_out)) return 0;
-	
+
 	return 1;
 }
 
 static int add_int(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 {
 	int reg_i;
-	
+
 	reg_i = fragment->next_sur--;
 	if(!add_isn(fragment, FPVM_OPCODE_F2I, reg_in, 0, reg_i)) return FPVM_INVALID_REG;
 	if(!add_isn(fragment, FPVM_OPCODE_I2F, reg_i, 0, reg_out)) return FPVM_INVALID_REG;
@@ -411,7 +411,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		int reg_b2;
 		int reg_invsqrt;
 		int reg_invsqrt2;
-		
+
 		reg_a2 = fragment->next_sur--;
 		reg_b2 = fragment->next_sur--;
 		reg_invsqrt = fragment->next_sur--;
@@ -420,7 +420,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		/* Transfer the sign of the result to a and make b positive */
 		if(!add_isn(fragment, FPVM_OPCODE_TSIGN, opa, opb, reg_a2)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_FABS, opb, 0, reg_b2)) return FPVM_INVALID_REG;
-		
+
 		if(!add_inv_sqrt(fragment, reg_b2, reg_invsqrt)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2)) return FPVM_INVALID_REG;
 		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg)) return FPVM_INVALID_REG;
@@ -532,7 +532,7 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 		return 0;
 	}
 	if(use_renaming) {
-		if(!rename(fragment, dest, dest_reg)) {
+		if(!rename_reg(fragment, dest, dest_reg)) {
 			fpvm_parse_free(n);
 			fragment_restore(fragment, &backup);
 			return 0;
@@ -621,7 +621,7 @@ int fpvm_get_arity(int opcode)
 void fpvm_dump(struct fpvm_fragment *fragment)
 {
 	int i;
-	
+
 	printf("== Permanent bindings:\n");
 	for(i=0;i<fragment->nbindings;i++) {
 		printf("R%04d ", i);
