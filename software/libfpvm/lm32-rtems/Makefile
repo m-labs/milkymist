@@ -1,5 +1,5 @@
 CC=lm32-rtems4.11-gcc
-CFLAGS=-O2 -mmultiply-enabled -mdivide-enabled -mbarrel-shift-enabled -msign-extend-enabled -DPRINTF_FLOAT -I$(MMDIR)/software/include
+CFLAGS=-O9 -mmultiply-enabled -mdivide-enabled -mbarrel-shift-enabled -msign-extend-enabled -DPRINTF_FLOAT -I$(MMDIR)/software/include
 AR=lm32-rtems4.11-ar
 RANLIB=lm32-rtems4.11-ranlib
 
