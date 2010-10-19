@@ -27,14 +27,13 @@ wire [31:0] wb_dat_o;
 reg wb_cyc_i;
 reg wb_stb_i;
 wire wb_ack_o;
-
-wire [6:0] aceusb_a;
-wire [15:0] aceusb_d;
+reg [3:0] wb_sel_i;
 
 wire [21:0] flash_adr;
-reg [15:0] flash_d;
+inout [15:0] flash_d;
+reg [15:0] flash_do;
 
-always @(flash_adr) #110 flash_d <= flash_adr[15:0] + 8'd1;
+always @(flash_adr) #110 flash_do <= flash_adr[15:0] + 16'b1;
 
 norflash16 dut(
 	.sys_clk(sys_clk),
@@ -45,10 +44,15 @@ norflash16 dut(
 	.wb_cyc_i(wb_cyc_i),
 	.wb_stb_i(wb_stb_i),
 	.wb_ack_o(wb_ack_o),
+	.wb_sel_i(wb_sel_i),
 
 	.flash_adr(flash_adr),
-	.flash_d(flash_d)
+	.flash_d(flash_d),
+	.flash_oe_n(flash_oe_n),
+	.flash_we_n(flash_we_n)
 );
+
+assign flash_d = flash_oe_n ? 16'bz : flash_do;
 
 task wbread;
 	input [31:0] address;
@@ -77,12 +81,16 @@ task wbread;
 endtask
 
 initial begin
+	$dumpfile("norflash16.vcd");
+	$dumpvars(-1, dut);
+
 	sys_rst = 1'b1;
 	sys_clk = 1'b0;
 	
 	wb_adr_i = 32'h00000000;
 	wb_cyc_i = 1'b0;
 	wb_stb_i = 1'b0;
+	wb_sel_i = 4'b1111;
 
 	#5 sys_clk = 1'b1;
 	#5 sys_clk = 1'b0;
@@ -91,7 +99,25 @@ initial begin
 	#5 sys_clk = 1'b1;
 	#5 sys_clk = 1'b0;
 	
-	wbread(32'h00000020);
+	wb_sel_i = 4'b1111;
+	wbread(32'h0000fff0);
+
+	wb_sel_i = 4'b0001;
+	wbread(32'h0000fff0);
+
+	wb_sel_i = 4'b0010;
+	wbread(32'h0000fff1);
+
+	wb_sel_i = 4'b0100;
+	wbread(32'h0000fff2);
+
+	wb_sel_i = 4'b1000;
+	wbread(32'h0000fff3);
+
+	wb_sel_i = 4'b0100;
+	wbread(32'h0000fff0);
+
+	wb_sel_i = 4'b1111;
 	wbread(32'h00000010);
 	#5 sys_clk = 1'b1;
 	#5 sys_clk = 1'b0;

@@ -255,6 +255,9 @@ wire [2:0]	cpuibus_cti,
 		ethernettxbus_cti;
 
 wire [31:0]	cpuibus_dat_r,
+`ifdef CFG_HW_DEBUG_ENABLED
+		cpuibus_dat_w,
+`endif
 		cpudbus_dat_r,
 		cpudbus_dat_w,
 		ac97bus_dat_r,
@@ -265,8 +268,14 @@ wire [31:0]	cpuibus_dat_r,
 		ethernettxbus_dat_r;
 
 wire [3:0]	cpudbus_sel;
+`ifdef CFG_HW_DEBUG_ENABLED
+wire [3:0]	cpuibus_sel;
+`endif
 
 wire		cpudbus_we,
+`ifdef CFG_HW_DEBUG_ENABLED
+		cpuibus_we,
+`endif
 		ac97bus_we;
 
 wire		cpuibus_cyc,
@@ -349,12 +358,21 @@ xbar xbar(
 	.sys_rst(sys_rst),
 
 	// Master 0
+`ifdef CFG_HW_DEBUG_ENABLED
+	.m0_dat_i(cpuibus_dat_w),
+`else
 	.m0_dat_i(32'hx),
+`endif
 	.m0_dat_o(cpuibus_dat_r),
 	.m0_adr_i(cpuibus_adr),
 	.m0_cti_i(cpuibus_cti),
+`ifdef CFG_HW_DEBUG_ENABLED
+	.m0_we_i(cpuibus_we),
+	.m0_sel_i(cpuibus_sel),
+`else
 	.m0_we_i(1'b0),
 	.m0_sel_i(4'hf),
+`endif
 	.m0_cyc_i(cpuibus_cyc),
 	.m0_stb_i(cpuibus_stb),
 	.m0_ack_o(cpuibus_ack),
@@ -750,12 +768,21 @@ lm32_top cpu(
 
 	.I_ADR_O(cpuibus_adr),
 	.I_DAT_I(cpuibus_dat_r),
+`ifdef CFG_HW_DEBUG_ENABLED
+	.I_DAT_O(cpuibus_dat_w),
+	.I_SEL_O(cpuibus_sel),
+`else
 	.I_DAT_O(),
 	.I_SEL_O(),
+`endif
 	.I_CYC_O(cpuibus_cyc),
 	.I_STB_O(cpuibus_stb),
 	.I_ACK_I(cpuibus_ack),
+`ifdef CFG_HW_DEBUG_ENABLED
+	.I_WE_O(cpuibus_we),
+`else
 	.I_WE_O(),
+`endif
 	.I_CTI_O(cpuibus_cti),
 	.I_LOCK_O(),
 	.I_BTE_O(),
