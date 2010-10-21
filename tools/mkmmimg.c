@@ -1,6 +1,7 @@
 /*
- * CRC32 computation tool
- * 2009, Sebastien Bourdeauducq - http://lekernel.net
+ * CRC32 computation tool and Milkymist image file writer
+ * (c) 2009, 2010, Sebastien Bourdeauducq
+ * Released under GNU GPL v3
  * This file is part of Milkymist.
  */
 
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
 	
 	if(((argc != 2) && (argc != 3) && (argc != 4))
 		|| ((argc > 2) && strcmp(argv[2], "write"))) {
-		fprintf(stderr, "Usage: crc32 <filename> [write] [dest]\n");
+		fprintf(stderr, "Usage: mkmmimg <filename> [write] [dest]\n");
 		return 1;
 	}
 	

@@ -1,4 +1,4 @@
-TARGETS=bin2hex crc32 flterm makeraw
+TARGETS=bin2hex mkmmimg flterm makeraw
 
 all: $(TARGETS)
 
@@ -8,7 +8,11 @@ all: $(TARGETS)
 makeraw: makeraw.c
 	clang -O2 -Wall -s -o $@ $< -lgd
 
-.PHONY: clean
+install: mkmmimg flterm
+	cp mkmmimg /usr/bin
+	cp flterm /usr/bin
+
+.PHONY: clean install
 
 clean:
 	rm -f $(TARGETS) *.o

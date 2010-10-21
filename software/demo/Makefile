@@ -22,7 +22,7 @@ logo.h: logo.raw
 	chmod -x $@
 
 %.fbi: %.bin
-	$(MMDIR)/tools/crc32 $< write $@
+	$(MMDIR)/tools/mkmmimg $< write $@
 
 boot.elf: linker.ld $(OBJECTS)
 	$(MAKE) -C $(MMDIR)/software/libbase

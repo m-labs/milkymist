@@ -10,7 +10,7 @@ all: bios.bin bios-rescue.bin
 	$(MAKE) -C $(MMDIR)/tools
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	chmod -x $@
-	$(MMDIR)/tools/crc32 $@ write
+	$(MMDIR)/tools/mkmmimg $@ write
 
 bios.elf: linker.ld $(OBJECTS)
 	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group

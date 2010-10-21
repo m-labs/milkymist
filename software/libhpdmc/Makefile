@@ -16,7 +16,6 @@ libhpdmc.a: libhpdmc.o
 	$(MAKE) -C $(MMDIR)/tools
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	chmod -x $@
-	$(MMDIR)/tools/crc32 $@
 
 test.elf: linker.ld libhpdmc.a test.o
 	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ -L. test.o --start-group -lhpdmc --end-group
