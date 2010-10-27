@@ -29,6 +29,7 @@
 enum {
 	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_BUS_RESET,
+	PORT_STATE_WARMUP,
 	PORT_STATE_SET_ADDRESS,
 	PORT_STATE_GET_DEVICE_DESCRIPTOR,
 	PORT_STATE_GET_CONFIGURATION_DESCRIPTOR,
@@ -43,7 +44,7 @@ struct port_status {
 	int keyboard;
 	int retry_count;
 	unsigned long int unreset_frame;
-	
+
 	unsigned char expected_data;
 	char previous_keys[4];
 };
@@ -64,7 +65,7 @@ static void make_usb_token(unsigned char pid, unsigned long int elevenbits, unsi
 static void usb_tx(unsigned char *buf, unsigned int len)
 {
 	unsigned int i;
-	
+
 	wio8(SIE_TX_DATA, 0x80); /* send SYNC */
 	while(rio8(SIE_TX_PENDING));
 	for(i=0;i<len;i++) {
@@ -148,9 +149,9 @@ static int control_transfer(unsigned char addr, struct setup_packet *p, int out,
 	int rxlen;
 	int transferred;
 	int chunklen;
-	
+
 	toggle = 0;
-	
+
 	/* send SETUP token */
 	make_usb_token(0x2d, addr, usb_buffer);
 	usb_tx(usb_buffer, 3);
@@ -167,7 +168,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p, int out,
 		dump_hex(usb_buffer, rxlen);
 		return -1;
 	}
-	
+
 	/* data phase */
 	transferred = 0;
 	if(out) {
@@ -177,7 +178,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p, int out,
 				break;
 			if(chunklen > 8)
 				chunklen = 8;
-			
+
 			/* send OUT token */
 			make_usb_token(0xe1, addr, usb_buffer);
 			usb_tx(usb_buffer, 3);
@@ -196,7 +197,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p, int out,
 				dump_hex(usb_buffer, rxlen);
 				return -1;
 			}
-			
+
 			transferred += chunklen;
 			payload += chunklen;
 			if(chunklen < 8)
@@ -221,18 +222,18 @@ static int control_transfer(unsigned char addr, struct setup_packet *p, int out,
 			if(chunklen > (maxlen - transferred))
 				chunklen = maxlen - transferred;
 			memcpy(payload, &usb_buffer[1], chunklen);
-			
+
 			/* send ACK token */
 			usb_buffer[0] = 0xd2;
 			usb_tx(usb_buffer, 1);
-			
+
 			transferred += chunklen;
 			payload += chunklen;
 			if(chunklen < 8)
 				break;
 		}
 	}
-	
+
 	/* send IN/OUT token in the opposite direction to end transfer */
 retry:
 	make_usb_token(out ? 0x69 : 0xe1, addr, usb_buffer);
@@ -269,7 +270,7 @@ retry:
 			return -1;
 		}
 	}
-	
+
 	return transferred;
 }
 
@@ -368,7 +369,7 @@ static void check_discon(struct port_status *p, char name)
 static int validate_configuration_descriptor(unsigned char *descriptor, int len, int *keyboard)
 {
 	int offset;
-	
+
 	offset = 0;
 	while(offset < len) {
 		if(descriptor[offset+1] == 0x04) {
@@ -453,7 +454,10 @@ static void port_service(struct port_status *p, char name)
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x02);
 				else
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
+				p->state = PORT_STATE_WARMUP;
 			}
+			break;
+		case PORT_STATE_WARMUP:
 			if(frame_nr == ((p->unreset_frame + 250) & 0x7ff)) {
 				p->retry_count = 0;
 				p->state = PORT_STATE_SET_ADDRESS;
@@ -461,7 +465,7 @@ static void port_service(struct port_status *p, char name)
 			break;
 		case PORT_STATE_SET_ADDRESS: {
 			struct setup_packet packet;
-			
+
 			packet.bmRequestType = 0x00;
 			packet.bRequest = 0x05;
 			packet.wValue[0] = 0x01;
@@ -481,7 +485,7 @@ static void port_service(struct port_status *p, char name)
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
 			struct setup_packet packet;
 			unsigned char device_descriptor[18];
-			
+
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
 			packet.wValue[0] = 0x00;
@@ -506,7 +510,7 @@ static void port_service(struct port_status *p, char name)
 				if((device_descriptor[4] != 0) || (device_descriptor[5] != 0)) {
 					print_string(found); print_string(unsupported_device);
 					p->state = PORT_STATE_UNSUPPORTED;
-				} else 
+				} else
 					p->state = PORT_STATE_GET_CONFIGURATION_DESCRIPTOR;
 			}
 			check_retry(p);
@@ -516,7 +520,7 @@ static void port_service(struct port_status *p, char name)
 			struct setup_packet packet;
 			unsigned char configuration_descriptor[127];
 			int len;
-			
+
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
 			packet.wValue[0] = 0x00;
@@ -546,7 +550,7 @@ static void port_service(struct port_status *p, char name)
 		}
 		case PORT_STATE_SET_CONFIGURATION: {
 			struct setup_packet packet;
-			
+
 			packet.bmRequestType = 0x00;
 			packet.bRequest = 0x09;
 			packet.wValue[0] = 0x01;
@@ -578,9 +582,9 @@ int main()
 {
 	unsigned char mask;
 	unsigned int i;
-	
+
 	print_string(banner);
-	
+
 	/* we only support low speed operation */
 	wio8(SIE_TX_LOW_SPEED, 1);
 	wio8(SIE_LOW_SPEED, 3);
@@ -593,26 +597,26 @@ int main()
 
 		/* send keepalive */
 		mask = 0;
-		if((port_a.state != PORT_STATE_DISCONNECTED) && (port_a.state != PORT_STATE_UNSUPPORTED))
+		if(port_a.state == PORT_STATE_WARMUP)
 			mask |= 0x01;
-		if((port_b.state != PORT_STATE_DISCONNECTED) && (port_b.state != PORT_STATE_UNSUPPORTED))
+		if(port_b.state == PORT_STATE_WARMUP)
 			mask |= 0x02;
 		wio8(SIE_SEL_TX, mask);
 		wio8(SIE_GENERATE_EOP, 1);
 		while(rio8(SIE_TX_BUSY));
 
 		/*
-		 * wait extra time to allow the USB cable 
+		 * wait extra time to allow the USB cable
 		 * capacitance to discharge (otherwise some disconnects
 		 * aren't properly detected)
 		 */
 		for(i=0;i<128;i++)
 			asm("nop");
-		
+
 		wio8(SIE_SEL_RX, 0);
 		wio8(SIE_SEL_TX, 0x01);
 		port_service(&port_a, 'A');
-		
+
 		while(rio8(SIE_TX_BUSY));
 
 		wio8(SIE_SEL_RX, 1);
