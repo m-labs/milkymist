@@ -20,7 +20,7 @@
 
 module system(
 	input clk50,
-	
+
 	// Boot ROM
 	output [23:0] flash_adr,
 	inout [15:0] flash_d,
@@ -70,7 +70,7 @@ module system(
 	inout [3:0] mc_d,
 	inout mc_cmd,
 	output mc_clk,
-	
+
 	// AC97
 	input ac97_clk,
 	input ac97_sin,
@@ -136,7 +136,7 @@ module system(
 
 	// Expansion connector
 	input [11:0] exp,
-	
+
 	// PCB revision
 	input [3:0] pcb_revision
 );
@@ -643,7 +643,7 @@ fmlarb #(
 csrbrg csrbrg(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	
+
 	.wb_adr_i(csrbrg_adr),
 	.wb_dat_i(csrbrg_dat_w),
 	.wb_dat_o(csrbrg_dat_r),
@@ -651,7 +651,7 @@ csrbrg csrbrg(
 	.wb_stb_i(csrbrg_stb),
 	.wb_we_i(csrbrg_we),
 	.wb_ack_o(csrbrg_ack),
-	
+
 	.csr_a(csr_a),
 	.csr_we(csr_we),
 	.csr_do(csr_dw),
@@ -689,7 +689,7 @@ fmlbrg #(
 ) fmlbrg (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	
+
 	.wb_adr_i(brg_adr),
 	.wb_cti_i(brg_cti),
 	.wb_dat_o(brg_dat_r),
@@ -699,7 +699,7 @@ fmlbrg #(
 	.wb_cyc_i(brg_cyc),
 	.wb_ack_o(brg_ack),
 	.wb_we_i(brg_we),
-	
+
 	.fml_adr(fml_brg_adr),
 	.fml_stb(fml_brg_stb),
 	.fml_we(fml_brg_we),
@@ -821,7 +821,7 @@ norflash16 #(
 	.wb_cyc_i(norflash_cyc),
 	.wb_ack_o(norflash_ack),
 	.wb_we_i(norflash_we),
-	
+
 	.flash_adr(flash_adr),
 	.flash_d(flash_d),
 	.flash_oe_n(flash_oe_n),
@@ -867,10 +867,10 @@ uart #(
 	.csr_we(csr_we),
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_uart),
-	
+
 	.rx_irq(uartrx_irq),
 	.tx_irq(uarttx_irq),
-	
+
 	.uart_rx(uart_rx),
 	.uart_tx(uart_tx)
 );
@@ -885,7 +885,7 @@ sysctl #(
 	.csr_addr(4'h1),
 	.ninputs(7),
 	.noutputs(2),
-	.systemid(32'h4D4F4E45) /* MONE */
+	.systemid(32'h10014D31) /* 1.0.0 RC1 on M1 */
 ) sysctl (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -932,7 +932,7 @@ ddram #(
 	.fml_sel(fml_sel),
 	.fml_di(fml_dw),
 	.fml_do(fml_dr),
-	
+
 	.sdram_clk_p(sdram_clk_p),
 	.sdram_clk_n(sdram_clk_n),
 	.sdram_cke(sdram_cke),
@@ -961,7 +961,7 @@ vga #(
 	.csr_we(csr_we),
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_vga),
-	
+
 	.fml_adr(fml_vga_adr),
 	.fml_stb(fml_vga_stb),
 	.fml_ack(fml_vga_ack),
@@ -971,7 +971,7 @@ vga #(
 	.dcb_adr(dcb_adr),
 	.dcb_dat(dcb_dat),
 	.dcb_hit(dcb_hit),
-	
+
 	.vga_psave_n(vga_psave_n),
 	.vga_hsync_n(vga_hsync_n),
 	.vga_vsync_n(vga_vsync_n),
@@ -1031,21 +1031,21 @@ ac97 #(
 	.sys_rst(sys_rst),
 	.ac97_clk(ac97_clk_b),
 	.ac97_rst_n(ac97_rst_n),
-	
+
 	.ac97_sin(ac97_sin),
 	.ac97_sout(ac97_sout),
 	.ac97_sync(ac97_sync),
-	
+
 	.csr_a(csr_a),
 	.csr_we(csr_we),
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_ac97),
-	
+
 	.crrequest_irq(ac97crrequest_irq),
 	.crreply_irq(ac97crreply_irq),
 	.dmar_irq(ac97dmar_irq),
 	.dmaw_irq(ac97dmaw_irq),
-	
+
 	.wbm_adr_o(ac97bus_adr),
 	.wbm_cti_o(ac97bus_cti),
 	.wbm_we_o(ac97bus_we),
@@ -1084,14 +1084,14 @@ pfpu #(
 ) pfpu (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
-	
+
 	.csr_a(csr_a),
 	.csr_we(csr_we),
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_pfpu),
-	
+
 	.irq(pfpu_irq),
-	
+
 	.wbm_dat_o(pfpubus_dat_w),
 	.wbm_adr_o(pfpubus_adr),
 	.wbm_cyc_o(pfpubus_cyc),
@@ -1165,7 +1165,7 @@ memtest #(
 	.csr_we(csr_we),
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_tmu),
-	
+
 	.fml_adr(fml_tmur_adr),
 	.fml_stb(fml_tmur_stb),
 	.fml_we(fml_tmur_we),

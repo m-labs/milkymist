@@ -64,10 +64,10 @@ static void dump_bytes(unsigned int *ptr, int count, unsigned addr)
 		printf("\n0x%08x  ", addr);
 		for(i=0;i<line_bytes;i++)
 			printf("%02x ", *(unsigned char *)(data+i));
-	
+
 		for(;i<NUMBER_OF_BYTES_ON_A_LINE;i++)
 			printf("   ");
-	
+
 		printf(" ");
 
 		for(i=0;i<line_bytes;i++) {
@@ -75,7 +75,7 @@ static void dump_bytes(unsigned int *ptr, int count, unsigned addr)
 				printf(".");
 			else
 				printf("%c", *(data+i));
-		}	
+		}
 
 		for(;i<NUMBER_OF_BYTES_ON_A_LINE;i++)
 			printf(" ");
@@ -444,7 +444,7 @@ static void do_command(char *c)
 	else if(strcmp(token, "mw") == 0) mw(get_token(&c), get_token(&c), get_token(&c));
 	else if(strcmp(token, "mc") == 0) mc(get_token(&c), get_token(&c), get_token(&c));
 	else if(strcmp(token, "crc") == 0) crc(get_token(&c), get_token(&c));
-	
+
 	else if(strcmp(token, "ls") == 0) ls(get_token(&c));
 	else if(strcmp(token, "load") == 0) load(get_token(&c), get_token(&c), get_token(&c));
 
@@ -459,12 +459,12 @@ static void do_command(char *c)
 	else if(strcmp(token, "version") == 0) puts(VERSION);
 	else if(strcmp(token, "reboot") == 0) reboot();
 	else if(strcmp(token, "reconf") == 0) reconf();
-	
+
 	else if(strcmp(token, "help") == 0) help();
 
 	else if(strcmp(token, "rcsr") == 0) rcsr(get_token(&c));
 	else if(strcmp(token, "wcsr") == 0) wcsr(get_token(&c), get_token(&c));
-	
+
 	else if(strcmp(token, "") != 0)
 		printf("Command not found\n");
 }
@@ -473,7 +473,7 @@ static int test_user_abort()
 {
 	unsigned int i;
 	char c;
-	
+
 	puts("I: Press Q or ESC to abort boot");
 	for(i=0;i<4500000;i++) {
 		if(readchar_nonblock()) {
@@ -498,7 +498,7 @@ static void crcbios()
 	unsigned int length;
 	unsigned int expected_crc;
 	unsigned int actual_crc;
-	
+
 	/*
 	 * _edata is located right after the end of the flat
 	 * binary image. The CRC tool writes the 32-bit CRC here.
@@ -515,6 +515,13 @@ static void crcbios()
 		printf("W: BIOS CRC failed (expected %08x, got %08x)\n", expected_crc, actual_crc);
 		printf("W: The system will continue, but expect problems.\n");
 	}
+}
+
+static void print_mac()
+{
+	unsigned char *macadr = (unsigned char *)FLASH_OFFSET_MAC_ADDRESS;
+
+	printf("I: MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", macadr[0], macadr[1], macadr[2], macadr[3], macadr[4], macadr[5]);
 }
 
 static const char banner[] =
@@ -546,7 +553,7 @@ static void readstr(char *s, int size)
 {
 	char c[2];
 	int ptr;
-	
+
 	c[1] = 0;
 	ptr = 0;
 	while(1) {
@@ -581,7 +588,7 @@ int main(int i, char **c)
 	char buffer[64];
 
 	CSR_GPIO_OUT = GPIO_LED1;
-	
+
 	irq_setmask(0);
 	irq_enable(1);
 	uart_init();
@@ -596,8 +603,9 @@ int main(int i, char **c)
 	rescue = !((unsigned int)main > FLASH_OFFSET_REGULAR_BIOS);
 	if(rescue)
 		printf("I: Booting in rescue mode\n");
-	
+
 	splash_display();
+	print_mac();
 	boot_sequence();
 	vga_set_console(1);
 	while(1) {

@@ -17,6 +17,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <version.h>
 #include <board.h>
 #include <hw/sysctl.h>
 #include <hw/capabilities.h>
@@ -49,7 +51,8 @@ static void display_capabilities()
 void brd_init()
 {
 	int rev;
-	
+	char soc_version[13];
+
 	brd_desc = get_board_desc();
 
 	if(brd_desc == NULL) {
@@ -57,7 +60,10 @@ void brd_init()
 		while(1);
 	}
 	rev = get_pcb_revision();
-	printf("BRD: Running on %s (PCB revision %d)\n", brd_desc->name, rev);
+	get_soc_version_formatted(soc_version);
+	printf("BRD: SoC %s on %s (PCB revision %d)\n", soc_version, brd_desc->name, rev);
+	if(strcmp(soc_version, VERSION) != 0)
+		printf("BRD: SoC and HAL versions do not match!\n");
 	if(rev > 1)
 		printf("BRD: Unsupported PCB revision, please upgrade!\n");
 	display_capabilities();

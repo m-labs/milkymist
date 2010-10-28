@@ -21,14 +21,16 @@
 #define BOARD_NAME_LEN 32
 
 struct board_desc {
-	unsigned int id;
+	unsigned short int id;
 	char name[BOARD_NAME_LEN];
 	unsigned int clk_frequency;
 	unsigned int ethernet_phyadr;
 };
 
-const struct board_desc *get_board_desc_id(unsigned int id);
+const struct board_desc *get_board_desc_id(unsigned short int id);
 const struct board_desc *get_board_desc();
 int get_pcb_revision();
+void get_soc_version(unsigned int *major, unsigned int *minor, unsigned int *subminor, unsigned int *rc);
+void get_soc_version_formatted(char *version);
 
 #endif /* __BOARD_H */
