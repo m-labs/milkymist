@@ -252,7 +252,7 @@ NET "phy_tx_clk" TNM_NET = "GRPphy_tx_clk";
 TIMESPEC "TSphy_rx_clk" = PERIOD "GRPphy_rx_clk" 40 ns HIGH 50%;
 TIMESPEC "TSphy_tx_clk" = PERIOD "GRPphy_tx_clk" 40 ns HIGH 50%;
 TIMESPEC "TSphy_tx_clk_io" = FROM "GRPphy_tx_clk" TO "PADS" 10 ns;
-TIMESPEC "TSphy_rx_clk_io" = FROM "PADS" TO "GRPphy_rx_clk" 6.3 ns;
+TIMESPEC "TSphy_rx_clk_io" = FROM "PADS" TO "GRPphy_rx_clk" 10 ns;
 
 # ==== Video input ====
 NET "videoin_p(0)" LOC = Y18;
@@ -333,7 +333,7 @@ INST "sdram_cke" TNM = "GRPsdramout";
 INST "sdram_cs_n" TNM = "GRPsdramout";
 INST "sdram_ras_n" TNM = "GRPsdramout";
 INST "sdram_we_n" TNM = "GRPsdramout";
-TIMESPEC "TSsdramout" = FROM FFS TO "GRPsdramout" 9.052 ns;
+TIMESPEC "TSsdramout" = FROM FFS TO "GRPsdramout" 10 ns;
 
 NET "vga/vga_iclk" TNM_NET = "GRPvga";
 TIMESPEC "TSvga_async1" = FROM "GRPsys" TO "GRPvga" TIG;
