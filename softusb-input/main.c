@@ -73,6 +73,7 @@ static void usb_tx(unsigned char *buf, unsigned int len)
 		while(rio8(SIE_TX_PENDING));
 	}
 	wio8(SIE_TX_VALID, 0);
+	while(rio8(SIE_TX_BUSY));
 }
 
 static const char transfer_start[] PROGMEM = "Transfer start: ";
