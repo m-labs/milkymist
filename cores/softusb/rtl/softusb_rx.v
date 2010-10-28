@@ -142,7 +142,7 @@ always @(posedge usb_clk) begin
 		if(eop_detected)
 			rx_active = 1'b0;
 		else if(dpll_ce) begin
-			if(rx_active) begin
+			if(rx_active & ~se0) begin
 				if(onecount == 3'd6) begin
 					/* skip stuffed bits */
 					onecount = 3'd0;
@@ -247,7 +247,8 @@ always @(*) begin
 				fs_next_state = FS_IDLE;
 		end
 		K5: begin
-			startrx = 1'b1;
+			if(~rx_corrected)
+				startrx = 1'b1;
 			if(dpll_ce)
 				fs_next_state = FS_IDLE;
 		end

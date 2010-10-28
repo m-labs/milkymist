@@ -124,23 +124,10 @@ always @(posedge usb_clk) begin
 end
 
 /* RX section */
-
-reg [1:0] rxreset_counter;
-always @(posedge usb_clk) begin
-	if(usb_rst)
-		rxreset_counter <= 2'd0;
-	else begin
-		if(txoe)
-			rxreset_counter <= 2'd3;
-		else if(|rxreset_counter)
-			rxreset_counter <= rxreset_counter - 2'd1;
-	end
-end
-
 softusb_rx rx(
 	.usb_clk(usb_clk),
 
-	.rxreset(|rxreset_counter),
+	.rxreset(txoe),
 
 	.rx(port_sel_rx ? rcv_s_b : rcv_s_a),
 	.rxp(port_sel_rx ? vp_s_b : vp_s_a),
