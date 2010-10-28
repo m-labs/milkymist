@@ -212,10 +212,10 @@ always @(*) begin
 			else begin
 				if(tx_valid) begin
 					sr_load = 1'b1;
+					tx_ready0 = 1'b1;
 					next_state = DATA;
 				end else
 					sr_rst = 1'b1;
-				tx_ready0 = 1'b1;
 			end
 		end
 		DATA: begin
