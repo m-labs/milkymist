@@ -18,18 +18,18 @@
 module hpdmc_datactl(
 	input sys_clk,
 	input sdram_rst,
-	
+
 	input read,
 	input write,
 	input [3:0] concerned_bank,
 	output reg read_safe,
 	output reg write_safe,
 	output [3:0] precharge_safe,
-	
+
 	output reg ack,
 	output reg direction,
 	output direction_r,
-	
+
 	input tim_cas,
 	input [1:0] tim_wr
 );
@@ -46,7 +46,7 @@ always @(posedge sys_clk) begin
 		read_safe <= 1'b1;
 	end else begin
 		if(read) begin
-			read_safe_counter <= 3'd5; // FIXME: 3'd4 fails, why?
+			read_safe_counter <= 3'd4;
 			read_safe <= 1'b0;
 		end else if(write) begin
 			/* after a write, read is unsafe for 5 cycles (4 transfers + tWTR=1) */
@@ -152,10 +152,10 @@ end
 hpdmc_banktimer banktimer0(
 	.sys_clk(sys_clk),
 	.sdram_rst(sdram_rst),
-	
+
 	.tim_cas(tim_cas),
 	.tim_wr(tim_wr),
-	
+
 	.read(read & concerned_bank[0]),
 	.write(write & concerned_bank[0]),
 	.precharge_safe(precharge_safe[0])
@@ -163,10 +163,10 @@ hpdmc_banktimer banktimer0(
 hpdmc_banktimer banktimer1(
 	.sys_clk(sys_clk),
 	.sdram_rst(sdram_rst),
-	
+
 	.tim_cas(tim_cas),
 	.tim_wr(tim_wr),
-	
+
 	.read(read & concerned_bank[1]),
 	.write(write & concerned_bank[1]),
 	.precharge_safe(precharge_safe[1])
@@ -174,20 +174,20 @@ hpdmc_banktimer banktimer1(
 hpdmc_banktimer banktimer2(
 	.sys_clk(sys_clk),
 	.sdram_rst(sdram_rst),
-	
+
 	.tim_cas(tim_cas),
 	.tim_wr(tim_wr),
-	
+
 	.read(read & concerned_bank[2]),
 	.write(write & concerned_bank[2]),	.precharge_safe(precharge_safe[2])
 );
 hpdmc_banktimer banktimer3(
 	.sys_clk(sys_clk),
 	.sdram_rst(sdram_rst),
-	
+
 	.tim_cas(tim_cas),
 	.tim_wr(tim_wr),
-	
+
 	.read(read & concerned_bank[3]),
 	.write(write & concerned_bank[3]),
 	.precharge_safe(precharge_safe[3])
