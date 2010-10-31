@@ -38,6 +38,7 @@ static int debug_consume;
 static mouse_event_cb mouse_cb;
 static int mouse_consume;
 
+unsigned char previous_keys[5];
 static keyboard_event_cb keyboard_cb;
 static int keyboard_consume;
 
@@ -74,7 +75,7 @@ void usb_init()
 	mouse_cb = NULL;
 	keyboard_consume = 0;
 	keyboard_cb = NULL;
-	
+
 	mask = irq_getmask();
 	mask |= IRQ_USB;
 	irq_setmask(mask);
@@ -89,7 +90,7 @@ static void flush_debug_buffer()
 {
 	char debug_buffer_fmt[266];
 	int i;
-	
+
 	if(debug_enable) {
 		debug_buffer[debug_len] = 0;
 		/* send USB debug messages to UART only */
@@ -139,12 +140,36 @@ void usb_isr()
 				COMLOC_MEVT(4*mouse_consume+3));
 		mouse_consume = (mouse_consume + 1) & 0x0f;
 	}
-	
+
 	while(keyboard_consume != COMLOC_KEVT_PRODUCE) {
-		if(keyboard_cb != NULL)
-			keyboard_cb(
-				COMLOC_KEVT(2*keyboard_consume+0),
-				COMLOC_KEVT(2*keyboard_consume+1));
+		if(keyboard_cb != NULL) {
+			if(COMLOC_KEVT(8*keyboard_consume+7) == 0x00) {
+				unsigned char modifiers;
+				unsigned char current_keys[5];
+				int i, j;
+				int already_pressed;
+
+				/* no error */
+				modifiers = COMLOC_KEVT(8*keyboard_consume+0);
+				for(i=0;i<5;i++)
+					current_keys[i] = COMLOC_KEVT(8*keyboard_consume+2+i);
+				for(i=0;i<5;i++) {
+					if(current_keys[i] != 0x00) {
+						already_pressed = 0;
+						for(j=0;j<5;j++)
+							if(previous_keys[j] == current_keys[i]) {
+								already_pressed = 1;
+								break;
+							}
+						if(!already_pressed)
+							keyboard_cb(modifiers, current_keys[i]);
+					}
+				}
+				for(i=0;i<5;i++)
+					previous_keys[i] = current_keys[i];
+			}
+
+		}
 		keyboard_consume = (keyboard_consume + 1) & 0x07;
 	}
 }

@@ -46,7 +46,6 @@ struct port_status {
 	unsigned long int unreset_frame;
 
 	unsigned char expected_data;
-	char previous_keys[4];
 };
 
 static struct port_status port_a;
@@ -281,6 +280,7 @@ static void poll(struct port_status *p)
 	unsigned char usb_buffer[11];
 	unsigned int len;
 	unsigned char m;
+	int i;
 
 	/* IN */
 	make_usb_token(0x69, 0x081, usb_buffer);
@@ -309,39 +309,15 @@ static void poll(struct port_status *p)
 	if(p->keyboard) {
 		if(len >= 9) {
 			m = COMLOC_KEVT_PRODUCE;
-			if((usb_buffer[3] != 0x00) && (usb_buffer[3] != p->previous_keys[0])) {
-				COMLOC_KEVT(2*m+0) = usb_buffer[1];
-				COMLOC_KEVT(2*m+1) = usb_buffer[3];
-				m = (m + 1) & 0x07;
-			}
-			if((usb_buffer[4] != 0x00) && (usb_buffer[4] != p->previous_keys[1])) {
-				COMLOC_KEVT(2*m+0) = usb_buffer[1];
-				COMLOC_KEVT(2*m+1) = usb_buffer[4];
-				m = (m + 1) & 0x07;
-			}
-			if((usb_buffer[5] != 0x00) && (usb_buffer[5] != p->previous_keys[2])) {
-				COMLOC_KEVT(2*m+0) = usb_buffer[1];
-				COMLOC_KEVT(2*m+1) = usb_buffer[5];
-				m = (m + 1) & 0x07;
-			}
-			if((usb_buffer[6] != 0x00) && (usb_buffer[6] != p->previous_keys[3])) {
-				COMLOC_KEVT(2*m+0) = usb_buffer[1];
-				COMLOC_KEVT(2*m+1) = usb_buffer[6];
-				m = (m + 1) & 0x07;
-			}
-			p->previous_keys[0] = usb_buffer[3];
-			p->previous_keys[1] = usb_buffer[4];
-			p->previous_keys[2] = usb_buffer[5];
-			p->previous_keys[3] = usb_buffer[6];
-			COMLOC_KEVT_PRODUCE = m;
+			for(i=0;i<8;i++)
+				COMLOC_KEVT(8*m+i) = usb_buffer[i+1];
+			COMLOC_KEVT_PRODUCE = (m + 1) & 0x07;
 		}
 	} else {
 		if(len >= 7) {
 			m = COMLOC_MEVT_PRODUCE;
-			COMLOC_MEVT(4*m+0) = usb_buffer[1];
-			COMLOC_MEVT(4*m+1) = usb_buffer[2];
-			COMLOC_MEVT(4*m+2) = usb_buffer[3];
-			COMLOC_MEVT(4*m+3) = usb_buffer[4];
+			for(i=0;i<4;i++)
+				COMLOC_MEVT(4*m+i) = usb_buffer[i+1];
 			COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
 		}
 	}
@@ -442,10 +418,6 @@ static void port_service(struct port_status *p, char name)
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x02);
 				p->state = PORT_STATE_BUS_RESET;
 				p->unreset_frame = (frame_nr + 350) & 0x7ff;
-				p->previous_keys[0] = 0;
-				p->previous_keys[1] = 0;
-				p->previous_keys[2] = 0;
-				p->previous_keys[3] = 0;
 			}
 			break;
 		}
