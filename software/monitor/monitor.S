@@ -25,6 +25,8 @@
 .section    .text, "ax", @progbits
 .global     _start  
 
+#define MONITOR_VERSION 2
+
 _start:    
 _reset_handler:
 	xor	r0, r0, r0		/* Clear r0 */
@@ -247,14 +249,19 @@ jtag_get_byte:
 	andi	r1, r2, 0xff
 	ret
 
-jtag_put_byte:
-	rcsr	r2, JTX
-	bne	r2, r0, jtag_put_byte
-	andi	r2, r1, 0xff
-	wcsr	JTX, r2
+jtag_get_halfword:
+	addi	sp, sp, -8
+	sw	(sp+4), ra
+	calli	jtag_get_byte
+	sb	(sp+9), r1
+	calli	jtag_get_byte
+	sb	(sp+8), r1
+	lbu	r1, (sp+8)
+	lw	ra, (sp+4)
+	addi	sp, sp, 8
 	ret
 
-jtag_get_reg:
+jtag_get_word:
 	addi	sp, sp, -8
 	sw	(sp+4), ra
 	calli	jtag_get_byte
@@ -270,7 +277,26 @@ jtag_get_reg:
 	addi	sp, sp, 8
 	ret
 
-jtag_put_reg:
+jtag_put_byte:
+	rcsr	r2, JTX
+	bne	r2, r0, jtag_put_byte
+	andi	r2, r1, 0xff
+	wcsr	JTX, r2
+	ret
+
+jtag_put_halfword:
+	addi	sp, sp, -8
+	sw	(sp+4), ra
+	sh	(sp+8), r1
+	lbu	r1, (sp+9)
+	calli	jtag_put_byte
+	lbu	r1, (sp+8)
+	calli	jtag_put_byte
+	lw	ra, (sp+4)
+	addi	sp, sp, 8
+	ret
+
+jtag_put_word:
 	addi	sp, sp, -8
 	sw	(sp+4), ra
 	sw	(sp+8), r1
@@ -303,7 +329,7 @@ handle_exception:
 	calli	jtag_put_byte
 _get_selection:
 	calli	jtag_get_byte
-	mvi	r2, 5
+	mvi	r2, 10
 	bg	r1, r2, _get_selection
 	sli	r1, r1, 2
 	add	r1, r1, r25
@@ -321,9 +347,14 @@ _continue:
 	addi	sp, sp, 4
 	ret
 
+get_version:
+	mvi	r1, MONITOR_VERSION
+	calli	jtag_put_byte
+	bi	_get_selection
+
 put_registers_address:
 	mv	r1, r22
-	calli	jtag_put_reg
+	calli	jtag_put_word
 	bi	_get_selection
 
 read_csr:
@@ -334,7 +365,7 @@ read_csr:
 	add	r2, r2, r24
 	b	r2
 _put_csr:
-	calli	jtag_put_reg
+	calli	jtag_put_word
 	bi	_get_selection
 
 write_csr:
@@ -342,15 +373,15 @@ write_csr:
 	mvi	r2, 10
 	bg	r1, r2, _get_selection
 	muli	r11, r1, 8		/* r11: offset */
-	calli	jtag_get_reg		/* r1: value */
+	calli	jtag_get_word		/* r1: value */
 	add	r11, r11, r23
 	b	r11
 	bi	_get_selection
 
 read_memory:
-	calli	jtag_get_reg		/* r11: base address */
+	calli	jtag_get_word		/* r11: base address */
 	mv	r11, r1
-	calli	jtag_get_reg		/* r12: length */
+	calli	jtag_get_word		/* r12: length */
 	mv	r12, r1
 _read_mem:
 	be	r12, r0, _read_end
@@ -363,9 +394,9 @@ _read_end:
 	bi	_get_selection
 
 write_memory:
-	calli	jtag_get_reg		/* r11: base address */
+	calli	jtag_get_word		/* r11: base address */
 	mv	r11, r1
-	calli	jtag_get_reg		/* r12: length */
+	calli	jtag_get_word		/* r12: length */
 	mv	r12, r1
 _write_mem:
 	be	r12, r0, _write_end
@@ -377,12 +408,43 @@ _write_mem:
 _write_end:
 	bi	_get_selection
 
+store_halfword:
+	calli	jtag_get_word		/* r11: base address */
+	mv	r11, r1
+	calli	jtag_get_halfword
+	sh      (r11+0), r1
+	bi	_get_selection
+
+store_word:
+	calli	jtag_get_word		/* r11: base address */
+	mv	r11, r1
+	calli	jtag_get_word
+	sw      (r11+0), r1
+	bi	_get_selection
+
+load_halfword:
+	calli	jtag_get_word		/* base address */
+	lhu	r1, (r1+0)
+	calli	jtag_put_halfword
+	bi	_get_selection
+
+load_word:
+	calli	jtag_get_word		/* base address */
+	lw	r1, (r1+0)
+	calli	jtag_put_word
+	bi	_get_selection
+
 _T_func:
+	bi	get_version
 	bi	put_registers_address
 	bi	read_csr
 	bi	write_csr
 	bi	read_memory
 	bi	write_memory
+	bi	store_halfword
+	bi	store_word
+	bi	load_halfword
+	bi	load_word
 	bi	_continue
 
 _T_csr_read:
@@ -405,8 +467,6 @@ _T_csr_write:
 	wcsr	BP3, r1
 	bi	_get_selection
 	wcsr	WP0, r1
-	bi	_get_selection
-	wcsr	WP1, r1
 	bi	_get_selection
 	wcsr	WP1, r1
 	bi	_get_selection
