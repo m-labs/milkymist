@@ -483,6 +483,11 @@ static int test_user_abort()
 				vga_set_console(1);
 				return 0;
 			}
+			if(c == 0x07) {
+				vga_set_console(1);
+				netboot();
+				return 0;
+			}
 		}
 	}
 	return 1;
@@ -568,6 +573,8 @@ static void readstr(char *s, int size)
 				break;
 			case '\e':
 				vga_set_console(!vga_get_console());
+				break;
+			case 0x07:
 				break;
 			case '\r':
 			case '\n':

@@ -191,7 +191,7 @@ static void del(const char *eqn)
 	char *p, *p2;
 	char eqn2[256];
 	int l;
-	
+
 	strcpy(eqn2, eqn);
 	l = strlen(eqn2);
 	eqn2[l++] = '=';
@@ -221,7 +221,7 @@ static void add(const char *eqn)
 {
 	int l;
 	char *c;
-	
+
 	c = strchr(eqn, '=');
 	if(c == NULL) {
 		printf("Invalid equation\n");
@@ -230,7 +230,7 @@ static void add(const char *eqn)
 	*c = 0;
 	del(eqn);
 	*c = '=';
-	
+
 	/* FIXME: check for overflows... */
 	l = strlen(patch_buf);
 	strcpy(&patch_buf[l], eqn);
@@ -247,7 +247,7 @@ static void print()
 static void renderb()
 {
 	char patch_buf_copy[8192];
-	
+
 	strcpy(patch_buf_copy, patch_buf);
 	renderer_start(patch_buf_copy);
 }
@@ -274,7 +274,7 @@ static void vmode(const char *mode)
 {
 	char *c;
 	int mode2;
-	
+
 	mode2 = strtoul(mode, &c, 0);
 	if(*c != 0) {
 		printf("incorrect mode\n");
@@ -334,7 +334,7 @@ static void help()
 static void cpucfg()
 {
 	unsigned long cpu_cfg;
-	
+
 	__asm__ volatile(
 		"rcsr %0, cfg\n\t"
 		: "=r"(cpu_cfg)
@@ -363,7 +363,7 @@ static void cpucfg()
 static void loadpic(const char *filename)
 {
 	int size;
-	
+
 	if(*filename == 0) {
 		printf("loadpic <filename>\n");
 		return;
@@ -511,7 +511,7 @@ static void tmutest()
 	td.dstsquarew = vga_hres/32;
 	td.dstsquareh = vga_vres/32;
 	td.alpha = TMU_ALPHA_MAX;
-	
+
 	td.callback = tmutest_callback;
 	td.user = (void *)&complete;
 
@@ -535,7 +535,7 @@ static void tmubench()
 	int hits, reqs;
 
 	uart_force_sync(1);
-	
+
 	for(i=0;i<512*512;i++)
 		texture[i] = i;
 	flush_bridge_cache();
@@ -673,9 +673,9 @@ static short vbuffer[720*288] __attribute__((aligned(32)));
 
 static void testv()
 {
-	
+
 	int x, y;
-	
+
 	irq_ack(IRQ_VIDEOIN);
 	CSR_BT656CAP_BASE = (unsigned int)vbuffer;
 	CSR_BT656CAP_FILTERSTATUS = BT656CAP_FILTERSTATUS_FIELD1;
@@ -700,7 +700,7 @@ static void testv()
 static void irtest()
 {
 	unsigned int r;
-	
+
 	irq_ack(IRQ_IR);
 	while(!readchar_nonblock()) {
 		if(irq_pending() & IRQ_IR) {
@@ -711,7 +711,7 @@ static void irtest()
 				(r & 0x0800) >> 11,
 				(r & 0x07c0) >> 6,
 				r & 0x003f);
-			
+
 		}
 	}
 }
@@ -746,7 +746,7 @@ static void miditx(char *note)
 {
 	int note2;
 	char *c;
-	
+
 	if(*note == 0) {
 		printf("miditx <note>\n");
 		return;
@@ -756,7 +756,7 @@ static void miditx(char *note)
 		printf("incorrect note\n");
 		return;
 	}
-	
+
 	midisend(0x90);
 	midisend(note2);
 	midisend(0x22);
@@ -821,7 +821,7 @@ static void memtest(char *nb)
 {
 	char *c;
 	unsigned int n;
-	
+
 	if(*nb == 0) {
 		printf("memtest <nbursts>\n");
 		return;
@@ -856,9 +856,9 @@ static void lmemtest()
 	unsigned int total_errors;
 	struct timestamp t0, t1, t;
 	unsigned int length;
-	
+
 	total_errors = 0;
-	
+
 	flush_bridge_cache();
 	while(!readchar_nonblock()) {
 		time_get(&t0);
@@ -988,7 +988,7 @@ void shell_init()
 void shell_input(char c)
 {
 	char xc[2];
-	
+
 	cpustats_enter();
 	switch(c) {
 		case 0x7f:
@@ -1000,6 +1000,8 @@ void shell_input(char c)
 			break;
 		case '\e':
 			vga_set_console(!vga_get_console());
+			break;
+		case 0x07:
 			break;
 		case '\r':
 		case '\n':

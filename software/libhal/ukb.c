@@ -30,7 +30,7 @@ static volatile unsigned int rx_consume;
 char ukb_readchar()
 {
 	char c;
-	
+
 	while(rx_consume == rx_produce);
 	c = rx_buf[rx_consume];
 	rx_consume = (rx_consume + 1) & UKB_RINGBUFFER_MASK_RX;
@@ -104,6 +104,7 @@ static char get_base_key(unsigned char key)
 		case 0x58:
 		case 0x28: return '\n';
 		case 0x29: return '\e';
+		case 0x41: return 0x07;
 		default: return 0x00;
 	}
 }
@@ -124,7 +125,7 @@ static char translate_key(unsigned char modifiers, unsigned char key)
 static void keyboard_cb(unsigned char modifiers, unsigned char key)
 {
 	char c;
-	
+
 	c = translate_key(modifiers, key);
 	if(c != 0x00) {
 		rx_buf[rx_produce] = c;
