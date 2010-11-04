@@ -68,12 +68,12 @@ _interrupt_handler:
 	nop
 
 macaddress:
+	.byte 0x10
+	.byte 0xe2
+	.byte 0xd5
 	.byte 0x00
-	.byte 0x01
-	.byte 0x02
-	.byte 0x03
-	.byte 0x04
-	.byte 0x05
+	.byte 0x00
+	.byte 0x00
 
 	/* padding to align to a 32-bit boundary */
 	.byte 0x00
