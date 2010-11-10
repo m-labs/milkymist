@@ -6,8 +6,8 @@ SEGMENTS=-j .text -j .data -j .rodata
 
 all: boot.bin boot.fbi
 
-bandfilters.h: bandfilters.sce
-	scilab -nw -nwni -nogui -nb -f bandfilters.sce
+#bandfilters.h: bandfilters.sce
+#	scilab -nw -nwni -nogui -nb -f bandfilters.sce
 
 logo.raw: logo.png
 	$(MAKE) -C $(MMDIR)/tools
@@ -38,7 +38,7 @@ depend: bandfilters.h logo.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f $(OBJECTS) bandfilters.h logo.raw logo.h boot.elf boot.bin boot.fbi .*~ *~ Makefile.bak
+	rm -f $(OBJECTS) logo.raw logo.h boot.elf boot.bin boot.fbi .*~ *~ Makefile.bak
 
 # DO NOT DELETE
 
