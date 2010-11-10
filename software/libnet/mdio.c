@@ -50,9 +50,7 @@ static unsigned int raw_read()
 	unsigned int i;
 
 	word = 0;
-	if(CSR_MINIMAC_MDIO & MINIMAC_MDIO_DI)
-		word |= 1;
-	for(i=0;i<15;i++) {
+	for(i=0;i<16;i++) {
 		word <<= 1;
 		CSR_MINIMAC_MDIO = MINIMAC_MDIO_CLK;
 		delay();
