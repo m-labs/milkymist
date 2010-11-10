@@ -28,6 +28,8 @@ clean:
 
 brd.o: ../../software/include/base/stdlib.h
 brd.o: ../../software/include/base/stdio.h
+brd.o: ../../software/include/base/string.h
+brd.o: ../../software/include/base/version.h
 brd.o: ../../software/include/base/board.h ../../software/include/hw/sysctl.h
 brd.o: ../../software/include/hw/common.h
 brd.o: ../../software/include/hw/capabilities.h
