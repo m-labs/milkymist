@@ -39,11 +39,11 @@ enum {
 };
 
 struct port_status {
-	int state;
-	int fs;
-	int keyboard;
-	int retry_count;
-	unsigned long int unreset_frame;
+	char state;
+	char fs;
+	char keyboard;
+	char retry_count;
+	unsigned int unreset_frame;
 
 	unsigned char expected_data;
 };
@@ -51,9 +51,9 @@ struct port_status {
 static struct port_status port_a;
 static struct port_status port_b;
 
-static unsigned long int frame_nr;
+static unsigned int frame_nr;
 
-static void make_usb_token(unsigned char pid, unsigned long int elevenbits, unsigned char *out)
+static void make_usb_token(unsigned char pid, unsigned int elevenbits, unsigned char *out)
 {
 	out[0] = pid;
 	out[1] = elevenbits & 0xff;
@@ -61,9 +61,9 @@ static void make_usb_token(unsigned char pid, unsigned long int elevenbits, unsi
 	out[2] |= usb_crc5(out[1], out[2]) << 3;
 }
 
-static void usb_tx(unsigned char *buf, unsigned int len)
+static void usb_tx(unsigned char *buf, unsigned char len)
 {
-	unsigned int i;
+	unsigned char i;
 
 	wio8(SIE_TX_DATA, 0x80); /* send SYNC */
 	while(rio8(SIE_TX_PENDING));
@@ -79,10 +79,10 @@ static const char transfer_start[] PROGMEM = "Transfer start: ";
 static const char timeout_error[] PROGMEM = "RX timeout error\n";
 static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
 
-static unsigned int usb_rx(unsigned char *buf, unsigned int maxlen)
+static unsigned char usb_rx(unsigned char *buf, unsigned char maxlen)
 {
-	unsigned long int timeout;
-	unsigned int i;
+	unsigned int timeout;
+	unsigned char i;
 
 	i = 0;
 	timeout = 0xfff;
@@ -127,7 +127,7 @@ struct setup_packet {
 	unsigned char wLength[2];
 } __attribute__((packed));
 
-static inline unsigned char get_data_token(int *toggle)
+static inline unsigned char get_data_token(char *toggle)
 {
 	*toggle = !(*toggle);
 	if(*toggle)
@@ -142,13 +142,13 @@ static const char setup_reply[] PROGMEM = "SETUP reply:\n";
 static const char in_reply[] PROGMEM = "OUT/DATA reply:\n";
 static const char out_reply[] PROGMEM = "IN reply:\n";
 
-static int control_transfer(unsigned char addr, struct setup_packet *p, int out, unsigned char *payload, long int maxlen)
+static char control_transfer(unsigned char addr, struct setup_packet *p, char out, unsigned char *payload, int maxlen)
 {
 	unsigned char usb_buffer[11];
-	int toggle;
-	int rxlen;
-	int transferred;
-	int chunklen;
+	char toggle;
+	char rxlen;
+	char transferred;
+	char chunklen;
 
 	toggle = 0;
 
@@ -278,9 +278,9 @@ static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
 static void poll(struct port_status *p)
 {
 	unsigned char usb_buffer[11];
-	unsigned int len;
+	unsigned char len;
 	unsigned char m;
-	int i;
+	char i;
 
 	/* IN */
 	make_usb_token(0x69, 0x081, usb_buffer);
@@ -343,9 +343,9 @@ static void check_discon(struct port_status *p, char name)
 	}
 }
 
-static int validate_configuration_descriptor(unsigned char *descriptor, int len, int *keyboard)
+static char validate_configuration_descriptor(unsigned char *descriptor, char len, char *keyboard)
 {
-	int offset;
+	char offset;
 
 	offset = 0;
 	while(offset < len) {
@@ -492,7 +492,7 @@ static void port_service(struct port_status *p, char name)
 		case PORT_STATE_GET_CONFIGURATION_DESCRIPTOR: {
 			struct setup_packet packet;
 			unsigned char configuration_descriptor[127];
-			int len;
+			char len;
 
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
@@ -554,7 +554,7 @@ static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 int main()
 {
 	unsigned char mask;
-	unsigned int i;
+	unsigned char i;
 
 	print_string(banner);
 

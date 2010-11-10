@@ -49,9 +49,9 @@ void print_hex(unsigned char h)
 
 static const char nodata[] PROGMEM = "(no data)\n";
 
-void dump_hex(unsigned char *buf, unsigned int len)
+void dump_hex(unsigned char *buf, unsigned char len)
 {
-	unsigned int i;
+	unsigned char i;
 
 	if(len == 0) {
 		print_string(nodata);

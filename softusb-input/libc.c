@@ -17,9 +17,9 @@
 
 #include "libc.h"
 
-void *memcpy(void *dest, const void *src, long int n)
+void *memcpy(void *dest, const void *src, int n)
 {
-	long int i;
+	int i;
 	char *d = (char *)dest;
 	char *s = (char *)src;
 	for(i=0;i<n;i++)

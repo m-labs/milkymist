@@ -20,6 +20,6 @@
 
 #define NULL ((void *)0)
 
-void *memcpy(void *dest, const void *src, long int n); /* compiler built in */
+void *memcpy(void *dest, const void *src, int n); /* compiler built in */
 
 #endif

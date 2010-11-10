@@ -22,7 +22,7 @@
 
 #define read_pgm_byte(addr)						\
 	(__extension__({						\
-		unsigned long int __addr16 = (unsigned long int)(addr);	\
+		unsigned int __addr16 = (unsigned int)(addr);	\
 		unsigned char __result;					\
 		__asm__(						\
 			"lpm" "\n\t"					\

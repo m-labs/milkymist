@@ -21,7 +21,7 @@
 void print_char(char c);
 void print_string(const char *s);
 void print_hex(unsigned char h);
-void dump_hex(unsigned char *buf, unsigned int len);
+void dump_hex(unsigned char *buf, unsigned char len);
 void print_bin(unsigned char h, unsigned char count);
 
 #endif
