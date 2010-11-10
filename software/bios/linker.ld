@@ -48,6 +48,7 @@ SECTIONS
 		*(.dynbss)
 		*(.bss .bss.* .gnu.linkonce.b.*)
 		*(COMMON)
+		. = ALIGN(4);
 		_ebss = .;
 		_end = .;
 	} > sdram
