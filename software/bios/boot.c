@@ -40,22 +40,7 @@
 
 extern const struct board_desc *brd_desc;
 
-/*
- * HACK: by defining this function as not inlinable, GCC will automatically
- * put the values we want into the good registers because it has to respect
- * the LM32 calling conventions.
- */
-static void __attribute__((noinline)) __attribute__((noreturn)) boot_helper(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr)
-{
-	asm volatile( /* Invalidate instruction cache */
-		"wcsr ICC, r0\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"call r4\n"
-	);
-}
+extern void boot_helper(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr);
 
 static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr)
 {
@@ -64,6 +49,7 @@ static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, uns
 	irq_setmask(0);
 	irq_enable(0);
 	boot_helper(r1, r2, r3, addr);
+	while(1);
 }
 
 /* Note that we do not use the hw timer so that this function works

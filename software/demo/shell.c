@@ -673,7 +673,6 @@ static short vbuffer[720*288] __attribute__((aligned(32)));
 
 static void testv()
 {
-
 	int x, y;
 
 	irq_ack(IRQ_VIDEOIN);
