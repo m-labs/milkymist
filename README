@@ -31,11 +31,13 @@ You will need:
  - native Clang/LLVM toolchain,
  - libGD,
  - RE2C,
- - Lemon parser generator,
- - Scilab.
+ - Lemon parser generator.
 
 In case of Xst bugs or to improve timing/area (optional):
  - Synplify Pro (Synopsys).
+
+To regenerate the FIR filter coefficients (only if you touch it):
+ - Scilab.
 
 NB. Before switching synthesis tools, don't forget to run "make clean" in the
 synthesis directory.
@@ -45,7 +47,7 @@ synthesis directory.
  /boards/xxx/synthesis/build/system.bit build_bitstream.sh FPGA bitstream.
  /software/bios/bios.bin                build_bios.sh      BIOS image.
  /software/demo/boot.bin                build_demo.sh      Demonstration firmware image.
- /boards/xxx/flash/yyy.mcs                                 Flash images.
+ /boards/xxx/flash/yyy.mcs              use Makefile       Flash images.
  /doc/xxx.pdf                           build_doc.sh       System-wide documentation.
  /cores/xxx/doc/xxx.pdf                 build_doc.sh       Core-specific documentation.
 

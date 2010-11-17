@@ -1,0 +1,35 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage[english]{babel}
+\usepackage{listings,babel}
+\lstset{breaklines=true,basicstyle=\ttfamily}
+\usepackage{graphicx}
+\usepackage{moreverb}
+\usepackage{url}
+
+\title{RC5 receiver core}
+\author{S\'ebastien Bourdeauducq}
+\date{November 2010}
+\begin{document}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\maketitle{}
+\section{RC5 receiver core}
+This core decodes serial data received from an infrared remote control using the RC5 protocol.
+
+It is a fully synchronous design, and uses a clock divider to generate the baud rate. The system clock frequency must be provided using the \verb!clk_freq! parameter.
+
+It features a minimal CPU interface:
+\begin{itemize}
+\item The core implements one register on the CSR that contains the received RC5 code. The register is 13-bit wide, and contains the 14-bit RC5 code stripped of its first start bit.
+\item An interrupt line is pulsed every time a new RC5 code is received.
+\end{itemize}
+
+\section*{Copyright notice}
+Copyright \copyright 2007-2010 S\'ebastien Bourdeauducq. \\
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.3; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the LICENSE.FDL file at the root of the Milkymist source distribution.
+
+\end{document}
