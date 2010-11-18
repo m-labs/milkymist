@@ -595,6 +595,7 @@ int main(int i, char **c)
 	char buffer[64];
 
 	CSR_GPIO_OUT = GPIO_LED1;
+	rescue = !((unsigned int)main > FLASH_OFFSET_REGULAR_BIOS);
 
 	irq_setmask(0);
 	irq_enable(1);
@@ -607,7 +608,6 @@ int main(int i, char **c)
 	usb_init();
 	ukb_init();
 
-	rescue = !((unsigned int)main > FLASH_OFFSET_REGULAR_BIOS);
 	if(rescue)
 		printf("I: Booting in rescue mode\n");
 
