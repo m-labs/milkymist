@@ -475,7 +475,7 @@ static int test_user_abort()
 	char c;
 
 	puts("I: Press Q or ESC to abort boot");
-	for(i=0;i<4500000;i++) {
+	for(i=0;i<500000;i++) {
 		if(readchar_nonblock()) {
 			c = readchar();
 			if((c == 'Q')||(c == '\e')) {
