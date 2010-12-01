@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 		perror("strdup");
 		return 1;
 	}
-	c = strchr(foutname, '.');
+	c = strrchr(foutname, '.');
 	if(!c || strcasecmp(c, ".png")) {
 		fprintf(stderr, "Incorrect filename - must end with '.png'\n");
 		free(foutname);
