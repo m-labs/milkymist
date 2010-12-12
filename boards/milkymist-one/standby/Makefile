@@ -9,7 +9,7 @@ build/standby-routed.ncd: build/standby.ncd
 	cd build && par -w standby.ncd standby-routed.ncd
 
 build/standby.bit: build/standby-routed.ncd
-	cd build && bitgen -g LCK_cycle:6 -g compress -w standby-routed.ncd standby.bit
+	cd build && bitgen -g compress -w standby-routed.ncd standby.bit
 
 build/standby-routed.xdl: build/standby-routed.ncd
 	cd build && xdl -ncd2xdl standby-routed.ncd standby-routed.xdl

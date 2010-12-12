@@ -45,6 +45,7 @@ module standby(
 
 wire clk;
 wire clk_dcm;
+wire locked;
 
 DCM_SP #(
 	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
@@ -59,7 +60,7 @@ DCM_SP #(
 	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
 	.DUTY_CYCLE_CORRECTION("TRUE"),
 	.PHASE_SHIFT(0),
-	.STARTUP_WAIT("TRUE")
+	.STARTUP_WAIT("FALSE")
 ) clkgen (
 	.CLK0(),
 	.CLK90(),
@@ -72,7 +73,7 @@ DCM_SP #(
 	.CLKDV(),
 	.CLKFX(clk_dcm),
 	.CLKFX180(),
-	.LOCKED(),
+	.LOCKED(locked),
 	.CLKFB(),
 	.CLKIN(clk50),
 	.RST(1'b0),
@@ -111,25 +112,31 @@ ICAP_SPARTAN6 icap(
 reg [15:0] d;
 reg icap_en_n;
 
-always @(posedge clk) begin
-	d_r[0] <= d[7];
-	d_r[1] <= d[6];
-	d_r[2] <= d[5];
-	d_r[3] <= d[4];
-	d_r[4] <= d[3];
-	d_r[5] <= d[2];
-	d_r[6] <= d[1];
-	d_r[7] <= d[0];
-	d_r[8] <= d[15];
-	d_r[9] <= d[14];
-	d_r[10] <= d[13];
-	d_r[11] <= d[12];
-	d_r[12] <= d[11];
-	d_r[13] <= d[10];
-	d_r[14] <= d[9];
-	d_r[15] <= d[8];
-	ce_r <= icap_en_n;
-	write_r <= icap_en_n;
+always @(posedge clk, negedge locked) begin
+	if(~locked) begin
+		d_r <= 16'hffff;
+		ce_r <= 1'b1;
+		write_r <= 1'b1;
+	end else begin
+		d_r[0] <= d[7];
+		d_r[1] <= d[6];
+		d_r[2] <= d[5];
+		d_r[3] <= d[4];
+		d_r[4] <= d[3];
+		d_r[5] <= d[2];
+		d_r[6] <= d[1];
+		d_r[7] <= d[0];
+		d_r[8] <= d[15];
+		d_r[9] <= d[14];
+		d_r[10] <= d[13];
+		d_r[11] <= d[12];
+		d_r[12] <= d[11];
+		d_r[13] <= d[10];
+		d_r[14] <= d[9];
+		d_r[15] <= d[8];
+		ce_r <= icap_en_n;
+		write_r <= icap_en_n;
+	end
 end
 
 parameter IDLE =		4'd0;
@@ -151,13 +158,19 @@ reg [3:0] next_state;
 
 initial state <= IDLE;
 
-always @(posedge clk)
-	state <= next_state;
+always @(posedge clk, negedge locked)
+	if(~locked)
+		state <= IDLE;
+	else
+		state <= next_state;
 
 reg rescue;
 reg next_rescue;
-always @(posedge clk)
-	rescue <= next_rescue;
+always @(posedge clk, negedge locked)
+	if(~locked)
+		rescue <= 1'b0;
+	else
+		rescue <= next_rescue;
 
 always @(*) begin
 	d = 16'hxxxx;
