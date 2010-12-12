@@ -24,6 +24,7 @@ module tmu2_alpha #(
 	output busy,
 
 	input [5:0] alpha,
+	input additive,
 
 	input pipe_stb_i,
 	output pipe_ack_o,
@@ -83,13 +84,13 @@ reg [10:0] dr_2;
 reg [11:0] dg_2;
 reg [10:0] db_2;
 
-reg [10:0] r_3;
-reg [11:0] g_3;
-reg [10:0] b_3;
+reg [11:0] r_3;
+reg [12:0] g_3;
+reg [11:0] b_3;
 
-reg [4:0] r_4;
-reg [5:0] g_4;
-reg [4:0] b_4;
+reg [5:0] r_4;
+reg [6:0] g_4;
+reg [5:0] b_4;
 
 always @(posedge sys_clk) begin
 	if(en) begin
@@ -101,9 +102,9 @@ always @(posedge sys_clk) begin
 		r_1 <= ({1'b0, alpha} + 7'd1)*r;
 		g_1 <= ({1'b0, alpha} + 7'd1)*g;
 		b_1 <= ({1'b0, alpha} + 7'd1)*b;
-		dr_1 <= (6'd63 - alpha)*dr;
-		dg_1 <= (6'd63 - alpha)*dg;
-		db_1 <= (6'd63 - alpha)*db;
+		dr_1 <= (additive ? 7'd64 : (7'd63 - alpha))*dr;
+		dg_1 <= (additive ? 7'd64 : (7'd63 - alpha))*dg;
+		db_1 <= (additive ? 7'd64 : (7'd63 - alpha))*db;
 
 		r_2 <= r_1;
 		g_2 <= g_1;
@@ -116,13 +117,17 @@ always @(posedge sys_clk) begin
 		g_3 <= g_2 + dg_2;
 		b_3 <= b_2 + db_2;
 
-		r_4 <= r_3[10:6] + (r_3[5] & (|r_3[4:0] | r_3[6]));
-		g_4 <= g_3[11:6] + (g_3[5] & (|g_3[4:0] | g_3[6]));
-		b_4 <= b_3[10:6] + (b_3[5] & (|b_3[4:0] | b_3[6]));
+		r_4 <= r_3[11:6] + (r_3[5] & (|r_3[4:0] | r_3[6]));
+		g_4 <= g_3[12:6] + (g_3[5] & (|g_3[4:0] | g_3[6]));
+		b_4 <= b_3[11:6] + (b_3[5] & (|b_3[4:0] | b_3[6]));
 	end
 end
 
-assign acolor = {r_4, g_4, b_4};
+assign acolor = {
+	{5{r_4[5]}} | r_4[4:0],
+	{6{g_4[6]}} | g_4[5:0],
+	{5{b_4[5]}} | b_4[4:0]
+};
 
 /* Pipeline management */
 

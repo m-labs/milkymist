@@ -36,6 +36,7 @@ module tmu2_ctlif #(
 	output reg [6:0] vertex_vlast,
 	output reg [5:0] brightness,
 	output reg chroma_key_en,
+	output reg additive_en,
 	output reg [15:0] chroma_key,
 	output reg [28:0] vertex_adr,
 	output reg [fml_depth-1-1:0] tex_fbuf,
@@ -75,6 +76,7 @@ always @(posedge sys_clk) begin
 
 		brightness <= 6'd63;
 		chroma_key_en <= 1'b0;
+		additive_en <= 1'b0;
 		chroma_key <= 16'd0;
 		
 		vertex_adr <= 29'd0;
@@ -106,6 +108,7 @@ always @(posedge sys_clk) begin
 					5'b00000: begin
 						start <= csr_di[0];
 						chroma_key_en <= csr_di[1];
+						additive_en <= csr_di[2];
 					end
 
 					5'b00001: vertex_hlast <= csr_di[6:0];

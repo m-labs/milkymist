@@ -78,6 +78,7 @@ wire [6:0] vertex_hlast;		/* < 04 last horizontal vertex index */
 wire [6:0] vertex_vlast;		/* < 08 last vertical vertex index */
 wire [5:0] brightness;			/* < 0C output brightness 0-63 */
 wire chroma_key_en;			/* < 00 enable/disable chroma key filtering */
+wire additive_en;			/* < 00 enable/disable additive drawing */
 wire [15:0] chroma_key;			/* < 10 chroma key (RGB565 color) */
 wire [28:0] vertex_adr;			/* < 14 vertex mesh address (64-bit words) */
 wire [fml_depth-1-1:0] tex_fbuf;	/* < 18 texture address (16-bit words) */
@@ -116,6 +117,7 @@ tmu2_ctlif #(
 	.vertex_vlast(vertex_vlast),
 	.brightness(brightness),
 	.chroma_key_en(chroma_key_en),
+	.additive_en(additive_en),
 	.chroma_key(chroma_key),
 	.vertex_adr(vertex_adr),
 	.tex_fbuf(tex_fbuf),
@@ -787,7 +789,7 @@ tmu2_fdest #(
 	.flush(start),
 	.busy(fdest_busy),
 
-	.fetch_en(alpha_en),
+	.fetch_en(alpha_en|additive_en),
 
 	.pipe_stb_i(decay_pipe_stb),
 	.pipe_ack_o(decay_pipe_ack),
@@ -817,6 +819,7 @@ tmu2_alpha #(
 	.busy(alpha_busy),
 
 	.alpha(alpha),
+	.additive(additive_en),
 
 	.pipe_stb_i(fdest_pipe_stb),
 	.pipe_ack_o(fdest_pipe_ack),
