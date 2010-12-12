@@ -15,7 +15,7 @@
 
 \title{Texture Mapping Unit, Revision 2}
 \author{S\'ebastien Bourdeauducq}
-\date{April 2010}
+\date{December 2010}
 \begin{document}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
@@ -33,6 +33,7 @@ The texture mapping unit supports the following operations:
 \item Up to 2047x2047 texture size.
 \item Up to 2047x2047 output buffer resolution.
 \item Chroma key filtering.
+\item Alpha blending and additive drawing.
 \item Fading to black.
 \end{itemize}
 
@@ -55,6 +56,7 @@ Addresses are in bytes to match the addresses seen by the CPU when the CSR bus i
 0x00 & RW & 0 & Control register. \\
 & & & Bit 0: Start/Busy.\\
 & & & Bit 1: Enable chroma key. \\
+& & & Bit 2: Enable additive drawing. \\
 \hline
 0x04 & RW & 32 & Number of mesh rectangles in the X direction (which is the number of mesh points minus one, and also the index of the last mesh point). \\
 \hline
@@ -158,114 +160,9 @@ Those bits are used to compute a weighted average of 4 neighbouring texture pixe
 \end{figure}
 
 \subsection{Pixel distribution in the cache}
-Because of performance requirements, all four texture pixels must be fetched in one clock cycle. It is therefore relevant to examine their distribution in the cache, to determine what cache architecture should be used.
+Because of performance requirements, all four texture pixels must be fetched in one clock cycle in most cases.
 
-\subsubsection{General case, middle of texture}
-\begin{figure}[H]
-\centering
-\includegraphics[height=55mm]{dist_common.eps}
-\caption{Most common case, pixels 1 and 2 are in the same cache line.}\label{fig:case1}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[height=55mm]{dist_12lines.eps}
-\caption{Pixels 1 and 2 are in different cache lines.}\label{fig:case2}
-\end{figure}
-
-\subsubsection{With clamping}
-When pixels go out of the texture, clamping can induce cases where two or four pixels merge.
-
-\begin{figure}[H]
-\centering
-\includegraphics[height=55mm]{dist_clamp.eps}
-\caption{Example of pixels merging because Y1=-1.}\label{fig:caseclamp}
-\end{figure}
-
-\subsubsection{With wrapping}
-Wrapping can cause pixels split across the texture. This can happen horizontally, vertically or both.
-
-\begin{figure}[H]
-\centering
-\includegraphics[height=55mm]{dist_wrap1.eps}
-\caption{Vertical wrapping.}\label{fig:casewrap1}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[height=55mm]{dist_wrap2.eps}
-\caption{Horizontal wrapping.}\label{fig:casewrap2}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[height=55mm]{dist_wrap3.eps}
-\caption{Wrapping in both directions.}\label{fig:casewrap3}
-\end{figure}
-
-\subsection{Cache architecture}
-\subsubsection{Design options}
-We have two options for designing the cache:
-\begin{itemize}
-\item four separate caches (one for pixel 1, one for pixel 2, etc.)
-\item a shared cache capable of looking up 4 pixels at a time
-\end{itemize}
-
-Misses happening in the ways for pixels 1, 2, 3 and 4 are likely to be correlated, so a shared cache architecture is chosen to minimize memory bandwidth.
-
-\subsubsection{Avoiding cache conflicts}
-There could be replacement conflicts that have, at least, a detrimental impact of performance.
-
-Such conflicts happen when:
-\begin{itemize}
-\item (Figure~\ref{fig:case1}) lines A and B collide. This happens when:
-\begin{equation*}
-\text{hres} \equiv 0 \pmod{\text{csize}}
-\end{equation*}
-\item (Figure~\ref{fig:case2}) lines A and B collide or lines C and D collide. This does not happen unless the cache only contains one line, which is not a practical case.
-\item (Figure~\ref{fig:case2}) lines A and C or lines B and D collide. This is the same case as for Figure~\ref{fig:case1}.
-\item (Figure~\ref{fig:casewrap1}) lines A and B collide. This happens when:
-\begin{equation*}
-\text{hres}\cdot(\text{vres}-1) \equiv 0 \pmod{\text{csize}}
-\end{equation*}
-\item (Figure~\ref{fig:casewrap2}) lines A and B or lines B and C collide. This happens when:
-\begin{equation*}
-\text{hres}-1 \equiv 0 \pmod{\text{csize}}
-\end{equation*}
-\end{itemize}
-
-In the equations above:
-\begin{itemize}
-\item hres is the horizontal resolution in pixels
-\item vres is the vertical resolution in pixels
-\item csize is the total number of pixels the cache can hold. It is equal to the cache size in bytes (not counting the tag memory) divided by 2.
-\end{itemize}
-
-\subsubsection{Chosen architecture}
-The block diagram of the cache architecture is given in Figure~\ref{fig:carch}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[height=95mm]{carch.eps}
-\caption{TMU cache architecture for bilinear filtering.}\label{fig:carch}
-\end{figure}
-
-Because cache conflicts can be easily be avoided by choosing the texture resolution carefully, they are not handled by this architecture. \textbf{Having a cache conflict results in a lockup of the cache controller}, that requires a reset of the core.
-
-The four-way cache can be efficently implemented on FPGA targets by using two dual-port block RAMs.
-
-\subsubsection{Summary}
-In order to avoid cache conflicts which lock up the core, one must make sure that:
-\begin{equation*}
-\text{hres} \not \equiv 0 \pmod{\text{csize}}
-\end{equation*}
-Additionally, if texture wrapping is enabled, one must also make sure that:
-\begin{equation*}
-\text{hres}\cdot(\text{vres}-1) \not \equiv 0 \pmod{\text{csize}}
-\end{equation*}
-\begin{equation*}
-\text{hres}-1 \not \equiv 0 \pmod{\text{csize}}
-\end{equation*}
+The cache uses a shared data store. This brings cache conflict avoidance requirements which are discussed in the document ``A performance driven SoC architecture for video synthesis''.
 
 \section*{Copyright notice}
 Copyright \copyright 2007-2010 S\'ebastien Bourdeauducq. \\
