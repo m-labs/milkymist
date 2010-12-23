@@ -14,18 +14,21 @@ usage: $(BUILDDIR)/system-routed.xdl
 load: $(BUILDDIR)/system.bit
 	cd $(BUILDDIR) && impact -batch ../load.cmd
 
-# yeah, we need different placer cost tables for normal and rescue...:(
+# Meeting timing is difficult with the full design and requires special options
 build/system.ncd: build/system.ngd
-	cd build && map -ol high -t 1 -w system.ngd
+	cd build && map -ol high -xe n -register_duplication on -w system.ngd
+
+build/system-routed.ncd: build/system.ncd
+	cd build && par -ol high -xe n -w system.ncd system-routed.ncd
 
 build-rescue/system.ncd: build-rescue/system.ngd
-	cd build-rescue && map -ol high -t 99 -w system.ngd
+	cd build-rescue && map -ol high -w system.ngd
 
-$(BUILDDIR)/system-routed.ncd: $(BUILDDIR)/system.ncd
-	cd $(BUILDDIR) && par -ol high -w system.ncd system-routed.ncd
+build-rescue/system-routed.ncd: build-rescue/system.ncd
+	cd build-rescue && par -ol high -w system.ncd system-routed.ncd
 
 $(BUILDDIR)/system.bit: $(BUILDDIR)/system-routed.ncd
-	cd $(BUILDDIR) && bitgen -g LCK_cycle:6 -w system-routed.ncd system.bit
+	cd $(BUILDDIR) && bitgen -g LCK_cycle:6 -g Binary:Yes -w system-routed.ncd system.bit
 
 $(BUILDDIR)/system-routed.xdl: $(BUILDDIR)/system-routed.ncd
 	cd $(BUILDDIR) && xdl -ncd2xdl system-routed.ncd system-routed.xdl

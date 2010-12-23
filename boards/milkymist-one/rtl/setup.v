@@ -22,20 +22,26 @@
  * able to cut down synthesis times.
  */
 `define ENABLE_MEMORYCARD
+`define ENABLE_ETHERNET
+`define ENABLE_USB
+
+/* 
+ * Disable cores that are not useful to the rescue design.
+ * This reduces developer time wastage with the rescue design timing closure.
+ */
+`ifndef RESCUE
 `define ENABLE_AC97
 `define ENABLE_PFPU
 `define ENABLE_TMU
-`define ENABLE_ETHERNET
 `define ENABLE_FMLMETER
 `define ENABLE_VIDEOIN
 `define ENABLE_MIDI
 `define ENABLE_DMX
 `define ENABLE_IR
-`define ENABLE_USB
-
-/* only available when TMU is disabled */
+/* Memory tester is only available when TMU is disabled */
 `ifndef ENABLE_TMU
 `define ENABLE_MEMTEST
+`endif
 `endif
 
 /*
