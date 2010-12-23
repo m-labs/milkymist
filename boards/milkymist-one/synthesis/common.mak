@@ -4,7 +4,7 @@ else
 	BUILDDIR=build
 endif
 
-all: $(BUILDDIR)/system.bit
+all: $(BUILDDIR)/system.bit $(BUILDDIR)/system.fpg
 
 timing: $(BUILDDIR)/system-routed.twr
 
@@ -29,6 +29,11 @@ build-rescue/system-routed.ncd: build-rescue/system.ncd
 
 $(BUILDDIR)/system.bit: $(BUILDDIR)/system-routed.ncd
 	cd $(BUILDDIR) && bitgen -g LCK_cycle:6 -g Binary:Yes -w system-routed.ncd system.bit
+
+$(BUILDDIR)/system.bin: $(BUILDDIR)/system.bit
+
+$(BUILDDIR)/system.fpg: $(BUILDDIR)/system.bin
+	$(MMDIR)/tools/byteswap $(BUILDDIR)/system.bin $(BUILDDIR)/system.fpg
 
 $(BUILDDIR)/system-routed.xdl: $(BUILDDIR)/system-routed.ncd
 	cd $(BUILDDIR) && xdl -ncd2xdl system-routed.ncd system-routed.xdl

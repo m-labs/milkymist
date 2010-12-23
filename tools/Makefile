@@ -1,4 +1,4 @@
-TARGETS=bin2hex mkmmimg flterm makeraw
+TARGETS=bin2hex mkmmimg flterm makeraw byteswap
 
 all: $(TARGETS)
 
