@@ -642,7 +642,6 @@ always @(*) begin
 				end
 				16'b1101_xxxx_xxxx_xxxx: begin
 					/* RCALL */
-					/* TODO: in which order should we push the bytes? */
 					dmem_sel = DMEM_SEL_SP_PCL;
 					dmem_we = 1'b1;
 					push = 1'b1;
@@ -745,7 +744,6 @@ always @(*) begin
 				end
 				16'b1001_0101_000x_1000: begin
 					/* RET - RETI (treated as RET) */
-					/* TODO: in which order should we pop the bytes? */
 					dmem_sel = DMEM_SEL_SP_PCH;
 					pop = 1'b1;
 					next_state = RET1;
@@ -763,7 +761,6 @@ always @(*) begin
 				end
 				16'b1001_0101_0000_1001: begin
 					/* ICALL */
-					/* TODO: in which order should we push the bytes? */
 					dmem_sel = DMEM_SEL_SP_PCL;
 					dmem_we = 1'b1;
 					push = 1'b1;
