@@ -86,12 +86,12 @@ static void memcard_send_dummy()
 	while(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_TX);
 }
 
-static int memcard_receive_command(unsigned char *buffer)
+static int memcard_receive_command(unsigned char *buffer, int len)
 {
 	int i;
 	int timeout;
 
-	for(i=0;i<6;i++) {
+	for(i=0;i<len;i++) {
 		timeout = 2000000;
 		while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX)) {
 			timeout--;
@@ -109,7 +109,10 @@ static int memcard_receive_command(unsigned char *buffer)
 	while(!(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_RX));
 
 	#ifdef MEMCARD_DEBUG
-	printf("<< %02x %02x %02x %02x %02x %02x\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5]);
+	printf("<< ");
+	for(i=0;i<len;i++)
+		printf("%02x ", buffer[i]);
+	printf("\n");
 	#endif
 
 	return 1;
@@ -169,7 +172,7 @@ static int memcard_receive_command_data(unsigned char *command, unsigned int *da
 
 static int memcard_init()
 {
-	unsigned char b[6];
+	unsigned char b[17];
 	unsigned int rca;
 
 	CSR_MEMCARD_CLK2XDIV = 250;
@@ -183,18 +186,18 @@ static int memcard_init()
 	/* CMD8 */
 	memcard_send_command(8, 0x1aa);
 	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b, 6)) return 0;
 
 	/* ACMD41 - initialize */
 	while(1) {
 		memcard_start_cmd_tx();
 		memcard_send_command(55, 0);
 		memcard_start_cmd_rx();
-		if(!memcard_receive_command(b)) return 0;
+		if(!memcard_receive_command(b, 6)) return 0;
 		memcard_start_cmd_tx();
 		memcard_send_command(41, 0x00300000);
 		memcard_start_cmd_rx();
-		if(!memcard_receive_command(b)) return 0;
+		if(!memcard_receive_command(b, 6)) return 0;
 		if(b[1] & 0x80) break;
 		#ifdef MEMCARD_DEBUG
 		printf("Card is busy, retrying\n");
@@ -205,15 +208,13 @@ static int memcard_init()
 	memcard_start_cmd_tx();
 	memcard_send_command(2, 0);
 	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return 0;
-	if(!memcard_receive_command(b)) return 0;
-	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b, 17)) return 0;
 
 	/* CMD3 - get RCA */
 	memcard_start_cmd_tx();
 	memcard_send_command(3, 0);
 	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b, 6)) return 0;
 	rca = (((unsigned int)b[1]) << 8)|((unsigned int)b[2]);
 	#ifdef MEMCARD_DEBUG
 	printf("RCA: %04x\n", rca);
@@ -223,17 +224,17 @@ static int memcard_init()
 	memcard_start_cmd_tx();
 	memcard_send_command(7, rca << 16);
 	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b, 6)) return 0;
 
 	/* ACMD6 - set bus width */
 	memcard_start_cmd_tx();
 	memcard_send_command(55, rca << 16);
 	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b, 6)) return 0;
 	memcard_start_cmd_tx();
 	memcard_send_command(6, 2);
 	memcard_start_cmd_rx();
-	if(!memcard_receive_command(b)) return 0;
+	if(!memcard_receive_command(b, 6)) return 0;
 
 	CSR_MEMCARD_CLK2XDIV = 3;
 
