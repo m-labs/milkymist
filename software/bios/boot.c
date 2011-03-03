@@ -36,6 +36,7 @@
 #include <hw/hpdmc.h>
 #include <hw/flash.h>
 
+#include "unlzma.h"
 #include "boot.h"
 
 extern const struct board_desc *brd_desc;
@@ -331,12 +332,19 @@ void fsboot(int devnr)
 
 extern int rescue;
 
+static void lzma_error(char *x)
+{
+	printf("LZMA error: %s\n", x);
+}
+
 void flashboot()
 {
 	unsigned int *flashbase;
 	unsigned int length;
 	unsigned int crc;
 	unsigned int got_crc;
+	int lzma;
+	int r;
 
 	printf("I: Booting from flash...\n");
 	if(rescue)
@@ -344,14 +352,27 @@ void flashboot()
 	else
 		flashbase = (unsigned int *)FLASH_OFFSET_REGULAR_APP;
 	length = *flashbase++;
+	if(length & 0x80000000) {
+		length &= 0x7fffffff;
+		lzma = 1;
+	} else
+		lzma = 0;
 	crc = *flashbase++;
 	if((length < 32) || (length > 4*1024*1024)) {
 		printf("E: Invalid flash boot image length\n");
 		return;
 	}
-	printf("I: Loading %d bytes from flash...\n", length);
-	memcpy((void *)SDRAM_BASE, flashbase, length);
-	got_crc = crc32((unsigned char *)SDRAM_BASE, length);
+	if(lzma) {
+		printf("I: Decompressing %d bytes from flash...\n", length);
+		r = unlzma((unsigned char *)flashbase, length, NULL, NULL, (void *)SDRAM_BASE, NULL, lzma_error);
+		if(r < 0)
+			return;
+		got_crc = crc32((unsigned char *)flashbase, length);
+	} else {
+		printf("I: Loading %d bytes from flash...\n", length);
+		memcpy((void *)SDRAM_BASE, flashbase, length);
+		got_crc = crc32((unsigned char *)SDRAM_BASE, length);
+	}
 	if(crc != got_crc) {
 		printf("E: CRC failed (expected %08x, got %08x)\n", crc, got_crc);
 		return;

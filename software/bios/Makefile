@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=crt0.o isr.o main.o boot.o boot-helper.o splash.o
+OBJECTS=crt0.o isr.o main.o unlzma.o boot.o boot-helper.o splash.o
 SEGMENTS=-j .text -j .data -j .rodata
 
 all: bios.bin bios-rescue.bin
