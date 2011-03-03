@@ -1,3 +1,9 @@
+* 2011-03-03 lekernel Patch from Wesley W. Terpstra (GSI)
+  Support register file backed by ram blocks
+  Fix a minor problem where compilation fails when interrupts are not supported
+  Add support to flush icache and dcache per JTAG
+  Fix wrong width assignments for PC
+
 * 2010-09-32 lekernel Removed debug ROM (made external), trace module
   (TODO: make external) and non-portable JTAG.
 

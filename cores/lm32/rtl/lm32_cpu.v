@@ -1273,70 +1273,44 @@ lm32_debug #(
    /*----------------------------------------------------------------------
     Register file instantiation as Pseudo-Dual Port EBRs.
     ----------------------------------------------------------------------*/
-   pmi_ram_dp
+   // Modified by GSI: removed non-portable RAM instantiation
+   lm32_dp_ram
      #(
        // ----- Parameters -----
-       .pmi_wr_addr_depth(1<<5),
-       .pmi_wr_addr_width(5),
-       .pmi_wr_data_width(32),
-       .pmi_rd_addr_depth(1<<5),
-       .pmi_rd_addr_width(5),
-       .pmi_rd_data_width(32),
-       .pmi_regmode("noreg"),
-       .pmi_gsr("enable"),
-       .pmi_resetmode("sync"),
-       .pmi_init_file("none"),
-       .pmi_init_file_format("binary"),
-       .pmi_family(`LATTICE_FAMILY),
-       .module_type("pmi_ram_dp")
+       .addr_depth(1<<5),
+       .addr_width(5),
+       .data_width(32)
        )
    reg_0
      (
       // ----- Inputs -----
-      .Data(w_result),
-      .WrAddress(write_idx_w),
-      .RdAddress(instruction_f[25:21]),
-      .WrClock(clk_i),
-      .RdClock(clk_i),
-      .WrClockEn(`TRUE),
-      .RdClockEn(`TRUE),
-      .WE(reg_write_enable_q_w),
-      .Reset(rst_i), 
+      .clk_i	(clk_i),
+      .rst_i	(rst_i), 
+      .we_i	(reg_write_enable_q_w),
+      .wdata_i	(w_result),
+      .waddr_i	(write_idx_w),
+      .raddr_i	(instruction_f[25:21]),
       // ----- Outputs -----
-      .Q(regfile_data_0)
+      .rdata_o	(regfile_data_0)
       );
 
-   pmi_ram_dp
+   lm32_dp_ram
      #(
-       // ----- Parameters -----
-       .pmi_wr_addr_depth(1<<5),
-       .pmi_wr_addr_width(5),
-       .pmi_wr_data_width(32),
-       .pmi_rd_addr_depth(1<<5),
-       .pmi_rd_addr_width(5),
-       .pmi_rd_data_width(32),
-       .pmi_regmode("noreg"),
-       .pmi_gsr("enable"),
-       .pmi_resetmode("sync"),
-       .pmi_init_file("none"),
-       .pmi_init_file_format("binary"),
-       .pmi_family(`LATTICE_FAMILY),
-       .module_type("pmi_ram_dp")
+       .addr_depth(1<<5),
+       .addr_width(5),
+       .data_width(32)
        )
    reg_1
      (
       // ----- Inputs -----
-      .Data(w_result),
-      .WrAddress(write_idx_w),
-      .RdAddress(instruction_f[20:16]),
-      .WrClock(clk_i),
-      .RdClock(clk_i),
-      .WrClockEn(`TRUE),
-      .RdClockEn(`TRUE),
-      .WE(reg_write_enable_q_w),
-      .Reset(rst_i), 
+      .clk_i	(clk_i),
+      .rst_i	(rst_i), 
+      .we_i	(reg_write_enable_q_w),
+      .wdata_i	(w_result),
+      .waddr_i	(write_idx_w),
+      .raddr_i	(instruction_f[20:16]),
       // ----- Outputs -----
-      .Q(regfile_data_1)
+      .rdata_o	(regfile_data_1)
       );
 `endif
 
@@ -1886,7 +1860,9 @@ assign stall_m =    (stall_wb_load == `TRUE)
 			  exception has occured. This stall will ensure that D_CYC_O and 
 			  store_m will both be low for one cycle.
 			  */
+`ifdef CFG_INTERRUPTS_ENABLED
 		         || ((store_x == `TRUE) && (interrupt_exception == `TRUE))
+`endif
                          || (load_m == `TRUE)
                          || (load_x == `TRUE)
                         ) 
@@ -2046,15 +2022,29 @@ assign cfg2 = {
    
 // Cache flush
 `ifdef CFG_ICACHE_ENABLED
-assign iflush =    (csr_write_enable_d == `TRUE) 
-                && (csr_d == `LM32_CSR_ICC)
-                && (stall_d == `FALSE)
-                && (kill_d == `FALSE)
-                && (valid_d == `TRUE);
+assign iflush = (   (csr_write_enable_d == `TRUE) 
+                 && (csr_d == `LM32_CSR_ICC)
+                 && (stall_d == `FALSE)
+                 && (kill_d == `FALSE)
+                 && (valid_d == `TRUE))
+// Added by GSI: needed to flush cache after loading firmware per JTAG
+`ifdef CFG_HW_DEBUG_ENABLED
+             ||
+                (   (jtag_csr_write_enable == `TRUE)
+		 && (jtag_csr == `LM32_CSR_ICC))
+`endif
+		 ;
 `endif 
 `ifdef CFG_DCACHE_ENABLED
-assign dflush_x =  (csr_write_enable_q_x == `TRUE) 
-                && (csr_x == `LM32_CSR_DCC);
+assign dflush_x = (   (csr_write_enable_q_x == `TRUE) 
+                   && (csr_x == `LM32_CSR_DCC))
+// Added by GSI: needed to flush cache after loading firmware per JTAG
+`ifdef CFG_HW_DEBUG_ENABLED
+               ||
+                  (   (jtag_csr_write_enable == `TRUE)
+		   && (jtag_csr == `LM32_CSR_DCC))
+`endif
+		   ;
 `endif 
 
 // Extract CSR index
@@ -2256,7 +2246,7 @@ begin
         operand_0_x <= {`LM32_WORD_WIDTH{1'b0}};
         operand_1_x <= {`LM32_WORD_WIDTH{1'b0}};
         store_operand_x <= {`LM32_WORD_WIDTH{1'b0}};
-        branch_target_x <= {`LM32_WORD_WIDTH{1'b0}};        
+        branch_target_x <= {`LM32_PC_WIDTH{1'b0}};        
         x_result_sel_csr_x <= `FALSE;
 `ifdef LM32_MC_ARITHMETIC_ENABLED
         x_result_sel_mc_arith_x <= `FALSE;
@@ -2317,7 +2307,7 @@ begin
 `endif
         csr_write_enable_x <= `FALSE;
         operand_m <= {`LM32_WORD_WIDTH{1'b0}};
-        branch_target_m <= {`LM32_WORD_WIDTH{1'b0}};
+        branch_target_m <= {`LM32_PC_WIDTH{1'b0}};
         m_result_sel_compare_m <= `FALSE;
 `ifdef CFG_PL_BARREL_SHIFT_ENABLED
         m_result_sel_shift_m <= `FALSE;

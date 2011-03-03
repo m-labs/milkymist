@@ -15,6 +15,7 @@ LM32_SRC=							\
 	$(CORES_DIR)/lm32/rtl/lm32_mc_arithmetic.v		\
 	$(CORES_DIR)/lm32/rtl/lm32_interrupt.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_ram.v			\
+	$(CORES_DIR)/lm32/rtl/lm32_dp_ram.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_icache.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_dcache.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_top.v			\
