@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -471,11 +471,13 @@ static void do_command(char *c)
 
 static int test_user_abort()
 {
-	unsigned int i;
 	char c;
 
 	puts("I: Press Q or ESC to abort boot");
-	for(i=0;i<500000;i++) {
+	CSR_TIMER0_COUNTER = 0;
+	CSR_TIMER0_COMPARE = 2*brd_desc->clk_frequency;
+	CSR_TIMER0_CONTROL = TIMER_ENABLE;
+	while(CSR_TIMER0_CONTROL & TIMER_ENABLE) {
 		if(readchar_nonblock()) {
 			c = readchar();
 			if((c == 'Q')||(c == '\e')) {
