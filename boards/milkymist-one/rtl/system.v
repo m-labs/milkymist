@@ -885,7 +885,7 @@ sysctl #(
 	.csr_addr(4'h1),
 	.ninputs(7),
 	.noutputs(2),
-	.systemid(32'h10024D31) /* 1.0.0 RC2 on M1 */
+	.systemid(32'h10034D31) /* 1.0.0 RC3 on M1 */
 ) sysctl (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
