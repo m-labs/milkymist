@@ -13,6 +13,18 @@ echo "Log file:       $LOGFILE"
 echo "================================================================================"
 echo ""
 
+echo -n "Building host utilities..."
+cd $BASEDIR/tools
+echo >> $LOGFILEHOST
+date >> $LOGFILEHOST
+make >> $LOGFILEHOST 2>&1
+if [ "$?" != 0 ] ; then
+        echo "FAILED"
+	exit 1
+else
+        echo "OK"
+fi
+
 echo -n "Building FPGA bitstream..."
 echo >> $LOGFILE
 date >> $LOGFILE
