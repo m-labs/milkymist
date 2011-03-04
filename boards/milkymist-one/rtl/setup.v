@@ -25,11 +25,6 @@
 `define ENABLE_ETHERNET
 `define ENABLE_USB
 
-/* 
- * Disable cores that are not useful to the rescue design.
- * This reduces developer time wastage with the rescue design timing closure.
- */
-`ifndef RESCUE
 `define ENABLE_AC97
 `define ENABLE_PFPU
 `define ENABLE_TMU
@@ -38,11 +33,11 @@
 `define ENABLE_MIDI
 `define ENABLE_DMX
 `define ENABLE_IR
-/* Memory tester is only available when TMU is disabled */
+
 `ifndef ENABLE_TMU
 `define ENABLE_MEMTEST
 `endif
-`endif
+
 
 /*
  * System clock frequency in Hz.
