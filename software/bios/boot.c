@@ -364,18 +364,22 @@ void flashboot()
 	}
 	if(lzma) {
 		printf("I: Decompressing %d bytes from flash...\n", length);
+		got_crc = crc32((unsigned char *)flashbase, length);
+		if(crc != got_crc) {
+			printf("E: CRC failed (expected %08x, got %08x)\n", crc, got_crc);
+			return;
+		}
 		r = unlzma((unsigned char *)flashbase, length, NULL, NULL, (void *)SDRAM_BASE, NULL, lzma_error);
 		if(r < 0)
 			return;
-		got_crc = crc32((unsigned char *)flashbase, length);
 	} else {
 		printf("I: Loading %d bytes from flash...\n", length);
 		memcpy((void *)SDRAM_BASE, flashbase, length);
 		got_crc = crc32((unsigned char *)SDRAM_BASE, length);
-	}
-	if(crc != got_crc) {
-		printf("E: CRC failed (expected %08x, got %08x)\n", crc, got_crc);
-		return;
+		if(crc != got_crc) {
+			printf("E: CRC failed (expected %08x, got %08x)\n", crc, got_crc);
+			return;
+		}
 	}
 	printf("I: Booting...\n");
 	boot(0, 0, 0, SDRAM_BASE);
