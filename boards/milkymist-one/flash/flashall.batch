@@ -1,0 +1,19 @@
+cable milkymist
+detect
+instruction CFG_OUT 000100 BYPASS
+instruction CFG_IN 000101 BYPASS
+pld load fjmem.bit
+initbus fjmem opcode=000010
+frequency 6000000
+detectflash 0
+endian big
+
+flashmem 0x000000 standby.fpg noverify
+
+flashmem 0x0A0000 soc-rescue.fpg noverify
+flashmem 0x220000 bios-rescue.bin noverify
+flashmem 0x240000 splash-rescue.raw noverify
+
+flashmem 0x6E0000 soc.fpg noverify
+flashmem 0x860000 bios.bin noverify
+flashmem 0x880000 splash.raw noverify

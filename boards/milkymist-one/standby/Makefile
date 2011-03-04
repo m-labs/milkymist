@@ -1,3 +1,5 @@
+MMDIR?=../../..
+
 SRC=standby.v
 
 all: build/standby.fpg

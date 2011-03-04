@@ -1,3 +1,5 @@
+MMDIR?=../../..
+
 ifeq ($(RESCUE),1)
 	BUILDDIR=build-rescue
 else
