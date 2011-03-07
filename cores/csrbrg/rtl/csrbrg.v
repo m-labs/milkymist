@@ -40,7 +40,7 @@ always @(posedge sys_clk) begin
 	wb_dat_o <= csr_di;
 end
 
-/* Datapath: CSR -> WB */
+/* Datapath: CSR <- WB */
 reg next_csr_we;
 always @(posedge sys_clk) begin
 	csr_a <= wb_adr_i[15:2];
