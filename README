@@ -23,7 +23,7 @@ For the latest releases, binary distributions and more:
 You will need:
  - GNU Make,
  - Bourne Again Shell (bash),
- - Xilinx ISE 12.2 for synthesizing the FPGA bitstream (WebPack is enough),
+ - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
  - AVR toolchain for building the USB firmware,
  - SRecord,
@@ -32,9 +32,6 @@ You will need:
  - libGD,
  - RE2C,
  - Lemon parser generator.
-
-In case of Xst bugs or to improve timing/area (optional):
- - Synplify Pro (Synopsys).
 
 To regenerate the FIR filter coefficients (only if you touch it):
  - Scilab.
@@ -66,7 +63,7 @@ loading over the serial line (SFL boot) is provided in the /tools/ directory.
 
 
 [> Credits
-Most of the work is (C) Copyright 2007, 2008, 2009, 2010 Sebastien Bourdeauducq.
+Most of the work is (C) Copyright 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq.
 For this work:
  - The hardware design is licensed under GNU GPLv3.
    See the LICENSE.GPL file for more information.
@@ -92,6 +89,11 @@ The software and software library include:
  - line drawing code from the GD library. See the LICENSE.GD file.
 
 Special thanks to the people who did significant things which made this project possible:
+ - Wolfgang Spraul and Adam Wang for the manufacturing,
+ - Michael Walle for QEMU, UrJTAG and OpenOCD,
+ - Joachim Steiger for the case design,
+ - Yanjun Luo for the JTAG daughterboard design,
+ - Yann Sionneau for his work on RTEMS,
  - Lattice Semiconductor for the Mico32 processor,
  - Shawn Tan for the AEMB processor (used earlier),
  - Stephen Williams for Icarus Verilog,
@@ -102,7 +104,9 @@ Special thanks to the people who did significant things which made this project 
 
 
 [> Contact
-E-mail: sebastien.bourdeauducq at lekernel daaht net
+The mailing list devel at lists dot milkymist dot org is the preferred means of contact.
+However, if you wish to contact privately the founder of this project:
+E-mail: sebastien at milkymist daaht org
 Phone:  +33(0)606644335
 PGP:    0x9277FCF2
 
