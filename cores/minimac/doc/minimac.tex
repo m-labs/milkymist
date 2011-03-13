@@ -69,7 +69,7 @@ The two MDIO pins (clock and bidirectional data) are controlled using a low-leve
 \section{Packet reception}
 There are four reception slots. When a packet arrives, the Minimac cores picks the loaded slot with the lowest number (first slot 0, then 1, etc.), DMA's the packet into the system memory at the address given by the slot, updates the slot's byte count according to the length of the packet, and updates the slot's state to ``pending''.
 
-If a reception error occurs, of if the packet exceeds the Ethernet MTU, the whole packet is discarded and the slot's state is unchanged. However, some of the packet's data may have been transferred to the system memory; so software should consider that the contents of a DMA buffer attached to a loaded slot are undefined. DMA buffers should be made large enough to include a maximum length Ethernet packet with preamble and CRC. Raw packets are received entirely, including preamble, trailer and CRC.
+If a reception error occurs, or if the packet exceeds the Ethernet MTU, the whole packet is discarded and the slot's state is unchanged. However, some of the packet's data may have been transferred to the system memory; so software should consider that the contents of a DMA buffer attached to a loaded slot are undefined. DMA buffers should be made large enough to include a maximum length Ethernet packet with preamble and CRC. Raw packets are received entirely, including preamble, trailer and CRC.
 
 Memory addresses must be aligned to a 32-bit boundary.
 
