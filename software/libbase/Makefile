@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS_ALL=divsi3.o libc.o crc16.o crc32.o console.o blockdev.o fatfs.o system.o board.o irq.o uart.o
+OBJECTS_ALL=divsi3.o libc.o crc16.o crc32.o console.o blockdev.o fatfs.o system.o board.o uart.o
 OBJECTS=$(OBJECTS_ALL) softfloat.o softfloat-glue.o vsnprintf.o atof.o malloc.o
 OBJECTS_LIGHT=$(OBJECTS_ALL) vsnprintf-nofloat.o
 
