@@ -2,6 +2,7 @@
 
 source setup.inc
 BASEDIR=`pwd`
+LOGFILEHOST=$BASEDIR/tools.log
 LOGFILE=$BASEDIR/synthesis.log
 
 echo "================================================================================"
