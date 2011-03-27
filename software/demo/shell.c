@@ -628,6 +628,46 @@ static void echo()
 	}
 }
 
+static void cr(char *addr)
+{
+	unsigned int a;
+	char *c;
+
+	if(*addr == 0) {
+		printf("cr <address>\n");
+		return;
+	}
+	a = strtoul(addr, &c, 0);
+	if(*c != 0) {
+		printf("incorrect address\n");
+		return;
+	}
+
+	printf("%04x\n", snd_ac97_read(a));
+}
+
+static void cw(char *addr, char *value)
+{
+	unsigned int a, v;
+	char *c;
+
+	if((*addr == 0)||(*value == 0)) {
+		printf("cw <address> <value>\n");
+		return;
+	}
+	a = strtoul(addr, &c, 0);
+	if(*c != 0) {
+		printf("incorrect address\n");
+		return;
+	}
+	v = strtoul(value, &c, 0);
+	if(*c != 0) {
+		printf("incorrect value\n");
+		return;
+	}
+	snd_ac97_write(a, v);
+}
+
 static void readv(char *addr)
 {
 	unsigned char a;
@@ -951,6 +991,8 @@ static void do_command(char *c)
 		else if(strcmp(command, "tmutest") == 0) tmutest();
 		else if(strcmp(command, "tmubench") == 0) tmubench();
 		else if(strcmp(command, "echo") == 0) echo();
+		else if(strcmp(command, "cr") == 0) cr(param1);
+		else if(strcmp(command, "cw") == 0) cw(param1, param2);
 		else if(strcmp(command, "testv") == 0) testv();
 		else if(strcmp(command, "readv") == 0) readv(param1);
 		else if(strcmp(command, "writev") == 0) writev(param1, param2);
