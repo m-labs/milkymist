@@ -1,4 +1,4 @@
-SOURCES=tb_ac97.v $(wildcard ../rtl/*.v)
+SOURCES=tb_ac97.v $(wildcard ../rtl/*.v) ../../asfifo/rtl/asfifo.v ../../asfifo/rtl/asfifo_graycounter.v
 
 all: sim
 
