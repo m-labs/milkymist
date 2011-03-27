@@ -110,9 +110,9 @@ always @(posedge sys_clk) begin
 	
 		if(down_en & down_next_frame) begin
 			down_addr_valid <= request_en;
-			down_addr <= {~request_write, request_addr, 12'd0};
+			down_addr <= {20{request_en}} & {~request_write, request_addr, 12'd0};
 			down_data_valid <= request_en & request_write;
-			down_data <= {request_data, 4'd0};
+			down_data <= {20{request_en & request_write}} & {request_data, 4'd0};
 			
 			request_en <= 1'b0;
 			if(request_en)

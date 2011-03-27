@@ -74,8 +74,8 @@ always @(posedge sys_clk) begin
 	if(load_downpcm) begin
 		down_pcmleft_valid <= dmar_en;
 		down_pcmright_valid <= dmar_en;
-		down_pcmleft <= {wbm_dat_i[31:16], wbm_dat_i[30:27]};
-		down_pcmright <= {wbm_dat_i[15:0], wbm_dat_i[14:11]};
+		down_pcmleft <= {20{dmar_en}} & {{wbm_dat_i[31:16], wbm_dat_i[30:27]}};
+		down_pcmright <= {20{dmar_en}} & {{wbm_dat_i[15:0], wbm_dat_i[14:11]}};
 	end
 end
 
@@ -122,7 +122,7 @@ always @(*) begin
 			up_en = 1'b1;
 			
 			if(down_next_frame) begin
-			 	if(dmar_en)
+				if(dmar_en)
 					down_en = 1'b0;
 				else
 					load_downpcm = 1'b1;
@@ -130,8 +130,6 @@ always @(*) begin
 			if(up_next_frame) begin
 				if(dmaw_en)
 					up_en = 1'b0;
-				else
-					load_downpcm = 1'b1;
 			end
 			
 			if(down_next_frame & dmar_en & ~dmar_finished) begin
