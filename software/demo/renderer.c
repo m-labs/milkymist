@@ -109,11 +109,11 @@ static int process_top_assign(char *left, char *right)
 		return 1;
 	}
 
-	if(strncmp(left, "per_frame_", 10) == 0)
+	if(strncmp(left, "per_frame", 9) == 0)
 		/* per-frame equation */
 		return process_equations(right, 0);
 
-	if((strncmp(left, "per_vertex_", 11) == 0) || (strncmp(left, "per_pixel_", 10) == 0))
+	if((strncmp(left, "per_vertex", 10) == 0) || (strncmp(left, "per_pixel", 9) == 0))
 		/* per-vertex equation */
 		return process_equations(right, 1);
 
