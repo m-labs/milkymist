@@ -14,7 +14,7 @@ usage: $(BUILDDIR)/system-routed.xdl
 	../../../tools/xdlanalyze.pl $(BUILDDIR)/system-routed.xdl 0
 
 load: $(BUILDDIR)/system.bit
-	cd $(BUILDDIR) && impact -batch ../load.cmd
+	jtag -n load.batch
 
 # Meeting timing is difficult with the full design and requires special options
 build/system.ncd: build/system.ngd
