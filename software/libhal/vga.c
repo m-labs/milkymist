@@ -249,12 +249,12 @@ int vga_read_edid(char *buffer)
 	return 1;
 }
 
-// FIXME: change pixel clock as well. This function won't work without!
+/* http://web.mit.edu/6.111/www/s2004/NEWKIT/vga.shtml */
 void vga_set_mode(int mode)
 {
 	CSR_VGA_RESET = VGA_RESET;
 	switch(mode) {
-		case VGA_MODE_640_480:
+		case VGA_MODE_640_480: // Pixel clock: 25MHz
 			vga_hres = 640;
 			vga_vres = 480;
 			CSR_VGA_HRES = 640;
@@ -265,8 +265,9 @@ void vga_set_mode(int mode)
 			CSR_VGA_VSYNC_START = 491;
 			CSR_VGA_VSYNC_END = 493;
 			CSR_VGA_VSCAN = 523;
+			CSR_VGA_CLKSEL = 0;
 			break;
-		case VGA_MODE_800_600:
+		case VGA_MODE_800_600: // Pixel clock: 50MHz
 			vga_hres = 800;
 			vga_vres = 600;
 			CSR_VGA_HRES = 800;
@@ -277,20 +278,26 @@ void vga_set_mode(int mode)
 			CSR_VGA_VSYNC_START = 637;
 			CSR_VGA_VSYNC_END = 643;
 			CSR_VGA_VSCAN = 666;
+			CSR_VGA_CLKSEL = 1;
 			break;
-		case VGA_MODE_1024_768:
+		case VGA_MODE_1024_768: // Pixel clock: 65MHz
 			vga_hres = 1024;
 			vga_vres = 768;
 			CSR_VGA_HRES = 1024;
-			CSR_VGA_HSYNC_START = 1040;
+			CSR_VGA_HSYNC_START = 1048;
 			CSR_VGA_HSYNC_END = 1184;
 			CSR_VGA_HSCAN = 1344;
 			CSR_VGA_VRES = 768;
 			CSR_VGA_VSYNC_START = 771;
 			CSR_VGA_VSYNC_END = 777;
 			CSR_VGA_VSCAN = 806;
+			CSR_VGA_CLKSEL = 2;
 			break;
 	}
+	memset(framebufferA, 0, vga_hres*vga_vres*2);
+	memset(framebufferB, 0, vga_hres*vga_vres*2);
+	memset(framebufferC, 0, vga_hres*vga_vres*2);
+	memset(framebuffer_text, 0, vga_hres*vga_vres*2);
 	cursor_pos = 0;
 	text_line_len = vga_hres/8;
 	CSR_VGA_BURST_COUNT = vga_hres*vga_vres/16;

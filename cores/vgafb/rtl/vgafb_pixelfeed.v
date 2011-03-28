@@ -49,6 +49,7 @@ module vgafb_pixelfeed #(
 
 reg fifo_source_cache;
 reg fifo_stb;
+wire can_burst;
 wire fifo_valid;
 
 vgafb_fifo64to16 fifo64to16(
@@ -58,6 +59,7 @@ vgafb_fifo64to16 fifo64to16(
 	.stb(fifo_stb),
 	.di(fifo_source_cache ? dcb_dat : fml_di),
 	
+	.can_burst(can_burst),
 	.do_valid(fifo_valid),
 	.do(pixel),
 	.next(pixel_ack)
@@ -176,7 +178,7 @@ always @(*) begin
 	
 	case(state)
 		IDLE: begin
-			if(~fifo_valid & ~vga_rst) begin
+			if(can_burst & ~vga_rst) begin
 				/* We're in need of pixels ! */
 				next_burst = 1'b1;
 				ignore_clear = 1'b1;

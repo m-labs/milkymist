@@ -955,6 +955,7 @@ vga #(
 	.fml_depth(`SDRAM_DEPTH)
 ) vga (
 	.sys_clk(sys_clk),
+	.clk50(clk50),
 	.sys_rst(sys_rst),
 
 	.csr_a(csr_a),

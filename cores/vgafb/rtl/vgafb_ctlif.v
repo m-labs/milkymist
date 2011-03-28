@@ -45,7 +45,9 @@ module vgafb_ctlif #(
 	output reg [17:0] nbursts,
 
 	inout vga_sda,
-	output reg vga_sdc
+	output reg vga_sdc,
+	
+	output reg [1:0] clksel
 );
 
 /* I2C */
@@ -97,6 +99,8 @@ always @(posedge sys_clk) begin
 		sda_oe <= 1'b0;
 		sda_o <= 1'b0;
 		vga_sdc <= 1'b0;
+		
+		clksel <= 2'd0;
 	end else begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin
@@ -112,13 +116,14 @@ always @(posedge sys_clk) begin
 					4'd7: vsync_end <= csr_di[10:0];
 					4'd8: vscan <= csr_di[10:0];
 					4'd9: baseaddress <= csr_di[fml_depth-1:0];
-					// 10: baseaddress_act is read-only for Wishbone
+					// 10: baseaddress_act is read-only
 					4'd11: nbursts <= csr_di[17:0];
 					4'd12: begin
 						sda_o <= csr_di[1];
 						sda_oe <= csr_di[2];
 						vga_sdc <= csr_di[3];
 					end
+					4'd13: clksel <= csr_di[1:0];
 				endcase
 			end
 			
@@ -136,6 +141,7 @@ always @(posedge sys_clk) begin
 				4'd10: csr_do <= baseaddress_act;
 				4'd11: csr_do <= nbursts;
 				4'd12: csr_do <= {vga_sdc, sda_oe, sda_o, sda_2};
+				4'd13: csr_do <= clksel;
 			endcase
 		end
 	end

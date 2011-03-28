@@ -22,26 +22,27 @@ module vgafb_fifo64to16(
 	input stb,
 	input [63:0] di,
 	
+	output can_burst,
 	output do_valid,
 	output reg [15:0] do,
 	input next /* should only be asserted when do_valid = 1 */
 );
 
 /*
- * FIFO can hold 4 64-bit words
- * that is 16 16-bit words.
+ * FIFO can hold 8 64-bit words
+ * that is 32 16-bit words.
  */
 
-reg [63:0] storage[0:3];
-reg [1:0] produce; /* in 64-bit words */
-reg [3:0] consume; /* in 16-bit words */
+reg [63:0] storage[0:7];
+reg [2:0] produce; /* in 64-bit words */
+reg [4:0] consume; /* in 16-bit words */
 /*
- * 16-bit words stored in the FIFO, 0-16 (17 possible values)
+ * 16-bit words stored in the FIFO, 0-32 (33 possible values)
  */
-reg [4:0] level;
+reg [5:0] level;
 
 wire [63:0] do64;
-assign do64 = storage[consume[3:2]];
+assign do64 = storage[consume[4:2]];
 
 always @(*) begin
 	case(consume[1:0])
@@ -54,22 +55,23 @@ end
 
 always @(posedge sys_clk) begin
 	if(vga_rst) begin
-		produce = 2'd0;
-		consume = 4'd0;
-		level = 5'd0;
+		produce = 3'd0;
+		consume = 5'd0;
+		level = 6'd0;
 	end else begin
 		if(stb) begin
 			storage[produce] = di;
-			produce = produce + 2'd1;
-			level = level + 5'd4;
+			produce = produce + 3'd1;
+			level = level + 6'd4;
 		end
 		if(next) begin /* next should only be asserted when do_valid = 1 */
-			consume = consume + 4'd1;
-			level = level - 5'd1;
+			consume = consume + 5'd1;
+			level = level - 6'd1;
 		end
 	end
 end
 
-assign do_valid = ~(level == 5'd0);
+assign do_valid = ~(level == 6'd0);
+assign can_burst = level <= 6'd16;
 
 endmodule

@@ -54,7 +54,9 @@ module vgafb #(
 	output reg [7:0] vga_b,
 
 	inout vga_sda,
-	output vga_sdc
+	output vga_sdc,
+	
+	output [1:0] clksel
 );
 
 /*
@@ -107,7 +109,9 @@ vgafb_ctlif #(
 	.nbursts(nbursts),
 
 	.vga_sda(vga_sda),
-	.vga_sdc(vga_sdc)
+	.vga_sdc(vga_sdc),
+	
+	.clksel(clksel)
 );
 
 /*
@@ -205,7 +209,7 @@ wire [17:0] fifo_do;
 
 asfifo #(
 	.data_width(18),
-	.address_width(6)
+	.address_width(10)
 ) fifo (
 	.data_out(fifo_do),
 	.empty(),

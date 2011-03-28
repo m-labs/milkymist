@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,8 @@
 #define CSR_VGA_BURST_COUNT	MMPTR(0xe000302C)
 
 #define CSR_VGA_DDC		MMPTR(0xe0003030)
+
+#define CSR_VGA_CLKSEL		MMPTR(0xe0003034)
 
 #define VGA_DDC_SDAIN		(0x1)
 #define VGA_DDC_SDAOUT		(0x2)

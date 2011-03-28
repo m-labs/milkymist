@@ -22,6 +22,7 @@ module vga #(
 	parameter fml_depth = 26
 ) (
 	input sys_clk,
+	input clk50,
 	input sys_rst,
 
 	/* Configuration interface */
@@ -56,16 +57,22 @@ module vga #(
 	output vga_sdc
 );
 
-wire vga_iclk_dcm;
-wire vga_iclk_n_dcm;
+reg vga_iclk_25;
+wire vga_iclk_50;
+wire vga_iclk_65;
+
+wire [1:0] clksel;
+reg vga_iclk_sel;
 wire vga_iclk;
-wire vga_iclk_n;
+
+always @(posedge clk50) vga_iclk_25 <= ~vga_iclk_25;
+assign vga_iclk_50 = clk50;
 
 DCM_SP #(
 	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
 
 	.CLKFX_DIVIDE(16),		// 1 to 32
-	.CLKFX_MULTIPLY(5),		// 2 to 32
+	.CLKFX_MULTIPLY(13),		// 2 to 32
 
 	.CLKIN_DIVIDE_BY_2("FALSE"),
 	.CLKIN_PERIOD(`CLOCK_PERIOD),
@@ -85,7 +92,7 @@ DCM_SP #(
 	.CLK2X180(),
 
 	.CLKDV(),
-	.CLKFX(vga_iclk_dcm),
+	.CLKFX(vga_iclk_65),
 	.CLKFX180(),
 	.LOCKED(),
 	.CLKFB(),
@@ -94,8 +101,15 @@ DCM_SP #(
 
 	.PSEN(1'b0)
 );
+always @(*) begin
+	case(clksel)
+		2'd0: vga_iclk_sel = vga_iclk_25;
+		2'd1: vga_iclk_sel = vga_iclk_50;
+		default: vga_iclk_sel = vga_iclk_65;
+	endcase
+end
 BUFG b(
-	.I(vga_iclk_dcm),
+	.I(vga_iclk_sel),
 	.O(vga_iclk)
 );
 
@@ -145,7 +159,9 @@ vgafb #(
 	.vga_b(vga_b),
 
 	.vga_sda(vga_sda),
-	.vga_sdc(vga_sdc)
+	.vga_sdc(vga_sdc),
+	
+	.clksel(clksel)
 );
 
 endmodule
