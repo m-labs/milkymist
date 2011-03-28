@@ -64,6 +64,8 @@ void snd_init()
 	codec_id = snd_ac97_read(0x00);
 	if(codec_id == 0x0d50)
 		printf("SND: found LM4550 AC'97 codec\n");
+	else if(codec_id == 0x6150)
+		printf("SND: found WM9707 AC'97 codec\n");
 	else
 		printf("SND: warning, unknown codec found (ID:%04x)\n", codec_id);
 	
