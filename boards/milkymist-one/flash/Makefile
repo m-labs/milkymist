@@ -52,7 +52,7 @@ flash: all
 	jtag -n flashall.batch
 
 connect:
-       stty -F $(SERIAL) raw 115200
-       while : ; do cat $(SERIAL) ; done & cat > $(SERIAL)
+	stty -F $(SERIAL) raw 115200
+	while : ; do cat $(SERIAL) ; done & cat > $(SERIAL)
 
-.PHONY: flash clean
+.PHONY: flash clean connect
