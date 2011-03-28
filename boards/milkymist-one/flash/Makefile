@@ -1,6 +1,7 @@
 MMDIR?=../../..
 
 TARGETS=standby.fpg soc-rescue.fpg bios-rescue.bin splash-rescue.raw soc.fpg bios.bin splash.raw
+SERIAL?=/dev/ttyUSB0
 
 all: $(TARGETS)
 clean:
@@ -49,5 +50,9 @@ splash.raw: splash.png
 
 flash: all
 	jtag -n flashall.batch
+
+connect:
+       stty -F $(SERIAL) raw 115200
+       while : ; do cat $(SERIAL) ; done & cat > $(SERIAL)
 
 .PHONY: flash clean
