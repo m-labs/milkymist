@@ -12,12 +12,12 @@ all: bios.bin bios-rescue.bin
 	chmod -x $@
 	$(MMDIR)/tools/mkmmimg $@ write
 
+# make sure the linker*.ld at the first of depends
 bios.elf: linker.ld $(OBJECTS)
-	$(LD) $(LDFLAGS) -T linker.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group
-	chmod -x $@
-
 bios-rescue.elf: linker-rescue.ld $(OBJECTS)
-	$(LD) $(LDFLAGS) -T linker-rescue.ld -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group
+
+%.elf:
+	$(LD) $(LDFLAGS) -T $< -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group
 	chmod -x $@
 
 .PHONY: clean depend
