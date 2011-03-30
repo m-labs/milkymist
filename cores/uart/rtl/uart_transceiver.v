@@ -30,7 +30,9 @@ module uart_transceiver(
 
 	input [7:0] tx_data,
 	input tx_wr,
-	output reg tx_done
+	output reg tx_done,
+
+	output reg break
 );
 
 //-----------------------------------------------------------------
@@ -77,9 +79,11 @@ always @(posedge sys_clk) begin
 		rx_busy <= 1'b0;
 		rx_count16  <= 4'd0;
 		rx_bitcount <= 4'd0;
+		break <= 1'b0;
 		uart_rx_r <= 1'b0;
 	end else begin
 		rx_done <= 1'b0;
+		break <= 1'b0;
 
 		if(enable16) begin
 			uart_rx_r <= uart_rx2;
@@ -103,7 +107,8 @@ always @(posedge sys_clk) begin
 						if(uart_rx2) begin // stop bit ok
 							rx_data <= rx_reg;
 							rx_done <= 1'b1;
-						end // ignore RX error
+						end else if(rx_reg == 8'h00) // break condition
+							break <= 1'b1;
 					end else
 						rx_reg <= {uart_rx2, rx_reg[7:1]};
 				end
