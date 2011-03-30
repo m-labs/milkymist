@@ -66,6 +66,7 @@ end
 // UART RX Logic
 //-----------------------------------------------------------------
 reg rx_busy;
+reg uart_rx_r;
 reg [3:0] rx_count16;
 reg [3:0] rx_bitcount;
 reg [7:0] rx_reg;
@@ -76,12 +77,14 @@ always @(posedge sys_clk) begin
 		rx_busy <= 1'b0;
 		rx_count16  <= 4'd0;
 		rx_bitcount <= 4'd0;
+		uart_rx_r <= 1'b0;
 	end else begin
 		rx_done <= 1'b0;
 
 		if(enable16) begin
+			uart_rx_r <= uart_rx2;
 			if(~rx_busy) begin // look for start bit
-				if(~uart_rx2) begin // start bit found
+				if(~uart_rx2 & uart_rx_r) begin // start bit found
 					rx_busy <= 1'b1;
 					rx_count16 <= 4'd7;
 					rx_bitcount <= 4'd0;
