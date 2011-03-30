@@ -74,6 +74,7 @@ always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		divisor <= default_divisor;
 		csr_do <= 32'd0;
+		thru <= 1'b0;
 	end else begin
 		csr_do <= 32'd0;
 		if(csr_selected) begin
