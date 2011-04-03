@@ -761,6 +761,7 @@ assign cpu_interrupt = {14'd0,
 //---------------------------------------------------------------------------
 // LM32 CPU
 //---------------------------------------------------------------------------
+wire ext_break;
 lm32_top cpu(
 	.clk_i(sys_clk),
 	.rst_i(sys_rst),
@@ -788,6 +789,9 @@ lm32_top cpu(
 	.I_BTE_O(),
 	.I_ERR_I(1'b0),
 	.I_RTY_I(1'b0),
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+	.ext_break(ext_break),
+`endif
 
 	.D_ADR_O(cpudbus_adr),
 	.D_DAT_I(cpudbus_dat_r),
@@ -858,7 +862,8 @@ assign monitor_ack = 1'b0;
 uart #(
 	.csr_addr(4'h0),
 	.clk_freq(`CLOCK_FREQUENCY),
-	.baud(`BAUD_RATE)
+	.baud(`BAUD_RATE),
+	.break_en_default(1'b1)
 ) uart (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -872,7 +877,13 @@ uart #(
 	.tx_irq(uarttx_irq),
 
 	.uart_rx(uart_rx),
-	.uart_tx(uart_tx)
+	.uart_tx(uart_tx),
+
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+	.break(ext_break)
+`else
+	.break()
+`endif
 );
 
 //---------------------------------------------------------------------------
@@ -1367,7 +1378,8 @@ assign videoin_sdc = 1'b0;
 uart #(
 	.csr_addr(4'hb),
 	.clk_freq(`CLOCK_FREQUENCY),
-	.baud(31250)
+	.baud(31250),
+	.break_en_default(1'b0)
 ) midi (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
