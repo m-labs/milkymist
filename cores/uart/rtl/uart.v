@@ -18,7 +18,8 @@
 module uart #(
 	parameter csr_addr = 4'h0,
 	parameter clk_freq = 100000000,
-	parameter baud = 115200
+	parameter baud = 115200,
+	parameter break_en_default = 1'b0
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -76,23 +77,29 @@ parameter default_divisor = clk_freq/baud/16;
 
 reg thru;
 reg break_en;
+reg tx_pending;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		divisor <= default_divisor;
 		csr_do <= 32'd0;
 		thru <= 1'b0;
-		break_en <= 1'b1;
+		break_en <= break_en_default;
+		tx_pending <= 1'b0;
 	end else begin
 		csr_do <= 32'd0;
 		if(break)
 			break_en <= 1'b0;
+		if(tx_irq)
+			tx_pending <= 1'b0;
+		if(tx_wr)
+			tx_pending <= 1'b1;
 		if(csr_selected) begin
 			case(csr_a[1:0])
 				2'b00: csr_do <= rx_data;
 				2'b01: csr_do <= divisor;
 				2'b10: csr_do <= thru;
-				2'b11: csr_do <= break_en;
+				2'b11: csr_do <= {tx_pending, break_en};
 			endcase
 			if(csr_we) begin
 				case(csr_a[1:0])

@@ -23,5 +23,11 @@
 #define CSR_UART_RXTX 		MMPTR(0xe0000000)
 #define CSR_UART_DIVISOR	MMPTR(0xe0000004)
 #define CSR_UART_THRU		MMPTR(0xe0000008)
+#define CSR_UART_BREAK		MMPTR(0xe000000c)
+
+#define UART_THRU		(0x1)
+
+#define UART_BREAK_EN		(0x1)
+#define UART_TX_PENDING		(0x2)
 
 #endif /* __HW_UART_H */
