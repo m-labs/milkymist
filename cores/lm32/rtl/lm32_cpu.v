@@ -91,6 +91,9 @@ module lm32_cpu (
     jtag_reg_q,
     jtag_reg_addr_q,
 `endif
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+    ext_break,
+`endif
 `ifdef CFG_IWB_ENABLED
     // Instruction Wishbone master
     I_DAT_I,
@@ -239,6 +242,10 @@ input [`LM32_WORD_RNG] D_DAT_I;                 // Data Wishbone interface read 
 input D_ACK_I;                                  // Data Wishbone interface acknowledgement
 input D_ERR_I;                                  // Data Wishbone interface error
 input D_RTY_I;                                  // Data Wishbone interface retry
+
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+input ext_break;
+`endif
 
 /////////////////////////////////////////////////////
 // Outputs
@@ -729,6 +736,10 @@ wire system_call_exception;                     // Indicates if a system call ex
 
 `ifdef CFG_BUS_ERRORS_ENABLED
 reg data_bus_error_seen;                        // Indicates if a data bus error was seen
+`endif
+
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+reg ext_break_r;
 `endif
 
 /////////////////////////////////////////////////////
@@ -1657,6 +1668,9 @@ assign breakpoint_exception =    (   (   (break_x == `TRUE)
 `ifdef CFG_JTAG_ENABLED
                               || (jtag_break == `TRUE)
 `endif
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+                              || (ext_break_r == `TRUE)
+`endif
                               ;
 `endif
 
@@ -2144,6 +2158,21 @@ begin
 end
 `endif
  
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+always @(posedge clk_i `CFG_RESET_SENSITIVITY)
+begin
+    if (rst_i == `TRUE)
+        ext_break_r <= `FALSE;
+    else
+    begin
+		if (ext_break == `TRUE)
+			ext_break_r <= `TRUE;
+        if (debug_exception_q_w == `TRUE)
+            ext_break_r <= `FALSE;
+    end
+end
+`endif
+
 // Valid bits to indicate whether an instruction in a partcular pipeline stage is valid or not  
 
 `ifdef CFG_ICACHE_ENABLED

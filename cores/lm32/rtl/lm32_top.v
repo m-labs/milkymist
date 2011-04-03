@@ -52,6 +52,9 @@ module lm32_top (
     I_ERR_I,
     I_RTY_I,
 `endif
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+    ext_break,
+`endif
     // Data Wishbone master
     D_DAT_I,
     D_ACK_I,
@@ -116,6 +119,10 @@ input D_ACK_I;                                  // Data Wishbone interface ackno
 input D_ERR_I;                                  // Data Wishbone interface error
 input D_RTY_I;                                  // Data Wishbone interface retry
 
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+input ext_break;
+`endif
+
 /////////////////////////////////////////////////////
 // Outputs
 /////////////////////////////////////////////////////
@@ -170,7 +177,7 @@ output D_LOCK_O;                                // Date Wishbone interface lock 
 wire   D_LOCK_O;
 output [`LM32_BTYPE_RNG] D_BTE_O;               // Data Wishbone interface burst type 
 wire   [`LM32_BTYPE_RNG] D_BTE_O;
-  
+
 /////////////////////////////////////////////////////
 // Internal nets and registers 
 /////////////////////////////////////////////////////
@@ -231,6 +238,9 @@ lm32_cpu cpu (
     .jtag_update           (jtag_update),
     .jtag_reg_q            (jtag_reg_q),
     .jtag_reg_addr_q       (jtag_reg_addr_q),
+`endif
+`ifdef CFG_EXTERNAL_BREAK_ENABLED
+    .ext_break             (ext_break),
 `endif
 `ifdef CFG_IWB_ENABLED
      // Instruction Wishbone master
