@@ -17,3 +17,5 @@ flashmem 0x240000 splash-rescue.raw noverify
 flashmem 0x6E0000 soc.fpg noverify
 flashmem 0x860000 bios.bin noverify
 flashmem 0x880000 splash.raw noverify
+
+pld reconfigure
