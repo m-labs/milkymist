@@ -30,14 +30,26 @@ module monitor(
 	input wb_we_i
 );
 
+`ifdef CFG_GDBSTUB_ENABLED
+/* 8kb ram */
+reg [31:0] mem[0:2047];
+initial $readmemh("gdbstub.rom", mem);
+`else
 /* 2kb ram */
 reg [31:0] mem[0:511];
 initial $readmemh("monitor.rom", mem);
+`endif
 
 /* write protect */
+`ifdef CFG_GDBSTUB_ENABLED
+assign ram_we = (wb_adr_i[12] == 1'b1);
+wire [10:0] adr;
+assign adr = wb_adr_i[12:2];
+`else
 assign ram_we = (wb_adr_i[10:9] == 2'b11);
 wire [9:0] adr;
 assign adr = wb_adr_i[10:2];
+`endif
 
 always @(posedge sys_clk) begin
 	wb_dat_o <= mem[adr];
