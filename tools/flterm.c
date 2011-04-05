@@ -1,6 +1,8 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
+ * Copyright (C) 2011 Michael Walle
+ * Copyright (C) 2004 MontaVista Software, Inc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +38,8 @@
 #define DEFAULT_CMDLINEADR	(0x41000000)
 #define DEFAULT_INITRDADR	(0x41002000)
 
+#define GDBBUFLEN 1000
+
 unsigned int crc16_table[256] = {
 	0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
 	0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
@@ -70,6 +74,8 @@ unsigned int crc16_table[256] = {
 	0xEF1F, 0xFF3E, 0xCF5D, 0xDF7C, 0xAF9B, 0xBFBA, 0x8FD9, 0x9FF8,
 	0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0
 };
+
+static int debug = 0;
 
 static unsigned short crc16(const void *_buffer, int len)
 {
@@ -283,18 +289,104 @@ static void answer_magic(int serialfd,
 	close(kernelfd);
 }
 
+static int hex(unsigned char c)
+{
+	if(c >= 'a' && c <= 'f') {
+		return c - 'a' + 10;
+	}
+	if(c >= '0' && c <= '9') {
+		return c - '0';
+	}
+	if(c >= 'A' && c <= 'F') {
+		return c - 'A' + 10;
+	}
+	return 0;
+}
+
+/*
+ * This is taken from kdmx2.
+ * Author: Tom Rini <trini@mvista.com>
+ */
+static void gdb_process_packet(int infd, int outfd, int altfd)
+{
+	/* gdb packet handling */
+	char gdbbuf[GDBBUFLEN + 1];
+	int pos = 0;
+	unsigned char runcksum = 0;
+	unsigned char recvcksum = 0;
+	struct pollfd fds;
+	char c;
+	int seen_hash = 0;
+
+	fds.fd = infd;
+	fds.events = POLLIN;
+
+	memset(gdbbuf, 0, sizeof(gdbbuf));
+	gdbbuf[0] = '$';
+	pos++;
+
+	while (1) {
+		fds.revents = 0;
+		if(poll(&fds, 1, 100) == 0) {
+			/* timeout */
+			if (altfd != -1) {
+				write(altfd, gdbbuf, pos);
+			}
+			break;
+		}
+		if (pos == GDBBUFLEN) {
+			if (altfd != -1) {
+				write(altfd, gdbbuf, pos);
+			}
+			break;
+		}
+		read(infd, &c, 1);
+		gdbbuf[pos++] = c;
+		if(c == '#') {
+			seen_hash = 1;
+		} else if (seen_hash == 0) {
+			runcksum += c;
+		} else if (seen_hash == 1) {
+			recvcksum = hex(c) << 4;
+			seen_hash = 2;
+		} else if (seen_hash == 2) {
+			recvcksum |= hex(c);
+			seen_hash = 3;
+		}
+
+		if (seen_hash == 3) {
+			/* we're done */
+			runcksum %= 256;
+			if (recvcksum == runcksum) {
+				if (debug) {
+					fprintf(stderr, "[GDB %s]\n", gdbbuf);
+				}
+				write(outfd, gdbbuf, pos);
+			} else {
+				if (altfd != -1) {
+					write(altfd, gdbbuf, pos);
+				}
+			}
+			seen_hash = 0;
+			break;
+		}
+	}
+}
+
 static void do_terminal(char *serial_port,
-	int doublerate,
+	int doublerate, int gdb_passthrough,
 	const char *kernel_image, unsigned int kernel_address,
 	const char *cmdline, unsigned int cmdline_address,
 	const char *initrd_image, unsigned int initrd_address)
 {
 	int serialfd;
+	int gdbfd = -1;
 	struct termios my_termios;
 	char c;
 	int recognized;
-	struct pollfd fds[2];
+	struct pollfd fds[3];
 	int flags;
+	int rsp_pending = 0;
 	
 	/* Open and configure the serial port */
 	serialfd = open(serial_port, O_RDWR|O_NOCTTY);
@@ -302,7 +394,7 @@ static void do_terminal(char *serial_port,
 		perror("Unable to open serial port");
 		return;
 	}
-	
+
 	/* Thanks to Julien Schmitt (GTKTerm) for figuring out the correct parameters
 	 * to put into that weird struct.
 	 */
@@ -319,7 +411,7 @@ static void do_terminal(char *serial_port,
 	tcsetattr(serialfd, TCSANOW, &my_termios);
 	tcflush(serialfd, TCOFLUSH);
 	tcflush(serialfd, TCIFLUSH);
-	
+
 	/* Prepare the fdset for poll() */
 	fds[0].fd = 0;
 	fds[0].events = POLLIN;
@@ -329,47 +421,103 @@ static void do_terminal(char *serial_port,
 	recognized = 0;
 	flags = fcntl(serialfd, F_GETFL, 0);
 	while(1) {
+		if (gdbfd == -1 && gdb_passthrough) {
+			gdbfd = open("/dev/ptmx", O_RDWR);
+			if(grantpt(gdbfd) != 0) {
+				perror("grantpt()");
+				return;
+			}
+			if(unlockpt(gdbfd) != 0) {
+				perror("unlockpt()");
+				return;
+			}
+			printf("[GDB passthrough] use %s as GDB remote device\n",
+					ptsname(gdbfd));
+			fds[2].fd = gdbfd;
+			fds[2].events = POLLIN;
+		}
+
 		fds[0].revents = 0;
 		fds[1].revents = 0;
-		
+		fds[2].revents = 0;
+
 		/* poll() behaves strangely when the serial port descriptor is in
 		 * blocking mode. So work around this.
 		 */
 		fcntl(serialfd, F_SETFL, flags|O_NONBLOCK);
-		if(poll(&fds[0], 2, -1) < 0) break;
+		if(poll(&fds[0], (gdbfd == -1) ? 2 : 3, -1) < 0) break;
 		fcntl(serialfd, F_SETFL, flags);
-		
+
 		if(fds[0].revents & POLLIN) {
-			read(0, &c, 1);
+			if (read(0, &c, 1) <= 0) break;
 			if(write(serialfd, &c, 1) <= 0) break;
 		}
-		
+
+		if(fds[2].revents & POLLIN) {
+			rsp_pending = 1;
+			if (read(gdbfd, &c, 1) <= 0) break;
+			if (c == '\03') {
+				/* convert ETX to breaks */
+				if (debug) {
+					fprintf(stderr, "[GDB BREAK]\n");
+				}
+				tcsendbreak(serialfd, 0);
+			} else if (c == '$') {
+				gdb_process_packet(gdbfd, serialfd, -1);
+			} else if (c == '+' || c == '-') {
+				write(serialfd, &c, 1);
+			} else {
+				fprintf(stderr, "Internal error (line %d)", __LINE__);
+				exit(1);
+			}
+		}
+
+		if(fds[2].revents & POLLHUP) {
+			/* close and reopen new pair */
+			close(gdbfd);
+			gdbfd = -1;
+			continue;
+		}
+
 		if(fds[1].revents & POLLIN) {
 			if(read(serialfd, &c, 1) <= 0) break;
-			write(0, &c, 1);
-			
-			if(c == sfl_magic_req[recognized]) {
-				recognized++;
-				if(recognized == SFL_MAGIC_LEN) {
-					/* We've got the magic string ! */
-					recognized = 0;
-					answer_magic(serialfd,
-						kernel_image, kernel_address,
-						cmdline, cmdline_address,
-						initrd_image, initrd_address);
-				}
+			if(gdbfd != -1 && rsp_pending && (c == '+' || c == '-')) {
+				rsp_pending = 0;
+				write(gdbfd, &c, 1);
+			} else if (gdbfd != -1 && c == '$') {
+				gdb_process_packet(serialfd, gdbfd, 0);
 			} else {
-				if(c == sfl_magic_req[0]) recognized = 1; else recognized = 0;
+				/* write to terminal */
+				write(0, &c, 1);
+			
+				if(c == sfl_magic_req[recognized]) {
+					recognized++;
+					if(recognized == SFL_MAGIC_LEN) {
+						/* We've got the magic string ! */
+						recognized = 0;
+						answer_magic(serialfd,
+							kernel_image, kernel_address,
+							cmdline, cmdline_address,
+							initrd_image, initrd_address);
+					}
+				} else {
+					if(c == sfl_magic_req[0]) recognized = 1; else recognized = 0;
+				}
 			}
 		}
 	}
 	
 	close(serialfd);
+	if(gdbfd != -1) {
+		close(gdbfd);
+	}
 }
 
 enum {
 	OPTION_PORT,
+	OPTION_GDB_PASSTHROUGH,
 	OPTION_DOUBLERATE,
+	OPTION_DEBUG,
 	OPTION_KERNEL,
 	OPTION_KERNELADR,
 	OPTION_CMDLINE,
@@ -383,6 +531,16 @@ static const struct option options[] = {
 		.name = "port",
 		.has_arg = 1,
 		.val = OPTION_PORT
+	},
+	{
+		.name = "gdb-passthrough",
+		.has_arg = 0,
+		.val = OPTION_GDB_PASSTHROUGH
+	},
+	{
+		.name = "debug",
+		.has_arg = 0,
+		.val = OPTION_DEBUG
 	},
 	{
 		.name = "double-rate",
@@ -433,7 +591,8 @@ static void print_usage()
 	fprintf(stderr, "it under the terms of the GNU General Public License as published by\n");
 	fprintf(stderr, "the Free Software Foundation, version 3 of the License.\n\n");
 
-	fprintf(stderr, "Usage: flterm --port <port> [--double-rate]\n");
+	fprintf(stderr, "Usage: flterm --port <port>\n");
+	fprintf(stderr, "              [--double-rate] [--gdb-passthrough] [--debug]\n");
 	fprintf(stderr, "              --kernel <kernel_image> [--kernel-adr <address>]\n");
 	fprintf(stderr, "              [--cmdline <cmdline> [--cmdline-adr <address>]]\n");
 	fprintf(stderr, "              [--initrd <initrd_image> [--initrd-adr <address>]]\n\n");
@@ -448,6 +607,7 @@ int main(int argc, char *argv[])
 	int opt;
 	char *serial_port;
 	int doublerate;
+	int gdb_passthrough;
 	char *kernel_image;
 	unsigned int kernel_address;
 	char *cmdline;
@@ -460,6 +620,7 @@ int main(int argc, char *argv[])
 	/* Fetch command line arguments */
 	serial_port = NULL;
 	doublerate = 0;
+	gdb_passthrough = 0;
 	kernel_image = NULL;
 	kernel_address = DEFAULT_KERNELADR;
 	cmdline = NULL;
@@ -478,6 +639,12 @@ int main(int argc, char *argv[])
 				break;
 			case OPTION_DOUBLERATE:
 				doublerate = 1;
+				break;
+			case OPTION_DEBUG:
+				debug = 1;
+				break;
+			case OPTION_GDB_PASSTHROUGH:
+				gdb_passthrough = 1;
 				break;
 			case OPTION_KERNEL:
 				free(kernel_image);
@@ -519,9 +686,9 @@ int main(int argc, char *argv[])
 	ntty = otty;
 	ntty.c_lflag &= ~(ECHO | ICANON);
 	tcsetattr(0, TCSANOW, &ntty);
-	
+
 	/* Do the bulk of the work */
-	do_terminal(serial_port, doublerate,
+	do_terminal(serial_port, doublerate, gdb_passthrough,
 		kernel_image, kernel_address,
 		cmdline, cmdline_address,
 		initrd_image, initrd_address);
