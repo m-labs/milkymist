@@ -16,12 +16,12 @@ usage: $(BUILDDIR)/system-routed.xdl
 load: $(BUILDDIR)/system.bit
 	jtag -n load.batch
 
-# Meeting timing is difficult with the full design and requires special options
+# Sometimes different options are needed to meet timing
 build/system.ncd: build/system.ngd
-	cd build && map -ol high -xe n -register_duplication on -w system.ngd
+	cd build && map -ol high -w system.ngd
 
 build/system-routed.ncd: build/system.ncd
-	cd build && par -ol high -xe n -w system.ncd system-routed.ncd
+	cd build && par -ol high -w system.ncd system-routed.ncd
 
 build-rescue/system.ncd: build-rescue/system.ngd
 	cd build-rescue && map -ol high -w system.ngd
