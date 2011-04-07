@@ -60,10 +60,11 @@ enum lm32_regnames {
 
 /* BUFMAX defines the maximum number of characters in inbound/outbound buffers */
 #define BUFMAX 800
+#define BUFMAX_HEX 320  /* keep this in sync with BUFMAX */
 
 /* I/O packet buffers */
-static char remcom_in_buffer[BUFMAX];
-static char remcom_out_buffer[BUFMAX];
+static char remcom_in_buffer[BUFMAX + 1];
+static char remcom_out_buffer[BUFMAX + 1];
 
 /* Remember breakpoint and watchpoint addresses */
 #ifdef SUPPORT_Z_CMD
@@ -257,7 +258,7 @@ static char *get_packet(void)
         count = 0;
 
         /* now, read until a # or end of buffer is found */
-        while (count < BUFMAX - 1) {
+        while (count < BUFMAX) {
             ch = get_debug_char();
             if (ch == '$') {
                 goto retry;
@@ -659,7 +660,7 @@ static void cmd_reg_set(unsigned int *registers)
 static void cmd_query(void)
 {
     if (memcmp(&remcom_in_buffer[1], "Supported", 9) == 0) {
-        strcpy(remcom_out_buffer, "PacketSize=" STRINGY(BUFMAX));
+        strcpy(remcom_out_buffer, "PacketSize=" STRINGY(BUFMAX_HEX));
     }
 }
 #endif
