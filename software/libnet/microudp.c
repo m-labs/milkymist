@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -400,13 +400,31 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 	CSR_MINIMAC_SETUP = 0;
 }
 
+static void ethernet_reset()
+{
+	int i;
+	
+	printf("Resetting PHY\n");
+	CSR_MINIMAC_SETUP = MINIMAC_SETUP_RXRST|MINIMAC_SETUP_TXRST;
+	for(i=0;i<8000;i++)
+		__asm__("nop");
+	CSR_MINIMAC_SETUP = 0;
+}
+
 void microudp_service()
 {
+	static int previous_overflow;
+	
 	if(irq_pending() & IRQ_ETHRX) {
 		if(CSR_MINIMAC_SETUP & MINIMAC_SETUP_RXRST) {
 			printf("Minimac RX FIFO overflow!\n");
-			CSR_MINIMAC_SETUP = 0;
-		}
+			if(previous_overflow)
+				ethernet_reset();
+			else
+				CSR_MINIMAC_SETUP = 0;
+			previous_overflow = 1;
+		} else
+			previous_overflow = 0;
 		if(CSR_MINIMAC_STATE0 == MINIMAC_STATE_PENDING) {
 			rxlen = CSR_MINIMAC_COUNT0;
 			rxbuffer = rxbuffer0;

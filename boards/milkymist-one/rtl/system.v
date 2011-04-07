@@ -213,7 +213,6 @@ always @(posedge sys_clk) begin
 end
 
 assign ac97_rst_n = ~sys_rst;
-assign phy_rst_n = ~sys_rst;
 assign videoin_rst_n = ~sys_rst;
 
 /*
@@ -896,7 +895,7 @@ sysctl #(
 	.csr_addr(4'h1),
 	.ninputs(7),
 	.noutputs(2),
-	.systemid(32'h10034D31) /* 1.0.0 RC3 on M1 */
+	.systemid(32'h10044D31) /* 1.0.0 RC4 on M1 */
 ) sysctl (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -1279,7 +1278,8 @@ minimac #(
 	.phy_col(phy_col),
 	.phy_crs(phy_crs),
 	.phy_mii_clk(phy_mii_clk),
-	.phy_mii_data(phy_mii_data)
+	.phy_mii_data(phy_mii_data),
+	.phy_rst_n(phy_rst_n)
 );
 `else
 assign csr_dr_ethernet = 32'd0;

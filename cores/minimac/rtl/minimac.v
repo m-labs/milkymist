@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,8 @@ module minimac #(
 	input phy_col,
 	input phy_crs,
 	output phy_mii_clk,
-	inout phy_mii_data
+	inout phy_mii_data,
+	output phy_rst_n
 );
 
 assign wbrx_cti_o = 3'd0;
@@ -111,6 +112,8 @@ minimac_ctlif #(
 	.phy_mii_clk(phy_mii_clk),
 	.phy_mii_data(phy_mii_data)
 );
+
+assign phy_rst_n = ~(rx_rst & tx_rst);
 
 minimac_rx rx(
 	.sys_clk(sys_clk),
