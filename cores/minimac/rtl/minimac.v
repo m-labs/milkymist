@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC
+ * Milkymist SoC
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
@@ -68,7 +68,6 @@ wire tx_rst;
 
 wire rx_valid;
 wire [29:0] rx_adr;
-wire rx_resetcount;
 wire rx_incrcount;
 wire rx_endframe;
 
@@ -98,7 +97,6 @@ minimac_ctlif #(
 
 	.rx_valid(rx_valid),
 	.rx_adr(rx_adr),
-	.rx_resetcount(rx_resetcount),
 	.rx_incrcount(rx_incrcount),
 	.rx_endframe(rx_endframe),
 
@@ -128,7 +126,6 @@ minimac_rx rx(
 
 	.rx_valid(rx_valid),
 	.rx_adr(rx_adr),
-	.rx_resetcount(rx_resetcount),
 	.rx_incrcount(rx_incrcount),
 	.rx_endframe(rx_endframe),
 

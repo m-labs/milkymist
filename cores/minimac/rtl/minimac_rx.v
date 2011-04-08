@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ module minimac_rx(
 
 	input rx_valid,
 	input [29:0] rx_adr,
-	output rx_resetcount,
 	output rx_incrcount,
 	output rx_endframe,
 
@@ -40,9 +39,7 @@ module minimac_rx(
 	input phy_rx_er
 );
 
-reg rx_resetcount_r;
 reg rx_endframe_r;
-assign rx_resetcount = rx_resetcount_r;
 assign rx_endframe = rx_endframe_r;
 
 reg bus_stb;
@@ -107,9 +104,10 @@ end
 wire full_word = &loadbyte_counter;
 wire empty_word = loadbyte_counter == 2'd0;
 
-parameter MTU = 11'd1530;
+parameter MTU = 11'd2000;
 
 reg [10:0] maxcount;
+reg still_place;
 always @(posedge sys_clk) begin
 	if(sys_rst|rx_rst)
 		maxcount <= MTU;
@@ -118,9 +116,9 @@ always @(posedge sys_clk) begin
 			maxcount <= MTU;
 		else if(loadbyte_en)
 			maxcount <= maxcount - 11'd1;
+		still_place <= |maxcount;
 	end
 end
-wire still_place = |maxcount;
 
 assign rx_incrcount = loadbyte_en;
 
@@ -138,14 +136,13 @@ always @(posedge sys_clk) begin
 end
 assign wbm_adr_o = {adr, 2'd0};
 
-reg [2:0] state;
-reg [2:0] next_state;
+reg [1:0] state;
+reg [1:0] next_state;
 
-parameter IDLE		= 3'd0;
-parameter LOADBYTE	= 3'd1;
-parameter WBSTROBE	= 3'd2;
-parameter SENDLAST	= 3'd3;
-parameter NOMORE	= 3'd3;
+parameter IDLE		= 2'd0;
+parameter LOADBYTE	= 2'd1;
+parameter WBSTROBE	= 2'd2;
+parameter SENDLAST	= 2'd3;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -158,7 +155,6 @@ always @(*) begin
 	next_state = state;
 	fifo_ack = 1'b0;
 
-	rx_resetcount_r = 1'b0;
 	rx_endframe_r = 1'b0;
 
 	start_of_frame = 1'b0;
@@ -176,14 +172,10 @@ always @(*) begin
 				if(fifo_eof) begin
 					fifo_ack = 1'b1;
 					if(in_frame) begin
-						if(fifo_data[0])
-							rx_resetcount_r = 1'b1;
-						else begin
-							if(empty_word)
-								rx_endframe_r = 1'b1;
-							else
-								next_state = SENDLAST;
-						end
+						if(empty_word)
+							rx_endframe_r = 1'b1;
+						else
+							next_state = SENDLAST;
 						end_of_frame = 1'b1;
 					end
 				end else begin
@@ -196,36 +188,23 @@ always @(*) begin
 		LOADBYTE: begin
 			loadbyte_en = 1'b1;
 			fifo_ack = 1'b1;
-			if(full_word & rx_valid)
+			if(full_word)
 				next_state = WBSTROBE;
 			else
 				next_state = IDLE;
 		end
 		WBSTROBE: begin
-			bus_stb = 1'b1;
-			if(wbm_ack_i) begin
-				if(still_place)
-					next_state = IDLE;
-				else
-					next_state = NOMORE;
+			bus_stb = still_place;
+			if(wbm_ack_i | ~still_place) begin
 				next_wb_adr = 1'b1;
-			end
-		end
-		SENDLAST: begin
-			bus_stb = 1'b1;
-			if(wbm_ack_i) begin
-				rx_endframe_r = 1'b1;
 				next_state = IDLE;
 			end
 		end
-		NOMORE: begin
-			fifo_ack = 1'b1;
-			if(~fifo_empty & rx_valid) begin
-				if(fifo_eof) begin
-					rx_resetcount_r = 1'b1;
-					end_of_frame = 1'b1;
-					next_state = IDLE;
-				end
+		SENDLAST: begin
+			bus_stb = still_place;
+			if(wbm_ack_i | ~still_place) begin
+				rx_endframe_r = 1'b1;
+				next_state = IDLE;
 			end
 		end
 	endcase

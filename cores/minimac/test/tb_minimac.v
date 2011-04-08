@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -152,20 +152,22 @@ always @(posedge sys_clk) begin
 		wbtx_ack_i = 1'b0;
 end
 
-
+integer cycle;
+initial cycle = 0;
 always @(posedge phy_rx_clk) begin
+	cycle <= cycle + 1;
 	phy_rx_er <= 1'b0;
-	phy_rx_data <= $random;
+	phy_rx_data <= cycle;
 	if(phy_dv) begin
-		//$display("rx: %x", phy_rx_data);
-		if(($random % 125) == 0) begin
+		$display("rx: %x", phy_rx_data);
+		if((cycle % 16) == 13) begin
 			phy_dv <= 1'b0;
-			//$display("** stopping transmission");
+			$display("** stopping transmission");
 		end
 	end else begin
-		if(($random % 12) == 0) begin
+		if((cycle % 16) == 15) begin
 			phy_dv <= 1'b1;
-			//$display("** starting transmission");
+			$display("** starting transmission");
 		end
 	end
 end
@@ -190,31 +192,13 @@ initial begin
 
 	waitclock;
 
-	/*csrwrite(32'h00, 0);
+	csrwrite(32'h00, 0);
 	csrwrite(32'h0C, 32'h10000000);
 	csrwrite(32'h08, 1);
+	csrwrite(32'h18, 32'h20000000);
+	csrwrite(32'h14, 1);
 
-	#3000;
-	csrread(32'h00);
-
-	csrread(32'h14);
-	csrread(32'h20);
-	csrread(32'h2C);
-	csrread(32'h38);*/
-
-	waitclock;
-	waitclock;
-	waitclock;
-	waitclock;
-
-	csrwrite(32'h00, 1);
-	csrwrite(32'h3C, 72);
-
-	csrread(32'h3C);
-
-	@(posedge irq_tx);
-
-	#30000;
+	#5000;
 	
 	$finish;
 end

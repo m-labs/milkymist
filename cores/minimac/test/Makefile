@@ -1,4 +1,4 @@
-SOURCES=tb_minimac.v $(wildcard ../rtl/*.v)
+SOURCES=tb_minimac.v $(wildcard ../rtl/*.v) $(wildcard ../../asfifo/rtl/*.v)
 
 all: cversim
 

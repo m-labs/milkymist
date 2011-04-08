@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ wire full;
 
 asfifo #(
 	.data_width(9),
-	.address_width(7)
+	.address_width(8)
 ) fifo (
 	.data_out(fifo_out),
 	.empty(empty),
@@ -82,7 +82,6 @@ always @(posedge phy_rx_clk) begin
 end
 
 reg hi_nibble;
-reg abort;
 reg phy_dv_r;
 
 always @(posedge phy_rx_clk) begin
@@ -92,18 +91,16 @@ always @(posedge phy_rx_clk) begin
 		fifo_hi <= 4'd0;
 		fifo_lo <= 4'd0;
 		hi_nibble <= 1'b0;
-		abort <= 1'b0;
 		phy_dv_r <= 1'b0;
 	end else begin
 		fifo_eof <= 1'b0;
 		fifo_we <= 1'b0;
 
 		/* Transfer data */
-		if(~abort) begin
+		if(phy_dv) begin
 			if(~hi_nibble) begin
 				fifo_lo <= phy_rx_data;
-				if(phy_dv)
-					hi_nibble <= 1'b1;
+				hi_nibble <= 1'b1;
 			end else begin
 				fifo_hi <= phy_rx_data;
 				fifo_we <= 1'b1;
@@ -111,26 +108,13 @@ always @(posedge phy_rx_clk) begin
 			end
 		end
 
-		/* Detect error events */
-		if(phy_dv & phy_rx_er) begin
-			fifo_eof <= 1'b1;
-			fifo_hi <= 4'd0;
-			fifo_lo <= 4'd1;
-			fifo_we <= 1'b1;
-			abort <= 1'b1;
-			hi_nibble <= 1'b0;
-		end
-
 		/* Detect end of frame */
 		phy_dv_r <= phy_dv;
 		if(phy_dv_r & ~phy_dv) begin
-			if(~abort) begin
-				fifo_eof <= 1'b1;
-				fifo_hi <= 4'd0;
-				fifo_lo <= 4'd0;
-				fifo_we <= 1'b1;
-			end
-			abort <= 1'b0;
+			fifo_eof <= 1'b1;
+			fifo_hi <= 4'd0;
+			fifo_lo <= 4'd0;
+			fifo_we <= 1'b1;
 			hi_nibble <= 1'b0;
 		end
 	end

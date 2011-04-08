@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC
+ * Milkymist SoC
  * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
@@ -42,7 +42,7 @@ end
 
 asfifo #(
 	.data_width(8),
-	.address_width(7)
+	.address_width(8)
 ) fifo (
 	.data_out(fifo_out),
 	.empty(fifo_empty),

@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ module minimac_ctlif #(
 
 	output rx_valid,
 	output [29:0] rx_adr,
-	input rx_resetcount,
 	input rx_incrcount,
 	input rx_endframe,
 	input fifo_full,
@@ -197,21 +196,11 @@ always @(posedge sys_clk) begin
 				4'd14: csr_do <= tx_adr;
 				4'd15: csr_do <= tx_remaining;
 			endcase
-		end
+		end /* if(csr_selected) */
 
 		if(fifo_full)
 			rx_rst <= 1'b1;
 
-		if(rx_resetcount) begin
-			if(select0)
-				slot0_count <= 11'd0;
-			if(select1)
-				slot1_count <= 11'd0;
-			if(select2)
-				slot2_count <= 11'd0;
-			if(select3)
-				slot3_count <= 11'd0;
-		end
 		if(rx_incrcount) begin
 			if(select0)
 				slot0_count <= slot0_count + 11'd1;
