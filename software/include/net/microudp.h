@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC (Software)
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,11 @@
 
 typedef void (*udp_callback)(unsigned int src_ip, unsigned short src_port, unsigned short dst_port, void *data, unsigned int length);
 
-void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers);
+void microudp_start(unsigned char *macaddr, unsigned int ip);
 int microudp_arp_resolve(unsigned int ip);
 void *microudp_get_tx_buffer();
 int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int length);
 void microudp_set_callback(udp_callback callback);
 void microudp_service();
-void microudp_shutdown();
 
 #endif /* __NET_MICROUDP_H */

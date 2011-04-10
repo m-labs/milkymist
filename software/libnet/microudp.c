@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC (Software)
+ * Milkymist SoC (Software)
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
@@ -117,8 +117,6 @@ static int rxlen;
 static ethernet_buffer *rxbuffer;
 static ethernet_buffer *rxbuffer0;
 static ethernet_buffer *rxbuffer1;
-static ethernet_buffer *rxbuffer2;
-static ethernet_buffer *rxbuffer3;
 static int txlen;
 static ethernet_buffer *txbuffer;
 
@@ -132,8 +130,7 @@ static void send_packet()
 	txbuffer->raw[txlen+2] = (crc & 0xff0000) >> 16;
 	txbuffer->raw[txlen+3] = (crc & 0xff000000) >> 24;
 	txlen += 4;
-	CSR_MINIMAC_TXADR = (unsigned int)txbuffer;
-	CSR_MINIMAC_TXREMAINING = txlen;
+	CSR_MINIMAC_TXCOUNT = txlen;
 	while((irq_pending() & IRQ_ETHTX) == 0);
 	irq_ack(IRQ_ETHTX);
 }
@@ -366,18 +363,15 @@ static void process_frame()
 	else if(rxbuffer->frame.eth_header.ethertype == ETHERTYPE_IP) process_ip();
 }
 
-void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
+void microudp_start(unsigned char *macaddr, unsigned int ip)
 {
 	int i;
-	char *_buffers = (char *)buffers;
 
 	irq_ack(IRQ_ETHRX|IRQ_ETHTX);
 
-	rxbuffer0 = (ethernet_buffer *)_buffers;
-	rxbuffer1 = (ethernet_buffer *)(_buffers + sizeof(ethernet_buffer));;
-	rxbuffer2 = (ethernet_buffer *)(_buffers + 2*sizeof(ethernet_buffer));;
-	rxbuffer3 = (ethernet_buffer *)(_buffers + 3*sizeof(ethernet_buffer));;
-	txbuffer = (ethernet_buffer *)(_buffers + 4*sizeof(ethernet_buffer));
+	rxbuffer0 = (ethernet_buffer *)MINIMAC_RX0_BASE;
+	rxbuffer1 = (ethernet_buffer *)MINIMAC_RX1_BASE;
+	txbuffer = (ethernet_buffer *)MINIMAC_TX_BASE;
 
 	for(i=0;i<6;i++)
 		my_mac[i] = macaddr[i];
@@ -389,84 +383,26 @@ void microudp_start(unsigned char *macaddr, unsigned int ip, void *buffers)
 
 	rx_callback = (udp_callback)0;
 
-	CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer0;
 	CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
-	CSR_MINIMAC_ADDR1 = (unsigned int)rxbuffer1;
 	CSR_MINIMAC_STATE1 = MINIMAC_STATE_LOADED;
-	CSR_MINIMAC_ADDR2 = (unsigned int)rxbuffer2;
-	CSR_MINIMAC_STATE2 = MINIMAC_STATE_LOADED;
-	CSR_MINIMAC_ADDR3 = (unsigned int)rxbuffer3;
-	CSR_MINIMAC_STATE3 = MINIMAC_STATE_LOADED;
-	CSR_MINIMAC_SETUP = 0;
-}
-
-static void ethernet_reset()
-{
-	int i;
-	
-	printf("Resetting PHY\n");
-	CSR_MINIMAC_SETUP = MINIMAC_SETUP_RXRST|MINIMAC_SETUP_TXRST;
-	for(i=0;i<8000;i++)
-		__asm__("nop");
 	CSR_MINIMAC_SETUP = 0;
 }
 
 void microudp_service()
 {
-	static int previous_overflow;
-	
 	if(irq_pending() & IRQ_ETHRX) {
-		if(CSR_MINIMAC_SETUP & MINIMAC_SETUP_RXRST) {
-			printf("Minimac RX FIFO overflow!\n");
-			if(previous_overflow)
-				ethernet_reset();
-			else
-				CSR_MINIMAC_SETUP = 0;
-			previous_overflow = 1;
-		} else
-			previous_overflow = 0;
 		if(CSR_MINIMAC_STATE0 == MINIMAC_STATE_PENDING) {
 			rxlen = CSR_MINIMAC_COUNT0;
 			rxbuffer = rxbuffer0;
 			process_frame();
-			CSR_MINIMAC_ADDR0 = (unsigned int)rxbuffer0;
 			CSR_MINIMAC_STATE0 = MINIMAC_STATE_LOADED;
 		}
 		if(CSR_MINIMAC_STATE1 == MINIMAC_STATE_PENDING) {
 			rxlen = CSR_MINIMAC_COUNT1;
 			rxbuffer = rxbuffer1;
 			process_frame();
-			CSR_MINIMAC_ADDR1 = (unsigned int)rxbuffer1;
 			CSR_MINIMAC_STATE1 = MINIMAC_STATE_LOADED;
-		}
-		if(CSR_MINIMAC_STATE2 == MINIMAC_STATE_PENDING) {
-			rxlen = CSR_MINIMAC_COUNT2;
-			rxbuffer = rxbuffer2;
-			process_frame();
-			CSR_MINIMAC_ADDR2 = (unsigned int)rxbuffer2;
-			CSR_MINIMAC_STATE2 = MINIMAC_STATE_LOADED;
-		}
-		if(CSR_MINIMAC_STATE3 == MINIMAC_STATE_PENDING) {
-			rxlen = CSR_MINIMAC_COUNT3;
-			rxbuffer = rxbuffer3;
-			process_frame();
-			CSR_MINIMAC_ADDR3 = (unsigned int)rxbuffer3;
-			CSR_MINIMAC_STATE3 = MINIMAC_STATE_LOADED;
 		}
 		irq_ack(IRQ_ETHRX);
 	}
-}
-
-void microudp_shutdown()
-{
-	CSR_MINIMAC_STATE0 = MINIMAC_STATE_EMPTY;
-	CSR_MINIMAC_STATE1 = MINIMAC_STATE_EMPTY;
-	CSR_MINIMAC_STATE2 = MINIMAC_STATE_EMPTY;
-	CSR_MINIMAC_STATE3 = MINIMAC_STATE_EMPTY;
-	CSR_MINIMAC_TXREMAINING = 0;
-	/* This transfer should be last. It will make the CPU request the Wishbone bus,
-	 * and therefore, when it completes,
-	 * it makes sure that any ongoing DMA bus transaction is finished.
-	 */
-	CSR_MINIMAC_SETUP = MINIMAC_SETUP_RXRST|MINIMAC_SETUP_TXRST;
 }

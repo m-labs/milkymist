@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC (Software)
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -229,8 +229,6 @@ static int tftp_get_v(unsigned int ip, const char *filename, char *buffer)
 	return r;
 }
 
-static char microudp_buf[MICROUDP_BUFSIZE];
-
 void netboot()
 {
 	int size;
@@ -245,7 +243,7 @@ void netboot()
 
 	ip = IPTOINT(REMOTEIP1, REMOTEIP2, REMOTEIP3, REMOTEIP4);
 
-	microudp_start(macadr, IPTOINT(LOCALIP1, LOCALIP2, LOCALIP3, LOCALIP4), microudp_buf);
+	microudp_start(macadr, IPTOINT(LOCALIP1, LOCALIP2, LOCALIP3, LOCALIP4));
 
 	if(tftp_get_v(ip, "boot.bin", (void *)SDRAM_BASE) <= 0) {
 		printf("E: Network boot failed\n");
@@ -268,8 +266,6 @@ void netboot()
 		initrdend_adr = 0;
 	} else
 		initrdend_adr = initrdstart_adr + size - 1;
-
-	microudp_shutdown();
 
 	printf("I: Booting...\n");
 	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
