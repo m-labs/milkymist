@@ -251,8 +251,8 @@ conbus_arb5 arb(
 
 assign slave_sel[0] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-3-1] == s0_addr);
 assign slave_sel[1] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-3-1] == s1_addr);
-assign slave_sel[2] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-2-1] == s2_addr);
-assign slave_sel[3] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-2-1] == s3_addr);
+assign slave_sel[2] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-3-1] == s2_addr);
+assign slave_sel[3] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-3-1] == s3_addr);
 assign slave_sel[4] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-2-1] == s4_addr);
 assign slave_sel[5] = (i_bus_m[`mbusw_ls-2 : `mbusw_ls-2-1] == s5_addr);
 
