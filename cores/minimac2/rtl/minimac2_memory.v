@@ -60,6 +60,7 @@ RAMB16BWER #(
 	.WRITE_MODE_B("WRITE_FIRST")
 ) rxb0 (
 	.DIA(wb_dat_i_le),
+	.DIPA(4'd0),
 	.DOA(rxb0_wbdat),
 	.ADDRA({wb_adr_i[10:2], 5'd0}),
 	.WEA({4{wb_en & wb_we_i & (wb_buf == 2'b00)}} & wb_sel_i_le),
@@ -68,6 +69,7 @@ RAMB16BWER #(
 	.CLKA(sys_clk),
 
 	.DIB(rxb0_dat),
+	.DIPB(1'd0),
 	.DOB(),
 	.ADDRB({rxb0_adr, 3'd0}),
 	.WEB(rxb0_we),
@@ -89,6 +91,7 @@ RAMB16BWER #(
 	.WRITE_MODE_B("WRITE_FIRST")
 ) rxb1 (
 	.DIA(wb_dat_i_le),
+	.DIPA(4'd0),
 	.DOA(rxb1_wbdat),
 	.ADDRA({wb_adr_i[10:2], 5'd0}),
 	.WEA({4{wb_en & wb_we_i & (wb_buf == 2'b01)}} & wb_sel_i_le),
@@ -97,6 +100,7 @@ RAMB16BWER #(
 	.CLKA(sys_clk),
 
 	.DIB(rxb1_dat),
+	.DIPB(1'd0),
 	.DOB(),
 	.ADDRB({rxb1_adr, 3'd0}),
 	.WEB(rxb1_we),
@@ -118,6 +122,7 @@ RAMB16BWER #(
 	.WRITE_MODE_B("WRITE_FIRST")
 ) txb (
 	.DIA(wb_dat_i_le),
+	.DIPA(4'd0),
 	.DOA(txb_wbdat),
 	.ADDRA({wb_adr_i[10:2], 5'd0}),
 	.WEA({4{wb_en & wb_we_i & (wb_buf == 2'b10)}} & wb_sel_i_le),
@@ -125,7 +130,8 @@ RAMB16BWER #(
 	.RSTA(1'b0),
 	.CLKA(sys_clk),
 
-	.DIB(),
+	.DIB(8'd0),
+	.DIPB(1'd0),
 	.DOB(txb_dat),
 	.ADDRB({txb_adr, 3'd0}),
 	.WEB(1'b0),
