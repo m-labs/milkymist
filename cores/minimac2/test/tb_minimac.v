@@ -23,15 +23,14 @@ initial sys_clk = 1'b0;
 always #5 sys_clk = ~sys_clk;
 
 /* 25MHz RX clock */
-//reg phy_rx_clk;
-//initial phy_rx_clk = 1'b0;
-//always #20 phy_rx_clk = ~phy_rx_clk;
+reg phy_rx_clk;
+initial phy_rx_clk = 1'b0;
+always #20 phy_rx_clk = ~phy_rx_clk;
 
 /* 25MHz TX clock */
 reg phy_tx_clk;
 initial phy_tx_clk = 1'b0;
 always #20 phy_tx_clk = ~phy_tx_clk;
-
 
 reg sys_rst;
 
@@ -168,25 +167,25 @@ begin
 end
 endtask
 
-/*integer cycle;
+integer cycle;
 initial cycle = 0;
 always @(posedge phy_rx_clk) begin
 	cycle <= cycle + 1;
 	phy_rx_er <= 1'b0;
 	phy_rx_data <= cycle;
 	if(phy_dv) begin
-		$display("rx: %x", phy_rx_data);
+		//$display("rx: %x", phy_rx_data);
 		if((cycle % 16) == 13) begin
 			phy_dv <= 1'b0;
-			$display("** stopping transmission");
+			//$display("** stopping transmission");
 		end
 	end else begin
 		if((cycle % 16) == 15) begin
 			phy_dv <= 1'b1;
-			$display("** starting transmission");
+			//$display("** starting transmission");
 		end
 	end
-end*/
+end
 
 always @(posedge phy_tx_clk) begin
 	if(phy_tx_en)
@@ -209,11 +208,24 @@ initial begin
 	waitclock;
 
 	csrwrite(32'h00, 0);
+	csrwrite(32'h08, 1);
 	wbwrite(32'h1000, 32'h12345678);
 	wbread(32'h1000);
 	csrwrite(32'h18, 10);
+	csrwrite(32'h10, 1);
 
 	#5000;
+	
+	csrread(32'h08);
+	csrread(32'h0C);
+	csrread(32'h10);
+	csrread(32'h14);
+	wbread(32'h0000);
+	wbread(32'h0004);
+	wbread(32'h0008);
+	wbread(32'h0800);
+	wbread(32'h0804);
+	wbread(32'h0808);
 	
 	$finish;
 end

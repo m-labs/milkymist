@@ -170,4 +170,24 @@ minimac2_tx tx(
 );
 assign phy_tx_er = 1'b0;
 
+minimac2_rx rx(
+	.phy_rx_clk(phy_rx_clk),
+	
+	.rx_ready(phy_rx_ready),
+	.rx_done(phy_rx_done),
+	.rx_count_0(phy_rx_count_0),
+	.rx_count_1(phy_rx_count_1),
+	
+	.rxb0_dat(rxb0_dat),
+	.rxb0_adr(rxb0_adr),
+	.rxb0_we(rxb0_we),
+	.rxb1_dat(rxb1_dat),
+	.rxb1_adr(rxb1_adr),
+	.rxb1_we(rxb1_we),
+	
+	.phy_dv(phy_dv),
+	.phy_rx_data(phy_rx_data),
+	.phy_rx_er(phy_rx_er)
+);
+
 endmodule
