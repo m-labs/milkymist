@@ -57,7 +57,7 @@ wire [3:0] phy_tx_data;
 wire irq_rx;
 wire irq_tx;
 
-minimac #(
+minimac2 #(
 	.csr_addr(4'h0)
 ) ethernet (
 	.sys_clk(sys_clk),

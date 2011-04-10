@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module minimac #(
+module minimac2 #(
 	parameter csr_addr = 4'h0
 ) (
 	input sys_clk,

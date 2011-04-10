@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module conbus_arb6(
+module conbus_arb5(
 	input sys_clk,
 	input sys_rst,
 	
-	input [5:0] req,
+	input [4:0] req,
 	output [2:0] gnt
 );
 
@@ -44,7 +44,6 @@ always @(*) begin
 				else if(req[2]) next_state = 3'd2;
 				else if(req[3]) next_state = 3'd3;
 				else if(req[4]) next_state = 3'd4;
-				else if(req[5]) next_state = 3'd5;
 			end
 		end
 		3'd1: begin
@@ -52,7 +51,6 @@ always @(*) begin
 				     if(req[2]) next_state = 3'd2;
 				else if(req[3]) next_state = 3'd3;
 				else if(req[4]) next_state = 3'd4;
-				else if(req[5]) next_state = 3'd5;
 				else if(req[0]) next_state = 3'd0;
 			end
 		end
@@ -60,7 +58,6 @@ always @(*) begin
 			if(~req[2]) begin
 				     if(req[3]) next_state = 3'd3;
 				else if(req[4]) next_state = 3'd4;
-				else if(req[5]) next_state = 3'd5;
 				else if(req[0]) next_state = 3'd0;
 				else if(req[1]) next_state = 3'd1;
 			end
@@ -68,7 +65,6 @@ always @(*) begin
 		3'd3: begin
 			if(~req[3]) begin
 				     if(req[4]) next_state = 3'd4;
-				else if(req[5]) next_state = 3'd5;
 				else if(req[0]) next_state = 3'd0;
 				else if(req[1]) next_state = 3'd1;
 				else if(req[2]) next_state = 3'd2;
@@ -76,20 +72,10 @@ always @(*) begin
 		end
 		3'd4: begin
 			if(~req[4]) begin
-				     if(req[5]) next_state = 3'd5;
-				else if(req[0]) next_state = 3'd0;
-				else if(req[1]) next_state = 3'd1;
-				else if(req[2]) next_state = 3'd2;
-				else if(req[3]) next_state = 3'd3;
-			end
-		end
-		3'd5: begin
-			if(~req[5]) begin
 				     if(req[0]) next_state = 3'd0;
 				else if(req[1]) next_state = 3'd1;
 				else if(req[2]) next_state = 3'd2;
 				else if(req[3]) next_state = 3'd3;
-				else if(req[4]) next_state = 3'd4;
 			end
 		end
 	endcase

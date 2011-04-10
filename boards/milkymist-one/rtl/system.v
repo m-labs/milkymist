@@ -1,6 +1,6 @@
 /*
- * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Milkymist SoC
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -242,16 +242,12 @@ wire [31:0]	cpuibus_adr,
 		cpudbus_adr,
 		ac97bus_adr,
 		pfpubus_adr,
-		tmumbus_adr,
-		ethernetrxbus_adr,
-		ethernettxbus_adr;
+		tmumbus_adr;
 
 wire [2:0]	cpuibus_cti,
 		cpudbus_cti,
 		ac97bus_cti,
-		tmumbus_cti,
-		ethernetrxbus_cti,
-		ethernettxbus_cti;
+		tmumbus_cti;
 
 wire [31:0]	cpuibus_dat_r,
 `ifdef CFG_HW_DEBUG_ENABLED
@@ -262,9 +258,7 @@ wire [31:0]	cpuibus_dat_r,
 		ac97bus_dat_r,
 		ac97bus_dat_w,
 		pfpubus_dat_w,
-		tmumbus_dat_r,
-		ethernetrxbus_dat_w,
-		ethernettxbus_dat_r;
+		tmumbus_dat_r;
 
 wire [3:0]	cpudbus_sel;
 `ifdef CFG_HW_DEBUG_ENABLED
@@ -281,25 +275,19 @@ wire		cpuibus_cyc,
 		cpudbus_cyc,
 		ac97bus_cyc,
 		pfpubus_cyc,
-		tmumbus_cyc,
-		ethernetrxbus_cyc,
-		ethernettxbus_cyc;
+		tmumbus_cyc;
 
 wire		cpuibus_stb,
 		cpudbus_stb,
 		ac97bus_stb,
 		pfpubus_stb,
-		tmumbus_stb,
-		ethernetrxbus_stb,
-		ethernettxbus_stb;
+		tmumbus_stb;
 
 wire		cpuibus_ack,
 		cpudbus_ack,
 		ac97bus_ack,
 		tmumbus_ack,
-		pfpubus_ack,
-		ethernetrxbus_ack,
-		ethernettxbus_ack;
+		pfpubus_ack;
 
 //------------------------------------------------------------------
 // Wishbone slave wires
@@ -307,6 +295,7 @@ wire		cpuibus_ack,
 wire [31:0]	norflash_adr,
 		monitor_adr,
 		usb_adr,
+		eth_adr,
 		brg_adr,
 		csrbrg_adr;
 
@@ -318,6 +307,8 @@ wire [31:0]	norflash_dat_r,
 		monitor_dat_w,
 		usb_dat_r,
 		usb_dat_w,
+		eth_dat_r,
+		eth_dat_w,
 		brg_dat_r,
 		brg_dat_w,
 		csrbrg_dat_r,
@@ -326,33 +317,56 @@ wire [31:0]	norflash_dat_r,
 wire [3:0]	norflash_sel,
 		monitor_sel,
 		usb_sel,
+		eth_sel,
 		brg_sel;
 
 wire		norflash_we,
 		monitor_we,
 		usb_we,
+		eth_we,
 		brg_we,
 		csrbrg_we;
 
 wire		norflash_cyc,
 		monitor_cyc,
+		usb_cyc,
+		eth_cyc,
 		brg_cyc,
 		csrbrg_cyc;
 
 wire		norflash_stb,
 		monitor_stb,
+		usb_stb,
+		eth_stb,
 		brg_stb,
 		csrbrg_stb;
 
 wire		norflash_ack,
 		monitor_ack,
+		usb_ack,
+		eth_ack,
 		brg_ack,
 		csrbrg_ack;
 
 //---------------------------------------------------------------------------
 // Wishbone switch
 //---------------------------------------------------------------------------
-xbar xbar(
+// norflash     0x00000000 (shadow @0x80000000)
+// debug        0x10000000 (shadow @0x90000000)
+// USB          0x20000000 (shadow @0xa0000000)
+// Ethernet     0x30000000 (shadow @0xb0000000)
+// SDRAM        0x40000000 (shadow @0xc0000000)
+// CSR bridge   0x60000000 (shadow @0xe0000000)
+
+// MSB (Bit 31) is ignored for slave address decoding
+conbus5x6 #(
+	.s0_addr(3'b000), // norflash
+	.s1_addr(3'b001), // debug
+	.s2_addr(3'b010), // USB
+	.s3_addr(3'b011), // Ethernet
+	.s4_addr(2'b10),  // SDRAM
+	.s5_addr(2'b11)   // CSR
+) wbswitch (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
@@ -415,26 +429,6 @@ xbar xbar(
 	.m4_cyc_i(tmumbus_cyc),
 	.m4_stb_i(tmumbus_stb),
 	.m4_ack_o(tmumbus_ack),
-	// Master 5
-	.m5_dat_i(ethernetrxbus_dat_w),
-	.m5_dat_o(),
-	.m5_adr_i(ethernetrxbus_adr),
-	.m5_cti_i(ethernetrxbus_cti),
-	.m5_we_i(1'b1),
-	.m5_sel_i(4'hf),
-	.m5_cyc_i(ethernetrxbus_cyc),
-	.m5_stb_i(ethernetrxbus_stb),
-	.m5_ack_o(ethernetrxbus_ack),
-	// Master 6
-	.m6_dat_i(32'bx),
-	.m6_dat_o(ethernettxbus_dat_r),
-	.m6_adr_i(ethernettxbus_adr),
-	.m6_cti_i(ethernettxbus_cti),
-	.m6_we_i(1'b0),
-	.m6_sel_i(4'hf),
-	.m6_cyc_i(ethernettxbus_cyc),
-	.m6_stb_i(ethernettxbus_stb),
-	.m6_ack_o(ethernettxbus_ack),
 
 	// Slave 0
 	.s0_dat_i(norflash_dat_r),
@@ -467,15 +461,15 @@ xbar xbar(
 	.s2_stb_o(usb_stb),
 	.s2_ack_i(usb_ack),
 	// Slave 3
-	.s3_dat_i(csrbrg_dat_r),
-	.s3_dat_o(csrbrg_dat_w),
-	.s3_adr_o(csrbrg_adr),
+	.s3_dat_i(eth_dat_r),
+	.s3_dat_o(eth_dat_w),
+	.s3_adr_o(eth_adr),
 	.s3_cti_o(),
-	.s3_sel_o(),
-	.s3_we_o(csrbrg_we),
-	.s3_cyc_o(csrbrg_cyc),
-	.s3_stb_o(csrbrg_stb),
-	.s3_ack_i(csrbrg_ack),
+	.s3_sel_o(eth_sel),
+	.s3_we_o(eth_we),
+	.s3_cyc_o(eth_cyc),
+	.s3_stb_o(eth_stb),
+	.s3_ack_i(eth_ack),
 	// Slave 4
 	.s4_dat_i(brg_dat_r),
 	.s4_dat_o(brg_dat_w),
@@ -485,7 +479,17 @@ xbar xbar(
 	.s4_we_o(brg_we),
 	.s4_cyc_o(brg_cyc),
 	.s4_stb_o(brg_stb),
-	.s4_ack_i(brg_ack)
+	.s4_ack_i(brg_ack),
+	// Slave 5
+	.s5_dat_i(csrbrg_dat_r),
+	.s5_dat_o(csrbrg_dat_w),
+	.s5_adr_o(csrbrg_adr),
+	.s5_cti_o(),
+	.s5_sel_o(),
+	.s5_we_o(csrbrg_we),
+	.s5_cyc_o(csrbrg_cyc),
+	.s5_stb_o(csrbrg_stb),
+	.s5_ack_i(csrbrg_ack)
 );
 
 //------------------------------------------------------------------
@@ -1239,7 +1243,7 @@ BUFG b_phy_rx_clk(
 	.O(phy_rx_clk_b)
 );
 `ifdef ENABLE_ETHERNET
-minimac #(
+minimac2 #(
 	.csr_addr(4'h8)
 ) ethernet (
 	.sys_clk(sys_clk),
@@ -1250,22 +1254,17 @@ minimac #(
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_ethernet),
 
-	.wbrx_adr_o(ethernetrxbus_adr),
-	.wbrx_cti_o(ethernetrxbus_cti),
-	.wbrx_cyc_o(ethernetrxbus_cyc),
-	.wbrx_stb_o(ethernetrxbus_stb),
-	.wbrx_ack_i(ethernetrxbus_ack),
-	.wbrx_dat_o(ethernetrxbus_dat_w),
-
-	.wbtx_adr_o(ethernettxbus_adr),
-	.wbtx_cti_o(ethernettxbus_cti),
-	.wbtx_cyc_o(ethernettxbus_cyc),
-	.wbtx_stb_o(ethernettxbus_stb),
-	.wbtx_ack_i(ethernettxbus_ack),
-	.wbtx_dat_i(ethernettxbus_dat_r),
-
 	.irq_rx(ethernetrx_irq),
 	.irq_tx(ethernettx_irq),
+	
+	.wb_adr_i(eth_adr),
+	.wb_dat_o(eth_dat_r),
+	.wb_dat_i(eth_dat_w),
+	.wb_sel_i(eth_sel),
+	.wb_stb_i(eth_stb),
+	.wb_cyc_i(eth_cyc),
+	.wb_ack_o(eth_ack),
+	.wb_we_i(eth_we),
 
 	.phy_tx_clk(phy_tx_clk_b),
 	.phy_tx_data(phy_tx_data),
@@ -1283,16 +1282,8 @@ minimac #(
 );
 `else
 assign csr_dr_ethernet = 32'd0;
-assign ethernetrxbus_adr = 32'bx;
-assign ethernetrxbus_cti = 3'bx;
-assign ethernetrxbus_cyc = 1'b0;
-assign ethernetrxbus_stb = 1'b0;
-assign ethernetrxbus_dat_w = 32'bx;
-assign ethernettxbus_adr = 32'bx;
-assign ethernettxbus_cti = 3'bx;
-assign ethernettxbus_cyc = 1'b0;
-assign ethernettxbus_stb = 1'b0;
-assign ethernettxbus_dat_r = 32'bx;
+assign eth_dat_r = 32'bx;
+assign eth_ack = 1'b0;
 assign ethernetrx_irq = 1'b0;
 assign ethernettx_irq = 1'b0;
 assign phy_tx_data = 4'b0;
@@ -1569,7 +1560,7 @@ assign usbb_vp = 1'bz;
 assign usbb_vm = 1'bz;
 
 // HACK: we need to put something on usb_clk, otherwise the net is
-// optimized away and the tool later complain about invalid clock
+// optimized away and the tools later complain about invalid clock
 // constraints. Attribute KEEP on usb_clk won't work for some reason.
 (* LOCK_PINS="ALL" *)
 FD workaround(
