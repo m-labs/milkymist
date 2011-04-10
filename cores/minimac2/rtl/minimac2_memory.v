@@ -72,7 +72,7 @@ RAMB16BWER #(
 	.DIPB(1'd0),
 	.DOB(),
 	.ADDRB({rxb0_adr, 3'd0}),
-	.WEB(rxb0_we),
+	.WEB({4{rxb0_we}}),
 	.ENB(1'b1),
 	.RSTB(1'b0),
 	.CLKB(phy_rx_clk)
@@ -103,7 +103,7 @@ RAMB16BWER #(
 	.DIPB(1'd0),
 	.DOB(),
 	.ADDRB({rxb1_adr, 3'd0}),
-	.WEB(rxb1_we),
+	.WEB({4{rxb1_we}}),
 	.ENB(1'b1),
 	.RSTB(1'b0),
 	.CLKB(phy_rx_clk)
@@ -134,7 +134,7 @@ RAMB16BWER #(
 	.DIPB(1'd0),
 	.DOB(txb_dat),
 	.ADDRB({txb_adr, 3'd0}),
-	.WEB(1'b0),
+	.WEB(4'd0),
 	.ENB(1'b1),
 	.RSTB(1'b0),
 	.CLKB(phy_tx_clk)
