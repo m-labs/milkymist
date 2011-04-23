@@ -40,16 +40,17 @@
 #include "boot.h"
 
 extern const struct board_desc *brd_desc;
+extern int rescue;
 
-extern void boot_helper(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr);
+extern void boot_helper(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int r4, unsigned int addr);
 
-static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int addr)
+static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int r4, unsigned int addr)
 {
 	vga_disable();
 	uart_force_sync(1);
 	irq_setmask(0);
 	irq_enable(0);
-	boot_helper(r1, r2, r3, addr);
+	boot_helper(r1, r2, r3, r4, addr);
 	while(1);
 }
 
@@ -168,7 +169,7 @@ void serialboot()
 					|((unsigned int)frame.payload[2] << 8)
 					|((unsigned int)frame.payload[3] << 0);
 				uart_write(SFL_ACK_SUCCESS);
-				boot(cmdline_adr, initrdstart_adr, initrdend_adr, addr);
+				boot(cmdline_adr, initrdstart_adr, initrdend_adr, rescue, addr);
 				break;
 			}
 			case SFL_CMD_CMDLINE:
@@ -268,7 +269,7 @@ void netboot()
 		initrdend_adr = initrdstart_adr + size - 1;
 
 	printf("I: Booting...\n");
-	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
+	boot(cmdline_adr, initrdstart_adr, initrdend_adr, rescue, SDRAM_BASE);
 }
 
 static int tryload(char *filename, unsigned int address)
@@ -323,10 +324,8 @@ void fsboot(int devnr)
 
 	fatfs_done();
 	printf("I: Booting...\n");
-	boot(cmdline_adr, initrdstart_adr, initrdend_adr, SDRAM_BASE);
+	boot(cmdline_adr, initrdstart_adr, initrdend_adr, rescue, SDRAM_BASE);
 }
-
-extern int rescue;
 
 static void lzma_error(char *x)
 {
@@ -378,5 +377,5 @@ void flashboot()
 		}
 	}
 	printf("I: Booting...\n");
-	boot(0, 0, 0, SDRAM_BASE);
+	boot(0, 0, 0, rescue, SDRAM_BASE);
 }

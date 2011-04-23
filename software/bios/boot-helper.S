@@ -7,4 +7,4 @@ boot_helper:
 	nop
 	nop
 	nop
-	call r4
+	call r5

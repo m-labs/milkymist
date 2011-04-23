@@ -533,7 +533,7 @@ static void print_mac()
 
 static const char banner[] =
 	"\nMILKYMIST(tm) v"VERSION" BIOS   http://www.milkymist.org\n"
-	"(c) Copyright 2007, 2008, 2009, 2010 Sebastien Bourdeauducq\n\n"
+	"(c) Copyright 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq\n\n"
 	"This program is free software: you can redistribute it and/or modify\n"
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, version 3 of the License.\n\n";
