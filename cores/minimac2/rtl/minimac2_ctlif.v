@@ -56,7 +56,7 @@ always @(posedge sys_clk) begin
 end
 
 reg phy_rst;
-assign phy_rst_n = ~phy_rst;
+assign phy_rst_n = ~(phy_rst | sys_rst);
 
 /*
  * RX Slots
@@ -81,7 +81,7 @@ always @(posedge sys_clk) begin
 		mii_data_oe <= 1'b0;
 		mii_data_do <= 1'b0;
 		phy_mii_clk <= 1'b0;
-		phy_rst <= 1'b1;
+		phy_rst <= 1'b0;
 
 		slot0_state <= 2'b00;
 		slot1_state <= 2'b00;
