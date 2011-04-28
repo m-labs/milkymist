@@ -46,7 +46,7 @@ extern void boot_helper(unsigned int r1, unsigned int r2, unsigned int r3, unsig
 
 static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, unsigned int r3, unsigned int r4, unsigned int addr)
 {
-	vga_disable();
+	vga_blank();
 	uart_force_sync(1);
 	irq_setmask(0);
 	irq_enable(0);

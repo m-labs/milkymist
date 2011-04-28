@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ static unsigned short int framebufferA[1024*768] __attribute__((aligned(32)));
 static unsigned short int framebufferB[1024*768] __attribute__((aligned(32)));
 static unsigned short int framebufferC[1024*768] __attribute__((aligned(32)));
 
+int vga_blanked;
 int vga_hres;
 int vga_vres;
 
@@ -55,8 +56,10 @@ static int console_mode;
 
 static void write_hook(char c);
 
-void vga_init()
+void vga_init(int blanked)
 {
+	vga_blanked = blanked;
+
 	vga_frontbuffer = framebufferA;
 	vga_backbuffer = framebufferB;
 	vga_lastbuffer = framebufferC;
@@ -75,16 +78,27 @@ void vga_init()
 	console_set_write_hook(write_hook);
 }
 
-void vga_disable()
+void vga_blank()
 {
-	CSR_VGA_RESET = VGA_RESET;
+	if(!vga_blanked) {
+		CSR_VGA_RESET = VGA_RESET;
+		vga_blanked = 1;
+	}
+}
+
+void vga_unblank()
+{
+	if(vga_blanked) {
+		CSR_VGA_RESET = 0;
+		vga_blanked = 0;
+	}
 }
 
 void vga_swap_buffers()
 {
 	unsigned short int *p;
 
-	if(!console_mode) {
+	if(!console_mode && !vga_blanked) {
 		/*
 		 * Make sure last buffer swap has been executed.
 		 */
@@ -302,7 +316,8 @@ void vga_set_mode(int mode)
 	text_line_len = vga_hres/8;
 	CSR_VGA_BURST_COUNT = vga_hres*vga_vres/16;
 	printf("VGA: mode set to %dx%d\n", vga_hres, vga_vres);
-	CSR_VGA_RESET = 0;
+	if(!vga_blanked)
+		CSR_VGA_RESET = 0;
 }
 
 extern const unsigned char fontdata_8x16[];

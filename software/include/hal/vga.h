@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 extern int vga_hres;
 extern int vga_vres;
+extern int vga_blanked;
 extern unsigned short int *vga_frontbuffer;
 extern unsigned short int *vga_backbuffer;
 extern unsigned short int *vga_lastbuffer;
@@ -30,8 +31,9 @@ enum {
 	VGA_MODE_1024_768
 };
 
-void vga_init();
-void vga_disable();
+void vga_init(int blanked);
+void vga_blank();
+void vga_unblank();
 void vga_swap_buffers();
 void vga_set_console(int console);
 int vga_get_console();

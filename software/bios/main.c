@@ -602,7 +602,7 @@ int main(int i, char **c)
 	irq_setmask(0);
 	irq_enable(1);
 	uart_init();
-	vga_init();
+	vga_init(!(rescue || (CSR_GPIO_IN & GPIO_BTN2)));
 	putsnonl(banner);
 	crcbios();
 	brd_init();
@@ -616,6 +616,7 @@ int main(int i, char **c)
 	splash_display();
 	print_mac();
 	boot_sequence();
+	vga_unblank();
 	vga_set_console(1);
 	while(1) {
 		putsnonl("\e[1mBIOS>\e[0m ");
