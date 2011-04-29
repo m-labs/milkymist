@@ -482,10 +482,10 @@ static int test_user_abort()
 			c = readchar();
 			if((c == 'Q')||(c == '\e')) {
 				puts("I: Aborted boot on user request");
-				vga_set_console(1);
 				return 0;
 			}
 			if(c == 0x07) {
+				vga_unblank();
 				vga_set_console(1);
 				netboot();
 				return 0;
