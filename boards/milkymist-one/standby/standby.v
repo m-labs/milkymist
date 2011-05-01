@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,14 +88,29 @@ reg btn1_r0;
 reg btn1_r;
 reg btn2_r0;
 reg btn2_r;
+reg btn2_r2;
+
+wire debounce;
 
 always @(posedge clk) begin
-	btn1_r0 <= btn1;
-	btn1_r <= btn1_r0;
-	btn2_r0 <= btn2;
-	btn2_r <= btn2_r0;
+	if(debounce) begin
+		btn1_r0 <= btn1;
+		btn1_r <= btn1_r0;
+		btn2_r0 <= btn2;
+		btn2_r <= btn2_r0;
+		btn2_r2 <= btn2_r;
+	end
 end
 
+initial begin
+	btn2_r0 <= 1'b1;
+	btn2_r <= 1'b1;
+	btn2_r2 <= 1'b1;
+end
+
+reg [19:0] debounce_r;
+always @(posedge clk) debounce_r <= debounce_r + 20'd1;
+assign debounce = &debounce_r;
 
 reg ce_r;
 reg [15:0] d_r;
@@ -183,7 +198,7 @@ always @(*) begin
 	case(state)
 		IDLE: begin
 			next_rescue = btn1_r;
-			if(btn2_r)
+			if(btn2_r & ~btn2_r2)
 				next_state = DUMMY;
 		end
 		DUMMY: begin
