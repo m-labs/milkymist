@@ -86,7 +86,7 @@ always @(posedge sys_clk) begin
 			if(~rx_busy) begin // look for start bit
 				if(rx2) begin // start bit found
 					rx_busy <= 1'b1;
-					rx_count16 <= 4'd11;
+					rx_count16 <= 4'd13;
 					rx_bitcount <= 4'd0;
 				end
 			end else begin
