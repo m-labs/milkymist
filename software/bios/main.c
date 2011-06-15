@@ -31,6 +31,7 @@
 #include <hw/sysctl.h>
 #include <hw/gpio.h>
 #include <hw/flash.h>
+#include <hw/minimac.h>
 
 #include <hal/vga.h>
 #include <hal/tmu.h>
@@ -592,6 +593,22 @@ static void readstr(char *s, int size)
 	}
 }
 
+static void ethreset_delay()
+{
+	CSR_TIMER0_COUNTER = 0;
+	CSR_TIMER0_COMPARE = brd_desc->clk_frequency >> 2;
+	CSR_TIMER0_CONTROL = TIMER_ENABLE;
+	while(CSR_TIMER0_CONTROL & TIMER_ENABLE);
+}
+
+static void ethreset()
+{
+	CSR_MINIMAC_SETUP = MINIMAC_SETUP_PHYRST;
+	ethreset_delay();
+	CSR_MINIMAC_SETUP = 0;
+	ethreset_delay();
+}
+
 int main(int i, char **c)
 {
 	char buffer[64];
@@ -614,6 +631,7 @@ int main(int i, char **c)
 		printf("I: Booting in rescue mode\n");
 
 	splash_display();
+	ethreset(); /* < that pesky ethernet PHY needs two resets at times... */
 	print_mac();
 	boot_sequence();
 	vga_unblank();
