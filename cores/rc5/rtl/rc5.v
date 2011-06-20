@@ -1,6 +1,6 @@
 /*
  * Milkymist VJ SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  * Copyright (C) 2007 Das Labor
  *
  * This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,7 @@ module rc5 #(
 //-----------------------------------------------------------------
 // enable16 generator
 //-----------------------------------------------------------------
-parameter divisor = clk_freq/570/16;
+parameter divisor = clk_freq/596/16;
 
 reg [15:0] enable16_counter;
 
