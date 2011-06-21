@@ -99,11 +99,15 @@ always @(posedge sys_clk) begin
 	end
 end
 
+reg in_frame_r;
 always @(posedge sys_clk) begin
-	if(sys_rst)
+	if(sys_rst) begin
+		in_frame_r <= 1'b0;
 		irq <= 1'b0;
-	else
-		irq <= start_of_frame;
+	end else begin
+		in_frame_r <= in_frame;
+		irq <= in_frame_r & ~in_frame;
+	end
 end
 
 reg [14:0] burst_counter;
