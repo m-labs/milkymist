@@ -666,12 +666,20 @@ static void cmd_query(void)
 #endif
 
 /*
- * This function does all command procesing for interfacing to gdb. The error
+ * This function does all command processing for interfacing to gdb. The error
  * codes we return are errno numbers.
  */
 void handle_exception(unsigned int *registers)
 {
     int irq;
+    
+    /* make sure break is disabled.
+     * we can enter the stub with break enabled when the application calls it.
+     * there is a race condition here if the break is asserted before
+     * this line is executed, but the race window is small. to prevent it completely,
+     * applications should disable debug exceptions before jumping to debug ROM.
+     */
+    CSR_UART_BREAK = 0;
 
     /* clear BSS there was a board reset */
     if (!CSR_DBG_SCRATCHPAD) {
