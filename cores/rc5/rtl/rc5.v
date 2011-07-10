@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC
+ * Milkymist SoC
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  * Copyright (C) 2007 Das Labor
  *

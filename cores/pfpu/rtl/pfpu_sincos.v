@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC
+ * Milkymist SoC
  * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify

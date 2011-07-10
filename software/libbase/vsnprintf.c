@@ -1,5 +1,5 @@
 /*
- * Milkymist VJ SoC (Software)
+ * Milkymist SoC (Software)
  * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
  * Copyright (C) Linux kernel developers
  *
