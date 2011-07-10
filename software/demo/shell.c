@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -311,9 +311,27 @@ static void stats()
 	}
 }
 
+static void memcapture()
+{
+	int i, j;
+	char buffer[16];
+	
+	if(memstat_capture_ready()) {
+		for(i=0;i<4096;i++) {
+			/* send to UART only */
+			sprintf(buffer, "%08x\n", memstat_capture_get(i));
+			j = 0;
+			while(buffer[j])
+				uart_write(buffer[j++]);
+		}
+		memstat_capture_start();
+	} else
+		puts("Still capturing");
+}
+
 static void help()
 {
-	puts("Milkymist(tm) demonstration program (PROOF OF CONCEPT ONLY!)\n");
+	puts("Milkymist(tm) SoC demonstration program\n");
 	puts("Available commands:");
 	puts("cons        - switch console mode");
 	puts("ls          - list files on the memory card");
@@ -326,6 +344,7 @@ static void help()
 	puts("renderi     - render console input");
 	puts("stop        - stop renderer");
 	puts("stats       - print system stats");
+	puts("memcapture  - capture memory transactions");
 	puts("version     - display version");
 	puts("reboot      - system reset");
 	puts("reconf      - reload FPGA configuration");
@@ -978,6 +997,7 @@ static void do_command(char *c)
 		} else if(strcmp(command, "stop") == 0) renderer_stop();
 		else if(strcmp(command, "vmode") == 0) vmode(param1);
 		else if(strcmp(command, "stats") == 0) stats();
+		else if(strcmp(command, "memcapture") == 0) memcapture();
 		else if(strcmp(command, "version") == 0) puts(VERSION);
 		else if(strcmp(command, "reboot") == 0) reboot();
 		else if(strcmp(command, "reconf") == 0) reconf();

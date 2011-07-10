@@ -28,15 +28,15 @@ void memstats_init()
 {
 	last_stb_count = 0;
 	last_ack_count = 0;
-	CSR_FMLMETER_ENABLE = FMLMETER_ENABLE;
+	CSR_FMLMETER_COUNTERS_ENABLE = FMLMETER_COUNTERS_ENABLE;
 }
 
 void memstats_tick()
 {
-	CSR_FMLMETER_ENABLE = 0;
+	CSR_FMLMETER_COUNTERS_ENABLE = 0;
 	last_stb_count = CSR_FMLMETER_STBCOUNT;
 	last_ack_count = CSR_FMLMETER_ACKCOUNT;
-	CSR_FMLMETER_ENABLE = FMLMETER_ENABLE;
+	CSR_FMLMETER_COUNTERS_ENABLE = FMLMETER_COUNTERS_ENABLE;
 }
 
 unsigned int memstat_occupancy()
@@ -58,4 +58,20 @@ unsigned int memstat_amat()
 		return 0;
 	else
 		return (last_stb_count-last_ack_count)/d;
+}
+
+void memstat_capture_start()
+{
+	CSR_FMLMETER_CAPTURE_WADR = 0;
+}
+
+int memstat_capture_ready()
+{
+	return CSR_FMLMETER_CAPTURE_WADR > 4095;
+}
+
+unsigned int memstat_capture_get(int index)
+{
+	CSR_FMLMETER_CAPTURE_RADR = index;
+	return CSR_FMLMETER_CAPTURE_DATA;
 }

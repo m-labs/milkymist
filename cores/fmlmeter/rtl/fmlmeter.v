@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,8 @@
  */
 
 module fmlmeter #(
-	parameter csr_addr = 4'h0
+	parameter csr_addr = 4'h0,
+	parameter fml_depth = 26
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -27,55 +28,88 @@ module fmlmeter #(
 	output reg [31:0] csr_do,
 
 	input fml_stb,
-	input fml_ack
+	input fml_ack,
+	input [fml_depth-1:0] fml_adr
 );
 
 /* Register the signals we probe to have a minimal impact on timing */
 reg fml_stb_r;
 reg fml_ack_r;
+reg [fml_depth-1:0] fml_adr_r;
 always @(posedge sys_clk) begin
 	fml_stb_r <= fml_stb;
 	fml_ack_r <= fml_ack;
+	fml_adr_r <= fml_adr;
 end
 
-reg en;			// @ 00
-reg [31:0] stb_count;	// @ 04
-reg [31:0] ack_count;	// @ 08
+reg counters_en;		// @ 00
+reg [31:0] stb_count;		// @ 04
+reg [31:0] ack_count;		// @ 08
+reg [12:0] capture_wadr;	// @ 0c
+reg [11:0] capture_radr;	// @ 10
+reg [fml_depth-1:0] capture_do;	// @ 14
+
+reg [fml_depth-1:0] capture_mem[0:4095];
+wire capture_en = ~capture_wadr[12];
+wire capture_we = capture_en & fml_stb_r & fml_ack_r;
+wire [11:0] capture_adr = capture_we ? capture_wadr[11:0] : capture_radr;
+wire [fml_depth-1:0] capture_di = fml_adr_r;
+
+always @(posedge sys_clk) begin
+	if(capture_we)
+		capture_mem[capture_adr] <= capture_di;
+	capture_do <= capture_mem[capture_adr];
+end
 
 wire csr_selected = csr_a[13:10] == csr_addr;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
-		en <= 1'b0;
+		counters_en <= 1'b0;
 		stb_count <= 32'd0;
 		ack_count <= 32'd0;
+		
+		capture_wadr <= 13'd4096;
+		capture_radr <= 12'd0;
 
 		csr_do <= 32'd0;
 	end else begin
-		if(en) begin
+		if(counters_en) begin
 			if(fml_stb_r)
 				stb_count <= stb_count + 32'd1;
 			if(fml_ack_r)
 				ack_count <= ack_count + 32'd1;
 		end
+		
+		if(capture_we)
+			capture_wadr <= capture_wadr + 13'd1;
 
 		csr_do <= 32'd0;
 		if(csr_selected) begin
 			if(csr_we) begin
-				/* Assume all writes are for the ENABLE register
-				 * (others are read-only)
-				 */
-				en <= csr_di[0];
-				if(csr_di[0]) begin
-					stb_count <= 32'd0;
-					ack_count <= 32'd0;
-				end
+				case(csr_a[2:0])
+					3'b000: begin
+						counters_en <= csr_di[0];
+						if(csr_di[0]) begin
+							stb_count <= 32'd0;
+							ack_count <= 32'd0;
+						end
+					end
+					// 3'b001 stb_count is read-only
+					// 3'b010 ack_count is read-only
+					3'b011: capture_wadr <= 13'd0;
+					3'b100: capture_radr <= csr_di[11:0];
+					// 3'b101 capture_do is read-only
+				endcase
 			end
 
-			case(csr_a[1:0])
-				2'b00: csr_do <= en;
-				2'b01: csr_do <= stb_count;
-				2'b10: csr_do <= ack_count;
+			case(csr_a[3:0])
+				3'b000: csr_do <= counters_en;
+				3'b001: csr_do <= stb_count;
+				3'b010: csr_do <= ack_count;
+				3'b011: csr_do <= capture_wadr;
+				3'b100: csr_do <= capture_radr;
+				3'b101: csr_do <= capture_do;
 			endcase
 		end
 	end

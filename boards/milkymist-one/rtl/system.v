@@ -1300,7 +1300,8 @@ always @(posedge clk50) phy_clk <= ~phy_clk;
 //---------------------------------------------------------------------------
 `ifdef ENABLE_FMLMETER
 fmlmeter #(
-	.csr_addr(4'h9)
+	.csr_addr(4'h9),
+	.fml_depth(`SDRAM_DEPTH)
 ) fmlmeter (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -1311,7 +1312,8 @@ fmlmeter #(
 	.csr_do(csr_dr_fmlmeter),
 
 	.fml_stb(fml_stb),
-	.fml_ack(fml_ack)
+	.fml_ack(fml_ack),
+	.fml_adr(fml_adr)
 );
 `else
 assign csr_dr_fmlmeter = 32'd0;
