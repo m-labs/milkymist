@@ -2,9 +2,9 @@
 -------------------------------
 
 This is the complete core source code and documentation for the opensource
-system-on-chip used in the Milkymist(tm) interactive VJ station.
+system-on-chip used in the Milkymist(tm) One video synthesizer.
 
-For the latest releases, binary distributions and more:
+For the latest releases, documentation, more information, or to buy a Milkymist One:
   http://www.milkymist.org
 
 
@@ -44,7 +44,7 @@ synthesis directory.
  /boards/xxx/synthesis/build/system.bit build_bitstream.sh FPGA bitstream.
  /software/bios/bios.bin                build_bios.sh      BIOS image.
  /software/demo/boot.bin                build_demo.sh      Demonstration firmware image.
- /boards/xxx/flash/yyy.mcs              use Makefile       Flash images.
+ /boards/xxx/flash/yyy.fpg              use Makefile       Flash images.
  /doc/xxx.pdf                           build_doc.sh       System-wide documentation.
  /cores/xxx/doc/xxx.pdf                 build_doc.sh       Core-specific documentation.
 
