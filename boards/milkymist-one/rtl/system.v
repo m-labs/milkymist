@@ -899,7 +899,7 @@ sysctl #(
 	.csr_addr(4'h1),
 	.ninputs(7),
 	.noutputs(2),
-	.systemid(32'h10004D31) /* 1.0.0 final (0) on M1 */
+	.systemid(32'h11004D31) /* 1.1.0 final (0) on M1 */
 ) sysctl (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
