@@ -29,16 +29,19 @@ module fmlmeter #(
 
 	input fml_stb,
 	input fml_ack,
+	input fml_we,
 	input [fml_depth-1:0] fml_adr
 );
 
 /* Register the signals we probe to have a minimal impact on timing */
 reg fml_stb_r;
 reg fml_ack_r;
+reg fml_we_r;
 reg [fml_depth-1:0] fml_adr_r;
 always @(posedge sys_clk) begin
 	fml_stb_r <= fml_stb;
 	fml_ack_r <= fml_ack;
+	fml_we_r <= fml_we;
 	fml_adr_r <= fml_adr;
 end
 
@@ -47,13 +50,13 @@ reg [31:0] stb_count;		// @ 04
 reg [31:0] ack_count;		// @ 08
 reg [12:0] capture_wadr;	// @ 0c
 reg [11:0] capture_radr;	// @ 10
-reg [fml_depth-1:0] capture_do;	// @ 14
+reg [fml_depth:0] capture_do;	// @ 14
 
-reg [fml_depth-1:0] capture_mem[0:4095];
+reg [fml_depth:0] capture_mem[0:4095];
 wire capture_en = ~capture_wadr[12];
 wire capture_we = capture_en & fml_stb_r & fml_ack_r;
 wire [11:0] capture_adr = capture_we ? capture_wadr[11:0] : capture_radr;
-wire [fml_depth-1:0] capture_di = fml_adr_r;
+wire [fml_depth:0] capture_di = {fml_we_r, fml_adr_r};
 
 always @(posedge sys_clk) begin
 	if(capture_we)

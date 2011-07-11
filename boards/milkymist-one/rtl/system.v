@@ -1313,6 +1313,7 @@ fmlmeter #(
 
 	.fml_stb(fml_stb),
 	.fml_ack(fml_ack),
+	.fml_we(fml_we),
 	.fml_adr(fml_adr)
 );
 `else
