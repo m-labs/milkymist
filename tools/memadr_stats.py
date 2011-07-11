@@ -74,13 +74,21 @@ print "Miss penalty:    %d" % param_misspenalty
 
 print "=======    Reading input...   ======="
 transaction_count = 0
+write_count = 0
 unordered_adrs = []
 for line in sys.stdin:
-	unordered_adrs.append(int(line, 16) >> 2) # express address in 32-bit words
+	adr = int(line, 16) >> 2 # express address in 32-bit words
+	unordered_adrs.append(adr)
+	if extract_bits(adr, param_capacity-2, 1) == 1:
+		write_count = write_count + 1
 	transaction_count += 1
 
 print "...done."
 print "Transaction count: %d" % transaction_count
+print "Writes:            %d%%" % (100*write_count/transaction_count)
+print "Reads:             %d%%" % (100*(transaction_count-write_count)/transaction_count)
+if write_count != 0:
+	print "Reads/Writes:      %.2f" % (float(transaction_count-write_count)/float(write_count))
 
 print "=======    Full reordering    ======="
 print "(window size, page hit rate, utilization)"
