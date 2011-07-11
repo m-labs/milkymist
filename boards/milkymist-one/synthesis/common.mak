@@ -30,7 +30,7 @@ build-rescue/system-routed.ncd: build-rescue/system.ncd
 	cd build-rescue && par -ol high -w system.ncd system-routed.ncd
 
 $(BUILDDIR)/system.bit: $(BUILDDIR)/system-routed.ncd
-	cd $(BUILDDIR) && bitgen -g LCK_cycle:6 -g Binary:Yes -w system-routed.ncd system.bit
+	cd $(BUILDDIR) && bitgen -g LCK_cycle:6 -g Binary:Yes -g INIT_9K:Yes -w system-routed.ncd system.bit
 
 $(BUILDDIR)/system.bin: $(BUILDDIR)/system.bit
 
