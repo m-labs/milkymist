@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,9 @@
 `timescale 1ns / 1ps
 
 `define ENABLE_VCD
-`define TEST_SOMETRANSFERS
+//`define TEST_SOMETRANSFERS
 //`define TEST_RANDOMTRANSFERS
+`define TEST_PEAK
 
 module tb_hpdmc();
 
@@ -376,6 +377,33 @@ always begin
 	$display(" Average write bandwidth: %f MBit/s @ 100MHz", (4/(4+write_clocks/writes))*64*100);
 	$display("=======================================================");
 
+`endif
+
+`ifdef TEST_PEAK
+	fml_adr = 32'h000000;
+	fml_stb = 1'b1;
+	fml_we = 1'b0;
+
+	n = 0;
+	while(n < 10) begin
+		while(~fml_ack) begin
+			waitclock;
+		end
+		waitclock;
+		n = n+1;
+	end
+	
+	/* generate page miss */
+	fml_adr = 32'h200000;
+	
+	n = 0;
+	while(n < 10) begin
+		while(~fml_ack) begin
+			waitclock;
+		end
+		waitclock;
+		n = n+1;
+	end
 `endif
 
 	$finish;
