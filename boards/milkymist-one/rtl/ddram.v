@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ module ddram #(
 	input [`SDRAM_DEPTH-1:0] fml_adr,
 	input fml_stb,
 	input fml_we,
-	output fml_ack,
+	output fml_eack,
 	input [7:0] fml_sel,
 	input [63:0] fml_di,
 	output [63:0] fml_do,
@@ -101,7 +101,7 @@ hpdmc #(
 	.fml_adr(fml_adr),
 	.fml_stb(fml_stb),
 	.fml_we(fml_we),
-	.fml_ack(fml_ack),
+	.fml_eack(fml_eack),
 	.fml_sel(fml_sel),
 	.fml_di(fml_di),
 	.fml_do(fml_do),

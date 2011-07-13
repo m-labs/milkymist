@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ module hpdmc_datactl(
 	output reg write_safe,
 	output [3:0] precharge_safe,
 
-	output reg ack,
 	output reg direction,
 	output direction_r,
 
@@ -46,7 +45,7 @@ always @(posedge sys_clk) begin
 		read_safe <= 1'b1;
 	end else begin
 		if(read) begin
-			read_safe_counter <= 3'd4;
+			read_safe_counter <= 3'd3;
 			read_safe <= 1'b0;
 		end else if(write) begin
 			/* after a write, read is unsafe for 5 cycles (4 transfers + tWTR=1) */
@@ -76,7 +75,7 @@ always @(posedge sys_clk) begin
 			write_safe_counter <= {1'b1, tim_cas, ~tim_cas};
 			write_safe <= 1'b0;
 		end else if(write) begin
-			write_safe_counter <= 3'd3;
+			write_safe_counter <= 3'd4;
 			write_safe <= 1'b0;
 		end else begin
 			if(write_safe_counter == 3'd1)
@@ -84,49 +83,6 @@ always @(posedge sys_clk) begin
 			if(~write_safe)
 				write_safe_counter <= write_safe_counter - 3'd1;
 		end
-	end
-end
-
-/* Generate ack signal.
- * After write is asserted, it should pulse after 2 cycles.
- * After read is asserted, it should pulse after CL+3 cycles, that is
- * 5 cycles when tim_cas = 0
- * 6 cycles when tim_cas = 1
- */
-
-reg ack_read3;
-reg ack_read2;
-reg ack_read1;
-reg ack_read0;
-
-always @(posedge sys_clk) begin
-	if(sdram_rst) begin
-		ack_read3 <= 1'b0;
-		ack_read2 <= 1'b0;
-		ack_read1 <= 1'b0;
-		ack_read0 <= 1'b0;
-	end else begin
-		if(tim_cas) begin
-			ack_read3 <= read;
-			ack_read2 <= ack_read3;
-			ack_read1 <= ack_read2;
-			ack_read0 <= ack_read1;
-		end else begin
-			ack_read2 <= read;
-			ack_read1 <= ack_read2;
-			ack_read0 <= ack_read1;
-		end
-	end
-end
-
-reg ack0;
-always @(posedge sys_clk) begin
-	if(sdram_rst) begin
-		ack0 <= 1'b0;
-		ack <= 1'b0;
-	end else begin
-		ack0 <= ack_read0|write;
-		ack <= ack0;
 	end
 end
 

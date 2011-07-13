@@ -562,7 +562,7 @@ wire [63:0]		fml_brg_dr,
 wire [`SDRAM_DEPTH-1:0] fml_adr;
 wire fml_stb;
 wire fml_we;
-wire fml_ack;
+wire fml_eack;
 wire [7:0] fml_sel;
 wire [63:0] fml_dw;
 wire [63:0] fml_dr;
@@ -634,7 +634,7 @@ fmlarb #(
 	.s_adr(fml_adr),
 	.s_stb(fml_stb),
 	.s_we(fml_we),
-	.s_ack(fml_ack),
+	.s_eack(fml_eack),
 	.s_sel(fml_sel),
 	.s_di(fml_dr),
 	.s_do(fml_dw)
@@ -942,7 +942,7 @@ ddram #(
 	.fml_adr(fml_adr),
 	.fml_stb(fml_stb),
 	.fml_we(fml_we),
-	.fml_ack(fml_ack),
+	.fml_eack(fml_eack),
 	.fml_sel(fml_sel),
 	.fml_di(fml_dw),
 	.fml_do(fml_dr),
@@ -1312,7 +1312,7 @@ fmlmeter #(
 	.csr_do(csr_dr_fmlmeter),
 
 	.fml_stb(fml_stb),
-	.fml_ack(fml_ack),
+	.fml_ack(fml_eack),
 	.fml_we(fml_we),
 	.fml_adr(fml_adr)
 );

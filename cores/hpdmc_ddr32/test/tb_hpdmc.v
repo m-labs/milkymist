@@ -18,9 +18,9 @@
 `timescale 1ns / 1ps
 
 `define ENABLE_VCD
-//`define TEST_SOMETRANSFERS
+`define TEST_SOMETRANSFERS
 //`define TEST_RANDOMTRANSFERS
-`define TEST_PEAK
+//`define TEST_PEAK
 
 module tb_hpdmc();
 
@@ -82,7 +82,7 @@ wire [31:0] csr_do;
 reg [25:0] fml_adr;
 reg fml_stb;
 reg fml_we;
-wire fml_ack;
+wire fml_eack;
 reg [7:0] fml_sel;
 reg [63:0] fml_di;
 wire [63:0] fml_do;
@@ -100,7 +100,7 @@ hpdmc dut(
 	.fml_adr(fml_adr),
 	.fml_stb(fml_stb),
 	.fml_we(fml_we),
-	.fml_ack(fml_ack),
+	.fml_eack(fml_eack),
 	.fml_sel(fml_sel),
 	.fml_di(fml_di),
 	.fml_do(fml_do),
@@ -165,23 +165,35 @@ real read_clocks;
 task readburst;
 input [31:0] address;
 integer i;
+integer b;
 begin
 	$display("READ  [%x]", address);
 	fml_adr = address;
 	fml_stb = 1'b1;
 	fml_we = 1'b0;
 	i = 0;
-	while(~fml_ack) begin
+	#1;
+	while(~fml_eack) begin
 		i = i+1;
 		waitclock;
 	end
-	$display("%t: Memory Read : %x=%x acked in %d clocks", $time, address, fml_do, i);
+	if(i == 0) begin
+		b = 1;
+		waitclock;
+	end else
+		b = 0;
+	$display("%t: Memory Read : %x early acked in %d clocks", $time, address, i);
 	fml_stb = 1'b0;
 	reads = reads + 1;
-	read_clocks = read_clocks + i;
-	for(i=0;i<3;i=i+1) begin
+	read_clocks = read_clocks + i + 5;
+	i = 0;
+	while(i < (4-b)) begin
+		i = i+1;
 		waitclock;
-		$display("%t: (R burst continuing)    %x", $time, fml_do);
+	end
+	for(i=0;i<4;i=i+1) begin
+		waitclock;
+		$display("%t: (R burst)    %x", $time, fml_do);
 	end
 	
 	waitclock;
@@ -194,6 +206,7 @@ real write_clocks;
 task writeburst;
 input [31:0] address;
 integer i;
+integer b;
 begin
 	$display("WRITE [%x]", address);
 	fml_adr = address;
@@ -202,18 +215,30 @@ begin
 	fml_sel = 8'hff;
 	fml_di = {$random, $random};
 	i = 0;
-	while(~fml_ack) begin
+	#1;
+	while(~fml_eack) begin
 		i = i+1;
 		waitclock;
 	end
-	$display("%t: Memory Write : %x=%x acked in %d clocks", $time, address, fml_di, i);
+	if(i == 0) begin
+		waitclock;
+		b = 1;
+	end else
+		b = 0;
+
+	$display("%t: Memory Write : %x=%x early acked in %d clocks", $time, address, fml_di, i);
 	fml_stb = 1'b0;
 	writes = writes + 1;
-	write_clocks = write_clocks + i;
+	write_clocks = write_clocks + i + 2;
+	i = 0;
+	while(i < (2-b)) begin
+		i = i+1;
+		waitclock;
+	end
 	for(i=0;i<3;i=i+1) begin
 		waitclock;
 		fml_di = {$random, $random};
-		$display("%t: (W burst continuing)    %x", $time, fml_di);
+		$display("%t: (W burst)    %x", $time, fml_di);
 	end
 
 	waitclock;
@@ -338,11 +363,13 @@ always begin
 	 * Try some transfers.
 	 */
 	writeburst(32'h00);
-	writeburst(32'h20);
+	writeburst(32'h200000);
+	//writeburst(32'h20);
 	//writeburst(32'h40);
 	
+	readburst(32'h200000);
 	readburst(32'h00);
-	readburst(32'h20);
+	//readburst(32'h20);
 	/*readburst(32'h40);
 	writeburst(32'h40);
 	readburst(32'h40);*/
@@ -386,7 +413,7 @@ always begin
 
 	n = 0;
 	while(n < 10) begin
-		while(~fml_ack) begin
+		while(~fml_eack) begin
 			waitclock;
 		end
 		waitclock;
@@ -398,7 +425,7 @@ always begin
 	
 	n = 0;
 	while(n < 10) begin
-		while(~fml_ack) begin
+		while(~fml_eack) begin
 			waitclock;
 		end
 		waitclock;

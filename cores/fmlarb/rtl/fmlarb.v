@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ module fmlarb #(
 	output reg [fml_depth-1:0] s_adr,
 	output reg s_stb,
 	output reg s_we,
-	input s_ack,
+	input s_eack,
 	output reg [7:0] s_sel,
 	input [63:0] s_di,
 	output reg [63:0] s_do
@@ -85,6 +85,13 @@ assign m2_do = s_di;
 assign m3_do = s_di;
 assign m4_do = s_di;
 assign m5_do = s_di;
+
+wire m0_stbm;
+wire m1_stbm;
+wire m2_stbm;
+wire m3_stbm;
+wire m4_stbm;
+wire m5_stbm;
 
 reg [2:0] master;
 reg [2:0] next_master;
@@ -102,114 +109,116 @@ always @(*) begin
 	next_master = master;
 	
 	case(master)
-		3'd0: if(~m0_stb | s_ack) begin
-			if(m1_stb) next_master = 3'd1;
-			else if(m2_stb) next_master = 3'd2;
-			else if(m3_stb) next_master = 3'd3;
-			else if(m4_stb) next_master = 3'd4;
-			else if(m5_stb) next_master = 3'd5;
+		3'd0: if(~m0_stbm | s_eack) begin
+			if(m1_stbm) next_master = 3'd1;
+			else if(m2_stbm) next_master = 3'd2;
+			else if(m3_stbm) next_master = 3'd3;
+			else if(m4_stbm) next_master = 3'd4;
+			else if(m5_stbm) next_master = 3'd5;
 		end
-		3'd1: if(~m1_stb | s_ack) begin
-			if(m0_stb) next_master = 3'd0;
-			else if(m3_stb) next_master = 3'd3;
-			else if(m4_stb) next_master = 3'd4;
-			else if(m5_stb) next_master = 3'd5;
-			else if(m2_stb) next_master = 3'd2;
+		3'd1: if(~m1_stbm | s_eack) begin
+			if(m0_stbm) next_master = 3'd0;
+			else if(m3_stbm) next_master = 3'd3;
+			else if(m4_stbm) next_master = 3'd4;
+			else if(m5_stbm) next_master = 3'd5;
+			else if(m2_stbm) next_master = 3'd2;
 		end
-		3'd2: if(~m2_stb | s_ack) begin
-			if(m0_stb) next_master = 3'd0;
-			else if(m3_stb) next_master = 3'd3;
-			else if(m4_stb) next_master = 3'd4;
-			else if(m5_stb) next_master = 3'd5;
-			else if(m1_stb) next_master = 3'd1;
+		3'd2: if(~m2_stbm | s_eack) begin
+			if(m0_stbm) next_master = 3'd0;
+			else if(m3_stbm) next_master = 3'd3;
+			else if(m4_stbm) next_master = 3'd4;
+			else if(m5_stbm) next_master = 3'd5;
+			else if(m1_stbm) next_master = 3'd1;
 		end
-		3'd3: if(~m3_stb | s_ack) begin
-			if(m0_stb) next_master = 3'd0;
-			else if(m4_stb) next_master = 3'd4;
-			else if(m5_stb) next_master = 3'd5;
-			else if(m1_stb) next_master = 3'd1;
-			else if(m2_stb) next_master = 3'd2;
+		3'd3: if(~m3_stbm | s_eack) begin
+			if(m0_stbm) next_master = 3'd0;
+			else if(m4_stbm) next_master = 3'd4;
+			else if(m5_stbm) next_master = 3'd5;
+			else if(m1_stbm) next_master = 3'd1;
+			else if(m2_stbm) next_master = 3'd2;
 		end
-		3'd4: if(~m4_stb | s_ack) begin
-			if(m0_stb) next_master = 3'd0;
-			else if(m5_stb) next_master = 3'd5;
-			else if(m1_stb) next_master = 3'd1;
-			else if(m2_stb) next_master = 3'd2;
-			else if(m3_stb) next_master = 3'd3;
+		3'd4: if(~m4_stbm | s_eack) begin
+			if(m0_stbm) next_master = 3'd0;
+			else if(m5_stbm) next_master = 3'd5;
+			else if(m1_stbm) next_master = 3'd1;
+			else if(m2_stbm) next_master = 3'd2;
+			else if(m3_stbm) next_master = 3'd3;
 		end
-		default: if(~m5_stb | s_ack) begin // 3'd5
-			if(m0_stb) next_master = 3'd0;
-			else if(m1_stb) next_master = 3'd1;
-			else if(m2_stb) next_master = 3'd2;
-			else if(m3_stb) next_master = 3'd3;
-			else if(m4_stb) next_master = 3'd4;
+		default: if(~m5_stbm | s_eack) begin // 3'd5
+			if(m0_stbm) next_master = 3'd0;
+			else if(m1_stbm) next_master = 3'd1;
+			else if(m2_stbm) next_master = 3'd2;
+			else if(m3_stbm) next_master = 3'd3;
+			else if(m4_stbm) next_master = 3'd4;
 		end
 	endcase
 end
-
-/* Generate ack signals */
-assign m0_ack = (master == 3'd0) & s_ack;
-assign m1_ack = (master == 3'd1) & s_ack;
-assign m2_ack = (master == 3'd2) & s_ack;
-assign m3_ack = (master == 3'd3) & s_ack;
-assign m4_ack = (master == 3'd4) & s_ack;
-assign m5_ack = (master == 3'd5) & s_ack;
 
 /* Mux control signals */
 always @(*) begin
 	case(master)
 		3'd0: begin
 			s_adr = m0_adr;
-			s_stb = m0_stb;
+			s_stb = m0_stbm;
 			s_we = m0_we;
 		end
 		3'd1: begin
 			s_adr = m1_adr;
-			s_stb = m1_stb;
+			s_stb = m1_stbm;
 			s_we = m1_we;
 		end
 		3'd2: begin
 			s_adr = m2_adr;
-			s_stb = m2_stb;
+			s_stb = m2_stbm;
 			s_we = m2_we;
 		end
 		3'd3: begin
 			s_adr = m3_adr;
-			s_stb = m3_stb;
+			s_stb = m3_stbm;
 			s_we = m3_we;
 		end
 		3'd4: begin
 			s_adr = m4_adr;
-			s_stb = m4_stb;
+			s_stb = m4_stbm;
 			s_we = m4_we;
 		end
 		default: begin // 3'd5
 			s_adr = m5_adr;
-			s_stb = m5_stb;
+			s_stb = m5_stbm;
 			s_we = m5_we;
 		end
 	endcase
 end
 
+
+/* Generate delayed ack signals and masked strobes */
+fmlarb_dack dack0(.sys_clk(sys_clk), .sys_rst(sys_rst),
+	.stb(m0_stb), .eack((master == 3'd0) & s_eack), .we(m0_we),
+	.stbm(m0_stbm), .ack(m0_ack));
+fmlarb_dack dack1(.sys_clk(sys_clk), .sys_rst(sys_rst),
+	.stb(m1_stb), .eack((master == 3'd1) & s_eack), .we(m1_we),
+	.stbm(m1_stbm), .ack(m1_ack));
+fmlarb_dack dack2(.sys_clk(sys_clk), .sys_rst(sys_rst),
+	.stb(m2_stb), .eack((master == 3'd2) & s_eack), .we(m2_we),
+	.stbm(m2_stbm), .ack(m2_ack));
+fmlarb_dack dack3(.sys_clk(sys_clk), .sys_rst(sys_rst),
+	.stb(m3_stb), .eack((master == 3'd3) & s_eack), .we(m3_we),
+	.stbm(m3_stbm), .ack(m3_ack));
+fmlarb_dack dack4(.sys_clk(sys_clk), .sys_rst(sys_rst),
+	.stb(m4_stb), .eack((master == 3'd4) & s_eack), .we(m4_we),
+	.stbm(m4_stbm), .ack(m4_ack));
+fmlarb_dack dack5(.sys_clk(sys_clk), .sys_rst(sys_rst),
+	.stb(m5_stb), .eack((master == 3'd5) & s_eack), .we(m5_we),
+	.stbm(m5_stbm), .ack(m5_ack));
+
 /* Mux data write signals */
-
-wire write_burst_start = s_we & s_ack;
-
 reg [2:0] wmaster;
-reg [1:0] burst_counter;
 
 always @(posedge sys_clk) begin
-	if(sys_rst) begin
+	if(sys_rst)
 		wmaster <= 3'd0;
-		burst_counter <= 2'd0;
-	end else begin
-		if(|burst_counter)
-			burst_counter <= burst_counter - 2'd1;
-		if(write_burst_start)
-			burst_counter <= 2'd2;
-		if(~write_burst_start & ~(|burst_counter))
-			wmaster <= next_master;
-	end
+	else if(s_we & s_eack)
+		wmaster <= master;
 end
 
 always @(*) begin

@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ module hpdmc #(
 	input [sdram_depth-1:0] fml_adr,
 	input fml_stb,
 	input fml_we,
-	output fml_ack,
+	output fml_eack,
 	input [7:0] fml_sel,
 	input [63:0] fml_di,
 	output [63:0] fml_do,
@@ -162,11 +162,6 @@ hpdmc_ctlif #(
 );
 
 /* SDRAM management unit */
-wire mgmt_stb;
-wire mgmt_we;
-wire [sdram_depth-3-1:0] mgmt_address;
-wire mgmt_ack;
-
 wire read;
 wire write;
 wire [3:0] concerned_bank;
@@ -186,10 +181,10 @@ hpdmc_mgmt #(
 	.tim_refi(tim_refi),
 	.tim_rfc(tim_rfc),
 	
-	.stb(mgmt_stb),
-	.we(mgmt_we),
-	.address(mgmt_address),
-	.ack(mgmt_ack),
+	.stb(fml_stb),
+	.we(fml_we),
+	.address(fml_adr[sdram_depth-1:3]),
+	.ack(fml_eack),
 	
 	.read(read),
 	.write(write),
@@ -206,28 +201,6 @@ hpdmc_mgmt #(
 	.sdram_ba(sdram_ba_mgmt)
 );
 
-/* Bus interface */
-wire data_ack;
-
-hpdmc_busif #(
-	.sdram_depth(sdram_depth)
-) busif (
-	.sys_clk(sys_clk),
-	.sdram_rst(sdram_rst),
-	
-	.fml_adr(fml_adr),
-	.fml_stb(fml_stb),
-	.fml_we(fml_we),
-	.fml_ack(fml_ack),
-	
-	.mgmt_stb(mgmt_stb),
-	.mgmt_we(mgmt_we),
-	.mgmt_address(mgmt_address),
-	.mgmt_ack(mgmt_ack),
-	
-	.data_ack(data_ack)
-);
-
 /* Data path controller */
 wire direction;
 
@@ -242,7 +215,6 @@ hpdmc_datactl datactl(
 	.write_safe(write_safe),
 	.precharge_safe(precharge_safe),
 	
-	.ack(data_ack),
 	.direction(direction),
 	
 	.tim_cas(tim_cas),
