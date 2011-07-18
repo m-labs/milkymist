@@ -1,7 +1,7 @@
 # Usage: make TB=test_bench_file.v [ARBSRC=/path_to/fmlarb.v]
 #
 
-ARBSRC?=../../fmlarb/rtl/fmlarb.v
+ARBSRC?=$(wildcard ../../fmlarb/rtl/*)
 SOURCES= \
 ../rtl/tmu2_adrgen.v \
 ../rtl/tmu2_clamp.v \

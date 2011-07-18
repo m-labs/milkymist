@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,7 +136,7 @@ tmu2_ctlif #(
 	.alpha(alpha)
 );
 
-/* Stage 1 - Fetch vertices */
+/* Stage - Fetch vertices */
 wire fetchvertex_busy;
 wire fetchvertex_pipe_stb;
 wire fetchvertex_pipe_ack;
@@ -187,7 +187,7 @@ tmu2_fetchvertex fetchvertex(
 	.dry(dry)
 );
 
-/* Stage 2 - Vertical interpolation division operands */
+/* Stage - Vertical interpolation division operands */
 wire vdivops_busy;
 wire vdivops_pipe_stb;
 wire vdivops_pipe_ack;
@@ -243,7 +243,7 @@ tmu2_vdivops vdivops(
 	.dry_f(dry_f)
 );
 
-/* Stage 3 - Vertical division */
+/* Stage - Vertical division */
 wire vdiv_busy;
 wire vdiv_pipe_stb;
 wire vdiv_pipe_ack;
@@ -313,7 +313,7 @@ tmu2_vdiv vdiv(
 	.dry_f(dry_f2)
 );
 
-/* Stage 4 - Vertical interpolation */
+/* Stage - Vertical interpolation */
 wire vinterp_busy;
 wire vinterp_pipe_stb;
 wire vinterp_pipe_ack;
@@ -363,7 +363,7 @@ tmu2_vinterp vinterp(
 	.tey(tey)
 );
 
-/* Stage 5 - Horizontal interpolation division operands */
+/* Stage - Horizontal interpolation division operands */
 wire hdivops_busy;
 wire hdivops_pipe_stb;
 wire hdivops_pipe_ack;
@@ -403,7 +403,7 @@ tmu2_hdivops hdivops(
 	.diff_y(diff_y)
 );
 
-/* Stage 6 - Horizontal division */
+/* Stage - Horizontal division */
 wire hdiv_busy;
 wire hdiv_pipe_stb;
 wire hdiv_pipe_ack;
@@ -451,7 +451,7 @@ tmu2_hdiv hdiv(
 	.diff_y_r(diff_y_r)
 );
 
-/* Stage 7 - Horizontal interpolation */
+/* Stage - Horizontal interpolation */
 wire hinterp_busy;
 wire hinterp_pipe_stb;
 wire hinterp_pipe_ack;
@@ -489,7 +489,7 @@ tmu2_hinterp hinterp(
 	.ty(ty)
 );
 
-/* Stage 8 - Mask texture coordinates */
+/* Stage - Mask texture coordinates */
 wire mask_busy;
 wire mask_pipe_stb;
 wire mask_pipe_ack;
@@ -522,7 +522,7 @@ tmu2_mask mask(
 	.ty_m(ty_m)
 );
 
-/* Stage 9 - Clamp texture coordinates and filter out off-screen points */
+/* Stage - Clamp texture coordinates and filter out off-screen points */
 wire clamp_busy;
 wire clamp_pipe_stb;
 wire clamp_pipe_ack;
@@ -557,7 +557,7 @@ tmu2_clamp clamp(
 	.ty_c(ty_c)
 );
 
-/* Stage 10 - Address generator */
+/* Stage - Address generator */
 wire adrgen_busy;
 wire adrgen_pipe_stb;
 wire adrgen_pipe_ack;
@@ -600,7 +600,7 @@ tmu2_adrgen #(
 	.y_frac(y_frac)
 );
 
-/* Stage 11a - Buffer */
+/* Stage - Buffer */
 wire buffer1_busy;
 wire buffer1_pipe_stb;
 wire buffer1_pipe_ack;
@@ -629,7 +629,7 @@ tmu2_buffer #(
 	.dat_o({dadr_buf, tadra_buf, tadrb_buf, tadrc_buf, tadrd_buf, x_frac_buf, y_frac_buf})
 );
 
-/* Stage 11b - Texel cache */
+/* Stage - Texel cache */
 wire texcache_busy;
 wire texcache_pipe_stb;
 wire texcache_pipe_ack;
@@ -677,7 +677,7 @@ tmu2_texcache #(
 	.y_frac_f(y_frac_f)
 );
 
-/* Stage 11c - Buffer */
+/* Stage - Buffer */
 wire buffer2_busy;
 wire buffer2_pipe_stb;
 wire buffer2_pipe_ack;
@@ -706,7 +706,7 @@ tmu2_buffer #(
 	.dat_o({dadr_f_buf, tcolora_buf, tcolorb_buf, tcolorc_buf, tcolord_buf, x_frac_f_buf, y_frac_f_buf})
 );
 
-/* Stage 11 - Blend neighbouring pixels for bilinear filtering */
+/* Stage - Blend neighbouring pixels for bilinear filtering */
 wire blend_busy;
 wire blend_pipe_stb;
 wire blend_pipe_ack;
@@ -736,7 +736,7 @@ tmu2_blend #(
 	.color(color)
 );
 
-/* Stage 11 - Apply decay effect and chroma key filtering. */
+/* Stage - Apply decay effect and chroma key filtering. */
 wire decay_busy;
 wire decay_pipe_stb;
 wire decay_pipe_ack;
@@ -767,7 +767,7 @@ tmu2_decay #(
 );
 
 `ifdef TMU_HAS_ALPHA
-/* Stage 12 - Fetch destination pixel for alpha blending */
+/* Stage - Fetch destination pixel for alpha blending */
 wire fdest_busy;
 wire fdest_pipe_stb;
 wire fdest_pipe_ack;
@@ -803,7 +803,7 @@ tmu2_fdest #(
 	.dcolor(dcolor)
 );
 
-/* Stage 13 - Alpha blending */
+/* Stage - Alpha blending */
 wire alpha_busy;
 wire alpha_pipe_stb;
 wire alpha_pipe_ack;
@@ -837,7 +837,7 @@ assign fmldr_adr = {fml_depth{1'bx}};
 assign fmldr_stb = 1'b0;
 `endif
 
-/* Stage 14 - Burst assembler */
+/* Stage - Burst assembler */
 reg burst_flush;
 wire burst_busy;
 wire burst_pipe_stb;
@@ -874,7 +874,7 @@ tmu2_burst #(
 	.burst_do(burst_do)
 );
 
-/* Stage 15 - Pixel output */
+/* Stage - Pixel output */
 wire pixout_busy;
 
 tmu2_pixout #(

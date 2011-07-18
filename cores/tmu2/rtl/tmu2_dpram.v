@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,60 +15,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Double-port RAM with double write-capable port */
+/* Double port RAM (1 read-only + 1 write-only), read-through */
 
 module tmu2_dpram #(
 	parameter depth = 11, /* < log2 of the capacity in words */
 	parameter width = 32
 ) (
 	input sys_clk,
-	input ce,
 
-	input [depth-1:0] a,
+	input [depth-1:0] ra,
+	input re,
+	output [width-1:0] rd,
+
+	input [depth-1:0] wa,
 	input we,
-	input [width-1:0] di,
-	output reg [width-1:0] do,
-
-	input [depth-1:0] a2,
-	input we2,
-	input [width-1:0] di2,
-	output reg [width-1:0] do2
+	input [width-1:0] wd
 );
 
 reg [width-1:0] ram[0:(1 << depth)-1];
 
-reg [width-1:0] do_tmp;
+reg [depth-1:0] rar;
 
 always @(posedge sys_clk) begin
-	if(ce) begin
-		if(we)
-			ram[a] <= di;
-		do_tmp <= ram[a];
-		do <= do_tmp;
-	end
+	if(re)
+		rar <= ra;
+	if(we)
+		ram[wa] <= wd;
 end
 
-reg [width-1:0] do2_tmp;
+assign rd = ram[rar];
 
-always @(posedge sys_clk) begin
-	if(ce) begin
-		if(we2)
-			ram[a2] <= di2;
-		do2_tmp <= ram[a2];
-		do2 <= do2_tmp;
-	end
-end
 
 // synthesis translate_off
-
-/*
- * For some reason, in Verilog the result of an undefined multiplied by zero
- * seems to be undefined.
- * This causes problems with pixels that texcache won't fetch because some fractional
- * parts are zero: the blend unit yields an undefined result on those, instead of ignoring
- * the contribution of the undefined pixel.
- * Work around this by initializing the memories.
- */
 
 integer i;
 initial begin
