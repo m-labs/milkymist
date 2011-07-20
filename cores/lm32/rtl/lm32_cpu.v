@@ -19,6 +19,11 @@
 // Title            : Top-level of CPU.
 // Dependencies     : lm32_include.v
 //
+// Version 3.8
+// 1. Feature: Support for dynamically switching EBA to DEBA via a GPIO.
+// 2. Bug: EA now reports instruction that caused the data abort, rather than
+//    next instruction.
+//
 // Version 3.4
 // 1. Bug Fix: In a tight infinite loop (add, sw, bi) incoming interrupts were 
 //    never serviced.
@@ -75,6 +80,11 @@ module lm32_cpu (
     clk_n_i,
 `endif    
     rst_i,
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+    at_debug,
+ `endif
+`endif
     // From external devices
 `ifdef CFG_INTERRUPTS_ENABLED
     interrupt,
@@ -214,6 +224,12 @@ input clk_i;                                    // Clock
 input clk_n_i;                                  // Inverted clock
 `endif    
 input rst_i;                                    // Reset
+
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+   input at_debug;                              // GPIO input that maps EBA to DEBA
+ `endif
+`endif
 
 `ifdef CFG_INTERRUPTS_ENABLED
 input [`LM32_INTERRUPT_RNG] interrupt;          // Interrupt pins
@@ -543,7 +559,6 @@ reg rotate_x;
 `endif
 wire direction_d;                               // Which direction to shift in
 reg direction_x;                                        
-reg direction_m;
 wire [`LM32_WORD_RNG] shifter_result_m;         // Result of shifter
 `endif
 `ifdef CFG_MC_BARREL_SHIFT_ENABLED
@@ -763,6 +778,11 @@ lm32_instruction_unit #(
     // ----- Inputs -------
     .clk_i                  (clk_i),
     .rst_i                  (rst_i),
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+    .at_debug               (at_debug),
+ `endif
+`endif
     // From pipeline
     .stall_a                (stall_a),
     .stall_f                (stall_f),
@@ -800,7 +820,6 @@ lm32_instruction_unit #(
     .i_dat_i                (I_DAT_I),
     .i_ack_i                (I_ACK_I),
     .i_err_i                (I_ERR_I),
-    .i_rty_i                (I_RTY_I),
 `endif
 `ifdef CFG_HW_DEBUG_ENABLED
     .jtag_read_enable       (jtag_read_enable),
@@ -2352,9 +2371,6 @@ begin
         exception_m <= `FALSE;
         load_m <= `FALSE;
         store_m <= `FALSE;
-`ifdef CFG_PL_BARREL_SHIFT_ENABLED
-        direction_m <= `FALSE;
-`endif
         write_enable_m <= `FALSE;            
         write_idx_m <= {`LM32_REG_IDX_WIDTH{1'b0}};
         condition_met_m <= `FALSE;
@@ -2478,9 +2494,6 @@ begin
 `endif
             end
             m_bypass_enable_m <= m_bypass_enable_x;
-`ifdef CFG_PL_BARREL_SHIFT_ENABLED
-            direction_m <= direction_x;
-`endif
             load_m <= load_x;
             store_m <= store_x;
 `ifdef CFG_FAST_UNCONDITIONAL_BRANCH    
@@ -2512,6 +2525,10 @@ begin
 `ifdef CFG_DEBUG_ENABLED
 	   if (exception_x == `TRUE)
 	     if ((dc_re == `TRUE)
+`ifdef CFG_ALTERNATE_EBA
+         || (at_debug == `TRUE)
+`endif
+
 		 || ((debug_exception_x == `TRUE) 
 		     && (non_debug_exception_x == `FALSE)))
 	       branch_target_m <= {deba, eid_x, {3{1'b0}}};
@@ -2582,6 +2599,7 @@ begin
 `endif
 `ifdef CFG_BUS_ERRORS_ENABLED
         if (   (stall_m == `FALSE)
+            && (data_bus_error_exception == `FALSE)
             && (   (load_q_m == `TRUE) 
                 || (store_q_m == `TRUE)
                )
