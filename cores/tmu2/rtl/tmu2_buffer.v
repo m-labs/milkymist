@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,8 @@
  */
 
 module tmu2_buffer #(
-	parameter width = 8
+	parameter width = 8,
+	parameter depth = 1 /* < log2 of the storage size, in words */
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -32,53 +33,48 @@ module tmu2_buffer #(
 	output [width-1:0] dat_o
 );
 
-reg [width-1:0] storage1;
-reg [width-1:0] storage2;
+reg [width-1:0] storage[0:(1 << depth)-1];
 
-reg produce;
-reg consume;
-reg [1:0] level;
+reg [depth-1:0] produce;
+reg [depth-1:0] consume;
+reg [depth:0] level;
 
 wire inc = pipe_stb_i & pipe_ack_o;
 wire dec = pipe_stb_o & pipe_ack_i;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
-		produce <= 1'b0;
-		consume <= 1'b0;
+		produce <= 0;
+		consume <= 0;
 	end else begin
 		if(inc)
-			produce <= ~produce;
+			produce <= produce + 1;
 		if(dec)
-			consume <= ~consume;
+			consume <= consume + 1;
 	end
 end
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
-		level <= 2'd0;
+		level <= 0;
 	else begin
 		case({inc, dec})
-			2'b10: level <= level + 2'd1;
-			2'b01: level <= level - 2'd1;
+			2'b10: level <= level + 1;
+			2'b01: level <= level - 1;
 			default:;
 		endcase
 	end
 end
 
 always @(posedge sys_clk) begin
-	if(inc) begin
-		if(produce)
-			storage2 <= dat_i;
-		else
-			storage1 <= dat_i;
-	end
+	if(inc)
+		storage[produce] <= dat_i;
 end
 
-assign dat_o = consume ? storage2 : storage1;
+assign dat_o = storage[consume];
 
 assign busy = |level;
-assign pipe_ack_o = ~level[1];
+assign pipe_ack_o = ~level[depth];
 assign pipe_stb_o = |level;
 
 endmodule
