@@ -36,6 +36,11 @@ module lm32_top (
     // ----- Inputs -------
     clk_i,
     rst_i,
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+    at_debug,
+ `endif
+`endif
     // From external devices
 `ifdef CFG_INTERRUPTS_ENABLED
     interrupt,
@@ -97,6 +102,12 @@ module lm32_top (
 
 input clk_i;                                    // Clock
 input rst_i;                                    // Reset
+
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+   input at_debug;                              // GPIO input that maps EBA to DEBA
+ `endif
+`endif
 
 `ifdef CFG_INTERRUPTS_ENABLED
 input [`LM32_INTERRUPT_RNG] interrupt;          // Interrupt pins
@@ -223,6 +234,11 @@ lm32_cpu cpu (
     .clk_n_i               (clk_n),
 `endif
     .rst_i                 (rst_i),
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+    .at_debug              (at_debug),
+ `endif
+`endif
     // From external devices
 `ifdef CFG_INTERRUPTS_ENABLED
     .interrupt             (interrupt),

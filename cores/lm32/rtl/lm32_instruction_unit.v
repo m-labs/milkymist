@@ -42,6 +42,9 @@
 //              : instruction cache) to lock up in to an infinite loop due to a 
 //              : instruction bus error when EBA was set to instruction inline
 //              : memory.
+// Version      : 3.8 
+//              : Feature: Support for dynamically switching EBA to DEBA via a 
+//              : GPIO.
 // =============================================================================
 
 `include "lm32_include.v"
@@ -54,6 +57,11 @@ module lm32_instruction_unit (
     // ----- Inputs -------
     clk_i,
     rst_i,
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+    at_debug,
+ `endif
+`endif
     // From pipeline
     stall_a,
     stall_f,
@@ -91,7 +99,6 @@ module lm32_instruction_unit (
     i_dat_i,
     i_ack_i,
     i_err_i,
-    i_rty_i,
 `endif
 `ifdef CFG_HW_DEBUG_ENABLED
     jtag_read_enable,
@@ -162,6 +169,12 @@ localparam addr_offset_msb = (addr_offset_lsb+addr_offset_width-1);
 input clk_i;                                            // Clock
 input rst_i;                                            // Reset
 
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+   input at_debug;                                      // GPIO input that maps EBA to DEBA
+ `endif
+`endif
+
 input stall_a;                                          // Stall A stage instruction
 input stall_f;                                          // Stall F stage instruction
 input stall_d;                                          // Stall D stage instruction
@@ -202,7 +215,6 @@ input irom_we_xm;                                       // Indicates if memory o
 input [`LM32_WORD_RNG] i_dat_i;                         // Instruction Wishbone interface read data
 input i_ack_i;                                          // Instruction Wishbone interface acknowledgement
 input i_err_i;                                          // Instruction Wishbone interface error
-input i_rty_i;                                          // Instruction Wishbone interface retry
 `endif
 
 `ifdef CFG_HW_DEBUG_ENABLED
@@ -334,6 +346,10 @@ reg bus_error_f;                                        // Indicates if a bus er
 
 `ifdef CFG_HW_DEBUG_ENABLED
 reg jtag_access;                                        // Indicates if a JTAG WB access is in progress
+`endif
+
+`ifdef CFG_ALTERNATE_EBA
+reg alternate_eba_taken;
 `endif
 
 /////////////////////////////////////////////////////
@@ -547,7 +563,18 @@ always @(posedge clk_i `CFG_RESET_SENSITIVITY)
 begin
     if (rst_i == `TRUE)
     begin
+`ifdef CFG_DEBUG_ENABLED
+ `ifdef CFG_ALTERNATE_EBA
+        if (at_debug == `TRUE)
+            pc_f <= (`CFG_DEBA_RESET-4)/4;
+        else
+            pc_f <= (`CFG_EBA_RESET-4)/4;
+ `else
         pc_f <= (`CFG_EBA_RESET-4)/4;
+ `endif
+`else
+        pc_f <= (`CFG_EBA_RESET-4)/4;
+`endif
         pc_d <= {`LM32_PC_WIDTH{1'b0}};
         pc_x <= {`LM32_PC_WIDTH{1'b0}};
         pc_m <= {`LM32_PC_WIDTH{1'b0}};
