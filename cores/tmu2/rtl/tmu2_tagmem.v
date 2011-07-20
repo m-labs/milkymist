@@ -280,13 +280,13 @@ always @(*) begin
 			busy = 1'b1;
 			tag_we = 1'b1;
 			missmask_we = 1'b1;
-			if(missd_a)
+			if(missd_a & missmask[0])
 				tag_sel = 2'd0;
-			else if(missd_b)
+			else if(missd_b & missmask[1])
 				tag_sel = 2'd1;
-			else if(missd_c)
+			else if(missd_c & missmask[2])
 				tag_sel = 2'd2;
-			else if(missd_d)
+			else if(missd_d & missmask[3])
 				tag_sel = 2'd3;
 			else begin
 				tag_we = 1'b0;
