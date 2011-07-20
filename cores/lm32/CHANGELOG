@@ -1,3 +1,5 @@
+* 2011-07-20 mwalle Upgrade to LatticeMico32 3.8
+
 * 2011-03-03 lekernel Patch from Wesley W. Terpstra (GSI)
   Support register file backed by ram blocks
   Fix a minor problem where compilation fails when interrupts are not supported
