@@ -159,9 +159,8 @@ reg lead_d_r;
 always @(posedge sys_clk) begin
 	if(sys_rst)
 		req_valid <= 1'b0;
-	else if(tag_re)
+	else if(tag_re) begin
 		req_valid <= pipe_stb_i;
-	if(tag_re) begin
 		ct_a_r <= tadra[fml_depth-1:cache_depth];
 		ct_b_r <= tadrb[fml_depth-1:cache_depth];
 		ct_c_r <= tadrc[fml_depth-1:cache_depth];
@@ -193,6 +192,31 @@ always @(*) begin
 	endcase
 end
 
+/* Miss mask */
+reg [3:0] missmask;
+
+reg missmask_init;
+reg missmask_we;
+
+always @(posedge sys_clk) begin
+	if(missmask_init) begin
+		case(tag_sel)
+			2'd0: missmask <= 4'b1110;
+			2'd1: missmask <= 4'b1101;
+			2'd2: missmask <= 4'b1011;
+			default: missmask <= 4'b0111;
+		endcase
+	end
+	if(missmask_we) begin
+		case(tag_sel)
+			2'd0: missmask <= missmask & 4'b1110;
+			2'd1: missmask <= missmask & 4'b1101;
+			2'd2: missmask <= missmask & 4'b1011;
+			default: missmask <= missmask & 4'b0111;
+		endcase
+	end
+end
+
 /* Control logic */
 reg state;
 reg next_state;
@@ -212,17 +236,23 @@ always @(*) begin
 	
 	pipe_ack_o = 1'b0;
 	pipe_stb_o = 1'b0;
+	busy = 1'b0;
 	
 	tag_re = 1'b0;
 	tag_we = 1'b0;
 	tag_sel = 2'd0;
 	
+	missmask_init = 1'b0;
+	missmask_we = 1'b0;
+	
 	case(state)
 		RUNNING: begin
 			pipe_ack_o = 1'b1;
 			tag_re = 1'b1;
+			missmask_init = 1'b1;
 			if(req_valid) begin
 				pipe_stb_o = 1'b1;
+				busy = 1'b1;
 				tag_we = 1'b1;
 				if(missd_a)
 					tag_sel = 2'd0;
@@ -247,7 +277,9 @@ always @(*) begin
 			end
 		end
 		RESOLVE_MISS: begin
+			busy = 1'b1;
 			tag_we = 1'b1;
+			missmask_we = 1'b1;
 			if(missd_a)
 				tag_sel = 2'd0;
 			else if(missd_b)
