@@ -79,4 +79,6 @@ always @(posedge sys_clk) begin
 		bcount <= bcount - 2'd1;
 end
 
+assign busy = pipe_stb_o | fml_stb_o;
+
 endmodule

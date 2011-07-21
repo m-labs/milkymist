@@ -15,7 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-module tmu2_fifo64to256(
+module tmu2_fifo64to256 #(
+	parameter depth = 2 /* < log2 of the capacity, in 256-bit words */
+) (
 	input sys_clk,
 	input sys_rst,
 	
@@ -28,39 +30,45 @@ module tmu2_fifo64to256(
 	output [255:0] rd
 );
 
-reg [63:0] storage1[0:3];
-reg [63:0] storage2[0:3];
-reg [63:0] storage3[0:3];
-reg [63:0] storage4[0:3];
+reg [63:0] storage1[0:(1 << depth)-1];
+reg [63:0] storage2[0:(1 << depth)-1];
+reg [63:0] storage3[0:(1 << depth)-1];
+reg [63:0] storage4[0:(1 << depth)-1];
 
-reg [4:0] level;
-reg [3:0] produce;
-reg [1:0] consume;
+reg [depth+2:0] level;
+reg [depth+1:0] produce;
+reg [depth-1:0] consume;
 
-wire wavail = ~level[4];
-wire w8avail = ~level[4] & ~level[3];
-wire ravail = |(level[4:2]);
+wire wavail = ~level[depth+2];
+wire w8avail = level < ((1 << (depth + 2)) - 8);
+wire ravail = |(level[depth+2:2]);
 
 wire read = re & ravail;
 wire write = we & wavail;
 
 always @(posedge sys_clk) begin
-	if(read)
-		consume <= consume + 2'd1;
-	if(write) begin
-		produce <= produce + 4'd1;
-		case(produce[1:0])
-			2'd0: storage1[produce[3:2]] <= wd;
-			2'd1: storage2[produce[3:2]] <= wd;
-			2'd2: storage3[produce[3:2]] <= wd;
-			2'd3: storage4[produce[3:2]] <= wd;
+	if(sys_rst) begin
+		level = 0;
+		produce = 0;
+		consume = 0;
+	end else begin
+		if(read)
+			consume <= consume + 1;
+		if(write) begin
+			produce <= produce + 1;
+			case(produce[1:0])
+				2'd0: storage1[produce[3:2]] <= wd;
+				2'd1: storage2[produce[3:2]] <= wd;
+				2'd2: storage3[produce[3:2]] <= wd;
+				2'd3: storage4[produce[3:2]] <= wd;
+			endcase
+		end
+		case({read, write})
+			2'b10: level <= level - 4;
+			2'b01: level <= level + 1;
+			2'b11: level <= level - 3;
 		endcase
 	end
-	case({read, write})
-		2'b10: level <= level - 5'd4;
-		2'b01: level <= level + 5'd1;
-		2'b11: level <= level - 5'd3;
-	endcase
 end
 
 assign rd = {storage1[consume], storage2[consume], storage3[consume], storage4[consume]};
