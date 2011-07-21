@@ -600,10 +600,10 @@ tmu2_adrgen #(
 	.y_frac(y_frac)
 );
 
-/* Stage - Texel cache */
-wire texcache_busy;
-wire texcache_pipe_stb;
-wire texcache_pipe_ack;
+/* Stage - Texel memory unit */
+wire texmem_busy;
+wire texmem_pipe_stb;
+wire texmem_pipe_ack;
 wire [fml_depth-1-1:0] dadr_f;
 wire [15:0] tcolora;
 wire [15:0] tcolorb;
@@ -612,10 +612,10 @@ wire [15:0] tcolord;
 wire [5:0] x_frac_f;
 wire [5:0] y_frac_f;
 
-tmu2_texcache #(
+tmu2_texmem #(
 	.cache_depth(texel_cache_depth),
 	.fml_depth(fml_depth)
-) texcache (
+) texmem (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
@@ -625,7 +625,7 @@ tmu2_texcache #(
 	.fml_di(fmlr_di),
 
 	.flush(start),
-	.busy(texcache_busy),
+	.busy(texmem_busy),
 
 	.pipe_stb_i(adrgen_pipe_stb),
 	.pipe_ack_o(adrgen_pipe_ack),
@@ -637,8 +637,8 @@ tmu2_texcache #(
 	.x_frac(x_frac),
 	.y_frac(y_frac),
 
-	.pipe_stb_o(texcache_pipe_stb),
-	.pipe_ack_i(texcache_pipe_ack),
+	.pipe_stb_o(texmem_pipe_stb),
+	.pipe_ack_i(texmem_pipe_ack),
 	.dadr_f(dadr_f),
 	.tcolora(tcolora),
 	.tcolorb(tcolorb),
@@ -662,8 +662,8 @@ tmu2_blend #(
 	.sys_rst(sys_rst),
 
 	.busy(blend_busy),
-	.pipe_stb_i(texcache_pipe_stb),
-	.pipe_ack_o(texcache_pipe_ack),
+	.pipe_stb_i(texmem_pipe_stb),
+	.pipe_ack_o(texmem_pipe_ack),
 	.dadr(dadr_f),
 	.colora(tcolora),
 	.colorb(tcolorb),
@@ -846,7 +846,7 @@ wire pipeline_busy = fetchvertex_busy
 	|vdivops_busy|vdiv_busy|vinterp_busy
 	|hdivops_busy|hdiv_busy|hinterp_busy
 	|mask_busy|clamp_busy
-	|texcache_busy
+	|texmem_busy
 	|blend_busy|decay_busy
 `ifdef TMU_HAS_ALPHA
 	|fdest_busy|alpha_busy
