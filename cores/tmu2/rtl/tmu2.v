@@ -845,7 +845,7 @@ tmu2_pixout #(
 wire pipeline_busy = fetchvertex_busy
 	|vdivops_busy|vdiv_busy|vinterp_busy
 	|hdivops_busy|hdiv_busy|hinterp_busy
-	|mask_busy|clamp_busy
+	|mask_busy|adrgen_busy|clamp_busy
 	|texmem_busy
 	|blend_busy|decay_busy
 `ifdef TMU_HAS_ALPHA
