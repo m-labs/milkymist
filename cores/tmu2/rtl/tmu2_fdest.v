@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ always @(posedge sys_clk) begin
 		if(flush)
 			valid <= 1'b0;
 		if(pipe_stb_i & pipe_ack_o) begin
-			hit <= tag == dadr[fml_depth-1-1:4];
+			hit <= valid & (tag == dadr[fml_depth-1-1:4]);
 			dadr_r <= dadr;
 		end
 	end
