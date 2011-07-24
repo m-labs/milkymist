@@ -45,12 +45,10 @@ reg [1:0] ralc;
 reg [1:0] rald;
 
 always @(posedge sys_clk) begin
-	if(re) begin
-		rala <= raa[2:1];
-		ralb <= rab[2:1];
-		ralc <= rac[2:1];
-		rald <= rad[2:1];
-	end
+	rala <= raa[2:1];
+	ralb <= rab[2:1];
+	ralc <= rac[2:1];
+	rald <= rad[2:1];
 end
 
 always @(*) begin

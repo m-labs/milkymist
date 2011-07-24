@@ -2,35 +2,7 @@
 #
 
 ARBSRC?=$(wildcard ../../fmlarb/rtl/*)
-SOURCES= \
-../rtl/tmu2_adrgen.v \
-../rtl/tmu2_clamp.v \
-../rtl/tmu2_dpram.v \
-../rtl/tmu2_dpram_sw.v \
-../rtl/tmu2_hdiv.v \
-../rtl/tmu2_burst.v \
-../rtl/tmu2_pixout.v \
-../rtl/tmu2.v\
-../rtl/tmu2_ctlif.v \
-../rtl/tmu2_fetchvertex.v \
-../rtl/tmu2_hinterp.v \
-../rtl/tmu2_qpram32.v \
-../rtl/tmu2_vdivops.v \
-../rtl/tmu2_blend.v \
-../rtl/tmu2_mult2.v \
-../rtl/tmu2_decay.v \
-../rtl/tmu2_geninterp18.v \
-../rtl/tmu2_mask.v \
-../rtl/tmu2_qpram.v \
-../rtl/tmu2_vdiv.v \
-../rtl/tmu2_divider17.v \
-../rtl/tmu2_hdivops.v \
-../rtl/tmu2_texcache.v \
-../rtl/tmu2_vinterp.v \
-../rtl/tmu2_fdest.v \
-../rtl/tmu2_alpha.v \
-../rtl/tmu2_buffer.v \
-$(ARBSRC)
+SOURCES=$(wildcard ../rtl/*) $(ARBSRC)
 
 all: sim
 

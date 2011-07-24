@@ -55,7 +55,7 @@ assign pipe_ack_o = fetch_en & (~fml_stb | fml_ack);
 
 /* Gather received data */
 wire fifo_we;
-tmu2_fifo64to256(
+tmu2_fifo64to256 fifo64to256(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 	
@@ -79,6 +79,6 @@ always @(posedge sys_clk) begin
 		bcount <= bcount - 2'd1;
 end
 
-assign busy = pipe_stb_o | fml_stb_o;
+assign busy = pipe_stb_o | fml_stb;
 
 endmodule

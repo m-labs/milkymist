@@ -40,8 +40,8 @@ reg [depth+1:0] produce;
 reg [depth-1:0] consume;
 
 wire wavail = ~level[depth+2];
-wire w8avail = level < ((1 << (depth + 2)) - 8);
-wire ravail = |(level[depth+2:2]);
+assign w8avail = level < ((1 << (depth + 2)) - 8);
+assign ravail = |(level[depth+2:2]);
 
 wire read = re & ravail;
 wire write = we & wavail;

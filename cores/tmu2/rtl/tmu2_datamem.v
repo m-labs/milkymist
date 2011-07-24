@@ -68,7 +68,7 @@ reg frag_miss_c_r;
 reg frag_miss_d_r;
 always @(posedge sys_clk) begin
 	if(req_ce) begin
-		req_valid <= pipe_stb_i;
+		req_valid <= frag_pipe_stb_i;
 		
 		frag_tadra_r <= frag_tadra;
 		frag_tadrb_r <= frag_tadrb;
@@ -129,7 +129,7 @@ always @(posedge sys_clk) begin
 	if(missmask_init)
 		missmask <= 4'b1111;
 	if(missmask_we) begin
-		case(tag_sel)
+		case(wa_sel)
 			2'd0: missmask <= missmask & 4'b1110;
 			2'd1: missmask <= missmask & 4'b1101;
 			2'd2: missmask <= missmask & 4'b1011;

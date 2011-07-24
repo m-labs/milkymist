@@ -29,7 +29,7 @@ module tmu2_texmem #(
 	input sys_rst,
 
 	output [fml_depth-1:0] fml_adr,
-	output reg fml_stb,
+	output fml_stb,
 	input fml_ack,
 	input [63:0] fml_di,
 
@@ -37,7 +37,7 @@ module tmu2_texmem #(
 	output busy,
 
 	input pipe_stb_i,
-	output reg pipe_ack_o,
+	output pipe_ack_o,
 	input [fml_depth-1-1:0] dadr, /* in 16-bit words */
 	input [fml_depth-1-1:0] tadra,
 	input [fml_depth-1-1:0] tadrb,
@@ -298,7 +298,7 @@ tmu2_buffer #(
 wire serialize_busy;
 wire serialize_pipe_stb;
 wire serialize_pipe_ack;
-wire [fml_depth-5-1:0] serialize_adr
+wire [fml_depth-5-1:0] serialize_adr;
 tmu2_serialize #(
 	.fml_depth(fml_depth)
 ) serialize (
@@ -402,6 +402,6 @@ tmu2_datamem #(
 assign busy = tagmem_busy|split_busy
 	|fragf_busy
 	|fetchf_busy|serialize_busy|fetchtexel_busy
-	|datemem_busy;
+	|datamem_busy;
 
 endmodule

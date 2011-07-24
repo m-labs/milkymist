@@ -177,9 +177,9 @@ assign miss_b = lead_b_r & (ct_b_r != tag_rd_b);
 assign miss_c = lead_c_r & (ct_c_r != tag_rd_c);
 assign miss_d = lead_d_r & (ct_d_r != tag_rd_d);
 
-wire more_than_one_miss = (missd_a & missd_b) | (missd_a & missd_c) | (missd_a & missd_d)
-	| (missd_b & missd_c) | (missd_b & missd_d)
-	| (missd_c & missd_d);
+wire more_than_one_miss = (miss_a & miss_b) | (miss_a & miss_c) | (miss_a & miss_d)
+	| (miss_b & miss_c) | (miss_b & miss_d)
+	| (miss_c & miss_d);
 
 /* Tag rewrite */
 reg [1:0] tag_sel;
@@ -254,13 +254,13 @@ always @(*) begin
 				pipe_stb_o = 1'b1;
 				busy = 1'b1;
 				tag_we = 1'b1;
-				if(missd_a)
+				if(miss_a)
 					tag_sel = 2'd0;
-				else if(missd_b)
+				else if(miss_b)
 					tag_sel = 2'd1;
-				else if(missd_c)
+				else if(miss_c)
 					tag_sel = 2'd2;
-				else if(missd_d)
+				else if(miss_d)
 					tag_sel = 2'd3;
 				else
 					tag_we = 1'b0;
@@ -280,13 +280,13 @@ always @(*) begin
 			busy = 1'b1;
 			tag_we = 1'b1;
 			missmask_we = 1'b1;
-			if(missd_a & missmask[0])
+			if(miss_a & missmask[0])
 				tag_sel = 2'd0;
-			else if(missd_b & missmask[1])
+			else if(miss_b & missmask[1])
 				tag_sel = 2'd1;
-			else if(missd_c & missmask[2])
+			else if(miss_c & missmask[2])
 				tag_sel = 2'd2;
-			else if(missd_d & missmask[3])
+			else if(miss_d & missmask[3])
 				tag_sel = 2'd3;
 			else begin
 				tag_we = 1'b0;

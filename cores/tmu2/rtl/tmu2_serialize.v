@@ -86,7 +86,7 @@ always @(posedge sys_clk) begin
 	if(missmask_init)
 		missmask <= 4'b1111;
 	if(missmask_we) begin
-		case(tag_sel)
+		case(adr_sel)
 			2'd0: missmask <= missmask & 4'b1110;
 			2'd1: missmask <= missmask & 4'b1101;
 			2'd2: missmask <= missmask & 4'b1011;
@@ -117,7 +117,7 @@ always @(*) begin
 	pipe_stb_o = 1'b0;
 	
 	load_en = 1'b0;
-	tag_sel = 2'd0;
+	adr_sel = 2'd0;
 	missmask_init = 1'b0;
 	missmask_we = 1'b0;
 	
@@ -133,13 +133,13 @@ always @(*) begin
 			pipe_stb_o = 1'b1;
 			missmask_we = 1'b1;
 			if(r_miss_a & missmask[0])
-				tag_sel = 2'd0;
+				adr_sel = 2'd0;
 			else if(r_miss_b & missmask[1])
-				tag_sel = 2'd1;
+				adr_sel = 2'd1;
 			else if(r_miss_c & missmask[2])
-				tag_sel = 2'd2;
+				adr_sel = 2'd2;
 			else if(r_miss_d & missmask[3])
-				tag_sel = 2'd3;
+				adr_sel = 2'd3;
 			else begin
 				pipe_stb_o = 1'b0;
 				next_state = LOAD;
