@@ -20,7 +20,6 @@ module tmu2_qpram #(
 ) (
 	input sys_clk,
 	
-	input re,
 	input [depth-1:0] raa, /* < in bytes, 16-bit aligned */
 	output reg [15:0] rda,
 	input [depth-1:0] rab,
@@ -89,13 +88,11 @@ tmu2_tdpram #(
 
 	.a(we ? {wa[depth-1:5], 2'b00} : raa[depth-1:3]),
 	.we(we),
-	.re(re),
 	.di(wd[255:192]),
 	.do(rd64a),
 
 	.a2(we ? {wa[depth-1:5], 2'b01} : rab[depth-1:3]),
 	.we2(we),
-	.re2(re),
 	.di2(wd[191:128]),
 	.do2(rd64b)
 );
@@ -108,13 +105,11 @@ tmu2_tdpram #(
 
 	.a(we ? {wa[depth-1:5], 2'b10} : rac[depth-1:3]),
 	.we(we),
-	.re(re),
 	.di(wd[127:64]),
 	.do(rd64c),
 
 	.a2(we ? {wa[depth-1:5], 2'b11} : rad[depth-1:3]),
 	.we2(we),
-	.re2(re),
 	.di2(wd[63:0]),
 	.do2(rd64d)
 );

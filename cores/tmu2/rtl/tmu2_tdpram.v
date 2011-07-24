@@ -25,13 +25,11 @@ module tmu2_tdpram #(
 
 	input [depth-1:0] a,
 	input we,
-	input re,
 	input [width-1:0] di,
 	output reg [width-1:0] do,
 
 	input [depth-1:0] a2,
 	input we2,
-	input re2,
 	input [width-1:0] di2,
 	output reg [width-1:0] do2
 );
@@ -42,15 +40,13 @@ reg [width-1:0] ram[0:(1 << depth)-1];
 always @(posedge sys_clk) begin
 	if(we)
 		ram[a] <= di;
-	if(re)
-		do <= ram[a];
+	do <= ram[a];
 end
 
 always @(posedge sys_clk) begin
 	if(we2)
 		ram[a2] <= di2;
-	if(re2)
-		do2 <= ram[a2];
+	do2 <= ram[a2];
 end
 
 // synthesis translate_off
