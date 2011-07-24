@@ -78,7 +78,7 @@ wire lead_d = valid_d;
 /* Tag memory */
 reg tag_re;
 reg tag_we;
-wire [cache_depth-5-1:0] tag_wa;
+reg [cache_depth-5-1:0] tag_wa;
 reg [fml_depth-cache_depth-1:0] tag_wd;
 
 wire [fml_depth-cache_depth-1:0] tag_rd_a;
@@ -151,6 +151,10 @@ reg [fml_depth-cache_depth-1:0] ct_a_r;
 reg [fml_depth-cache_depth-1:0] ct_b_r;
 reg [fml_depth-cache_depth-1:0] ct_c_r;
 reg [fml_depth-cache_depth-1:0] ct_d_r;
+reg [cache_depth-1-5:0] ci_a_r;
+reg [cache_depth-1-5:0] ci_b_r;
+reg [cache_depth-1-5:0] ci_c_r;
+reg [cache_depth-1-5:0] ci_d_r;
 reg lead_a_r;
 reg lead_b_r;
 reg lead_c_r;
@@ -165,6 +169,10 @@ always @(posedge sys_clk) begin
 		ct_b_r <= tadrb[fml_depth-1:cache_depth];
 		ct_c_r <= tadrc[fml_depth-1:cache_depth];
 		ct_d_r <= tadrd[fml_depth-1:cache_depth];
+		ci_a_r <= ci_a;
+		ci_b_r <= ci_b;
+		ci_c_r <= ci_c;
+		ci_d_r <= ci_d;
 		lead_a_r <= lead_a;
 		lead_b_r <= lead_b;
 		lead_c_r <= lead_c;
@@ -185,10 +193,22 @@ wire more_than_one_miss = (miss_a & miss_b) | (miss_a & miss_c) | (miss_a & miss
 reg [1:0] tag_sel;
 always @(*) begin
 	case(tag_sel)
-		2'd0: tag_wd = ct_a_r;
-		2'd1: tag_wd = ct_b_r;
-		2'd2: tag_wd = ct_c_r;
-		default: tag_wd = ct_d_r;
+		2'd0: begin
+			tag_wa = ci_a_r;
+			tag_wd = ct_a_r;
+		end
+		2'd1: begin
+			tag_wa = ci_b_r;
+			tag_wd = ct_b_r;
+		end
+		2'd2: begin
+			tag_wa = ci_c_r;
+			tag_wd = ct_c_r;
+		end
+		default: begin
+			tag_wa = ci_d_r;
+			tag_wd = ct_d_r;
+		end
 	endcase
 end
 

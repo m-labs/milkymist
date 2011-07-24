@@ -48,9 +48,9 @@ wire write = we & wavail;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
-		level = 0;
-		produce = 0;
-		consume = 0;
+		level <= 0;
+		produce <= 0;
+		consume <= 0;
 	end else begin
 		if(read)
 			consume <= consume + 1;

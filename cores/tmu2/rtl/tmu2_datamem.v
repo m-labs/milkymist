@@ -86,10 +86,10 @@ always @(posedge sys_clk) begin
 end
 
 reg retry;
-wire adra = retry ? frag_tadra_r : frag_tadra;
-wire adrb = retry ? frag_tadrb_r : frag_tadrb;
-wire adrc = retry ? frag_tadrc_r : frag_tadrc;
-wire adrd = retry ? frag_tadrd_r : frag_tadrd;
+wire [cache_depth-1:0] adra = retry ? frag_tadra_r : frag_tadra;
+wire [cache_depth-1:0] adrb = retry ? frag_tadrb_r : frag_tadrb;
+wire [cache_depth-1:0] adrc = retry ? frag_tadrc_r : frag_tadrc;
+wire [cache_depth-1:0] adrd = retry ? frag_tadrd_r : frag_tadrd;
 
 reg [1:0] wa_sel;
 reg [cache_depth-1:0] wa;
@@ -196,7 +196,7 @@ always @(*) begin
 					if(frag_miss_a_r & missmask[0])
 						wa_sel = 2'd0;
 					else if(frag_miss_b_r & missmask[1])
-						wa_sel = 2'd0;
+						wa_sel = 2'd1;
 					else if(frag_miss_c_r & missmask[2])
 						wa_sel = 2'd2;
 					else

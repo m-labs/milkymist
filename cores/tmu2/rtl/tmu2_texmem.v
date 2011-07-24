@@ -237,7 +237,7 @@ tmu2_buffer #(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 
-	.busy(frag_busy),
+	.busy(fragf_busy),
 
 	.pipe_stb_i(split_frag_pipe_stb),
 	.pipe_ack_o(split_frag_pipe_ack),
@@ -280,8 +280,8 @@ tmu2_buffer #(
 
 	.busy(fetchf_busy),
 
-	.pipe_stb_i(split_fetch_stb),
-	.pipe_ack_o(split_fetch_ack),
+	.pipe_stb_i(split_fetch_pipe_stb),
+	.pipe_ack_o(split_fetch_pipe_ack),
 	.dat_i({split_fetch_tadra, split_fetch_tadrb, split_fetch_tadrc, split_fetch_tadrd,
 		split_fetch_miss_a, split_fetch_miss_b, split_fetch_miss_c, split_fetch_miss_d}),
 
