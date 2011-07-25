@@ -173,6 +173,7 @@ always @(*) begin
 			req_ce = 1'b1;
 			missmask_init = 1'b1;
 			if(req_valid) begin
+				busy = 1'b1;
 				pipe_stb_o = 1'b1;
 				if(frag_miss_a_r | frag_miss_b_r | frag_miss_c_r | frag_miss_d_r) begin
 					frag_pipe_ack_o = 1'b0;
@@ -187,6 +188,7 @@ always @(*) begin
 			end
 		end
 		COMMIT: begin
+			busy = 1'b1;
 			retry = 1'b1;
 			if((frag_miss_a_r & missmask[0]) | (frag_miss_b_r & missmask[1]) | (frag_miss_c_r & missmask[2]) | (frag_miss_d_r & missmask[3])) begin
 				fetch_pipe_ack_o = 1'b1;
@@ -206,6 +208,7 @@ always @(*) begin
 				next_state = STROBE;
 		end
 		STROBE: begin
+			busy = 1'b1;
 			retry = 1'b1;
 			pipe_stb_o = 1'b1;
 			if(pipe_ack_i) begin
