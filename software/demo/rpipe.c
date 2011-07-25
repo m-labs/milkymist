@@ -49,8 +49,8 @@ static int run_swap_bottom_half;
 static unsigned int frames;
 static unsigned int fps;
 
-static unsigned short texbufferA[512*512];
-static unsigned short texbufferB[512*512];
+static unsigned short texbufferA[1024*1024];
+static unsigned short texbufferB[1024*1024];
 static unsigned short *tex_frontbuffer;
 static unsigned short *tex_backbuffer;
 
