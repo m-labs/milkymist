@@ -34,82 +34,98 @@ module tmu2_qpram #(
 	input [255:0] wd
 );
 
-wire [63:0] rd64a;
-wire [63:0] rd64b;
-wire [63:0] rd64c;
-wire [63:0] rd64d;
+wire [127:0] rd128a;
+wire [127:0] rd128b;
+wire [127:0] rd128c;
+wire [127:0] rd128d;
 
-reg [1:0] rala;
-reg [1:0] ralb;
-reg [1:0] ralc;
-reg [1:0] rald;
+reg [2:0] rala;
+reg [2:0] ralb;
+reg [2:0] ralc;
+reg [2:0] rald;
 
 always @(posedge sys_clk) begin
-	rala <= raa[2:1];
-	ralb <= rab[2:1];
-	ralc <= rac[2:1];
-	rald <= rad[2:1];
+	rala <= raa[3:1];
+	ralb <= rab[3:1];
+	ralc <= rac[3:1];
+	rald <= rad[3:1];
 end
 
 always @(*) begin
 	case(rala)
-		2'd0: rda = rd64a[63:48];
-		2'd1: rda = rd64a[47:32];
-		2'd2: rda = rd64a[31:16];
-		default: rda = rd64a[15:0];
+		3'd0: rda = rd128a[127:112];
+		3'd1: rda = rd128a[111:96];
+		3'd2: rda = rd128a[95:80];
+		3'd3: rda = rd128a[79:64];
+		3'd4: rda = rd128a[63:48];
+		3'd5: rda = rd128a[47:32];
+		3'd6: rda = rd128a[31:16];
+		default: rda = rd128a[15:0];
 	endcase
 	case(ralb)
-		2'd0: rdb = rd64b[63:48];
-		2'd1: rdb = rd64b[47:32];
-		2'd2: rdb = rd64b[31:16];
-		default: rdb = rd64b[15:0];
+		3'd0: rdb = rd128b[127:112];
+		3'd1: rdb = rd128b[111:96];
+		3'd2: rdb = rd128b[95:80];
+		3'd3: rdb = rd128b[79:64];
+		3'd4: rdb = rd128b[63:48];
+		3'd5: rdb = rd128b[47:32];
+		3'd6: rdb = rd128b[31:16];
+		default: rdb = rd128b[15:0];
 	endcase
 	case(ralc)
-		2'd0: rdc = rd64c[63:48];
-		2'd1: rdc = rd64c[47:32];
-		2'd2: rdc = rd64c[31:16];
-		default: rdc = rd64c[15:0];
+		3'd0: rdc = rd128c[127:112];
+		3'd1: rdc = rd128c[111:96];
+		3'd2: rdc = rd128c[95:80];
+		3'd3: rdc = rd128c[79:64];
+		3'd4: rdc = rd128c[63:48];
+		3'd5: rdc = rd128c[47:32];
+		3'd6: rdc = rd128c[31:16];
+		default: rdc = rd128c[15:0];
 	endcase
 	case(rald)
-		2'd0: rdd = rd64d[63:48];
-		2'd1: rdd = rd64d[47:32];
-		2'd2: rdd = rd64d[31:16];
-		default: rdd = rd64d[15:0];
+		3'd0: rdd = rd128d[127:112];
+		3'd1: rdd = rd128d[111:96];
+		3'd2: rdd = rd128d[95:80];
+		3'd3: rdd = rd128d[79:64];
+		3'd4: rdd = rd128d[63:48];
+		3'd5: rdd = rd128d[47:32];
+		3'd6: rdd = rd128d[31:16];
+		default: rdd = rd128d[15:0];
 	endcase
 end
 
 tmu2_tdpram #(
-	.depth(depth-3),
-	.width(64)
+	.depth(depth-4),
+	.width(128)
 ) ram0 (
 	.sys_clk(sys_clk),
 
-	.a(we ? {wa[depth-1:5], 2'b00} : raa[depth-1:3]),
+	.a(we ? {wa[depth-1:5], 1'b0} : raa[depth-1:4]),
 	.we(we),
-	.di(wd[255:192]),
-	.do(rd64a),
+	.di(wd[255:128]),
+	.do(rd128a),
 
-	.a2(we ? {wa[depth-1:5], 2'b01} : rab[depth-1:3]),
+	.a2(we ? {wa[depth-1:5], 1'b1} : rab[depth-1:4]),
 	.we2(we),
-	.di2(wd[191:128]),
-	.do2(rd64b)
+	.di2(wd[127:0]),
+	.do2(rd128b)
 );
 
 tmu2_tdpram #(
-	.depth(depth-3),
-	.width(64)
+	.depth(depth-4),
+	.width(128)
 ) ram1 (
 	.sys_clk(sys_clk),
 
-	.a(we ? {wa[depth-1:5], 2'b10} : rac[depth-1:3]),
+	.a(we ? {wa[depth-1:5], 1'b0} : rac[depth-1:4]),
 	.we(we),
-	.di(wd[127:64]),
-	.do(rd64c),
+	.di(wd[255:128]),
+	.do(rd128c),
 
-	.a2(we ? {wa[depth-1:5], 2'b11} : rad[depth-1:3]),
+	.a2(we ? {wa[depth-1:5], 1'b1} : rad[depth-1:4]),
 	.we2(we),
-	.di2(wd[63:0]),
-	.do2(rd64d)
+	.di2(wd[127:0]),
+	.do2(rd128d)
 );
 
 endmodule
