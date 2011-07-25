@@ -211,6 +211,7 @@ always @(*) begin
 			if(pipe_ack_i) begin
 				retry = 1'b0;
 				req_ce = 1'b1;
+				frag_pipe_ack_o = 1'b1;
 				next_state = RUNNING;
 			end
 		end
