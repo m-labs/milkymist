@@ -39,7 +39,7 @@ module tmu2_split #(
 	input miss_d,
 	
 	/* to fragment FIFO */
-	output frag_pipe_stb_o,
+	output reg frag_pipe_stb_o,
 	input frag_pipe_ack_i,
 	output reg [fml_depth-1-1:0] frag_dadr,
 	output [cache_depth-1:0] frag_tadra, /* < texel cache addresses (in bytes) */
@@ -54,7 +54,7 @@ module tmu2_split #(
 	output frag_miss_d,
 
 	/* to texel fetch unit */
-	output fetch_pipe_stb_o,
+	output reg fetch_pipe_stb_o,
 	input fetch_pipe_ack_i,
 	output [fml_depth-5-1:0] fetch_tadra, /* < texel burst addresses (in 4*64 bit units) */
 	output [fml_depth-5-1:0] fetch_tadrb,
@@ -94,32 +94,36 @@ assign fetch_miss_b = r_miss_b;
 assign fetch_miss_c = r_miss_c;
 assign fetch_miss_d = r_miss_d;
 
-/* registers */
 reg data_valid;
 
 always @(posedge sys_clk) begin
-	if(sys_rst)
-		data_valid <= 1'b0;
-	else if(frag_pipe_ack_i & fetch_pipe_ack_i) begin
-		data_valid <= pipe_stb_i;
-		frag_dadr <= dadr;
-		r_tadra <= tadra;
-		r_tadrb <= tadrb;
-		r_tadrc <= tadrc;
-		r_tadrd <= tadrd;
-		frag_x_frac <= x_frac;
-		frag_y_frac <= y_frac;
-		r_miss_a <= miss_a;
-		r_miss_b <= miss_b;
-		r_miss_c <= miss_c;
-		r_miss_d <= miss_d;
+	if(sys_rst) begin
+		frag_pipe_stb_o <= 1'b0;
+		fetch_pipe_stb_o <= 1'b0;
+	end else begin
+		if(frag_pipe_ack_i)
+			frag_pipe_stb_o <= 1'b0;
+		if(fetch_pipe_ack_i)
+			fetch_pipe_stb_o <= 1'b0;
+		if(pipe_ack_o) begin
+			frag_pipe_stb_o <= pipe_stb_i;
+			fetch_pipe_stb_o <= pipe_stb_i & (miss_a | miss_b | miss_c | miss_d);
+			frag_dadr <= dadr;
+			r_tadra <= tadra;
+			r_tadrb <= tadrb;
+			r_tadrc <= tadrc;
+			r_tadrd <= tadrd;
+			frag_x_frac <= x_frac;
+			frag_y_frac <= y_frac;
+			r_miss_a <= miss_a;
+			r_miss_b <= miss_b;
+			r_miss_c <= miss_c;
+			r_miss_d <= miss_d;
+		end
 	end
 end
 
-/* control */
-assign busy = data_valid;
-assign frag_pipe_stb_o = data_valid;
-assign fetch_pipe_stb_o = data_valid & (r_miss_a | r_miss_b | r_miss_c | r_miss_d);
-assign pipe_ack_o = ~data_valid | (frag_pipe_ack_i & fetch_pipe_ack_i);
+assign busy = frag_pipe_stb_o | fetch_pipe_stb_o;
+assign pipe_ack_o = (~frag_pipe_stb_o & ~fetch_pipe_stb_o) | (frag_pipe_ack_i & fetch_pipe_ack_i);
 
 endmodule
