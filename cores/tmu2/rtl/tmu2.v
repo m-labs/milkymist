@@ -18,7 +18,10 @@
 module tmu2 #(
 	parameter csr_addr = 4'h0,
 	parameter fml_depth = 26,
-	parameter texel_cache_depth = 15 /* 32kB cache */
+	parameter texel_cache_depth = 15, /* < 32kB cache */
+	parameter fragq_depth = 5,   /* < log2 of the fragment FIFO size */
+	parameter fetchq_depth = 4,  /* < log2 of the fetch FIFO size */
+	parameter commitq_depth = 4  /* < log2 of the commit FIFO size */
 ) (
 	/* Global clock and reset signals */
 	input sys_clk,
@@ -614,6 +617,9 @@ wire [5:0] y_frac_f;
 
 tmu2_texmem #(
 	.cache_depth(texel_cache_depth),
+	.fragq_depth(fragq_depth),
+	.fetchq_depth(fetchq_depth),
+	.commitq_depth(commitq_depth),
 	.fml_depth(fml_depth)
 ) texmem (
 	.sys_clk(sys_clk),

@@ -16,6 +16,7 @@
  */
 
 module tmu2_fetchtexel #(
+	parameter depth = 2,
 	parameter fml_depth = 26
 ) (
 	input sys_clk,
@@ -55,7 +56,9 @@ assign pipe_ack_o = fetch_en & (~fml_stb | fml_ack);
 
 /* Gather received data */
 wire fifo_we;
-tmu2_fifo64to256 fifo64to256(
+tmu2_fifo64to256 #(
+	.depth(depth)
+) fifo64to256 (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
 	

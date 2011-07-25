@@ -23,6 +23,9 @@
 
 module tmu2_texmem #(
 	parameter cache_depth = 13, /* < log2 of the capacity in 8-bit words */
+	parameter fragq_depth = 5,   /* < log2 of the fragment FIFO size */
+	parameter fetchq_depth = 4,  /* < log2 of the fetch FIFO size */
+	parameter commitq_depth = 4,  /* < log2 of the commit FIFO size */
 	parameter fml_depth = 26
 ) (
 	input sys_clk,
@@ -232,7 +235,7 @@ wire fragf_miss_d;
 
 tmu2_buffer #(
 	.width(fml_depth-1+4*cache_depth+2*6+4),
-	.depth(4)
+	.depth(fragq_depth)
 ) frag_fifo (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -273,7 +276,7 @@ wire fetchf_miss_d;
 
 tmu2_buffer #(
 	.width(4*(fml_depth-5)+4),
-	.depth(3)
+	.depth(fetchq_depth)
 ) fetch_fifo (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -332,6 +335,7 @@ wire fetchtexel_pipe_stb;
 wire fetchtexel_pipe_ack;
 wire [255:0] fetchtexel_dat;
 tmu2_fetchtexel #(
+	.depth(commitq_depth),
 	.fml_depth(fml_depth)
 ) fetchtexel (
 	.sys_clk(sys_clk),
