@@ -188,9 +188,7 @@ always @(*) begin
 		end
 		COMMIT: begin
 			retry = 1'b1;
-			if((~frag_miss_a_r | ~missmask[0]) & (~frag_miss_b_r | ~missmask[1]) & (~frag_miss_c_r | ~missmask[2]) & (~frag_miss_d_r | ~missmask[3]))
-				next_state = STROBE;
-			else begin
+			if((frag_miss_a_r & missmask[0]) | (frag_miss_b_r & missmask[1]) | (frag_miss_c_r & missmask[2]) | (frag_miss_d_r & missmask[3])) begin
 				fetch_pipe_ack_o = 1'b1;
 				if(fetch_pipe_stb_i) begin
 					if(frag_miss_a_r & missmask[0])
@@ -204,7 +202,8 @@ always @(*) begin
 					missmask_we = 1'b1;
 					we = 1'b1;
 				end
-			end
+			end else
+				next_state = STROBE;
 		end
 		STROBE: begin
 			retry = 1'b1;
