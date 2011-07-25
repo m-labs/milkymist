@@ -552,6 +552,8 @@ static void tmubench()
 	volatile int complete;
 	unsigned int t;
 	int hits, reqs;
+	char buffer[64];
+	int j;
 
 	uart_force_sync(1);
 
@@ -599,7 +601,11 @@ static void tmubench()
 		t = CSR_TIMER1_COUNTER;
 		hits = CSR_TMU_HIT_A + CSR_TMU_HIT_B + CSR_TMU_HIT_C + CSR_TMU_HIT_D;
 		reqs = CSR_TMU_REQ_A + CSR_TMU_REQ_B + CSR_TMU_REQ_C + CSR_TMU_REQ_D;
-		printf("%d,%d,%d\n", t, hits, reqs);
+		/* send to UART only */
+		sprintf(buffer, "%d,%d,%d\n", t, hits, reqs);
+		j = 0;
+		while(buffer[j])
+			uart_write(buffer[j++]);
 		vga_swap_buffers();
 	}
 
