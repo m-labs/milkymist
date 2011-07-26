@@ -57,10 +57,10 @@ always @(posedge sys_clk) begin
 		if(write) begin
 			produce <= produce + 1;
 			case(produce[1:0])
-				2'd0: storage1[produce[3:2]] <= wd;
-				2'd1: storage2[produce[3:2]] <= wd;
-				2'd2: storage3[produce[3:2]] <= wd;
-				2'd3: storage4[produce[3:2]] <= wd;
+				2'd0: storage1[produce[depth+1:2]] <= wd;
+				2'd1: storage2[produce[depth+1:2]] <= wd;
+				2'd2: storage3[produce[depth+1:2]] <= wd;
+				2'd3: storage4[produce[depth+1:2]] <= wd;
 			endcase
 		end
 		case({read, write})
