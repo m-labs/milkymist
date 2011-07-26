@@ -126,9 +126,17 @@ reg [3:0] missmask;
 reg missmask_init;
 reg missmask_we;
 always @(posedge sys_clk) begin
-	if(missmask_init)
+	if(missmask_init) begin
 		missmask <= 4'b1111;
-	if(missmask_we) begin
+		if(missmask_we) begin
+			case(wa_sel)
+				2'd0: missmask <= 4'b1110;
+				2'd1: missmask <= 4'b1101;
+				2'd2: missmask <= 4'b1011;
+				default: missmask <= 4'b0111;
+			endcase
+		end
+	end else if(missmask_we) begin
 		case(wa_sel)
 			2'd0: missmask <= missmask & 4'b1110;
 			2'd1: missmask <= missmask & 4'b1101;
@@ -178,6 +186,19 @@ always @(*) begin
 					frag_pipe_ack_o = 1'b0;
 					req_ce = 1'b0;
 					pipe_stb_o = 1'b0;
+					fetch_pipe_ack_o = 1'b1;
+					if(fetch_pipe_stb_i) begin
+						if(frag_miss_a_r)
+							wa_sel = 2'd0;
+						else if(frag_miss_b_r)
+							wa_sel = 2'd1;
+						else if(frag_miss_c_r)
+							wa_sel = 2'd2;
+						else
+							wa_sel = 2'd3;
+						missmask_we = 1'b1;
+						we = 1'b1;
+					end
 					next_state = COMMIT;
 				end else if(~pipe_ack_i) begin
 					frag_pipe_ack_o = 1'b0;
