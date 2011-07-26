@@ -79,66 +79,70 @@ wire lead_d = valid_d;
 reg tag_re;
 reg tag_we;
 reg [cache_depth-5-1:0] tag_wa;
-reg [fml_depth-cache_depth-1:0] tag_wd;
+reg [1+fml_depth-cache_depth-1:0] tag_wd;
 
+wire tag_rd_va;
 wire [fml_depth-cache_depth-1:0] tag_rd_a;
 tmu2_dpram #(
 	.depth(cache_depth-5),
-	.width(fml_depth-cache_depth)
+	.width(1+fml_depth-cache_depth)
 ) tag_a (
 	.sys_clk(sys_clk),
 
 	.ra(ci_a),
 	.re(tag_re),
-	.rd(tag_rd_a),
+	.rd({tag_rd_va, tag_rd_a}),
 
 	.wa(tag_wa),
 	.we(tag_we),
 	.wd(tag_wd)
 );
 
+wire tag_rd_vb;
 wire [fml_depth-cache_depth-1:0] tag_rd_b;
 tmu2_dpram #(
 	.depth(cache_depth-5),
-	.width(fml_depth-cache_depth)
+	.width(1+fml_depth-cache_depth)
 ) tag_b (
 	.sys_clk(sys_clk),
 
 	.ra(ci_b),
 	.re(tag_re),
-	.rd(tag_rd_b),
+	.rd({tag_rd_vb, tag_rd_b}),
 
 	.wa(tag_wa),
 	.we(tag_we),
 	.wd(tag_wd)
 );
 
+wire tag_rd_vc;
 wire [fml_depth-cache_depth-1:0] tag_rd_c;
 tmu2_dpram #(
 	.depth(cache_depth-5),
-	.width(fml_depth-cache_depth)
+	.width(1+fml_depth-cache_depth)
 ) tag_c (
 	.sys_clk(sys_clk),
 
 	.ra(ci_c),
 	.re(tag_re),
-	.rd(tag_rd_c),
+	.rd({tag_rd_vc, tag_rd_c}),
 
 	.wa(tag_wa),
 	.we(tag_we),
 	.wd(tag_wd)
 );
 
+wire tag_rd_vd;
 wire [fml_depth-cache_depth-1:0] tag_rd_d;
 tmu2_dpram #(
 	.depth(cache_depth-5),
-	.width(fml_depth-cache_depth)
+	.width(1+fml_depth-cache_depth)
 ) tag_d (
 	.sys_clk(sys_clk),
 
 	.ra(ci_d),
 	.re(tag_re),
-	.rd(tag_rd_d),
+	.rd({tag_rd_vd, tag_rd_d}),
 
 	.wa(tag_wa),
 	.we(tag_we),
@@ -180,34 +184,51 @@ always @(posedge sys_clk) begin
 	end
 end
 
-assign miss_a = lead_a_r & (ct_a_r != tag_rd_a);
-assign miss_b = lead_b_r & (ct_b_r != tag_rd_b);
-assign miss_c = lead_c_r & (ct_c_r != tag_rd_c);
-assign miss_d = lead_d_r & (ct_d_r != tag_rd_d);
+assign miss_a = lead_a_r & (~tag_rd_va | (ct_a_r != tag_rd_a));
+assign miss_b = lead_b_r & (~tag_rd_vb | (ct_b_r != tag_rd_b));
+assign miss_c = lead_c_r & (~tag_rd_vc | (ct_c_r != tag_rd_c));
+assign miss_d = lead_d_r & (~tag_rd_vd | (ct_d_r != tag_rd_d));
 
 wire more_than_one_miss = (miss_a & miss_b) | (miss_a & miss_c) | (miss_a & miss_d)
 	| (miss_b & miss_c) | (miss_b & miss_d)
 	| (miss_c & miss_d);
 
+/* Flush counter */
+reg [cache_depth-5-1:0] flush_counter;
+reg flush_counter_en;
+
+always @(posedge sys_clk) begin
+	if(flush_counter_en)
+		flush_counter <= flush_counter + 1;
+	else
+		flush_counter <= 0;
+end
+
+wire flush_done = &flush_counter;
+
 /* Tag rewrite */
-reg [1:0] tag_sel;
+reg [2:0] tag_sel;
 always @(*) begin
 	case(tag_sel)
-		2'd0: begin
+		3'd0: begin
 			tag_wa = ci_a_r;
-			tag_wd = ct_a_r;
+			tag_wd = {1'b1, ct_a_r};
 		end
-		2'd1: begin
+		3'd1: begin
 			tag_wa = ci_b_r;
-			tag_wd = ct_b_r;
+			tag_wd = {1'b1, ct_b_r};
 		end
-		2'd2: begin
+		3'd2: begin
 			tag_wa = ci_c_r;
-			tag_wd = ct_c_r;
+			tag_wd = {1'b1, ct_c_r};
+		end
+		3'd3: begin
+			tag_wa = ci_d_r;
+			tag_wd = {1'b1, ct_d_r};
 		end
 		default: begin
-			tag_wa = ci_d_r;
-			tag_wd = ct_d_r;
+			tag_wa = flush_counter;
+			tag_wd = {1+fml_depth-cache_depth{1'b0}};
 		end
 	endcase
 end
@@ -220,7 +241,7 @@ reg missmask_we;
 
 always @(posedge sys_clk) begin
 	if(missmask_init) begin
-		case(tag_sel)
+		case(tag_sel[1:0])
 			2'd0: missmask <= 4'b1110;
 			2'd1: missmask <= 4'b1101;
 			2'd2: missmask <= 4'b1011;
@@ -228,7 +249,7 @@ always @(posedge sys_clk) begin
 		endcase
 	end
 	if(missmask_we) begin
-		case(tag_sel)
+		case(tag_sel[1:0])
 			2'd0: missmask <= missmask & 4'b1110;
 			2'd1: missmask <= missmask & 4'b1101;
 			2'd2: missmask <= missmask & 4'b1011;
@@ -238,11 +259,12 @@ always @(posedge sys_clk) begin
 end
 
 /* Control logic */
-reg state;
-reg next_state;
+reg [1:0] state;
+reg [1:0] next_state;
 
-parameter RUNNING		= 1'd0;
-parameter RESOLVE_MISS		= 1'd1;
+parameter RUNNING		= 2'd0;
+parameter RESOLVE_MISS		= 2'd1;
+parameter FLUSH			= 2'd2;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -260,10 +282,12 @@ always @(*) begin
 	
 	tag_re = 1'b0;
 	tag_we = 1'b0;
-	tag_sel = 2'd0;
+	tag_sel = 3'd0;
 	
 	missmask_init = 1'b0;
 	missmask_we = 1'b0;
+	
+	flush_counter_en = 1'b0;
 	
 	case(state)
 		RUNNING: begin
@@ -275,13 +299,13 @@ always @(*) begin
 				busy = 1'b1;
 				tag_we = 1'b1;
 				if(miss_a)
-					tag_sel = 2'd0;
+					tag_sel = 3'd0;
 				else if(miss_b)
-					tag_sel = 2'd1;
+					tag_sel = 3'd1;
 				else if(miss_c)
-					tag_sel = 2'd2;
+					tag_sel = 3'd2;
 				else if(miss_d)
-					tag_sel = 2'd3;
+					tag_sel = 3'd3;
 				else
 					tag_we = 1'b0;
 				if(~pipe_ack_i) begin
@@ -295,24 +319,34 @@ always @(*) begin
 						next_state = RESOLVE_MISS;
 				end
 			end
+			if(flush)
+				next_state = FLUSH;
 		end
 		RESOLVE_MISS: begin
 			busy = 1'b1;
 			tag_we = 1'b1;
 			missmask_we = 1'b1;
 			if(miss_a & missmask[0])
-				tag_sel = 2'd0;
+				tag_sel = 3'd0;
 			else if(miss_b & missmask[1])
-				tag_sel = 2'd1;
+				tag_sel = 3'd1;
 			else if(miss_c & missmask[2])
-				tag_sel = 2'd2;
+				tag_sel = 3'd2;
 			else if(miss_d & missmask[3])
-				tag_sel = 2'd3;
+				tag_sel = 3'd3;
 			else begin
 				tag_we = 1'b0;
 				tag_re = 1'b1;
 				next_state = RUNNING;
 			end
+		end
+		FLUSH: begin
+			busy = 1'b1;
+			tag_sel = 3'd4;
+			tag_we = 1'b1;
+			flush_counter_en = 1'b1;
+			if(flush_done)
+				next_state = RUNNING;
 		end
 	endcase
 end
