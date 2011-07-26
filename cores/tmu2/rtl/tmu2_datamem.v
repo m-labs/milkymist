@@ -138,12 +138,11 @@ always @(posedge sys_clk) begin
 	end
 end
 
-reg [1:0] state;
-reg [1:0] next_state;
+reg state;
+reg next_state;
 
-parameter RUNNING		= 2'd0;
-parameter COMMIT		= 2'd1;
-parameter STROBE		= 2'd2;
+parameter RUNNING		= 1'd0;
+parameter COMMIT		= 1'd1;
 
 always @(posedge sys_clk) begin
 	if(sys_rst)
@@ -204,18 +203,14 @@ always @(*) begin
 					missmask_we = 1'b1;
 					we = 1'b1;
 				end
-			end else
-				next_state = STROBE;
-		end
-		STROBE: begin
-			busy = 1'b1;
-			retry = 1'b1;
-			pipe_stb_o = 1'b1;
-			if(pipe_ack_i) begin
-				retry = 1'b0;
-				req_ce = 1'b1;
-				frag_pipe_ack_o = 1'b1;
-				next_state = RUNNING;
+			end else begin
+				pipe_stb_o = 1'b1;
+				if(pipe_ack_i) begin
+					retry = 1'b0;
+					req_ce = 1'b1;
+					frag_pipe_ack_o = 1'b1;
+					next_state = RUNNING;
+				end
 			end
 		end
 	endcase
