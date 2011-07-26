@@ -310,11 +310,12 @@ always @(*) begin
 					tag_we = 1'b0;
 				if(~pipe_ack_i) begin
 					tag_re = 1'b0;
-					tag_we = 1'b0;
 					pipe_ack_o = 1'b0;
+					tag_we = 1'b0;
 				end
 				if(more_than_one_miss) begin
 					tag_re = 1'b0;
+					pipe_ack_o = 1'b0;
 					if(pipe_ack_i)
 						next_state = RESOLVE_MISS;
 				end
@@ -337,6 +338,7 @@ always @(*) begin
 			else begin
 				tag_we = 1'b0;
 				tag_re = 1'b1;
+				pipe_ack_o = 1'b1;
 				next_state = RUNNING;
 			end
 		end
