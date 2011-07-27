@@ -51,15 +51,6 @@ static void banner()
 			  "\e[0m           SoC demo program\n\n\n");
 }
 
-static void welcome()
-{
-	printf("\n\e[1mIMPORTANT: This program is proof of concept only,\n"
-	"IMPORTANT: and is not intended as a demonstration of the\n"
-	"IMPORTANT: usability of the final software.\e[0m\n"
-	"Questions/feedback: mail devel AT lists.milkymist.org\n"
-	"Have fun!\n\n");
-}
-
 int main()
 {
 	irq_setmask(0);
@@ -84,7 +75,6 @@ int main()
 	apipe_init();
 	rpipe_init();
 	osd_init();
-	welcome();
 	shell_init();
 
 	while(1) {

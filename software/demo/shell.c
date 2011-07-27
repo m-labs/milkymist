@@ -551,7 +551,6 @@ static void tmubench()
 	struct tmu_td td;
 	volatile int complete;
 	unsigned int t;
-	int hits, reqs;
 	char buffer[64];
 	int j;
 
@@ -599,10 +598,8 @@ static void tmubench()
 		tmu_submit_task(&td);
 		while(!complete);
 		t = CSR_TIMER1_COUNTER;
-		hits = CSR_TMU_HIT_A + CSR_TMU_HIT_B + CSR_TMU_HIT_C + CSR_TMU_HIT_D;
-		reqs = CSR_TMU_REQ_A + CSR_TMU_REQ_B + CSR_TMU_REQ_C + CSR_TMU_REQ_D;
 		/* send to UART only */
-		sprintf(buffer, "%d,%d,%d\n", t, hits, reqs);
+		sprintf(buffer, "%d\n", t);
 		j = 0;
 		while(buffer[j])
 			uart_write(buffer[j++]);

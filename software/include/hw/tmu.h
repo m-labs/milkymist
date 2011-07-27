@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,16 +63,4 @@ struct tmu_vertex {
 
 #define TMU_MESH_MAXSIZE	128
 
-/* Performance monitoring */
-
-#define CSR_TMU_REQ_A		MMPTR(0xe0007050)
-#define CSR_TMU_HIT_A		MMPTR(0xe0007054)
-#define CSR_TMU_REQ_B		MMPTR(0xe0007058)
-#define CSR_TMU_HIT_B		MMPTR(0xe000705C)
-#define CSR_TMU_REQ_C		MMPTR(0xe0007060)
-#define CSR_TMU_HIT_C		MMPTR(0xe0007064)
-#define CSR_TMU_REQ_D		MMPTR(0xe0007068)
-#define CSR_TMU_HIT_D		MMPTR(0xe000706C)
-
 #endif /* __HW_TMU_H */
-
