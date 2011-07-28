@@ -41,7 +41,7 @@ module fmlarb #(
 	input [fml_depth-1:0] m2_adr,
 	input m2_stb,
 	input m2_we,
-	output m2_ack,
+	output m2_eack,
 	input [7:0] m2_sel,
 	input [63:0] m2_di,
 	output [63:0] m2_do,
@@ -198,9 +198,8 @@ fmlarb_dack dack0(.sys_clk(sys_clk), .sys_rst(sys_rst),
 fmlarb_dack dack1(.sys_clk(sys_clk), .sys_rst(sys_rst),
 	.stb(m1_stb), .eack((master == 3'd1) & s_eack), .we(m1_we),
 	.stbm(m1_stbm), .ack(m1_ack));
-fmlarb_dack dack2(.sys_clk(sys_clk), .sys_rst(sys_rst),
-	.stb(m2_stb), .eack((master == 3'd2) & s_eack), .we(m2_we),
-	.stbm(m2_stbm), .ack(m2_ack));
+assign m2_eack = (master == 3'd2) & s_eack;
+assign m2_stbm = m2_stb;
 fmlarb_dack dack3(.sys_clk(sys_clk), .sys_rst(sys_rst),
 	.stb(m3_stb), .eack((master == 3'd3) & s_eack), .we(m3_we),
 	.stbm(m3_stbm), .ack(m3_ack));

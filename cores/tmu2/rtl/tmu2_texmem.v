@@ -33,7 +33,7 @@ module tmu2_texmem #(
 
 	output [fml_depth-1:0] fml_adr,
 	output fml_stb,
-	input fml_ack,
+	input fml_eack,
 	input [63:0] fml_di,
 
 	input flush,
@@ -353,7 +353,7 @@ tmu2_fetchtexel #(
 	
 	.fml_adr(fml_adr),
 	.fml_stb(fml_stb),
-	.fml_ack(fml_ack),
+	.fml_eack(fml_eack),
 	.fml_di(fml_di)
 );
 

@@ -537,7 +537,7 @@ wire			fml_brg_we,
 
 wire			fml_brg_ack,
 			fml_vga_ack,
-			fml_tmur_ack,
+			fml_tmur_eack,
 			fml_tmudr_ack,
 			fml_tmuw_ack,
 			fml_videoin_ack;
@@ -595,11 +595,10 @@ fmlarb #(
 	.m1_do(fml_brg_dr),
 
 	/* TMU, pixel read DMA (texture) */
-	/* Also used as memory test port */
 	.m2_adr(fml_tmur_adr),
 	.m2_stb(fml_tmur_stb),
 	.m2_we(fml_tmur_we),
-	.m2_ack(fml_tmur_ack),
+	.m2_eack(fml_tmur_eack),
 	.m2_sel(fml_tmur_sel),
 	.m2_di(fml_tmur_dw),
 	.m2_do(fml_tmur_dr),
@@ -1152,7 +1151,7 @@ tmu2 #(
 
 	.fmlr_adr(fml_tmur_adr),
 	.fmlr_stb(fml_tmur_stb),
-	.fmlr_ack(fml_tmur_ack),
+	.fmlr_eack(fml_tmur_eack),
 	.fmlr_di(fml_tmur_dr),
 
 	.fmldr_adr(fml_tmudr_adr),
@@ -1184,7 +1183,7 @@ memtest #(
 	.fml_adr(fml_tmur_adr),
 	.fml_stb(fml_tmur_stb),
 	.fml_we(fml_tmur_we),
-	.fml_ack(fml_tmur_ack),
+	.fml_ack(fml_tmur_eack),
 	.fml_di(fml_tmur_dr),
 	.fml_sel(fml_tmur_sel),
 	.fml_do(fml_tmur_dw)

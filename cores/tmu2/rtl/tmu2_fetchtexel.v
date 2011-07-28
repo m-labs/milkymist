@@ -34,7 +34,7 @@ module tmu2_fetchtexel #(
 	
 	output reg [fml_depth-1:0] fml_adr,
 	output reg fml_stb,
-	input fml_ack,
+	input fml_eack,
 	input [63:0] fml_di
 );
 
@@ -44,7 +44,7 @@ always @(posedge sys_clk) begin
 	if(sys_rst)
 		fml_stb <= 1'b0;
 	else begin
-		if(fml_ack)
+		if(fml_eack)
 			fml_stb <= 1'b0;
 		if(pipe_ack_o) begin
 			fml_stb <= pipe_stb_i;
@@ -52,7 +52,7 @@ always @(posedge sys_clk) begin
 		end
 	end
 end
-assign pipe_ack_o = fetch_en & (~fml_stb | fml_ack);
+assign pipe_ack_o = fetch_en & (~fml_stb | fml_eack);
 
 /* Gather received data */
 wire fifo_we;
@@ -71,12 +71,34 @@ tmu2_fifo64to256 #(
 	.rd(fetch_dat)
 );
 
+reg ack4;
+reg ack3;
+reg ack2;
+reg ack1;
+reg ack;
+
+always @(posedge sys_clk) begin
+	if(sys_rst) begin
+		ack4 <= 1'b0;
+		ack3 <= 1'b0;
+		ack2 <= 1'b0;
+		ack1 <= 1'b0;
+		ack <= 1'b0;
+	end else begin
+		ack4 <= fml_eack;
+		ack3 <= ack4;
+		ack2 <= ack3;
+		ack1 <= ack2;
+		ack <= ack1;
+	end
+end
+
 reg [1:0] bcount;
-assign fifo_we = fml_ack | (|bcount);
+assign fifo_we = ack | (|bcount);
 always @(posedge sys_clk) begin
 	if(sys_rst)
 		bcount <= 2'd0;
-	else if(fml_ack)
+	else if(ack)
 		bcount <= 2'd3;
 	else if(|bcount)
 		bcount <= bcount - 2'd1;

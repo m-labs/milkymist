@@ -46,7 +46,7 @@ module tmu2 #(
 	/* FML master - Texture pixel read. fml_we=0 is assumed. */
 	output [fml_depth-1:0] fmlr_adr,
 	output fmlr_stb,
-	input fmlr_ack,
+	input fmlr_eack,
 	input [63:0] fmlr_di,
 
 	/* FML master - Destination pixel read. fml_we=0 is assumed. */
@@ -627,7 +627,7 @@ tmu2_texmem #(
 
 	.fml_adr(fmlr_adr),
 	.fml_stb(fmlr_stb),
-	.fml_ack(fmlr_ack),
+	.fml_eack(fmlr_eack),
 	.fml_di(fmlr_di),
 
 	.flush(start),
