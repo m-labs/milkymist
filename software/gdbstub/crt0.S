@@ -102,7 +102,7 @@ _system_call_handler:
 /* save all registers onto the stack */ 
 save_all:        
     /* save origin sp */
-    addi    r0, r0, -144
+    addi    r0, r0, -156
     /* save registers */
     /* 0 - R0 - saved below */
     sw      (r0+4), r1
@@ -142,7 +142,13 @@ save_all:
     sw      (r0+136), r1
     rcsr    r1, DEBA
     sw      (r0+140), r1
-    	       
+    rcsr    r1, IE
+    sw      (r0+144), r1
+    rcsr    r1, IM
+    sw      (r0+148), r1
+    rcsr    r1, IP
+    sw      (r0+152), r1
+
     /* work out EID from exception entry point address */
     andi    r1, ra, 0xff
     srui    r1, r1, 5
@@ -157,7 +163,7 @@ save_all:
     xor     r0, r0, r0
     
     /* fix ra */
-    lw      r1, (sp+144)
+    lw      r1, (sp+156)
     sw      (sp+116), r1
     
     /* save r0 (hardcoded to 0) */
@@ -209,6 +215,10 @@ e_restore_and_return:
     wcsr    EBA, ea
     lw      ea, (sp+140)
     wcsr    DEBA, ea
+    lw      ea, (sp+144)
+    wcsr    IE, ea
+    lw      ea, (sp+148)
+    wcsr    IM, ea
     /* restore EA from PC */        
     lw      ea, (sp+128)
     /* stack pointer must be restored last, in case it has been updated */
@@ -225,6 +235,10 @@ b_restore_and_return:
     wcsr    EBA, ba
     lw      ba, (sp+140)
     wcsr    DEBA, ba
+    lw      ba, (sp+144)
+    wcsr    IE, ba
+    lw      ba, (sp+148)
+    wcsr    IM, ba
     /* restore BA from PC */        
     lw 	ba, (sp+128)
     /* stack pointer must be restored last, in case it has been updated */
