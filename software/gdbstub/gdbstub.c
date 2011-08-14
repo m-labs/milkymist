@@ -673,11 +673,13 @@ void handle_exception(unsigned int *registers)
 {
     int irq;
     
-    /* make sure break is disabled.
+    /*
+     * make sure break is disabled.
      * we can enter the stub with break enabled when the application calls it.
-     * there is a race condition here if the break is asserted before
-     * this line is executed, but the race window is small. to prevent it completely,
-     * applications should disable debug exceptions before jumping to debug ROM.
+     * there is a race condition here if the break is asserted before this line
+     * is executed, but the race window is small. to prevent it completely,
+     * applications should disable debug exceptions before jumping to debug
+     * ROM.
      */
     CSR_UART_BREAK = 0;
 
