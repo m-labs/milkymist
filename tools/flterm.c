@@ -377,10 +377,12 @@ static void do_terminal(char *serial_port,
 	int doublerate, int gdb_passthrough,
 	const char *kernel_image, unsigned int kernel_address,
 	const char *cmdline, unsigned int cmdline_address,
-	const char *initrd_image, unsigned int initrd_address)
+	const char *initrd_image, unsigned int initrd_address,
+	char *log_path)
 {
 	int serialfd;
 	int gdbfd = -1;
+	FILE * logfd = NULL;
 	struct termios my_termios;
 	char c;
 	int recognized;
@@ -389,6 +391,14 @@ static void do_terminal(char *serial_port,
 	int rsp_pending = 0;
 	
 	/* Open and configure the serial port */
+	if(log_path != NULL) {
+		logfd = fopen(log_path, "a+");
+		if(logfd == NULL) {
+			perror("Unable to open log file");
+			return;
+		}
+	}
+
 	serialfd = open(serial_port, O_RDWR|O_NOCTTY);
 	if(serialfd == -1) {
 		perror("Unable to open serial port");
@@ -450,7 +460,7 @@ static void do_terminal(char *serial_port,
 
 		if(fds[0].revents & POLLIN) {
 			if (read(0, &c, 1) <= 0) break;
-			if(write(serialfd, &c, 1) <= 0) break;
+			if (write(serialfd, &c, 1) <= 0) break;
 		}
 
 		if(fds[2].revents & POLLIN) {
@@ -481,6 +491,10 @@ static void do_terminal(char *serial_port,
 
 		if(fds[1].revents & POLLIN) {
 			if(read(serialfd, &c, 1) <= 0) break;
+
+			fwrite(&c, sizeof(c), 1, logfd);
+			fflush(logfd);
+
 			if(gdbfd != -1 && rsp_pending && (c == '+' || c == '-')) {
 				rsp_pending = 0;
 				write(gdbfd, &c, 1);
@@ -508,9 +522,9 @@ static void do_terminal(char *serial_port,
 	}
 	
 	close(serialfd);
-	if(gdbfd != -1) {
-		close(gdbfd);
-	}
+
+	if(gdbfd != -1) close(gdbfd);
+	if(logfd) fclose(logfd);
 }
 
 enum {
@@ -523,7 +537,8 @@ enum {
 	OPTION_CMDLINE,
 	OPTION_CMDLINEADR,
 	OPTION_INITRD,
-	OPTION_INITRDADR
+	OPTION_INITRDADR,
+	OPTION_LOG
 };
 
 static const struct option options[] = {
@@ -578,6 +593,11 @@ static const struct option options[] = {
 		.val = OPTION_INITRDADR
 	},
 	{
+		.name = "log",
+		.has_arg = 1,
+		.val = OPTION_LOG
+	},
+	{
 		.name = NULL
 	}
 };
@@ -597,7 +617,8 @@ static void print_usage()
 	fprintf(stderr, "              [--double-rate] [--gdb-passthrough] [--debug]\n");
 	fprintf(stderr, "              --kernel <kernel_image> [--kernel-adr <address>]\n");
 	fprintf(stderr, "              [--cmdline <cmdline> [--cmdline-adr <address>]]\n");
-	fprintf(stderr, "              [--initrd <initrd_image> [--initrd-adr <address>]]\n\n");
+	fprintf(stderr, "              [--initrd <initrd_image> [--initrd-adr <address>]]\n");
+	fprintf(stderr, "              [--log <log_file>]\n\n");
 	printf("Default load addresses:\n");
 	fprintf(stderr, "  kernel:  0x%08x\n", DEFAULT_KERNELADR);
 	fprintf(stderr, "  cmdline: 0x%08x\n", DEFAULT_CMDLINEADR);
@@ -617,6 +638,7 @@ int main(int argc, char *argv[])
 	char *initrd_image;
 	unsigned int initrd_address;
 	char *endptr;
+	char *log_path;
 	struct termios otty, ntty;
 	
 	/* Fetch command line arguments */
@@ -629,6 +651,7 @@ int main(int argc, char *argv[])
 	cmdline_address = DEFAULT_CMDLINEADR;
 	initrd_image = NULL;
 	initrd_address = DEFAULT_INITRDADR;
+	log_path = NULL;
 	while((opt = getopt_long(argc, argv, "", options, NULL)) != -1) {
 		if(opt == '?') {
 			print_usage();
@@ -672,6 +695,10 @@ int main(int argc, char *argv[])
 				initrd_address = strtoul(optarg, &endptr, 0);
 				if(*endptr != 0) initrd_address = 0;
 				break;
+			case OPTION_LOG:
+				free(log_path);
+				log_path = strdup(optarg);
+				break;
 		}
 	}
 
@@ -693,7 +720,8 @@ int main(int argc, char *argv[])
 	do_terminal(serial_port, doublerate, gdb_passthrough,
 		kernel_image, kernel_address,
 		cmdline, cmdline_address,
-		initrd_image, initrd_address);
+		initrd_image, initrd_address,
+		log_path);
 	
 	/* Restore stdin/out into their previous state */
 	tcsetattr(0, TCSANOW, &otty);
