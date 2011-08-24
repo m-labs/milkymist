@@ -329,13 +329,13 @@ static void gdb_process_packet(int infd, int outfd, int altfd)
 		fds.revents = 0;
 		if(poll(&fds, 1, 100) == 0) {
 			/* timeout */
-			if (altfd != -1) {
+			if(altfd != -1) {
 				write(altfd, gdbbuf, pos);
 			}
 			break;
 		}
-		if (pos == GDBBUFLEN) {
-			if (altfd != -1) {
+		if(pos == GDBBUFLEN) {
+			if(altfd != -1) {
 				write(altfd, gdbbuf, pos);
 			}
 			break;
@@ -344,26 +344,26 @@ static void gdb_process_packet(int infd, int outfd, int altfd)
 		gdbbuf[pos++] = c;
 		if(c == '#') {
 			seen_hash = 1;
-		} else if (seen_hash == 0) {
+		} else if(seen_hash == 0) {
 			runcksum += c;
-		} else if (seen_hash == 1) {
+		} else if(seen_hash == 1) {
 			recvcksum = hex(c) << 4;
 			seen_hash = 2;
-		} else if (seen_hash == 2) {
+		} else if(seen_hash == 2) {
 			recvcksum |= hex(c);
 			seen_hash = 3;
 		}
 
-		if (seen_hash == 3) {
+		if(seen_hash == 3) {
 			/* we're done */
 			runcksum %= 256;
-			if (recvcksum == runcksum) {
-				if (debug) {
+			if(recvcksum == runcksum) {
+				if(debug) {
 					fprintf(stderr, "[GDB %s]\n", gdbbuf);
 				}
 				write(outfd, gdbbuf, pos);
 			} else {
-				if (altfd != -1) {
+				if(altfd != -1) {
 					write(altfd, gdbbuf, pos);
 				}
 			}
@@ -382,7 +382,7 @@ static void do_terminal(char *serial_port,
 {
 	int serialfd;
 	int gdbfd = -1;
-	FILE * logfd = NULL;
+	FILE *logfd = NULL;
 	struct termios my_termios;
 	char c;
 	int recognized;
@@ -431,7 +431,7 @@ static void do_terminal(char *serial_port,
 	recognized = 0;
 	flags = fcntl(serialfd, F_GETFL, 0);
 	while(1) {
-		if (gdbfd == -1 && gdb_passthrough) {
+		if(gdbfd == -1 && gdb_passthrough) {
 			gdbfd = open("/dev/ptmx", O_RDWR);
 			if(grantpt(gdbfd) != 0) {
 				perror("grantpt()");
@@ -459,22 +459,22 @@ static void do_terminal(char *serial_port,
 		fcntl(serialfd, F_SETFL, flags);
 
 		if(fds[0].revents & POLLIN) {
-			if (read(0, &c, 1) <= 0) break;
-			if (write(serialfd, &c, 1) <= 0) break;
+			if(read(0, &c, 1) <= 0) break;
+			if(write(serialfd, &c, 1) <= 0) break;
 		}
 
 		if(fds[2].revents & POLLIN) {
 			rsp_pending = 1;
-			if (read(gdbfd, &c, 1) <= 0) break;
-			if (c == '\03') {
+			if(read(gdbfd, &c, 1) <= 0) break;
+			if(c == '\03') {
 				/* convert ETX to breaks */
-				if (debug) {
+				if(debug) {
 					fprintf(stderr, "[GDB BREAK]\n");
 				}
 				tcsendbreak(serialfd, 0);
-			} else if (c == '$') {
+			} else if(c == '$') {
 				gdb_process_packet(gdbfd, serialfd, -1);
-			} else if (c == '+' || c == '-') {
+			} else if(c == '+' || c == '-') {
 				write(serialfd, &c, 1);
 			} else {
 				fprintf(stderr, "Internal error (line %d)", __LINE__);
@@ -498,7 +498,7 @@ static void do_terminal(char *serial_port,
 			if(gdbfd != -1 && rsp_pending && (c == '+' || c == '-')) {
 				rsp_pending = 0;
 				write(gdbfd, &c, 1);
-			} else if (gdbfd != -1 && c == '$') {
+			} else if(gdbfd != -1 && c == '$') {
 				gdb_process_packet(serialfd, gdbfd, 0);
 			} else {
 				/* write to terminal */
@@ -604,7 +604,7 @@ static const struct option options[] = {
 
 static void print_usage()
 {
-	fprintf(stderr, "Serial boot program for Milkymist SoC - v. 2.0\n");
+	fprintf(stderr, "Serial boot program for Milkymist SoC - v. 2.1\n");
 	fprintf(stderr, "Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq\n");
 	fprintf(stderr, "Copyright (C) 2011 Michael Walle\n");
 	fprintf(stderr, "Copyright (C) 2004 MontaVista Software, Inc\n\n");
