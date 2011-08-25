@@ -493,8 +493,8 @@ static void do_terminal(char *serial_port,
 		if(fds[1].revents & POLLIN) {
 			if(read(serialfd, &c, 1) <= 0) break;
 
-			if(logfd != NULL) {
-				if(isascii(c)) fwrite(&c, sizeof(c), 1, logfd);
+			if(logfd && c && isascii(c)) {
+				fwrite(&c, sizeof(c), 1, logfd);
 				if(c == '\n') fflush(logfd);
 			}
 
