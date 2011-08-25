@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <string.h>
+#include <ctype.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -492,8 +493,10 @@ static void do_terminal(char *serial_port,
 		if(fds[1].revents & POLLIN) {
 			if(read(serialfd, &c, 1) <= 0) break;
 
-			fwrite(&c, sizeof(c), 1, logfd);
-			fflush(logfd);
+			if(logfd != NULL) {
+				if(isascii(c)) fwrite(&c, sizeof(c), 1, logfd);
+				if(c == '\n') fflush(logfd);
+			}
 
 			if(gdbfd != -1 && rsp_pending && (c == '+' || c == '-')) {
 				rsp_pending = 0;
