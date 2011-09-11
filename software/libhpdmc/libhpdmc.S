@@ -342,16 +342,18 @@ boot:
  *
  * inputs:	none
  * outputs:	r1 - character
- * clobbers:	r1
+ * clobbers:	r1, r2
  */
 getkey:
-	rcsr	r1, IP
-	andi	r1, r1, IRQ_UARTRX
-	be	r1, r0, getkey
-	wcsr	IP, r1
-	mvhi	r1, hi(CSR_UART_RXTX)
-	ori	r1, r1, lo(CSR_UART_RXTX)
-	lw	r1, (r1+0)
+	mvhi	r2, hi(CSR_UART_RXTX)
+	ori	r2, r2, lo(CSR_UART_RXTX)
+getkeywait:
+	lw	r1, (r2+8)
+	andi	r1, r1, UART_STAT_RX_EVT
+	be	r1, r0, getkeywait
+	mvi	r1, UART_STAT_RX_EVT
+	sw	(r2+8), r1
+	lw	r1, (r2+0)
 	ret
 #endif /* FEAT_MANUAL_CALIBRATION */
 
@@ -416,8 +418,8 @@ printint:
 	mvu	r3, '-'
 	sw	(r2+0), r3
 writeintwait0:
-	rcsr	r3, IP
-	andi	r3, r3, IRQ_UARTTX
+	lw	r3, (r2+8)
+	andi	r3, r3, UART_STAT_THRE
 	be	r3, r0, writeintwait0
 	wcsr	IP, r3
 
@@ -428,8 +430,8 @@ positive:
 	addi	r3, r3, '0'
 	sw	(r2+0), r3
 writeintwait1:
-	rcsr	r3, IP
-	andi	r3, r3, IRQ_UARTTX
+	lw	r3, (r2+8)
+	andi	r3, r3, UART_STAT_THRE
 	be	r3, r0, writeintwait1
 	wcsr	IP, r3
 	
@@ -439,16 +441,16 @@ writeintwait1:
 	addi	r3, r3, '0'
 	sw	(r2+0), r3
 writeintwait2:
-	rcsr	r3, IP
-	andi	r3, r3, IRQ_UARTTX
+	lw	r3, (r2+8)
+	andi	r3, r3, UART_STAT_THRE
 	be	r3, r0, writeintwait2
 	wcsr	IP, r3
 	
 	addi	r3, r1, '0'
 	sw	(r2+0), r3
 writeintwait3:
-	rcsr	r3, IP
-	andi	r3, r3, IRQ_UARTTX
+	lw	r3, (r2+8)
+	andi	r3, r3, UART_STAT_THRE
 	be	r3, r0, writeintwait3
 	wcsr	IP, r3
 
@@ -468,10 +470,9 @@ writeloop:
 	be	r3, r0, print_endloop
 	sw	(r2+0), r3
 writewait:
-	rcsr	r3, IP
-	andi	r3, r3, IRQ_UARTTX
+	lw	r3, (r2+8)
+	andi	r3, r3, UART_STAT_THRE
 	be	r3, r0, writewait
-	wcsr	IP, r3
 	addi	r1, r1, 1
 	bi	writeloop
 print_endloop:
