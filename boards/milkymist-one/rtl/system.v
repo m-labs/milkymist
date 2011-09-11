@@ -720,8 +720,7 @@ fmlbrg #(
 //---------------------------------------------------------------------------
 // Interrupts
 //---------------------------------------------------------------------------
-wire uartrx_irq;
-wire uarttx_irq;
+wire uart_irq;
 wire gpio_irq;
 wire timer0_irq;
 wire timer1_irq;
@@ -734,8 +733,7 @@ wire tmu_irq;
 wire ethernetrx_irq;
 wire ethernettx_irq;
 wire videoin_irq;
-wire midirx_irq;
-wire miditx_irq;
+wire midi_irq;
 wire ir_irq;
 wire usb_irq;
 
@@ -743,8 +741,8 @@ wire [31:0] cpu_interrupt;
 assign cpu_interrupt = {14'd0,
 	usb_irq,
 	ir_irq,
-	miditx_irq,
-	midirx_irq,
+	1'b0,
+	midi_irq,
 	videoin_irq,
 	ethernettx_irq,
 	ethernetrx_irq,
@@ -757,8 +755,8 @@ assign cpu_interrupt = {14'd0,
 	timer1_irq,
 	timer0_irq,
 	gpio_irq,
-	uarttx_irq,
-	uartrx_irq
+	1'b0,
+	uart_irq
 };
 
 //---------------------------------------------------------------------------
@@ -876,8 +874,7 @@ uart #(
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_uart),
 
-	.rx_irq(uartrx_irq),
-	.tx_irq(uarttx_irq),
+	.irq(uart_irq),
 
 	.uart_rx(uart_rx),
 	.uart_tx(uart_tx),
@@ -1383,16 +1380,14 @@ uart #(
 	.csr_di(csr_dw),
 	.csr_do(csr_dr_midi),
 
-	.rx_irq(midirx_irq),
-	.tx_irq(miditx_irq),
+	.irq(midi_irq),
 
 	.uart_rx(midi_rx),
 	.uart_tx(midi_tx)
 );
 `else
 assign csr_dr_midi = 32'd0;
-assign midirx_irq = 1'b0;
-assign miditx_irq = 1'b0;
+assign midi_irq = 1'b0;
 assign midi_tx = 1'b1;
 `endif
 

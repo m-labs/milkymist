@@ -29,8 +29,7 @@ module uart #(
 	input [31:0] csr_di,
 	output reg [31:0] csr_do,
 
-	output rx_irq,
-	output tx_irq,
+	output irq,
 
 	input uart_rx,
 	output uart_tx,
@@ -55,58 +54,85 @@ uart_transceiver transceiver(
 	.divisor(divisor),
 
 	.rx_data(rx_data),
-	.rx_done(rx_irq),
+	.rx_done(rx_done),
 
 	.tx_data(tx_data),
 	.tx_wr(tx_wr),
-	.tx_done(tx_irq),
+	.tx_done(tx_done),
 
 	.break(break_transceiver)
 );
 
-assign uart_tx = thru ? uart_rx : uart_tx_transceiver;
+assign uart_tx = thru_en ? uart_rx : uart_tx_transceiver;
 assign break = break_en & break_transceiver;
 
 /* CSR interface */
 wire csr_selected = csr_a[13:10] == csr_addr;
 
+assign irq = (tx_event & tx_irq_en) | (rx_event & rx_irq_en);
+
 assign tx_data = csr_di[7:0];
-assign tx_wr = csr_selected & csr_we & (csr_a[1:0] == 2'b00);
+assign tx_wr = csr_selected & csr_we & (csr_a[2:0] == 3'b000);
 
 parameter default_divisor = clk_freq/baud/16;
 
-reg thru;
+reg thru_en;
 reg break_en;
-reg tx_pending;
+reg tx_irq_en;
+reg rx_irq_en;
+reg rx_event;
+reg tx_event;
+reg thre;
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
 		divisor <= default_divisor;
 		csr_do <= 32'd0;
-		thru <= 1'b0;
+		thru_en <= 1'b0;
 		break_en <= break_en_default;
-		tx_pending <= 1'b0;
+		rx_irq_en <= 1'b0;
+		tx_irq_en <= 1'b0;
+		tx_event <= 1'b0;
+		rx_event <= 1'b0;
+		thre <= 1'b1;
 	end else begin
 		csr_do <= 32'd0;
 		if(break)
 			break_en <= 1'b0;
-		if(tx_irq)
-			tx_pending <= 1'b0;
+		if(tx_done) begin
+			tx_event <= 1'b1;
+			thre <= 1'b1;
+		end
 		if(tx_wr)
-			tx_pending <= 1'b1;
+			thre <= 1'b0;
+		if(rx_done) begin
+			rx_event <= 1'b1;
+		end
 		if(csr_selected) begin
-			case(csr_a[1:0])
-				2'b00: csr_do <= rx_data;
-				2'b01: csr_do <= divisor;
-				2'b10: csr_do <= thru;
-				2'b11: csr_do <= {tx_pending, break_en};
+			case(csr_a[2:0])
+				3'b000: csr_do <= rx_data;
+				3'b001: csr_do <= divisor;
+				3'b010: csr_do <= {tx_event, rx_event, thre};
+				3'b011: csr_do <= {thru_en, tx_irq_en, rx_irq_en};
+				3'b100: csr_do <= {break_en};
 			endcase
 			if(csr_we) begin
-				case(csr_a[1:0])
-					2'b00:; /* handled by transceiver */
-					2'b01: divisor <= csr_di[15:0];
-					2'b10: thru <= csr_di[0];
-					2'b11: break_en <= csr_di[0];
+				case(csr_a[2:0])
+					3'b000:; /* handled by transceiver */
+					3'b001: divisor <= csr_di[15:0];
+					3'b010: begin
+						/* write one to clear */
+						if(csr_di[1])
+							rx_event <= 1'b0;
+						if(csr_di[2])
+							tx_event <= 1'b0;
+					end
+					3'b011: begin
+						rx_irq_en <= csr_di[0];
+						tx_irq_en <= csr_di[1];
+						thru_en <= csr_di[2];
+					end
+					3'b100: break_en <= csr_di[0];
 				endcase
 			end
 		end
