@@ -109,17 +109,16 @@ static int memcmp(const void *cs, const void *ct, size_t count)
 
 static char get_debug_char(void)
 {
-    while (!(irq_pending() & IRQ_UARTRX));
-    irq_ack(IRQ_UARTRX);
+    while (!(CSR_UART_STAT & UART_STAT_RX_EVT));
+    CSR_UART_STAT = UART_STAT_RX_EVT;
     return (char)CSR_UART_RXTX;
 }
 
 static void put_debug_char(char c)
 {
     CSR_UART_RXTX = c;
-    /* Blocking on UART pending bit is intended here! Have a
-     * look at the end of handle_exception() too. */
-    while (CSR_UART_BREAK & UART_TX_PENDING);
+    /* loop on THRE, TX_EVT must not be cleared */
+    while (!(CSR_UART_STAT & UART_STAT_THRE));
 }
 
 /*
@@ -671,8 +670,8 @@ static void cmd_query(void)
  */
 void handle_exception(unsigned int *registers)
 {
-    int irq;
-    
+    unsigned int stat;
+
     /*
      * make sure break is disabled.
      * we can enter the stub with break enabled when the application calls it.
@@ -681,7 +680,7 @@ void handle_exception(unsigned int *registers)
      * applications should disable debug exceptions before jumping to debug
      * ROM.
      */
-    CSR_UART_BREAK = 0;
+    CSR_UART_DEBUG = 0;
 
     /* clear BSS there was a board reset */
     if (!CSR_DBG_SCRATCHPAD) {
@@ -689,11 +688,11 @@ void handle_exception(unsigned int *registers)
         clear_bss();
     }
 
-    /* wait until TX transaction is finished */
-    while (CSR_UART_BREAK & UART_TX_PENDING);
-
-    /* remember if irq was set */
-    irq = irq_pending() & IRQ_UARTTX;
+    /* wait until TX transaction is finished. If there was a transmission in
+     * progress, the event bit will be set. In this case, the gdbstub won't clear
+     * it after it is terminated. */
+    while(!(CSR_UART_STAT & UART_STAT_THRE));
+    stat = CSR_UART_STAT;
 
     /* reply to host that an exception has occured */
     if (gdb_connected) {
@@ -768,11 +767,9 @@ void handle_exception(unsigned int *registers)
 out:
     flush_cache();
 
-    /* ack TX IRQ only if it wasn't set before */
-    if (!irq) {
-        irq_ack(IRQ_UARTTX);
-    }
+    /* clear TX event if there was no transmission in progress */
+    CSR_UART_STAT = stat & UART_STAT_TX_EVT;
 
     /* reenable break */
-    CSR_UART_BREAK = UART_BREAK_EN;
+    CSR_UART_DEBUG = UART_DEBUG_BREAK_EN;
 }
