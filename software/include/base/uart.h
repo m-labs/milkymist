@@ -19,8 +19,7 @@
 #define __UART_H
 
 void uart_init();
-void uart_isr_rx();
-void uart_isr_tx();
+void uart_isr();
 void uart_force_sync(int f);
 
 void uart_write(char c);
