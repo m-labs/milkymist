@@ -34,11 +34,36 @@ static char rx_buf[UART_RINGBUFFER_SIZE_RX];
 static volatile unsigned int rx_produce;
 static volatile unsigned int rx_consume;
 
-void uart_isr_rx()
+#define UART_RINGBUFFER_SIZE_TX 131072
+#define UART_RINGBUFFER_MASK_TX (UART_RINGBUFFER_SIZE_TX-1)
+
+static char tx_buf[UART_RINGBUFFER_SIZE_TX];
+static unsigned int tx_produce;
+static unsigned int tx_consume;
+static volatile int tx_cts;
+
+static int force_sync;
+
+
+void uart_isr()
 {
-	irq_ack(IRQ_UARTRX);
-	rx_buf[rx_produce] = CSR_UART_RXTX;
-	rx_produce = (rx_produce + 1) & UART_RINGBUFFER_MASK_RX;
+	unsigned int stat = CSR_UART_STAT;
+
+	if(stat & UART_STAT_RX_EVT) {
+		rx_buf[rx_produce] = CSR_UART_RXTX;
+		rx_produce = (rx_produce + 1) & UART_RINGBUFFER_MASK_RX;
+	}
+
+	if(stat & UART_STAT_TX_EVT) {
+		if(tx_produce != tx_consume) {
+			CSR_UART_RXTX = tx_buf[tx_consume];
+			tx_consume = (tx_consume + 1) & UART_RINGBUFFER_MASK_TX;
+		} else
+			tx_cts = 1;
+	}
+
+	CSR_UART_STAT = stat;
+	irq_ack(IRQ_UART);
 }
 
 /* Do not use in interrupt handlers! */
@@ -57,36 +82,16 @@ int uart_read_nonblock()
 	return (rx_consume != rx_produce);
 }
 
-#define UART_RINGBUFFER_SIZE_TX 131072
-#define UART_RINGBUFFER_MASK_TX (UART_RINGBUFFER_SIZE_TX-1)
-
-static char tx_buf[UART_RINGBUFFER_SIZE_TX];
-static unsigned int tx_produce;
-static unsigned int tx_consume;
-static volatile int tx_cts;
-
-static int force_sync;
-
-void uart_isr_tx()
-{
-	irq_ack(IRQ_UARTTX);
-	if(tx_produce != tx_consume) {
-		CSR_UART_RXTX = tx_buf[tx_consume];
-		tx_consume = (tx_consume + 1) & UART_RINGBUFFER_MASK_TX;
-	} else
-		tx_cts = 1;
-}
-
 void uart_write(char c)
 {
 	unsigned int oldmask;
 	
 	oldmask = irq_getmask();
 	irq_setmask(0);
+
 	if(force_sync) {
 		CSR_UART_RXTX = c;
-		while(!(irq_pending() & IRQ_UARTTX));
-		irq_ack(IRQ_UARTTX);
+		while(!(CSR_UART_STAT & UART_STAT_THRE));
 	} else {
 		if(tx_cts) {
 			tx_cts = 0;
@@ -109,10 +114,16 @@ void uart_init()
 	tx_consume = 0;
 	tx_cts = 1;
 
-	irq_ack(IRQ_UARTRX|IRQ_UARTTX);
+	irq_ack(IRQ_UART);
+
+	/* ack any events */
+	CSR_UART_STAT = CSR_UART_STAT;
+
+	/* enable interrupts */
+	CSR_UART_CTRL = UART_CTRL_TX_INT | UART_CTRL_RX_INT;
 
 	mask = irq_getmask();
-	mask |= IRQ_UARTRX|IRQ_UARTTX;
+	mask |= IRQ_UART;
 	irq_setmask(mask);
 }
 

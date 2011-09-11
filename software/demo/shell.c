@@ -780,16 +780,16 @@ static void irtest()
 static void midiprint()
 {
 	unsigned int r;
-	if(irq_pending() & IRQ_MIDIRX) {
+	if(CSR_MIDI_STAT & MIDI_STAT_RX_EVT) {
 		r = CSR_MIDI_RXTX;
-		irq_ack(IRQ_MIDIRX);
+		CSR_MIDI_STAT = MIDI_STAT_RX_EVT;
 		printf("RX: %02x\n", r);
 	}
 }
 
 static void midirx()
 {
-	irq_ack(IRQ_MIDIRX);
+	CSR_MIDI_STAT = MIDI_STAT_RX_EVT;
 	while(!readchar_nonblock()) midiprint();
 }
 
@@ -797,9 +797,9 @@ static void midisend(int c)
 {
 	printf("TX: %02x\n", c);
 	CSR_MIDI_RXTX = c;
-	while(!(irq_pending() & IRQ_MIDITX));
+	while(!(CSR_MIDI_STAT & MIDI_STAT_TX_EVT));
 	printf("TX done\n");
-	irq_ack(IRQ_MIDITX);
+	CSR_MIDI_STAT = MIDI_STAT_TX_EVT;
 	midiprint();
 }
 

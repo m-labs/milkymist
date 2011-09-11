@@ -360,10 +360,10 @@ static void scroll_callback(struct tmu_td *td)
 	unsigned int oldmask;
 	unsigned int ie;
 	
-	/* HACK: allow nested UART RX interrupts to prevent data loss */
+	/* HACK: allow nested UART interrupts to prevent data loss */
 	ie = irq_getie();
 	oldmask = irq_getmask();
-	irq_setmask(IRQ_UARTRX);
+	irq_setmask(IRQ_UART);
 	irq_enable(1);
 	
 	flush_cpu_dcache();

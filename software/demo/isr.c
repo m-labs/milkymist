@@ -35,10 +35,8 @@ void isr()
 
 	irqs = irq_pending() & irq_getmask();
 
-	if(irqs & IRQ_UARTRX)
-		uart_isr_rx();
-	if(irqs & IRQ_UARTTX)
-		uart_isr_tx();
+	if(irqs & IRQ_UART)
+		uart_isr();
 
 	if(irqs & IRQ_TIMER0)
 		time_isr();
