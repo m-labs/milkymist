@@ -738,10 +738,9 @@ wire ir_irq;
 wire usb_irq;
 
 wire [31:0] cpu_interrupt;
-assign cpu_interrupt = {14'd0,
+assign cpu_interrupt = {16'd0,
 	usb_irq,
 	ir_irq,
-	1'b0,
 	midi_irq,
 	videoin_irq,
 	ethernettx_irq,
@@ -755,7 +754,6 @@ assign cpu_interrupt = {14'd0,
 	timer1_irq,
 	timer0_irq,
 	gpio_irq,
-	1'b0,
 	uart_irq
 };
 
