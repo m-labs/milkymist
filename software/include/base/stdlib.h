@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC (Software)
- * Copyright (C) 2007, 2008, 2009 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2011 Sebastien Bourdeauducq
  * Copyright (C) Linux kernel developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -50,6 +50,7 @@ long strtol(const char *nptr, char **endptr, int base);
 float atof(const char *s);
 
 unsigned int rand();
+void abort();
 
 void *malloc(size_t size);
 void free(void *p);
