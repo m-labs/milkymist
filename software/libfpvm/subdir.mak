@@ -1,4 +1,4 @@
-OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o pfpu.o
+OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o
 
 all: libfpvm.a
 

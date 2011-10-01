@@ -1,7 +1,7 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o pfpu.o
+OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o
 
 all: libfpvm.a
 
@@ -39,8 +39,16 @@ gfpus.o: ../../software/include/base/stdio.h
 gfpus.o: ../../software/include/base/stdlib.h
 gfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
 gfpus.o: ../../software/include/fpvm/pfpu.h
-gfpus.o: ../../software/include/fpvm/gfpus.h ../../software/include/hw/pfpu.h
-gfpus.o: ../../software/include/hw/common.h
+gfpus.o: ../../software/include/fpvm/schedulers.h
+gfpus.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
+lnfpus.o: ../../software/include/base/stdlib.h
+lnfpus.o: ../../software/include/base/stdio.h
+lnfpus.o: ../../software/include/base/string.h
+lnfpus.o: ../../software/include/base/assert.h
+lnfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
+lnfpus.o: ../../software/include/fpvm/pfpu.h
+lnfpus.o: ../../software/include/fpvm/schedulers.h
+lnfpus.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 parser.o: ../../software/include/base/stdio.h
 parser.o: ../../software/include/base/stdlib.h
 parser.o: ../../software/include/base/assert.h

@@ -62,7 +62,8 @@ eval.o: ../../software/include/base/stdlib.h
 eval.o: ../../software/include/base/string.h ../../software/include/hw/pfpu.h
 eval.o: ../../software/include/hw/common.h ../../software/include/hw/tmu.h
 eval.o: ../../software/include/hal/pfpu.h ../../software/include/fpvm/fpvm.h
-eval.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/gfpus.h
+eval.o: ../../software/include/fpvm/is.h
+eval.o: ../../software/include/fpvm/schedulers.h
 eval.o: ../../software/include/fpvm/pfpu.h eval.h renderer.h
 font.o: color.h font.h
 isr.o: ../../software/include/hw/interrupts.h

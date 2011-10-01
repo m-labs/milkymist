@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include <hal/pfpu.h>
 #include <fpvm/fpvm.h>
-#include <fpvm/gfpus.h>
+#include <fpvm/schedulers.h>
 #include <fpvm/pfpu.h>
 
 #include "eval.h"
@@ -281,7 +281,7 @@ fail_fpvm:
 
 static int schedule_pfv()
 {
-	perframe_prog_length = gfpus_schedule(&pfv_fragment, (unsigned int *)perframe_prog, (unsigned int *)perframe_regs);
+	perframe_prog_length = fpvm_default_schedule(&pfv_fragment, (unsigned int *)perframe_prog, (unsigned int *)perframe_regs);
 	eval_reinit_all_pfv();
 	if(perframe_prog_length < 0) {
 		printf("EVL: per-frame VLIW scheduling failed\n");
@@ -527,7 +527,7 @@ fail_finalize:
 
 static int schedule_pvv()
 {
-	pervertex_prog_length = gfpus_schedule(&pvv_fragment, (unsigned int *)pervertex_prog, (unsigned int *)pervertex_regs);
+	pervertex_prog_length = fpvm_default_schedule(&pvv_fragment, (unsigned int *)pervertex_prog, (unsigned int *)pervertex_regs);
 	if(pervertex_prog_length < 0) {
 		printf("EVL: per-vertex VLIW scheduling failed\n");
 		return 0;

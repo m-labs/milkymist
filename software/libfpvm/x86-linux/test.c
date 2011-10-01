@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 #include <stdio.h>
 
 #include <fpvm/fpvm.h>
-#include <fpvm/gfpus.h>
+#include <fpvm/schedulers.h>
 #include <fpvm/pfpu.h>
 #include <hw/pfpu.h>
 
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	fpvm_finalize(&frag);
 	fpvm_dump(&frag);
 	printf("== PFPU:\n");
-	len = gfpus_schedule(&frag, code, registers);
+	len = fpvm_default_schedule(&frag, code, registers);
 	if(len > 0)
 		pfpu_dump(code, len);
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	fpvm_finalize(&frag);
 	fpvm_dump(&frag);
 	printf("== PFPU:\n");
-	len = gfpus_schedule(&frag, code, registers);
+	len = fpvm_default_schedule(&frag, code, registers);
 	if(len > 0)
 		pfpu_dump(code, len);
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	fpvm_finalize(&frag);
 	fpvm_dump(&frag);
 	printf("== PFPU:\n");
-	len = gfpus_schedule(&frag, code, registers);
+	len = fpvm_default_schedule(&frag, code, registers);
 	if(len > 0)
 		pfpu_dump(code, len);
 	
