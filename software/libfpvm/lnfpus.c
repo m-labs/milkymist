@@ -90,7 +90,7 @@ struct pfpu_reg {
 };
 
 
-static struct sched_ctx {
+struct sched_ctx {
 	struct fpvm_fragment *frag;
 	struct insn insns[FPVM_MAXCODELEN];
 	struct vm_reg *regs;	/* dynamically allocated */
@@ -103,7 +103,7 @@ static struct sched_ctx {
 #ifdef REG_STATS
 	int max_regs, curr_regs;	/* allocation statistics */
 #endif
-} *sc;
+};
 
 
 /* ----- Register initialization ------------------------------------------- */
@@ -226,13 +226,13 @@ static void list_concat(struct list *a, struct list *b)
 /* ----- Register management ----------------------------------------------- */
 
 
-static int vm_reg2idx(int reg)
+static int vm_reg2idx(struct sched_ctx *sc, int reg)
 {
 	return reg >= 0 ? reg : sc->frag->nbindings-reg;
 }
 
 
-static int alloc_reg(struct insn *setter)
+static int alloc_reg(struct sched_ctx *sc, struct insn *setter)
 {
 	struct pfpu_reg *reg;
 	int vm_reg, pfpu_reg, vm_idx;
@@ -258,7 +258,7 @@ static int alloc_reg(struct insn *setter)
 
 	Dprintf("  alloc reg %d -> %d\n", vm_reg, pfpu_reg);
 
-	vm_idx = vm_reg2idx(vm_reg);
+	vm_idx = vm_reg2idx(sc, vm_reg);
 	sc->regs[vm_idx].setter = setter;
 	sc->regs[vm_idx].pfpu_reg = pfpu_reg;
 	sc->regs[vm_idx].refs = setter->num_dependants+1;
@@ -267,7 +267,7 @@ static int alloc_reg(struct insn *setter)
 }
 
 
-static void put_reg(int vm_reg)
+static void put_reg(struct sched_ctx *sc, int vm_reg)
 {
 	int vm_idx;
 	struct vm_reg *reg;
@@ -275,7 +275,7 @@ static void put_reg(int vm_reg)
 	if(vm_reg >= 0)
 		return;
 
-	vm_idx = vm_reg2idx(vm_reg);
+	vm_idx = vm_reg2idx(sc, vm_reg);
 	reg = sc->regs+vm_idx;
 
 	assert(reg->refs);
@@ -301,20 +301,21 @@ static void put_reg(int vm_reg)
 }
 
 
-static int lookup_pfpu_reg(int vm_reg)
+static int lookup_pfpu_reg(struct sched_ctx *sc, int vm_reg)
 {
-	return vm_reg >= 0 ? vm_reg : sc->regs[vm_reg2idx(vm_reg)].pfpu_reg;
+	return vm_reg >= 0 ? vm_reg :
+	    sc->regs[vm_reg2idx(sc, vm_reg)].pfpu_reg;
 }
 
 
-static void mark(int vm_reg)
+static void mark(struct sched_ctx *sc, int vm_reg)
 {
 	if(vm_reg > 0)
 		sc->pfpu_regs[vm_reg].used = 1;
 }
 
 
-static int init_registers(struct fpvm_fragment *frag,
+static int init_registers(struct sched_ctx *sc, struct fpvm_fragment *frag,
     unsigned int *registers)
 {
 	int i;
@@ -322,9 +323,9 @@ static int init_registers(struct fpvm_fragment *frag,
 	get_registers(frag, registers);
 
 	for(i = 0; i != frag->ninstructions; i++) {
-		mark(frag->code[i].opa);
-		mark(frag->code[i].opb);
-		mark(frag->code[i].dest);
+		mark(sc, frag->code[i].opa);
+		mark(sc, frag->code[i].opb);
+		mark(sc, frag->code[i].dest);
 	}
 
 	list_init(&sc->unallocated);
@@ -339,12 +340,12 @@ static int init_registers(struct fpvm_fragment *frag,
 /* ----- Instruction scheduler --------------------------------------------- */
 
 
-static struct vm_reg *add_data_ref(struct insn *insn, struct data_ref *ref,
-    int reg_num)
+static struct vm_reg *add_data_ref(struct sched_ctx *sc, struct insn *insn,
+    struct data_ref *ref, int reg_num)
 {
 	struct vm_reg *reg;
 
-	reg = sc->regs+vm_reg2idx(reg_num);
+	reg = sc->regs+vm_reg2idx(sc, reg_num);
 	ref->insn = insn;
 	ref->dep = reg->setter;
 	if(insn->vm_insn->dest == reg_num)
@@ -364,7 +365,7 @@ static struct vm_reg *add_data_ref(struct insn *insn, struct data_ref *ref,
 }
 
 
-static void init_scheduler(struct fpvm_fragment *frag)
+static void init_scheduler(struct sched_ctx *sc, struct fpvm_fragment *frag)
 {
 	int i;
 	struct insn *insn;
@@ -384,16 +385,20 @@ static void init_scheduler(struct fpvm_fragment *frag)
 		list_init(&insn->dependants);
 		switch (insn->arity) {
 			case 3:
-				add_data_ref(insn, &insn->cond, FPVM_REG_IFB);
+				add_data_ref(sc, insn, &insn->cond,
+				    FPVM_REG_IFB);
 				/* fall through */
 			case 2:
-				add_data_ref(insn, &insn->opb, frag->code[i].opb);
+				add_data_ref(sc, insn, &insn->opb,
+				     frag->code[i].opb);
 				/* fall through */
 			case 1:
-				add_data_ref(insn, &insn->opa, frag->code[i].opa);
+				add_data_ref(sc, insn, &insn->opa,
+				     frag->code[i].opa);
 				/* fall through */
 			case 0:
-				reg = sc->regs+vm_reg2idx(frag->code[i].dest);
+				reg = sc->regs+
+				    vm_reg2idx(sc, frag->code[i].dest);
 				if(reg->setter) {
 					reg->setter->next_setter = insn;
 					foreach(ref, &reg->setter->dependants)
@@ -453,7 +458,7 @@ static void init_scheduler(struct fpvm_fragment *frag)
 }
 
 
-static void unblock(struct insn *insn)
+static void unblock(struct sched_ctx *sc, struct insn *insn)
 {
 	int slot;
 
@@ -469,32 +474,33 @@ static void unblock(struct insn *insn)
 }
 
 
-static void put_reg_by_ref(struct data_ref *ref, int vm_reg)
+static void put_reg_by_ref(struct sched_ctx *sc, struct data_ref *ref,
+    int vm_reg)
 {
 	struct insn *setter = ref->dep;
 	struct vm_reg *reg;
 
 	if(setter) {
-		put_reg(setter->vm_insn->dest);
+		put_reg(sc, setter->vm_insn->dest);
 		if(setter->next_setter && setter->next_setter != ref->insn)
-			unblock(setter->next_setter);
+			unblock(sc, setter->next_setter);
 	} else {
-		reg = sc->regs+vm_reg2idx(vm_reg);
+		reg = sc->regs+vm_reg2idx(sc, vm_reg);
 		if(reg->first_setter && !reg->first_setter->rmw)
-			unblock(reg->first_setter);
+			unblock(sc, reg->first_setter);
 	}
 }
 
 
-static void unblock_after(struct insn *insn, int cycle)
+static void unblock_after(struct sched_ctx *sc, struct insn *insn, int cycle)
 {
 	if(insn->earliest <= cycle)
 		insn->earliest = cycle+1;
-	unblock(insn);
+	unblock(sc, insn);
 }
 
 
-static int issue(struct insn *insn, unsigned *code)
+static int issue(struct sched_ctx *sc, struct insn *insn, unsigned *code)
 {
 	struct data_ref *ref;
 	int end, reg;
@@ -507,15 +513,17 @@ static int issue(struct insn *insn, unsigned *code)
 
 	switch (insn->arity) {
 		case 3:
-			put_reg_by_ref(&insn->cond, FPVM_REG_IFB);
+			put_reg_by_ref(sc, &insn->cond, FPVM_REG_IFB);
 			/* fall through */
 		case 2:
-			CODE(sc->cycle).opb = lookup_pfpu_reg(insn->vm_insn->opb);
-			put_reg_by_ref(&insn->opb, insn->vm_insn->opb);
+			CODE(sc->cycle).opb =
+			    lookup_pfpu_reg(sc, insn->vm_insn->opb);
+			put_reg_by_ref(sc, &insn->opb, insn->vm_insn->opb);
 			/* fall through */
 		case 1:
-			CODE(sc->cycle).opa = lookup_pfpu_reg(insn->vm_insn->opa);
-			put_reg_by_ref(&insn->opa, insn->vm_insn->opa);
+			CODE(sc->cycle).opa =
+			    lookup_pfpu_reg(sc, insn->vm_insn->opa);
+			put_reg_by_ref(sc, &insn->opa, insn->vm_insn->opa);
 			break;
 		case 0:
 			break;
@@ -523,16 +531,16 @@ static int issue(struct insn *insn, unsigned *code)
 			abort();
 	}
 
-	reg = alloc_reg(insn);
+	reg = alloc_reg(sc, insn);
 	if(reg < 0)
 		return -1;
 	CODE(end).dest = reg;
 	CODE(sc->cycle).opcode = fpvm_to_pfpu(insn->vm_insn->opcode);
 
 	foreach(ref, &insn->dependants)
-		unblock_after(ref->insn, end);
+		unblock_after(sc, ref->insn, end);
 	if(insn->next_setter && !insn->next_setter->rmw)
-		unblock_after(insn->next_setter,
+		unblock_after(sc, insn->next_setter,
 		    end-insn->next_setter->latency);
 
 	return 0;
@@ -552,7 +560,7 @@ static int count(const struct list *list)
 #endif
 
 
-static int schedule(unsigned int *code)
+static int schedule(struct sched_ctx *sc, unsigned int *code)
 {
 	int remaining;
 	int i, last, end;
@@ -585,13 +593,13 @@ static int schedule(unsigned int *code)
 			}
 		}
 		if(best) {
-			if(issue(best, code) < 0)
+			if(issue(sc, best, code) < 0)
 				return -1;
 			list_del(&best->more);
 			remaining--;
 		}
 		if(CODE(i).dest)
-			put_reg(sc->pfpu_regs[CODE(i).dest].vm_reg);
+			put_reg(sc, sc->pfpu_regs[CODE(i).dest].vm_reg);
 	}
 
 	/*
@@ -617,23 +625,22 @@ int lnfpus_schedule(struct fpvm_fragment *frag, unsigned int *code,
 	 * allocate context and registers on stack because standalone FN has no
 	 * memory allocator
 	 */
-	struct sched_ctx sc_alloc;
+	struct sched_ctx sc;
 	struct vm_reg regs[frag->nbindings-frag->next_sur];
 	pfpu_instruction vecout;
 	int res;
 
-	sc = &sc_alloc;
-	memset(sc, 0, sizeof(*sc));
-	sc->frag = frag;
-	sc->regs = regs;
+	memset(&sc, 0, sizeof(sc));
+	sc.frag = frag;
+	sc.regs = regs;
 	memset(regs, 0, sizeof(regs));
 
-	if(init_registers(frag, reg) < 0)
+	if(init_registers(&sc, frag, reg) < 0)
 		return -1;
-	init_scheduler(frag);
+	init_scheduler(&sc, frag);
 
 	memset(code, 0, PFPU_PROGSIZE*sizeof(*code));
-	res = schedule(code);
+	res = schedule(&sc, code);
 
 #ifdef REG_STATS
 	printf("regs: %d/%d\n", sc->curr_regs, sc->max_regs);
