@@ -319,11 +319,6 @@ static int init_registers(struct fpvm_fragment *frag,
 {
 	int i;
 
-	sc->regs =
-	    calloc(frag->nbindings-frag->next_sur, sizeof(struct vm_reg));
-	if(!sc->regs)
-		return -1;
-
 	get_registers(frag, registers);
 
 	for(i = 0; i != frag->ninstructions; i++) {
@@ -615,33 +610,28 @@ static int schedule(unsigned int *code)
 }
 
 
-static int init_scheduler_context(struct fpvm_fragment *frag,
-    unsigned int *reg)
-{
-	sc = calloc(1, sizeof(*sc));
-	if(!sc)
-		return -1;
-
-	sc->frag = frag;
-
-	if(init_registers(frag, reg) < 0) {
-		free(sc);
-		return -1;
-	}
-
-	init_scheduler(frag);
-	return 0;
-}
-
-
 int lnfpus_schedule(struct fpvm_fragment *frag, unsigned int *code,
     unsigned int *reg)
 {
+	/*
+	 * allocate context and registers on stack because standalone FN has no
+	 * memory allocator
+	 */
+	struct sched_ctx sc_alloc;
+	struct vm_reg regs[frag->nbindings-frag->next_sur];
 	pfpu_instruction vecout;
 	int res;
 
-	if(init_scheduler_context(frag, reg) < 0)
+	sc = &sc_alloc;
+	memset(sc, 0, sizeof(*sc));
+	sc->frag = frag;
+	sc->regs = regs;
+	memset(regs, 0, sizeof(regs));
+
+	if(init_registers(frag, reg) < 0)
 		return -1;
+	init_scheduler(frag);
+
 	memset(code, 0, PFPU_PROGSIZE*sizeof(*code));
 	res = schedule(code);
 
@@ -649,8 +639,6 @@ int lnfpus_schedule(struct fpvm_fragment *frag, unsigned int *code,
 	printf("regs: %d/%d\n", sc->curr_regs, sc->max_regs);
 #endif
 
-	free(sc->regs);
-	free(sc);
 	if(res < 0)
 		return res;
 	if(frag->vector_mode)
