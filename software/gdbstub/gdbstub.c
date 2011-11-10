@@ -505,7 +505,7 @@ static void cmd_mem_read(void)
 
     /* try to read %x,%x */
     if (hex2int(&ptr, &addr) > 0 && *ptr++ == ',' && hex2int(&ptr, &length) > 0
-            && length < (sizeof(remcom_out_buffer) / 2)) {
+            && length <= sizeof(remcom_out_buffer) / 2) {
         if (mem2hex((char *)addr, remcom_out_buffer, length) == NULL) {
             strcpy(remcom_out_buffer, "E14");
         }
