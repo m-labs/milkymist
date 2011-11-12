@@ -38,24 +38,54 @@ _reset_handler:
 	bi	_crt0
 
 _breakpoint_handler:
-	nop; nop; nop; nop
-	nop; nop; nop; nop
+	bi _breakpoint_handler
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 _instruction_bus_error_handler:
-	nop; nop; nop; nop
-	nop; nop; nop; nop
+	bi _instruction_bus_error_handler
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 _watchpoint_hander:
-	nop; nop; nop; nop
-	nop; nop; nop; nop
+	bi _watchpoint_hander
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 _data_bus_error_handler:
-	nop; nop; nop; nop
-	nop; nop; nop; nop
+	bi _data_bus_error_handler
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 _divide_by_zero_handler:
-	nop; nop; nop; nop
-	nop; nop; nop; nop
+	bi _divide_by_zero_handler
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 
 _interrupt_handler:
 	sw      (sp+0), ra
