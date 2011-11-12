@@ -148,7 +148,7 @@
 `define LM32_SHIFT_OP_LEFT              1'b1
 
 // Bus errors
-//`define CFG_BUS_ERRORS_ENABLED
+`define CFG_BUS_ERRORS_ENABLED
 
 // Derive macro that indicates whether we have single-stepping or not
 `ifdef CFG_ROM_DEBUG_ENABLED

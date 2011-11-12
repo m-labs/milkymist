@@ -764,6 +764,25 @@ assign cpu_interrupt = {14'd0,
 //---------------------------------------------------------------------------
 // LM32 CPU
 //---------------------------------------------------------------------------
+wire cpuibus_err;
+wire cpudbus_err;
+`ifdef CFG_BUS_ERRORS_ENABLED
+// Catch NULL pointers and similar errors
+// NOTE: ERR is asserted at the same time as ACK, which violates
+// Wishbone rule 3.45. But LM32 doesn't care.
+reg locked_addr_i;
+reg locked_addr_d;
+always @(posedge sys_clk) begin
+	locked_addr_i <= cpuibus_adr[31:18] == 14'd0;
+	locked_addr_d <= cpudbus_adr[31:18] == 14'd0;
+end
+assign cpuibus_err = locked_addr_i & cpuibus_ack;
+assign cpudbus_err = locked_addr_d & cpudbus_ack;
+`else
+assign cpuibus_err = 1'b0;
+assign cpudbus_err = 1'b0;
+`endif
+
 wire ext_break;
 lm32_top cpu(
 	.clk_i(sys_clk),
@@ -790,7 +809,7 @@ lm32_top cpu(
 	.I_CTI_O(cpuibus_cti),
 	.I_LOCK_O(),
 	.I_BTE_O(),
-	.I_ERR_I(1'b0),
+	.I_ERR_I(cpuibus_err),
 	.I_RTY_I(1'b0),
 `ifdef CFG_EXTERNAL_BREAK_ENABLED
 	.ext_break(ext_break),
@@ -807,7 +826,7 @@ lm32_top cpu(
 	.D_CTI_O(cpudbus_cti),
 	.D_LOCK_O(),
 	.D_BTE_O(),
-	.D_ERR_I(1'b0),
+	.D_ERR_I(cpudbus_err),
 	.D_RTY_I(1'b0)
 );
 
