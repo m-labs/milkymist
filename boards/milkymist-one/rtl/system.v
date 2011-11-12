@@ -1286,6 +1286,7 @@ assign phy_tx_en = 1'b0;
 assign phy_tx_er = 1'b0;
 assign phy_mii_clk = 1'b0;
 assign phy_mii_data = 1'bz;
+assign phy_rst_n = 1'b0;
 `endif
 
 always @(posedge clk50) phy_clk <= ~phy_clk;
