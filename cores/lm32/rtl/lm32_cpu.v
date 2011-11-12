@@ -750,9 +750,7 @@ wire exception_q_w;
 `endif
 
 `ifdef CFG_DEBUG_ENABLED
-`ifdef CFG_JTAG_ENABLED
 wire reset_exception;                           // Indicates if a reset exception has occured
-`endif
 `endif
 `ifdef CFG_INTERRUPTS_ENABLED
 wire interrupt_exception;                       // Indicates if an interrupt exception has occured
