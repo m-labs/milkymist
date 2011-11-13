@@ -287,7 +287,7 @@ static void poll(struct port_status *p)
 	usb_tx(usb_buffer, 3);
 	/* DATAx */
 	len = usb_rx(usb_buffer, 11);
-	if(len < 7)
+	if(len < 6)
 		return;
 	if(usb_buffer[0] != p->expected_data) {
 		if((usb_buffer[0] == 0xc3) || (usb_buffer[0] == 0x4b)) {
@@ -314,10 +314,16 @@ static void poll(struct port_status *p)
 			COMLOC_KEVT_PRODUCE = (m + 1) & 0x07;
 		}
 	} else {
-		if(len >= 7) {
+		if(len >= 6) {
+			if(len > 7)
+				len = 7;
 			m = COMLOC_MEVT_PRODUCE;
-			for(i=0;i<4;i++)
+			for(i=0;i<len-3;i++)
 				COMLOC_MEVT(4*m+i) = usb_buffer[i+1];
+			while(i < 4) {
+				COMLOC_MEVT(4*m+i) = 0;
+				i++;
+			}
 			COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
 		}
 	}
