@@ -49,16 +49,17 @@ enum {
 };
 
 struct ep_status {
+	char ep;
 	unsigned char expected_data;
 };
 
 struct port_status {
 	char state;
 	char full_speed;
-	char keyboard;
 	char retry_count;
 	unsigned int unreset_frame;
-	struct ep_status ep;
+	struct ep_status keyboard;
+	struct ep_status mouse;
 };
 
 static struct port_status port_a;
@@ -302,7 +303,7 @@ static void poll(struct ep_status *ep, char keyboard)
 	char i;
 
 	/* IN */
-	make_usb_token(USB_PID_IN, ADDR_EP(1, 1), usb_buffer);
+	make_usb_token(USB_PID_IN, ADDR_EP(1, ep->ep), usb_buffer);
 	usb_tx(usb_buffer, 3);
 	/* DATAx */
 	len = usb_rx(usb_buffer, 11);
@@ -369,8 +370,10 @@ static void check_discon(struct port_status *p, char name)
 	}
 }
 
-static char validate_configuration_descriptor(unsigned char *descriptor, char len, char *keyboard)
+static char validate_configuration_descriptor(unsigned char *descriptor,
+    char len, struct port_status *p)
 {
+	struct ep_status *ep = NULL;
 	char offset;
 
 	offset = 0;
@@ -379,24 +382,30 @@ static char validate_configuration_descriptor(unsigned char *descriptor, char le
 			/* got an interface descriptor */
 			/* check for bInterfaceClass=3 and bInterfaceSubClass=1 (HID) */
 			if((descriptor[offset+5] != 0x03) || (descriptor[offset+6] != 0x01))
-				return 0;
+				break;
 			/* check bInterfaceProtocol */
 			switch(descriptor[offset+7]) {
 				case 0x01:
-					*keyboard = 1;
-					return 1;
+					ep = &p->keyboard;
+					break;
 				case 0x02:
-					*keyboard = 0;
-					return 1;
+					ep = &p->mouse;
+					break;
 				default:
 					/* unknown protocol, fail */
-					return 0;
+					ep = NULL;
+					break;
 			}
+		} else if(descriptor[offset+1] == 0x05 &&
+		    (descriptor[offset+2] & 0x80) && ep) {
+				ep->ep = descriptor[offset+2] & 0x7f;
+				ep->expected_data = USB_PID_DATA0;
+				    /* start with DATA0 */
+				ep = NULL;
 		}
 		offset += descriptor[offset+0];
 	}
-	/* no interface descriptor found, fail */
-	return 0;
+	return p->keyboard.ep || p->mouse.ep;
 }
 
 static const char retry_exceed[] PROGMEM = "Retry count exceeded, disabling device.\n";
@@ -533,16 +542,18 @@ static void port_service(struct port_status *p, char name)
 			if(len >= 0) {
 				p->retry_count = 0;
 				if(!validate_configuration_descriptor(
-				    configuration_descriptor, len,
-				    &p->keyboard)) {
+				    configuration_descriptor, len, p)) {
 					print_string(found); print_string(unsupported_device);
 					p->state = PORT_STATE_UNSUPPORTED;
 				} else {
-					print_string(found);
-					if(p->keyboard)
+					if(p->keyboard.ep) {
+						print_string(found);
 						print_string(keyboard);
-					else
+					}
+					if(p->mouse.ep) {
+						print_string(found);
 						print_string(mouse);
+					}
 					p->state = PORT_STATE_SET_CONFIGURATION;
 				}
 			}
@@ -563,15 +574,16 @@ static void port_service(struct port_status *p, char name)
 
 			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0) {
 				p->retry_count = 0;
-				p->ep.expected_data = USB_PID_DATA0;
-				    /* start with DATA0 */
 				p->state = PORT_STATE_RUNNING;
 			}
 			check_retry(p);
 			break;
 		}
 		case PORT_STATE_RUNNING:
-			poll(&p->ep, p->keyboard);
+			if(p->keyboard.ep)
+				poll(&p->keyboard, 1);
+			if(p->mouse.ep)
+				poll(&p->mouse, 0);
 			break;
 		case PORT_STATE_UNSUPPORTED:
 			break;
