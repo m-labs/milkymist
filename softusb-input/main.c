@@ -337,6 +337,16 @@ static void poll(struct ep_status *ep, char keyboard)
 	} else {
 		if(len < 6)
 			return;
+		/*
+		 * HACK: The Rii RF mini-keyboard sends ten byte messages with
+		 * a report ID and 16 bit coordinates. We're too lazy to parse
+		 * report descriptors, so we just hard-code that report layout.
+		 */
+		if(len == 10) {
+			usb_buffer[1] = usb_buffer[2];	/* buttons */
+			usb_buffer[2] = usb_buffer[3];	/* X LSB */
+			usb_buffer[3] = usb_buffer[5];	/* Y LSB */
+		}
 		if(len > 7)
 			len = 7;
 		m = COMLOC_MEVT_PRODUCE;
