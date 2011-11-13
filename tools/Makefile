@@ -1,13 +1,13 @@
 TARGETS=bin2hex mkmmimg flterm makeraw byteswap
-COMPILER?=clang
+CC=clang
 
 all: $(TARGETS)
 
 %: %.c
-	$(COMPILER) -O2 -Wall -I. -s -o $@ $<
+	$(CC) -O2 -Wall -I. -s -o $@ $<
 
 makeraw: makeraw.c
-	$(COMPILER) -O2 -Wall -s -o $@ $< -lgd
+	$(CC) -O2 -Wall -s -o $@ $< -lgd
 
 install: mkmmimg flterm
 	cp mkmmimg /usr/bin
