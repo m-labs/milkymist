@@ -324,25 +324,25 @@ static void poll(struct port_status *p)
 		p->expected_data = USB_PID_DATA0;
 	/* send to host */
 	if(p->keyboard) {
-		if(len >= 9) {
-			m = COMLOC_KEVT_PRODUCE;
-			for(i=0;i<8;i++)
-				COMLOC_KEVT(8*m+i) = usb_buffer[i+1];
-			COMLOC_KEVT_PRODUCE = (m + 1) & 0x07;
-		}
+		if(len < 9)
+			return;
+		m = COMLOC_KEVT_PRODUCE;
+		for(i=0;i<8;i++)
+			COMLOC_KEVT(8*m+i) = usb_buffer[i+1];
+		COMLOC_KEVT_PRODUCE = (m + 1) & 0x07;
 	} else {
-		if(len >= 6) {
-			if(len > 7)
-				len = 7;
-			m = COMLOC_MEVT_PRODUCE;
-			for(i=0;i<len-3;i++)
-				COMLOC_MEVT(4*m+i) = usb_buffer[i+1];
-			while(i < 4) {
-				COMLOC_MEVT(4*m+i) = 0;
-				i++;
-			}
-			COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
+		if(len < 6)
+			return;
+		if(len > 7)
+			len = 7;
+		m = COMLOC_MEVT_PRODUCE;
+		for(i=0;i<len-3;i++)
+			COMLOC_MEVT(4*m+i) = usb_buffer[i+1];
+		while(i < 4) {
+			COMLOC_MEVT(4*m+i) = 0;
+			i++;
 		}
+		COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
 	}
 	/* trigger host IRQ */
 	wio8(HOST_IRQ, 1);
