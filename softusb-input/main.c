@@ -50,7 +50,7 @@ enum {
 
 struct port_status {
 	char state;
-	char fs;
+	char full_speed;
 	char keyboard;
 	char retry_count;
 	unsigned int unreset_frame;
@@ -429,12 +429,12 @@ static void port_service(struct port_status *p, char name)
 				linestat = rio8(SIE_LINE_STATUS_B);
 			if(linestat == 0x01) {
 				print_string(connect_fs); print_char(name); print_char('\n');
-				p->fs = 1;
+				p->full_speed = 1;
 				p->state = PORT_STATE_UNSUPPORTED;
 			}
 			if(linestat == 0x02) {
 				print_string(connect_ls); print_char(name); print_char('\n');
-				p->fs = 0;
+				p->full_speed = 0;
 				if(name == 'A')
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x01);
 				else
