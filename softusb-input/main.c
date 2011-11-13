@@ -27,6 +27,16 @@
 #include "crc.h"
 
 enum {
+	USB_PID_OUT	= 0xe1,
+	USB_PID_IN	= 0x69,
+	USB_PID_SETUP	= 0x2d,
+	USB_PID_DATA0	= 0xc3,
+	USB_PID_DATA1	= 0x4b,
+	USB_PID_ACK	= 0xd2,
+	USB_PID_NAK	= 0x5a,
+};
+
+enum {
 	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_BUS_RESET,
 	PORT_STATE_WARMUP,
@@ -131,9 +141,9 @@ static inline unsigned char get_data_token(char *toggle)
 {
 	*toggle = !(*toggle);
 	if(*toggle)
-		return 0xc3;
+		return USB_PID_DATA0;
 	else
-		return 0x4b;
+		return USB_PID_DATA1;
 }
 
 static const char control_failed[] PROGMEM = "Control transfer failed:\n";
@@ -153,7 +163,7 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 	toggle = 0;
 
 	/* send SETUP token */
-	make_usb_token(0x2d, addr, usb_buffer);
+	make_usb_token(USB_PID_SETUP, addr, usb_buffer);
 	usb_tx(usb_buffer, 3);
 	/* send setup packet */
 	usb_buffer[0] = get_data_token(&toggle);
@@ -162,7 +172,7 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 	usb_tx(usb_buffer, 11);
 	/* get ACK token from device */
 	rxlen = usb_rx(usb_buffer, 11);
-	if((rxlen != 1) || (usb_buffer[0] != 0xd2)) {
+	if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
 		print_string(control_failed);
 		print_string(setup_reply);
 		dump_hex(usb_buffer, rxlen);
@@ -180,7 +190,7 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 				chunklen = 8;
 
 			/* send OUT token */
-			make_usb_token(0xe1, addr, usb_buffer);
+			make_usb_token(USB_PID_OUT, addr, usb_buffer);
 			usb_tx(usb_buffer, 3);
 			/* send DATAx packet */
 			usb_buffer[0] = get_data_token(&toggle);
@@ -189,8 +199,9 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 			usb_tx(usb_buffer, chunklen+3);
 			/* get ACK from device */
 			rxlen = usb_rx(usb_buffer, 11);
-			if((rxlen != 1) || (usb_buffer[0] != 0xd2)) {
-				if((rxlen > 0) && (usb_buffer[0] == 0x5a))
+			if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
+				if((rxlen > 0) &&
+				    (usb_buffer[0] == USB_PID_NAK))
 					continue; /* NAK: retry */
 				print_string(control_failed);
 				print_string(out_reply);
@@ -206,12 +217,14 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 	} else if(maxlen != 0) {
 		while(1) {
 			/* send IN token */
-			make_usb_token(0x69, addr, usb_buffer);
+			make_usb_token(USB_PID_IN, addr, usb_buffer);
 			usb_tx(usb_buffer, 3);
 			/* get DATAx packet */
 			rxlen = usb_rx(usb_buffer, 11);
-			if((rxlen < 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b))) {
-				if((rxlen > 0) && (usb_buffer[0] == 0x5a))
+			if((rxlen < 3) || ((usb_buffer[0] != USB_PID_DATA0) &&
+			    (usb_buffer[0] != USB_PID_DATA1))) {
+				if((rxlen > 0) &&
+				    (usb_buffer[0] == USB_PID_NAK))
 					continue; /* NAK: retry */
 				print_string(control_failed);
 				print_string(in_reply);
@@ -224,7 +237,7 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 			memcpy(payload, &usb_buffer[1], chunklen);
 
 			/* send ACK token */
-			usb_buffer[0] = 0xd2;
+			usb_buffer[0] = USB_PID_ACK;
 			usb_tx(usb_buffer, 1);
 
 			transferred += chunklen;
@@ -236,13 +249,14 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 
 	/* send IN/OUT token in the opposite direction to end transfer */
 retry:
-	make_usb_token(out ? 0x69 : 0xe1, addr, usb_buffer);
+	make_usb_token(out ? USB_PID_IN : USB_PID_OUT, addr, usb_buffer);
 	usb_tx(usb_buffer, 3);
 	if(out) {
 		/* get DATAx packet */
 		rxlen = usb_rx(usb_buffer, 11);
-		if((rxlen != 3) || ((usb_buffer[0] != 0xc3) && (usb_buffer[0] != 0x4b))) {
-			if((rxlen > 0) && (usb_buffer[0] == 0x5a))
+		if((rxlen != 3) || ((usb_buffer[0] != USB_PID_DATA0) &&
+		    (usb_buffer[0] != USB_PID_DATA1))) {
+			if((rxlen > 0) && (usb_buffer[0] == USB_PID_NAK))
 				goto retry; /* NAK: retry */
 			print_string(control_failed);
 			print_string(termination);
@@ -251,7 +265,7 @@ retry:
 			return -1;
 		}
 		/* send ACK token */
-		usb_buffer[0] = 0xd2;
+		usb_buffer[0] = USB_PID_ACK;
 		usb_tx(usb_buffer, 1);
 	} else {
 		/* send DATAx packet */
@@ -260,8 +274,8 @@ retry:
 		usb_tx(usb_buffer, 3);
 		/* get ACK token from device */
 		rxlen = usb_rx(usb_buffer, 11);
-		if((rxlen != 1) || (usb_buffer[0] != 0xd2)) {
-			if((rxlen > 0) && (usb_buffer[0] == 0x5a))
+		if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
+			if((rxlen > 0) && (usb_buffer[0] == USB_PID_NAK))
 				goto retry; /* NAK: retry */
 			print_string(control_failed);
 			print_string(termination);
@@ -283,28 +297,29 @@ static void poll(struct port_status *p)
 	char i;
 
 	/* IN */
-	make_usb_token(0x69, 0x081, usb_buffer);
+	make_usb_token(USB_PID_IN, 0x081, usb_buffer);
 	usb_tx(usb_buffer, 3);
 	/* DATAx */
 	len = usb_rx(usb_buffer, 11);
 	if(len < 6)
 		return;
 	if(usb_buffer[0] != p->expected_data) {
-		if((usb_buffer[0] == 0xc3) || (usb_buffer[0] == 0x4b)) {
+		if((usb_buffer[0] == USB_PID_DATA0) ||
+		    (usb_buffer[0] == USB_PID_DATA1)) {
 			/* ACK */
-			usb_buffer[0] = 0xd2;
+			usb_buffer[0] = USB_PID_ACK;
 			usb_tx(usb_buffer, 1);
 			print_string(datax_mismatch);
 		}
 		return; /* drop */
 	}
 	/* ACK */
-	usb_buffer[0] = 0xd2;
+	usb_buffer[0] = USB_PID_ACK;
 	usb_tx(usb_buffer, 1);
-	if(p->expected_data == 0xc3)
-		p->expected_data = 0x4b;
+	if(p->expected_data == USB_PID_DATA0)
+		p->expected_data = USB_PID_DATA1;
 	else
-		p->expected_data = 0xc3;
+		p->expected_data = USB_PID_DATA0;
 	/* send to host */
 	if(p->keyboard) {
 		if(len >= 9) {
@@ -541,7 +556,8 @@ static void port_service(struct port_status *p, char name)
 
 			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0) {
 				p->retry_count = 0;
-				p->expected_data = 0xc3; /* start with DATA0 */
+				p->expected_data = USB_PID_DATA0;
+				    /* start with DATA0 */
 				p->state = PORT_STATE_RUNNING;
 			}
 			check_retry(p);
