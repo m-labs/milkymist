@@ -48,14 +48,17 @@ enum {
 	PORT_STATE_UNSUPPORTED
 };
 
+struct ep_status {
+	unsigned char expected_data;
+};
+
 struct port_status {
 	char state;
 	char full_speed;
 	char keyboard;
 	char retry_count;
 	unsigned int unreset_frame;
-
-	unsigned char expected_data;
+	struct ep_status ep;
 };
 
 static struct port_status port_a;
@@ -291,7 +294,7 @@ retry:
 }
 
 static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
-static void poll(struct port_status *p)
+static void poll(struct ep_status *ep, char keyboard)
 {
 	unsigned char usb_buffer[11];
 	unsigned char len;
@@ -305,7 +308,7 @@ static void poll(struct port_status *p)
 	len = usb_rx(usb_buffer, 11);
 	if(len < 6)
 		return;
-	if(usb_buffer[0] != p->expected_data) {
+	if(usb_buffer[0] != ep->expected_data) {
 		if((usb_buffer[0] == USB_PID_DATA0) ||
 		    (usb_buffer[0] == USB_PID_DATA1)) {
 			/* ACK */
@@ -318,12 +321,12 @@ static void poll(struct port_status *p)
 	/* ACK */
 	usb_buffer[0] = USB_PID_ACK;
 	usb_tx(usb_buffer, 1);
-	if(p->expected_data == USB_PID_DATA0)
-		p->expected_data = USB_PID_DATA1;
+	if(ep->expected_data == USB_PID_DATA0)
+		ep->expected_data = USB_PID_DATA1;
 	else
-		p->expected_data = USB_PID_DATA0;
+		ep->expected_data = USB_PID_DATA0;
 	/* send to host */
-	if(p->keyboard) {
+	if(keyboard) {
 		if(len < 9)
 			return;
 		m = COMLOC_KEVT_PRODUCE;
@@ -529,7 +532,9 @@ static void port_service(struct port_status *p, char name)
 			len = control_transfer(0x01, &packet, 0, configuration_descriptor, 127);
 			if(len >= 0) {
 				p->retry_count = 0;
-				if(!validate_configuration_descriptor(configuration_descriptor, len, &p->keyboard)) {
+				if(!validate_configuration_descriptor(
+				    configuration_descriptor, len,
+				    &p->keyboard)) {
 					print_string(found); print_string(unsupported_device);
 					p->state = PORT_STATE_UNSUPPORTED;
 				} else {
@@ -558,7 +563,7 @@ static void port_service(struct port_status *p, char name)
 
 			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0) {
 				p->retry_count = 0;
-				p->expected_data = USB_PID_DATA0;
+				p->ep.expected_data = USB_PID_DATA0;
 				    /* start with DATA0 */
 				p->state = PORT_STATE_RUNNING;
 			}
@@ -566,7 +571,7 @@ static void port_service(struct port_status *p, char name)
 			break;
 		}
 		case PORT_STATE_RUNNING:
-			poll(p);
+			poll(&p->ep, p->keyboard);
 			break;
 		case PORT_STATE_UNSUPPORTED:
 			break;
