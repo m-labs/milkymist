@@ -63,6 +63,8 @@ static struct port_status port_b;
 
 static unsigned int frame_nr;
 
+#define	ADDR_EP(addr, ep)	((addr) | (ep) << 7)
+
 static void make_usb_token(unsigned char pid, unsigned int elevenbits, unsigned char *out)
 {
 	out[0] = pid;
@@ -297,7 +299,7 @@ static void poll(struct port_status *p)
 	char i;
 
 	/* IN */
-	make_usb_token(USB_PID_IN, 0x081, usb_buffer);
+	make_usb_token(USB_PID_IN, ADDR_EP(1, 1), usb_buffer);
 	usb_tx(usb_buffer, 3);
 	/* DATAx */
 	len = usb_rx(usb_buffer, 11);
