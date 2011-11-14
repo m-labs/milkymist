@@ -101,7 +101,7 @@ static unsigned char usb_rx(unsigned char *buf, unsigned char maxlen)
 	unsigned char i;
 
 	i = 0;
-	timeout = 0xfff;
+	timeout = 0x1ff;
 	while(!rio8(SIE_RX_PENDING)) {
 		if(timeout-- == 0) {
 			print_string(transfer_start);
@@ -115,7 +115,7 @@ static unsigned char usb_rx(unsigned char *buf, unsigned char maxlen)
 		}
 	}
 	while(1) {
-		timeout = 0xfff;
+		timeout = 0x1ff;
 		while(!rio8(SIE_RX_PENDING)) {
 			if(rio8(SIE_RX_ERROR)) {
 				print_string(bitstuff_error);
@@ -421,7 +421,7 @@ static char validate_configuration_descriptor(unsigned char *descriptor,
 static const char retry_exceed[] PROGMEM = "Retry count exceeded, disabling device.\n";
 static void check_retry(struct port_status *p)
 {
-	if(p->retry_count++ > 20) {
+	if(p->retry_count++ > 4) {
 		print_string(retry_exceed);
 		p->state = PORT_STATE_UNSUPPORTED;
 	}
