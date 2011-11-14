@@ -32,6 +32,7 @@ enum {
 	USB_PID_SETUP	= 0x2d,
 	USB_PID_DATA0	= 0xc3,
 	USB_PID_DATA1	= 0x4b,
+	USB_PID_SOF	= 0xa5,
 	USB_PID_ACK	= 0xd2,
 	USB_PID_NAK	= 0x5a,
 };
@@ -445,6 +446,12 @@ static void port_service(struct port_status *p, char name)
 		wio8(SIE_TX_LOW_SPEED, 0);
 	else
 		wio8(SIE_TX_LOW_SPEED, 1);
+	if((p->full_speed) && (p->state > PORT_STATE_BUS_RESET)) {
+		/* send SOF */
+		unsigned char usb_buffer[3];
+		make_usb_token(USB_PID_SOF, frame_nr, usb_buffer);
+		usb_tx(usb_buffer, 3);
+	}
 	switch(p->state) {
 		case PORT_STATE_DISCONNECTED: {
 			char linestat;
