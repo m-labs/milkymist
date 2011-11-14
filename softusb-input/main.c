@@ -39,7 +39,6 @@ enum {
 enum {
 	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_BUS_RESET,
-	PORT_STATE_WARMUP,
 	PORT_STATE_SET_ADDRESS,
 	PORT_STATE_GET_DEVICE_DESCRIPTOR,
 	PORT_STATE_GET_CONFIGURATION_DESCRIPTOR,
@@ -442,6 +441,10 @@ static void port_service(struct port_status *p, char name)
 		 * transmission takes place.
 		 */
 		check_discon(p, name);
+	if(p->full_speed)
+		wio8(SIE_TX_LOW_SPEED, 0);
+	else
+		wio8(SIE_TX_LOW_SPEED, 1);
 	switch(p->state) {
 		case PORT_STATE_DISCONNECTED: {
 			char linestat;
@@ -452,11 +455,12 @@ static void port_service(struct port_status *p, char name)
 			if(linestat == 0x01) {
 				print_string(connect_fs); print_char(name); print_char('\n');
 				p->full_speed = 1;
-				p->state = PORT_STATE_UNSUPPORTED;
 			}
 			if(linestat == 0x02) {
 				print_string(connect_ls); print_char(name); print_char('\n');
 				p->full_speed = 0;
+			}
+			if((linestat == 0x01)||(linestat == 0x02)) {
 				if(name == 'A')
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) | 0x01);
 				else
@@ -472,12 +476,6 @@ static void port_service(struct port_status *p, char name)
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x02);
 				else
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
-				p->state = PORT_STATE_WARMUP;
-			}
-			break;
-		case PORT_STATE_WARMUP:
-			if(frame_nr == ((p->unreset_frame + 250) & 0x7ff)) {
-				p->retry_count = 0;
 				p->state = PORT_STATE_SET_ADDRESS;
 			}
 			break;
@@ -503,7 +501,7 @@ static void port_service(struct port_status *p, char name)
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
 			struct setup_packet packet;
 			unsigned char device_descriptor[18];
-
+			
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
 			packet.wValue[0] = 0x00;
@@ -598,20 +596,17 @@ static void port_service(struct port_status *p, char name)
 		case PORT_STATE_UNSUPPORTED:
 			break;
 	}
+	while(rio8(SIE_TX_BUSY));
 }
 
 static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 
 int main()
 {
-	unsigned char mask;
 	unsigned char i;
+	unsigned char mask;
 
 	print_string(banner);
-
-	/* we only support low speed operation */
-	wio8(SIE_TX_LOW_SPEED, 1);
-	wio8(SIE_LOW_SPEED, 3);
 
 	wio8(TIMER0, 0);
 	while(1) {
@@ -619,29 +614,17 @@ int main()
 		while((rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70));
 		wio8(TIMER0, 0);
 
-		/* send keepalive */
-		mask = 0;
-		if(port_a.state == PORT_STATE_WARMUP)
-			mask |= 0x01;
-		if(port_b.state == PORT_STATE_WARMUP)
-			mask |= 0x02;
-		wio8(SIE_SEL_TX, mask);
-		wio8(SIE_GENERATE_EOP, 1);
-		while(rio8(SIE_TX_BUSY));
-
 		/*
-		 * wait extra time to allow the USB cable
-		 * capacitance to discharge (otherwise some disconnects
-		 * aren't properly detected)
+		 * set RX speed bits
 		 */
-		for(i=0;i<128;i++)
-			asm("nop");
+		mask = 0;
+		if(!port_a.full_speed) mask |= 0x01;
+		if(!port_b.full_speed) mask |= 0x02;
+		wio8(SIE_LOW_SPEED, mask);
 
 		wio8(SIE_SEL_RX, 0);
 		wio8(SIE_SEL_TX, 0x01);
 		port_service(&port_a, 'A');
-
-		while(rio8(SIE_TX_BUSY));
 
 		wio8(SIE_SEL_RX, 1);
 		wio8(SIE_SEL_TX, 0x02);
