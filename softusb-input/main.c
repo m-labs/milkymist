@@ -81,11 +81,11 @@ static void usb_tx(unsigned char *buf, unsigned char len)
 	unsigned char i;
 
 	wio8(SIE_TX_DATA, 0x80); /* send SYNC */
-	while(rio8(SIE_TX_PENDING));
 	for(i=0;i<len;i++) {
-		wio8(SIE_TX_DATA, buf[i]);
 		while(rio8(SIE_TX_PENDING));
+		wio8(SIE_TX_DATA, buf[i]);
 	}
+	while(rio8(SIE_TX_PENDING));
 	wio8(SIE_TX_VALID, 0);
 	while(rio8(SIE_TX_BUSY));
 }
@@ -477,6 +477,7 @@ static void port_service(struct port_status *p, char name)
 				else
 					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
 				p->state = PORT_STATE_SET_ADDRESS;
+				p->retry_count = 0;
 			}
 			break;
 		case PORT_STATE_SET_ADDRESS: {
