@@ -611,7 +611,6 @@ static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 
 int main()
 {
-	unsigned char i;
 	unsigned char mask;
 
 	print_string(banner);
