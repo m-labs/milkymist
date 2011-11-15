@@ -449,12 +449,6 @@ static void port_service(struct port_status *p, char name)
 		wio8(SIE_TX_LOW_SPEED, 0);
 	else
 		wio8(SIE_TX_LOW_SPEED, 1);
-	if((p->full_speed) && (p->state > PORT_STATE_RESET_WAIT)) {
-		/* send SOF */
-		unsigned char usb_buffer[3];
-		make_usb_token(USB_PID_SOF, frame_nr, usb_buffer);
-		usb_tx(usb_buffer, 3);
-	}
 	switch(p->state) {
 		case PORT_STATE_DISCONNECTED: {
 			char linestat;
@@ -619,9 +613,54 @@ static void port_service(struct port_status *p, char name)
 
 static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 
-int main()
+static void sof()
 {
 	unsigned char mask;
+	unsigned char usb_buffer[3];
+	
+	mask = 0;
+	if(port_a.full_speed && (port_a.state > PORT_STATE_BUS_RESET))
+		mask |= 0x01;
+	if(port_b.full_speed && (port_b.state > PORT_STATE_BUS_RESET))
+		mask |= 0x02;
+	if(mask != 0) {
+		wio8(SIE_TX_LOW_SPEED, 0);
+		wio8(SIE_SEL_TX, mask);
+		make_usb_token(USB_PID_SOF, frame_nr, usb_buffer);
+		usb_tx(usb_buffer, 3);
+	}
+}
+
+static void keepalive()
+{
+	unsigned char mask;
+	
+	mask = 0;
+	if(!port_a.full_speed && (port_a.state == PORT_STATE_RESET_WAIT))
+		mask |= 0x01;
+	if(!port_b.full_speed && (port_b.state == PORT_STATE_RESET_WAIT))
+		mask |= 0x02;
+	if(mask != 0) {
+		wio8(SIE_TX_LOW_SPEED, 1);
+		wio8(SIE_SEL_TX, mask);
+		wio8(SIE_GENERATE_EOP, 1);
+		while(rio8(SIE_TX_BUSY));
+	}
+}
+
+static void set_rx_speed()
+{
+	unsigned char mask;
+	
+	mask = 0;
+	if(!port_a.full_speed) mask |= 0x01;
+	if(!port_b.full_speed) mask |= 0x02;
+	wio8(SIE_LOW_SPEED, mask);
+}
+
+int main()
+{
+	unsigned char i;
 
 	print_string(banner);
 
@@ -631,14 +670,17 @@ int main()
 		while((rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70));
 		wio8(TIMER0, 0);
 
-		/*
-		 * set RX speed bits
-		 */
-		mask = 0;
-		if(!port_a.full_speed) mask |= 0x01;
-		if(!port_b.full_speed) mask |= 0x02;
-		wio8(SIE_LOW_SPEED, mask);
+		sof();
+		keepalive();
 
+		/*
+		 * wait extra time to allow the USB cable
+		 * capacitance to discharge (otherwise some disconnects
+		 * aren't properly detected)
+		 */
+		for(i=0;i<128;i++)
+			asm("nop");
+		
 		wio8(SIE_SEL_RX, 0);
 		wio8(SIE_SEL_TX, 0x01);
 		port_service(&port_a, 'A');
@@ -646,6 +688,9 @@ int main()
 		wio8(SIE_SEL_RX, 1);
 		wio8(SIE_SEL_TX, 0x02);
 		port_service(&port_b, 'B');
+		
+		/* set RX speed for new detected devices */
+		set_rx_speed();
 
 		frame_nr = (frame_nr + 1) & 0x7ff;
 	}
