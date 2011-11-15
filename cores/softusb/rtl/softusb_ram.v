@@ -17,7 +17,7 @@
 
 
 module softusb_ram #(
-	parameter pmem_width = 11,
+	parameter pmem_width = 12,
 	parameter dmem_width = 13,
 	parameter initprog = ""
 ) (
