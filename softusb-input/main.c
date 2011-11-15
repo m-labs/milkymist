@@ -40,6 +40,7 @@ enum {
 enum {
 	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_BUS_RESET,
+	PORT_STATE_RESET_WAIT,
 	PORT_STATE_SET_ADDRESS,
 	PORT_STATE_GET_DEVICE_DESCRIPTOR,
 	PORT_STATE_GET_CONFIGURATION_DESCRIPTOR,
@@ -47,6 +48,8 @@ enum {
 	PORT_STATE_RUNNING,
 	PORT_STATE_UNSUPPORTED
 };
+
+#define	RESET_RECOVERY_MS	50	/* USB 2.0, 7.1.7.5: >= 10 ms */
 
 struct ep_status {
 	char ep;
@@ -446,7 +449,7 @@ static void port_service(struct port_status *p, char name)
 		wio8(SIE_TX_LOW_SPEED, 0);
 	else
 		wio8(SIE_TX_LOW_SPEED, 1);
-	if((p->full_speed) && (p->state > PORT_STATE_BUS_RESET)) {
+	if((p->full_speed) && (p->state > PORT_STATE_RESET_WAIT)) {
 		/* send SOF */
 		unsigned char usb_buffer[3];
 		make_usb_token(USB_PID_SOF, frame_nr, usb_buffer);
@@ -478,14 +481,21 @@ static void port_service(struct port_status *p, char name)
 			break;
 		}
 		case PORT_STATE_BUS_RESET:
-			if(frame_nr == p->unreset_frame) {
-				if(name == 'A')
-					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x02);
-				else
-					wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
-				p->state = PORT_STATE_SET_ADDRESS;
-				p->retry_count = 0;
-			}
+			if(frame_nr != p->unreset_frame)
+				break;
+			if(name == 'A')
+				wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x02);
+			else
+				wio8(SIE_TX_BUSRESET, rio8(SIE_TX_BUSRESET) & 0x01);
+			p->state = PORT_STATE_RESET_WAIT;
+			p->unreset_frame =
+			    (frame_nr + RESET_RECOVERY_MS) & 0x7ff;
+			break;
+		case PORT_STATE_RESET_WAIT:
+			if(frame_nr != p->unreset_frame)
+				break;
+			p->state = PORT_STATE_SET_ADDRESS;
+			p->retry_count = 0;
 			break;
 		case PORT_STATE_SET_ADDRESS: {
 			struct setup_packet packet;
