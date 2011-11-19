@@ -106,52 +106,9 @@ static inline void usb_ack(void)
 	while(rio8(SIE_TX_BUSY));
 }
 
-static const char transfer_start[] PROGMEM = "Transfer start: ";
+static const char ack_error[] PROGMEM = "ACK: ";
 static const char timeout_error[] PROGMEM = "RX timeout error\n";
 static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
-
-static unsigned char usb_rx(unsigned char *buf, unsigned char maxlen)
-{
-	unsigned int timeout;
-	unsigned char i;
-
-	i = 0;
-	timeout = 0x1ff;
-	while(!rio8(SIE_RX_PENDING)) {
-		if(timeout-- == 0) {
-			print_string(transfer_start);
-			print_string(timeout_error);
-			return 0;
-		}
-		if(rio8(SIE_RX_ERROR)) {
-			print_string(transfer_start);
-			print_string(bitstuff_error);
-			return 0;
-		}
-	}
-	while(1) {
-		timeout = 0x1ff;
-		while(!rio8(SIE_RX_PENDING)) {
-			if(rio8(SIE_RX_ERROR)) {
-				print_string(bitstuff_error);
-				return 0;
-			}
-			if(!rio8(SIE_RX_ACTIVE))
-				return i;
-			if(timeout-- == 0) {
-				print_string(timeout_error);
-				return 0;
-			}
-		}
-		if(i == maxlen)
-			return 0;
-		buf[i] = rio8(SIE_RX_DATA);
-		i++;
-	}
-}
-
-static const char in_reply[] PROGMEM = "IN reply:\n";
-static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
 
 #define	WAIT_RX(first, end)					\
 	do {							\
@@ -165,6 +122,49 @@ static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
 				goto end;			\
 		}						\
 	} while (0)
+
+
+static char usb_rx_ack(void)
+{
+	unsigned char pid;
+	unsigned char i;
+
+	/* SYNC */
+	WAIT_RX(1, nothing);
+
+	/* PID */
+	WAIT_RX(0, nothing);
+	pid = rio8(SIE_RX_DATA);
+
+	/* wait for idle, or simply time out and fall foward */
+	for(i = 200; i; i--)
+		if(!rio8(SIE_RX_ACTIVE))
+			break;
+
+	if(pid == USB_PID_ACK)
+		return 1;
+	if(pid == USB_PID_NAK)
+		return 0;
+
+	for(i = 200; i; i--)
+		WAIT_RX(0,out);
+out:
+	print_string(ack_error);
+	print_hex(pid);
+	print_char('\n');
+	return -1;
+
+timeout:
+	print_string(timeout_error);
+nothing:
+	return 0;
+error:
+	print_string(bitstuff_error);
+	return 0;
+}
+
+static const char in_reply[] PROGMEM = "IN reply:\n";
+static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
 
 static int usb_in(unsigned addr, unsigned char expected_data,
     unsigned char *buf, unsigned char maxlen)
@@ -247,8 +247,6 @@ static const char out_reply[] PROGMEM = "OUT/DATA reply:\n";
 static char usb_out(unsigned addr, const unsigned char *buf, unsigned char len)
 {
 	unsigned char out[3];
-	unsigned char ack[11];
-	unsigned char got;
 
 	/* send OUT */
 	make_usb_token(USB_PID_OUT, addr, out);
@@ -258,15 +256,7 @@ static char usb_out(unsigned addr, const unsigned char *buf, unsigned char len)
 	usb_tx(buf, len);
 
 	/* receive ACK */
-	got = usb_rx(ack, 11);
-	if(got == 1 && ack[0] == USB_PID_ACK)
-		return 1;
-	if (!got || ack[0] == USB_PID_NAK) /* timeout or NAK */
-		return 0;
-
-	print_string(out_reply);
-	dump_hex(ack, got);
-	return -1;
+	return usb_rx_ack();
 }
 
 struct setup_packet {
@@ -282,8 +272,7 @@ static inline unsigned char toggle(unsigned char old)
 	return old ^ USB_PID_DATA0 ^ USB_PID_DATA1;
 }
 
-static const char control_failed[] PROGMEM = "Control transfer failed:\n";
-static const char setup_reply[] PROGMEM = "SETUP reply:\n";
+static const char setup_ack[] PROGMEM = "SETUP not ACKed\n";
 
 static int control_transfer(unsigned char addr, struct setup_packet *p,
     char out, unsigned char *payload, int maxlen)
@@ -311,11 +300,8 @@ wio8(SIE_SEL_TX, 3);
 wio8(SIE_SEL_TX, 2);
 #endif
 	/* get ACK token from device */
-	rxlen = usb_rx(usb_buffer, 11);
-	if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
-		print_string(control_failed);
-		print_string(setup_reply);
-		dump_hex(usb_buffer, rxlen);
+	if(usb_rx_ack() != 1) {
+		print_string(setup_ack);
 		return -1;
 	}
 
