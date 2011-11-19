@@ -219,7 +219,6 @@ static inline unsigned char toggle(unsigned char old)
 }
 
 static const char control_failed[] PROGMEM = "Control transfer failed:\n";
-static const char termination[] PROGMEM = "(termination)\n";
 static const char setup_reply[] PROGMEM = "SETUP reply:\n";
 
 static int control_transfer(unsigned char addr, struct setup_packet *p,
