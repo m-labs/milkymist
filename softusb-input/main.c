@@ -26,6 +26,8 @@
 #include "host.h"
 #include "crc.h"
 
+//#define	TRIGGER
+
 #define        print_string(s) (void) (s)
 #define        dump_hex(x, y)  (void) (x)
 
@@ -181,7 +183,13 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 	usb_buffer[0] = get_data_token(&toggle);
 	memcpy(&usb_buffer[1], p, 8);
 	usb_crc16(&usb_buffer[1], 8, &usb_buffer[9]);
+#ifdef TRIGGER
+wio8(SIE_SEL_TX, 3);
+#endif
 	usb_tx(usb_buffer, 11);
+#ifdef TRIGGER
+wio8(SIE_SEL_TX, 2);
+#endif
 	/* get ACK token from device */
 	rxlen = usb_rx(usb_buffer, 11);
 	if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
@@ -622,8 +630,10 @@ static void sof()
 	unsigned char usb_buffer[3];
 	
 	mask = 0;
+#ifndef TRIGGER
 	if(port_a.full_speed && (port_a.state > PORT_STATE_BUS_RESET))
 		mask |= 0x01;
+#endif
 	if(port_b.full_speed && (port_b.state > PORT_STATE_BUS_RESET))
 		mask |= 0x02;
 	if(mask != 0) {
@@ -639,8 +649,10 @@ static void keepalive()
 	unsigned char mask;
 	
 	mask = 0;
+#ifndef TRIGGER
 	if(!port_a.full_speed && (port_a.state == PORT_STATE_RESET_WAIT))
 		mask |= 0x01;
+#endif
 	if(!port_b.full_speed && (port_b.state == PORT_STATE_RESET_WAIT))
 		mask |= 0x02;
 	if(mask != 0) {
@@ -684,9 +696,11 @@ int main()
 		for(i=0;i<128;i++)
 			asm("nop");
 		
+#ifndef TRIGGER
 		wio8(SIE_SEL_RX, 0);
 		wio8(SIE_SEL_TX, 0x01);
 		port_service(&port_a, 'A');
+#endif
 
 		wio8(SIE_SEL_RX, 1);
 		wio8(SIE_SEL_TX, 0x02);
