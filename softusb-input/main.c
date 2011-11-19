@@ -96,6 +96,16 @@ static void usb_tx(const unsigned char *buf, unsigned char len)
 	while(rio8(SIE_TX_BUSY));
 }
 
+static inline void usb_ack(void)
+{
+	wio8(SIE_TX_DATA, 0x80); /* send SYNC */
+	while(rio8(SIE_TX_PENDING));
+	wio8(SIE_TX_DATA, USB_PID_ACK); /* send SYNC */
+	while(rio8(SIE_TX_PENDING));
+	wio8(SIE_TX_VALID, 0);
+	while(rio8(SIE_TX_BUSY));
+}
+
 static const char transfer_start[] PROGMEM = "Transfer start: ";
 static const char timeout_error[] PROGMEM = "RX timeout error\n";
 static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
@@ -160,7 +170,6 @@ static int usb_in(unsigned addr, unsigned char expected_data,
     unsigned char *buf, unsigned char maxlen)
 {
 	unsigned char in[3];
-	unsigned char ack[1] = { USB_PID_ACK };
 	unsigned char len = 1;
 	unsigned char i;
 
@@ -200,7 +209,7 @@ ignore:
 		WAIT_RX(0, ignore_eop);
 	goto complain; /* this doesn't stop - just quit silently */
 ignore_eop:
-	usb_tx(ack, 1);
+	usb_ack();
 complain:
 	print_string(datax_mismatch);
 	return 0;
@@ -215,7 +224,7 @@ receive:
 		buf[len++] = rio8(SIE_RX_DATA);
 	}
 eop:
-	usb_tx(ack, 1);
+	usb_ack();
 	return len;
 
 discard:
