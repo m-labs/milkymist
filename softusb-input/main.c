@@ -200,7 +200,7 @@ static int usb_in(unsigned addr, unsigned char expected_data,
 fail:
 	print_string(in_reply);
 	dump_hex(buf, len);
-	return 0;	/* @@@ -1 in previous logic */
+	return -1;
 
 	/* bad sequence bit: wait until packet has arrived, then ack */
 
