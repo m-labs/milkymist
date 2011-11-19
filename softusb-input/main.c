@@ -143,35 +143,93 @@ static unsigned char usb_rx(unsigned char *buf, unsigned char maxlen)
 static const char in_reply[] PROGMEM = "IN reply:\n";
 static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
 
+#define	WAIT_RX(first, end)					\
+	do {							\
+		unsigned timeout = 0x200;			\
+		while(!rio8(SIE_RX_PENDING)) {			\
+			if(!--timeout)				\
+				goto timeout;			\
+			if(rio8(SIE_RX_ERROR))			\
+				goto error;			\
+			if(!first && !rio8(SIE_RX_ACTIVE))	\
+				goto end;			\
+		}						\
+	} while (0)
+
 static int usb_in(unsigned addr, unsigned char expected_data,
     unsigned char *buf, unsigned char maxlen)
 {
 	unsigned char in[3];
 	unsigned char ack[1] = { USB_PID_ACK };
-	unsigned char len;
+	unsigned char len = 1;
+	unsigned char i;
 
 	/* send IN */
 	make_usb_token(USB_PID_IN, addr, in);
 	usb_tx(in, 3);
 
-	/* receive DATAx */
-	len = usb_rx(buf, maxlen);
-	if(!len) /* timeout or massive confusion */
-		return 0;
+	/* SYNC */
+	WAIT_RX(1, nothing);
+
+	/* PID */
+	WAIT_RX(0, nothing);
+	buf[0] = rio8(SIE_RX_DATA);
+
+	if(buf[0] == expected_data)
+		goto receive;
+	if(buf[0] == USB_PID_DATA0 || buf[0] == USB_PID_DATA1)
+		goto ignore;
 	if(buf[0] == USB_PID_NAK)
 		return 0;
-	if(buf[0] != USB_PID_DATA0 && buf[0] != USB_PID_DATA1) {
-		print_string(in_reply);
-		dump_hex(buf, len);
-		return -1;
+
+	/* unknown packet: try to receive for debug purposes, then dump */
+
+	while(len != maxlen) {
+		WAIT_RX(0, fail);
+		buf[len++] = rio8(SIE_RX_DATA);
 	}
+fail:
+	print_string(in_reply);
+	dump_hex(buf, len);
+	return 0;	/* @@@ -1 in previous logic */
 
-	/* send ACK */
+	/* bad sequence bit: wait until packet has arrived, then ack */
+
+ignore:
+	for(i = 200; i; i--)
+		WAIT_RX(0, ignore_eop);
+	goto complain; /* this doesn't stop - just quit silently */
+ignore_eop:
 	usb_tx(ack, 1);
-	if(buf[0] == expected_data)
-		return len;
-
+complain:
 	print_string(datax_mismatch);
+	return 0;
+
+	/* receive the rest of the (good) packet */
+
+receive:
+	while(1) {
+		WAIT_RX(0, eop);
+		if(len == maxlen)
+			goto discard;
+		buf[len++] = rio8(SIE_RX_DATA);
+	}
+eop:
+	usb_tx(ack, 1);
+	return len;
+
+discard:
+	for(i = 200; i; i--)
+		WAIT_RX(0, nothing);
+nothing:
+	return 0;
+
+timeout:
+	print_string(timeout_error);
+	return 0;
+
+error:
+	print_string(bitstuff_error);
 	return 0;
 }
 
