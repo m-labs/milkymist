@@ -438,6 +438,7 @@ static void check_discon(struct port_status *p, char name)
 	if(discon) {
 		print_string(disconnect); print_char(name); print_char('\n');
 		p->state = PORT_STATE_DISCONNECTED;
+		p->keyboard.ep = p->mouse.ep = 0;
 	}
 }
 
