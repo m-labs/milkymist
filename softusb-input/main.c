@@ -26,6 +26,9 @@
 #include "host.h"
 #include "crc.h"
 
+#define        print_string(s) (void) (s)
+#define        dump_hex(x, y)  (void) (x)
+
 enum {
 	USB_PID_OUT	= 0xe1,
 	USB_PID_IN	= 0x69,

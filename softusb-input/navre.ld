@@ -3,7 +3,7 @@ OUTPUT_FORMAT("elf32-avr","elf32-avr","elf32-avr")
 OUTPUT_ARCH(avr:2)
 MEMORY
 {
-  text   (rx)   : ORIGIN = 0, LENGTH = 8K
+  text   (rx)   : ORIGIN = 0, LENGTH = 4K
   data   (rw!x) : ORIGIN = 0, LENGTH = 32K
 }
 SECTIONS
