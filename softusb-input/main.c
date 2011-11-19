@@ -168,6 +168,7 @@ static const char out_reply[] PROGMEM = "IN reply:\n";
 
 static char control_transfer(unsigned char addr, struct setup_packet *p, char out, unsigned char *payload, int maxlen)
 {
+	unsigned char setup[11];
 	unsigned char usb_buffer[11];
 	char toggle;
 	char rxlen;
@@ -176,16 +177,17 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 
 	toggle = 0;
 
-	/* send SETUP token */
-	make_usb_token(USB_PID_SETUP, addr, usb_buffer);
-	usb_tx(usb_buffer, 3);
-	/* send setup packet */
+	/* generate SETUP token */
+	make_usb_token(USB_PID_SETUP, addr, setup);
+	/* generate setup packet */
 	usb_buffer[0] = get_data_token(&toggle);
 	memcpy(&usb_buffer[1], p, 8);
 	usb_crc16(&usb_buffer[1], 8, &usb_buffer[9]);
 #ifdef TRIGGER
 wio8(SIE_SEL_TX, 3);
 #endif
+	/* send them back-to-back */
+	usb_tx(setup, 3);
 	usb_tx(usb_buffer, 11);
 #ifdef TRIGGER
 wio8(SIE_SEL_TX, 2);
