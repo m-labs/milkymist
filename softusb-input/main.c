@@ -151,13 +151,9 @@ struct setup_packet {
 	unsigned char wLength[2];
 } __attribute__((packed));
 
-static inline unsigned char get_data_token(char *toggle)
+static inline unsigned char toggle(unsigned char old)
 {
-	*toggle = !(*toggle);
-	if(*toggle)
-		return USB_PID_DATA0;
-	else
-		return USB_PID_DATA1;
+	return old ^ USB_PID_DATA0 ^ USB_PID_DATA1;
 }
 
 static const char control_failed[] PROGMEM = "Control transfer failed:\n";
@@ -170,17 +166,15 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 {
 	unsigned char setup[11];
 	unsigned char usb_buffer[11];
-	char toggle;
+	unsigned char expected_data = USB_PID_DATA1;
 	char rxlen;
 	char transferred;
 	char chunklen;
 
-	toggle = 0;
-
 	/* generate SETUP token */
 	make_usb_token(USB_PID_SETUP, addr, setup);
 	/* generate setup packet */
-	usb_buffer[0] = get_data_token(&toggle);
+	usb_buffer[0] = USB_PID_DATA0;
 	memcpy(&usb_buffer[1], p, 8);
 	usb_crc16(&usb_buffer[1], 8, &usb_buffer[9]);
 #ifdef TRIGGER
@@ -215,10 +209,11 @@ wio8(SIE_SEL_TX, 2);
 			make_usb_token(USB_PID_OUT, addr, usb_buffer);
 			usb_tx(usb_buffer, 3);
 			/* send DATAx packet */
-			usb_buffer[0] = get_data_token(&toggle);
+			usb_buffer[0] = expected_data;
 			memcpy(&usb_buffer[1], payload, chunklen);
 			usb_crc16(&usb_buffer[1], chunklen, &usb_buffer[chunklen+1]);
 			usb_tx(usb_buffer, chunklen+3);
+
 			/* get ACK from device */
 			rxlen = usb_rx(usb_buffer, 11);
 			if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
@@ -231,6 +226,7 @@ wio8(SIE_SEL_TX, 2);
 				return -1;
 			}
 
+			expected_data = toggle(expected_data);
 			transferred += chunklen;
 			payload += chunklen;
 			if(chunklen < 8)
@@ -291,7 +287,7 @@ retry:
 		usb_tx(usb_buffer, 1);
 	} else {
 		/* send DATAx packet */
-		usb_buffer[0] = get_data_token(&toggle);
+		usb_buffer[0] = USB_PID_DATA1;
 		usb_buffer[1] = usb_buffer[2] = 0x00; /* CRC is 0x0000 without data */
 		usb_tx(usb_buffer, 3);
 		/* get ACK token from device */
