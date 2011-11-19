@@ -143,6 +143,41 @@ static unsigned char usb_rx(unsigned char *buf, unsigned char maxlen)
 	}
 }
 
+static const char in_reply[] PROGMEM = "IN reply:\n";
+static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
+
+static int usb_in(unsigned addr, unsigned char expected_data,
+    unsigned char *buf, unsigned char maxlen)
+{
+	unsigned char in[3];
+	unsigned char ack[1] = { USB_PID_ACK };
+	unsigned char len;
+
+	/* send IN */
+	make_usb_token(USB_PID_IN, addr, in);
+	usb_tx(in, 3);
+
+	/* receive DATAx */
+	len = usb_rx(buf, maxlen);
+	if(!len) /* timeout or massive confusion */
+		return 0;
+	if(buf[0] == USB_PID_NAK)
+		return 0;
+	if(buf[0] != USB_PID_DATA0 && buf[0] != USB_PID_DATA1) {
+		print_string(in_reply);
+		dump_hex(buf, len);
+		return -1;
+	}
+
+	/* send ACK */
+	usb_tx(ack, 1);
+	if(buf[0] == expected_data)
+		return len;
+
+	print_string(datax_mismatch);
+	return 0;
+}
+
 struct setup_packet {
 	unsigned char bmRequestType;
 	unsigned char bRequest;
@@ -160,14 +195,13 @@ static const char control_failed[] PROGMEM = "Control transfer failed:\n";
 static const char termination[] PROGMEM = "(termination)\n";
 static const char setup_reply[] PROGMEM = "SETUP reply:\n";
 static const char out_reply[] PROGMEM = "OUT/DATA reply:\n";
-static const char in_reply[] PROGMEM = "IN reply:\n";
 
-static char control_transfer(unsigned char addr, struct setup_packet *p, char out, unsigned char *payload, int maxlen)
+static int control_transfer(unsigned char addr, struct setup_packet *p,
+    char out, unsigned char *payload, int maxlen)
 {
 	unsigned char setup[11];
 	unsigned char usb_buffer[11];
 	unsigned char expected_data = USB_PID_DATA1;
-	unsigned char ack[] =  { USB_PID_ACK };
 	char rxlen;
 	char transferred;
 	char chunklen;
@@ -235,27 +269,11 @@ wio8(SIE_SEL_TX, 2);
 		}
 	} else if(maxlen != 0) {
 		while(1) {
-			/* send IN token */
-			make_usb_token(USB_PID_IN, addr, usb_buffer);
-			usb_tx(usb_buffer, 3);
-			/* get DATAx packet */
-			rxlen = usb_rx(usb_buffer, 11);
-			if((rxlen < 3) || ((usb_buffer[0] != USB_PID_DATA0) &&
-			    (usb_buffer[0] != USB_PID_DATA1))) {
-				if((rxlen > 0) &&
-				    (usb_buffer[0] == USB_PID_NAK))
-					continue; /* NAK: retry */
-				print_string(control_failed);
-				print_string(in_reply);
-				dump_hex(usb_buffer, rxlen);
-				return -1;
-			}
-
-			/* send ACK token */
-			usb_tx(ack, 1);
-
-			if(usb_buffer[0] != expected_data)
+			rxlen = usb_in(addr, expected_data, usb_buffer, 11);
+			if(!rxlen)
 				continue;
+			if(rxlen <0)
+				return rxlen;
 
 			expected_data = toggle(expected_data);
 			chunklen = rxlen - 3; /* strip token and CRC */
@@ -272,25 +290,17 @@ wio8(SIE_SEL_TX, 2);
 
 	/* send IN/OUT token in the opposite direction to end transfer */
 retry:
-	make_usb_token(out ? USB_PID_IN : USB_PID_OUT, addr, usb_buffer);
-	usb_tx(usb_buffer, 3);
 	if(out) {
-		/* get DATAx packet */
-		rxlen = usb_rx(usb_buffer, 11);
-		if((rxlen != 3) || ((usb_buffer[0] != USB_PID_DATA0) &&
-		    (usb_buffer[0] != USB_PID_DATA1))) {
-			if((rxlen > 0) && (usb_buffer[0] == USB_PID_NAK))
-				goto retry; /* NAK: retry */
-			print_string(control_failed);
-			print_string(termination);
-			print_string(in_reply);
-			dump_hex(usb_buffer, rxlen);
+		rxlen = usb_in(addr, USB_PID_DATA1, usb_buffer, 11);
+		if(!rxlen)
+			goto retry;
+		if(rxlen < 0)
 			return -1;
-		}
-		/* send ACK token */
-		usb_buffer[0] = USB_PID_ACK;
-		usb_tx(usb_buffer, 1);
 	} else {
+		/* send OUT token */
+		make_usb_token(USB_PID_OUT, addr, usb_buffer);
+		usb_tx(usb_buffer, 3);
+
 		/* send DATAx packet */
 		usb_buffer[0] = USB_PID_DATA1;
 		usb_buffer[1] = usb_buffer[2] = 0x00; /* CRC is 0x0000 without data */
@@ -311,35 +321,18 @@ retry:
 	return transferred;
 }
 
-static const char datax_mismatch[] PROGMEM = "DATAx mismatch\n";
 static void poll(struct ep_status *ep, char keyboard)
 {
 	unsigned char usb_buffer[11];
-	unsigned char len;
+	int len;
 	unsigned char m;
 	char i;
 
-	/* IN */
-	make_usb_token(USB_PID_IN, ADDR_EP(1, ep->ep), usb_buffer);
-	usb_tx(usb_buffer, 3);
-	/* DATAx */
-	len = usb_rx(usb_buffer, 11);
-	if(len < 6)
+	len = usb_in(ADDR_EP(1, ep->ep), ep->expected_data, usb_buffer, 11);
+	if(len <= 0)
 		return;
-	if(usb_buffer[0] != ep->expected_data) {
-		if((usb_buffer[0] == USB_PID_DATA0) ||
-		    (usb_buffer[0] == USB_PID_DATA1)) {
-			/* ACK */
-			usb_buffer[0] = USB_PID_ACK;
-			usb_tx(usb_buffer, 1);
-			print_string(datax_mismatch);
-		}
-		return; /* drop */
-	}
-	/* ACK */
-	usb_buffer[0] = USB_PID_ACK;
-	usb_tx(usb_buffer, 1);
 	ep->expected_data = toggle(ep->expected_data);
+
 	/* send to host */
 	if(keyboard) {
 		if(len < 9)
