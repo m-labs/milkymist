@@ -339,10 +339,7 @@ static void poll(struct ep_status *ep, char keyboard)
 	/* ACK */
 	usb_buffer[0] = USB_PID_ACK;
 	usb_tx(usb_buffer, 1);
-	if(ep->expected_data == USB_PID_DATA0)
-		ep->expected_data = USB_PID_DATA1;
-	else
-		ep->expected_data = USB_PID_DATA0;
+	ep->expected_data = toggle(ep->expected_data);
 	/* send to host */
 	if(keyboard) {
 		if(len < 9)
