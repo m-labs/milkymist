@@ -167,6 +167,7 @@ static char control_transfer(unsigned char addr, struct setup_packet *p, char ou
 	unsigned char setup[11];
 	unsigned char usb_buffer[11];
 	unsigned char expected_data = USB_PID_DATA1;
+	unsigned char ack[] =  { USB_PID_ACK };
 	char rxlen;
 	char transferred;
 	char chunklen;
@@ -249,14 +250,18 @@ wio8(SIE_SEL_TX, 2);
 				dump_hex(usb_buffer, rxlen);
 				return -1;
 			}
+
+			/* send ACK token */
+			usb_tx(ack, 1);
+
+			if(usb_buffer[0] != expected_data)
+				continue;
+
+			expected_data = toggle(expected_data);
 			chunklen = rxlen - 3; /* strip token and CRC */
 			if(chunklen > (maxlen - transferred))
 				chunklen = maxlen - transferred;
 			memcpy(payload, &usb_buffer[1], chunklen);
-
-			/* send ACK token */
-			usb_buffer[0] = USB_PID_ACK;
-			usb_tx(usb_buffer, 1);
 
 			transferred += chunklen;
 			payload += chunklen;
