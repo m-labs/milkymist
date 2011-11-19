@@ -85,7 +85,7 @@ static void make_usb_token(unsigned char pid, unsigned int elevenbits, unsigned 
 	out[2] |= usb_crc5(out[1], out[2]) << 3;
 }
 
-static void usb_tx(unsigned char *buf, unsigned char len)
+static void usb_tx(const unsigned char *buf, unsigned char len)
 {
 	unsigned char i;
 
@@ -178,6 +178,33 @@ static int usb_in(unsigned addr, unsigned char expected_data,
 	return 0;
 }
 
+static const char out_reply[] PROGMEM = "OUT/DATA reply:\n";
+
+static char usb_out(unsigned addr, const unsigned char *buf, unsigned char len)
+{
+	unsigned char out[3];
+	unsigned char ack[11];
+	unsigned char got;
+
+	/* send OUT */
+	make_usb_token(USB_PID_OUT, addr, out);
+	usb_tx(out, 3);
+
+	/* send DATAx */
+	usb_tx(buf, len);
+
+	/* receive ACK */
+	got = usb_rx(ack, 11);
+	if(got == 1 && ack[0] == USB_PID_ACK)
+		return 1;
+	if (!got || ack[0] == USB_PID_NAK) /* timeout or NAK */
+		return 0;
+
+	print_string(out_reply);
+	dump_hex(ack, got);
+	return -1;
+}
+
 struct setup_packet {
 	unsigned char bmRequestType;
 	unsigned char bRequest;
@@ -194,7 +221,6 @@ static inline unsigned char toggle(unsigned char old)
 static const char control_failed[] PROGMEM = "Control transfer failed:\n";
 static const char termination[] PROGMEM = "(termination)\n";
 static const char setup_reply[] PROGMEM = "SETUP reply:\n";
-static const char out_reply[] PROGMEM = "OUT/DATA reply:\n";
 
 static int control_transfer(unsigned char addr, struct setup_packet *p,
     char out, unsigned char *payload, int maxlen)
@@ -240,26 +266,15 @@ wio8(SIE_SEL_TX, 2);
 			if(chunklen > 8)
 				chunklen = 8;
 
-			/* send OUT token */
-			make_usb_token(USB_PID_OUT, addr, usb_buffer);
-			usb_tx(usb_buffer, 3);
-			/* send DATAx packet */
+			/* make DATAx packet */
 			usb_buffer[0] = expected_data;
 			memcpy(&usb_buffer[1], payload, chunklen);
 			usb_crc16(&usb_buffer[1], chunklen, &usb_buffer[chunklen+1]);
-			usb_tx(usb_buffer, chunklen+3);
-
-			/* get ACK from device */
-			rxlen = usb_rx(usb_buffer, 11);
-			if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
-				if((rxlen > 0) &&
-				    (usb_buffer[0] == USB_PID_NAK))
-					continue; /* NAK: retry */
-				print_string(control_failed);
-				print_string(out_reply);
-				dump_hex(usb_buffer, rxlen);
+			rxlen = usb_out(addr, usb_buffer, chunklen+3);
+			if(!rxlen)
+				continue;
+			if(rxlen < 0)
 				return -1;
-			}
 
 			expected_data = toggle(expected_data);
 			transferred += chunklen;
@@ -297,25 +312,15 @@ retry:
 		if(rxlen < 0)
 			return -1;
 	} else {
-		/* send OUT token */
-		make_usb_token(USB_PID_OUT, addr, usb_buffer);
-		usb_tx(usb_buffer, 3);
-
-		/* send DATAx packet */
+		/* make DATA1 packet */
 		usb_buffer[0] = USB_PID_DATA1;
 		usb_buffer[1] = usb_buffer[2] = 0x00; /* CRC is 0x0000 without data */
-		usb_tx(usb_buffer, 3);
-		/* get ACK token from device */
-		rxlen = usb_rx(usb_buffer, 11);
-		if((rxlen != 1) || (usb_buffer[0] != USB_PID_ACK)) {
-			if((rxlen > 0) && (usb_buffer[0] == USB_PID_NAK))
-				goto retry; /* NAK: retry */
-			print_string(control_failed);
-			print_string(termination);
-			print_string(out_reply);
-			dump_hex(usb_buffer, rxlen);
+
+		rxlen = usb_out(addr, usb_buffer, 3);
+		if(!rxlen)
+			goto retry;
+		if(!rxlen < 0)
 			return -1;
-		}
 	}
 
 	return transferred;
