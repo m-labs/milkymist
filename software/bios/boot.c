@@ -266,7 +266,7 @@ void netboot()
 		initrdstart_adr = 0;
 		initrdend_adr = 0;
 	} else
-		initrdend_adr = initrdstart_adr + size - 1;
+		initrdend_adr = initrdstart_adr + size;
 
 	printf("I: Booting...\n");
 	boot(cmdline_adr, initrdstart_adr, initrdend_adr, rescue, SDRAM_BASE);
@@ -320,7 +320,7 @@ void fsboot(int devnr)
 		initrdstart_adr = 0;
 		initrdend_adr = 0;
 	} else
-		initrdend_adr = initrdstart_adr + size - 1;
+		initrdend_adr = initrdstart_adr + size;
 
 	fatfs_done();
 	printf("I: Booting...\n");
