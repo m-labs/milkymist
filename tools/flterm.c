@@ -507,18 +507,20 @@ static void do_terminal(char *serial_port,
 				/* write to terminal */
 				write(0, &c, 1);
 			
-				if(c == sfl_magic_req[recognized]) {
-					recognized++;
-					if(recognized == SFL_MAGIC_LEN) {
-						/* We've got the magic string ! */
-						recognized = 0;
-						answer_magic(serialfd,
-							kernel_image, kernel_address,
-							cmdline, cmdline_address,
-							initrd_image, initrd_address);
+				if(kernel_image != NULL) {
+					if(c == sfl_magic_req[recognized]) {
+						recognized++;
+						if(recognized == SFL_MAGIC_LEN) {
+							/* We've got the magic string ! */
+							recognized = 0;
+							answer_magic(serialfd,
+								kernel_image, kernel_address,
+								cmdline, cmdline_address,
+								initrd_image, initrd_address);
+						}
+					} else {
+						if(c == sfl_magic_req[0]) recognized = 1; else recognized = 0;
 					}
-				} else {
-					if(c == sfl_magic_req[0]) recognized = 1; else recognized = 0;
 				}
 			}
 		}
@@ -618,7 +620,7 @@ static void print_usage()
 
 	fprintf(stderr, "Usage: flterm --port <port>\n");
 	fprintf(stderr, "              [--double-rate] [--gdb-passthrough] [--debug]\n");
-	fprintf(stderr, "              --kernel <kernel_image> [--kernel-adr <address>]\n");
+	fprintf(stderr, "              [--kernel <kernel_image> [--kernel-adr <address>]]\n");
 	fprintf(stderr, "              [--cmdline <cmdline> [--cmdline-adr <address>]]\n");
 	fprintf(stderr, "              [--initrd <initrd_image> [--initrd-adr <address>]]\n");
 	fprintf(stderr, "              [--log <log_file>]\n\n");
@@ -705,7 +707,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if((serial_port == NULL) || (kernel_image == NULL)) {
+	if(serial_port == NULL) {
 		print_usage();
 		return 1;
 	}
