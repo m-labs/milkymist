@@ -855,10 +855,12 @@ assign flash_ce_n = 1'b0;
 //---------------------------------------------------------------------------
 // Monitor ROM / RAM
 //---------------------------------------------------------------------------
+wire debug_write_lock;
 `ifdef CFG_ROM_DEBUG_ENABLED
 monitor(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
+	.write_lock(debug_write_lock),
 
 	.wb_adr_i(monitor_adr),
 	.wb_dat_o(monitor_dat_r),
@@ -930,6 +932,8 @@ sysctl #(
 
 	.gpio_inputs({pcb_revision, btn3, btn2, btn1}),
 	.gpio_outputs({led2, led1}),
+
+	.debug_write_lock(debug_write_lock),
 
 	.capabilities(capabilities),
 	.hard_reset(hard_reset)
