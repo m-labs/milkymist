@@ -613,6 +613,9 @@ int main(int i, char **c)
 {
 	char buffer[64];
 
+	/* lock gdbstub ROM */
+	CSR_DBG_CTRL = DBG_CTRL_GDB_ROM_LOCK;
+
 	CSR_GPIO_OUT = GPIO_LED1;
 	rescue = !((unsigned int)main > FLASH_OFFSET_REGULAR_BIOS);
 
