@@ -19,6 +19,7 @@ module sysctl #(
 	parameter csr_addr = 4'h0,
 	parameter ninputs = 16,
 	parameter noutputs = 16,
+	parameter clk_freq = 32'h00000000,
 	parameter systemid = 32'habadface
 ) (
 	input sys_clk,
@@ -109,7 +110,7 @@ reg [7:0] debug_scratchpad;
 
 wire csr_selected = csr_a[13:10] == csr_addr;
 
-assign icap_we = csr_selected & csr_we & (csr_a[3:0] == 4'b1101);
+assign icap_we = csr_selected & csr_we & (csr_a[4:0] == 4'b10000);
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
@@ -153,56 +154,67 @@ always @(posedge sys_clk) begin
 		if(csr_selected) begin
 			/* CSR Writes */
 			if(csr_we) begin
-				case(csr_a[3:0])
+				case(csr_a[4:0])
 					/* GPIO registers */
-					// 0000 is GPIO IN and is read-only
-					4'b0001: gpio_outputs <= csr_di[noutputs-1:0];
-					4'b0010: gpio_irqen <= csr_di[ninputs-1:0];
+					// 00000 is GPIO IN and is read-only
+					5'b00001: gpio_outputs <= csr_di[noutputs-1:0];
+					5'b00010: gpio_irqen <= csr_di[ninputs-1:0];
 					
 					/* Timer 0 registers */
-					4'b0100: begin
+					5'b00100: begin
 						en0 <= csr_di[0];
 						ar0 <= csr_di[1];
 					end
-					4'b0101: compare0 <= csr_di;
-					4'b0110: counter0 <= csr_di;
+					5'b00101: compare0 <= csr_di;
+					5'b00110: counter0 <= csr_di;
 					
 					/* Timer 1 registers */
-					4'b1000: begin
+					5'b01000: begin
 						en1 <= csr_di[0];
 						ar1 <= csr_di[1];
 					end
-					4'b1001: compare1 <= csr_di;
-					4'b1010: counter1 <= csr_di;
+					5'b01001: compare1 <= csr_di;
+					5'b01010: counter1 <= csr_di;
 
-					4'b1100: debug_scratchpad <= csr_di[7:0];
-					// 1101 is ICAP and is handled separately
-					// 1110 is capabilities and is read-only
-					4'b1111: hard_reset <= 1'b1;
+					/* ICAP */
+					// 10000 is ICAP and is handled separately
+
+					/* Debug monitor (gdbstub) */
+					5'b10100: debug_scratchpad <= csr_di[7:0];
+
+					// 11101 is clk_freq and is read-only
+					// 11110 is capabilities and is read-only
+					5'b11111: hard_reset <= 1'b1;
 				endcase
 			end
 		
 			/* CSR Reads */
-			case(csr_a[3:0])
+			case(csr_a[4:0])
 				/* GPIO registers */
-				4'b0000: csr_do <= gpio_in;
-				4'b0001: csr_do <= gpio_outputs;
-				4'b0010: csr_do <= gpio_irqen;
+				5'b00000: csr_do <= gpio_in;
+				5'b00001: csr_do <= gpio_outputs;
+				5'b00010: csr_do <= gpio_irqen;
 				
 				/* Timer 0 registers */
-				4'b0100: csr_do <= {ar0, en0};
-				4'b0101: csr_do <= compare0;
-				4'b0110: csr_do <= counter0;
+				5'b00100: csr_do <= {ar0, en0};
+				5'b00101: csr_do <= compare0;
+				5'b00110: csr_do <= counter0;
 				
 				/* Timer 1 registers */
-				4'b1000: csr_do <= {ar1, en1};
-				4'b1001: csr_do <= compare1;
-				4'b1010: csr_do <= counter1;
+				5'b01000: csr_do <= {ar1, en1};
+				5'b01001: csr_do <= compare1;
+				5'b01010: csr_do <= counter1;
 
-				4'b1100: csr_do <= debug_scratchpad;
-				4'b1101: csr_do <= icap_ready;
-				4'b1110: csr_do <= capabilities;
-				4'b1111: csr_do <= systemid;
+				/* ICAP */
+				5'b10000: csr_do <= icap_ready;
+
+				/* Debug monitor (gdbstub) */
+				5'b10100: csr_do <= debug_scratchpad;
+
+				/* Read only SoC properties */
+				5'b11101: csr_do <= clk_freq;
+				5'b11110: csr_do <= capabilities;
+				5'b11111: csr_do <= systemid;
 			endcase
 		end
 	end
