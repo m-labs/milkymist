@@ -29,6 +29,8 @@
 #define SUPPORT_Z_CMD 1
 #define SUPPORT_Q_CMD 1
 
+#define GDBSTUB_UART_SPEED 115200
+
 /* see crt0.S */
 extern void clear_bss(void);
 
@@ -671,6 +673,7 @@ static void cmd_query(void)
 void handle_exception(unsigned int *registers)
 {
     unsigned int stat;
+    unsigned int uart_div;
 
     /*
      * make sure break is disabled.
@@ -693,6 +696,10 @@ void handle_exception(unsigned int *registers)
      * it after it is terminated. */
     while(!(CSR_UART_STAT & UART_STAT_THRE));
     stat = CSR_UART_STAT;
+
+    /* save UART divider and set own speed */
+    uart_div = CSR_UART_DIVISOR;
+    CSR_UART_DIVISOR = CSR_FREQUENCY / 16 / GDBSTUB_UART_SPEED;
 
     /* reply to host that an exception has occured */
     if (gdb_connected) {
@@ -769,6 +776,9 @@ out:
 
     /* clear TX event if there was no transmission in progress */
     CSR_UART_STAT = stat & UART_STAT_TX_EVT;
+
+    /* restore UART divider */
+    CSR_UART_DIVISOR = uart_div;
 
     /* reenable break */
     CSR_UART_DEBUG = UART_DEBUG_BREAK_EN;
