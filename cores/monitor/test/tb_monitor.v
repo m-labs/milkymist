@@ -17,6 +17,7 @@ reg dat;
 monitor dut(
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
+	.write_lock(1'b1),
 	.wb_stb_i(wb_stb_i),
 	.wb_cyc_i(wb_cyc_i),
 	.wb_ack_o(wb_ack_o),
