@@ -609,7 +609,7 @@ static const struct option options[] = {
 
 static void print_usage()
 {
-	fprintf(stderr, "Serial boot program for Milkymist SoC - v. 2.1\n");
+	fprintf(stderr, "Serial boot program for Milkymist SoC - v. 2.2\n");
 	fprintf(stderr, "Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq\n");
 	fprintf(stderr, "Copyright (C) 2011 Michael Walle\n");
 	fprintf(stderr, "Copyright (C) 2004 MontaVista Software, Inc\n\n");
@@ -624,7 +624,7 @@ static void print_usage()
 	fprintf(stderr, "              [--cmdline <cmdline> [--cmdline-adr <address>]]\n");
 	fprintf(stderr, "              [--initrd <initrd_image> [--initrd-adr <address>]]\n");
 	fprintf(stderr, "              [--log <log_file>]\n\n");
-	printf("Default load addresses:\n");
+	fprintf(stderr, "Default load addresses:\n");
 	fprintf(stderr, "  kernel:  0x%08x\n", DEFAULT_KERNELADR);
 	fprintf(stderr, "  cmdline: 0x%08x\n", DEFAULT_CMDLINEADR);
 	fprintf(stderr, "  initrd:  0x%08x\n", DEFAULT_INITRDADR);
