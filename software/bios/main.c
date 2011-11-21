@@ -616,6 +616,9 @@ int main(int i, char **c)
 	/* lock gdbstub ROM */
 	CSR_DBG_CTRL = DBG_CTRL_GDB_ROM_LOCK;
 
+	/* enable bus errors */
+	CSR_DBG_CTRL = DBG_CTRL_BUS_ERR_EN;
+
 	CSR_GPIO_OUT = GPIO_LED1;
 	rescue = !((unsigned int)main > FLASH_OFFSET_REGULAR_BIOS);
 
