@@ -674,6 +674,7 @@ void handle_exception(unsigned int *registers)
 {
     unsigned int stat;
     unsigned int uart_div;
+    unsigned int dbg_ctrl;
 
     /*
      * make sure break is disabled.
@@ -690,6 +691,10 @@ void handle_exception(unsigned int *registers)
         CSR_DBG_SCRATCHPAD = 1;
         clear_bss();
     }
+
+    /* disable bus errors */
+    dbg_ctrl = CSR_DBG_CTRL;
+    CSR_DBG_CTRL = 0;
 
     /* wait until TX transaction is finished. If there was a transmission in
      * progress, the event bit will be set. In this case, the gdbstub won't clear
@@ -779,6 +784,9 @@ out:
 
     /* restore UART divider */
     CSR_UART_DIVISOR = uart_div;
+
+    /* restore dbg control register */
+    CSR_DBG_CTRL = dbg_ctrl;
 
     /* reenable break */
     CSR_UART_DEBUG = UART_DEBUG_BREAK_EN;
