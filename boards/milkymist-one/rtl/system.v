@@ -760,6 +760,7 @@ assign cpu_interrupt = {16'd0,
 //---------------------------------------------------------------------------
 // LM32 CPU
 //---------------------------------------------------------------------------
+wire bus_errors_en;
 wire cpuibus_err;
 wire cpudbus_err;
 `ifdef CFG_BUS_ERRORS_ENABLED
@@ -772,8 +773,8 @@ always @(posedge sys_clk) begin
 	locked_addr_i <= cpuibus_adr[31:18] == 14'd0;
 	locked_addr_d <= cpudbus_adr[31:18] == 14'd0;
 end
-assign cpuibus_err = locked_addr_i & cpuibus_ack;
-assign cpudbus_err = locked_addr_d & cpudbus_ack;
+assign cpuibus_err = bus_errors_en & locked_addr_i & cpuibus_ack;
+assign cpudbus_err = bus_errors_en & locked_addr_d & cpudbus_ack;
 `else
 assign cpuibus_err = 1'b0;
 assign cpudbus_err = 1'b0;
@@ -934,6 +935,7 @@ sysctl #(
 	.gpio_outputs({led2, led1}),
 
 	.debug_write_lock(debug_write_lock),
+	.bus_errors_en(bus_errors_en),
 
 	.capabilities(capabilities),
 	.hard_reset(hard_reset)
