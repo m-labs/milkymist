@@ -23,7 +23,6 @@
 #include <hw/sysctl.h>
 #include <hw/interrupts.h>
 
-#include <hal/brd.h>
 #include <hal/time.h>
 
 static int sec;
@@ -33,7 +32,7 @@ void time_init()
 	unsigned int mask;
 	
 	CSR_TIMER0_COUNTER = 0;
-	CSR_TIMER0_COMPARE = brd_desc->clk_frequency;
+	CSR_TIMER0_COMPARE = CSR_FREQUENCY;
 	CSR_TIMER0_CONTROL = TIMER_AUTORESTART|TIMER_ENABLE;
 	irq_ack(IRQ_TIMER0);
 
@@ -64,7 +63,7 @@ void time_get(struct timestamp *ts)
 	irq_setmask(oldmask);
 
 	ts->sec = sec2;
-	ts->usec = counter/(brd_desc->clk_frequency/1000000);
+	ts->usec = counter/(CSR_FREQUENCY/1000000);
 	
 	/*
 	 * If the counter is less than half a second, we consider that
@@ -72,7 +71,7 @@ void time_get(struct timestamp *ts)
 	 * value.
 	 */
 	if(pending) {
-		if(counter < (brd_desc->clk_frequency/2))
+		if(counter < (CSR_FREQUENCY/2))
 			ts->sec++;
 	}
 }

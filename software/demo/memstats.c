@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,8 @@
 
 #include <board.h>
 
-#include <hal/brd.h>
-
 #include <hw/fmlmeter.h>
+#include <hw/sysctl.h>
 
 static unsigned int last_stb_count;
 static unsigned int last_ack_count;
@@ -41,7 +40,7 @@ void memstats_tick()
 
 unsigned int memstat_occupancy()
 {
-	return last_stb_count/(brd_desc->clk_frequency/100);
+	return last_stb_count/(CSR_FREQUENCY/100);
 }
 
 unsigned int memstat_net_bandwidth()
