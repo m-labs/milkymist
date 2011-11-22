@@ -112,7 +112,7 @@ reg [7:0] debug_scratchpad;
 
 wire csr_selected = csr_a[13:10] == csr_addr;
 
-assign icap_we = csr_selected & csr_we & (csr_a[4:0] == 4'b10000);
+assign icap_we = csr_selected & csr_we & (csr_a[4:0] == 5'b10000);
 
 always @(posedge sys_clk) begin
 	if(sys_rst) begin
