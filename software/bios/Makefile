@@ -14,9 +14,8 @@ all: bios.bin bios-rescue.bin
 	chmod -x $@
 	$(MMDIR)/tools/mkmmimg $@ write
 
-# make sure the linker*.ld at the first of depends
-bios.elf: linker.ld $(OBJECTS) $(wildcard *.h) $(LIBS)
-bios-rescue.elf: linker-rescue.ld $(OBJECTS) $(wildcard *.h) $(LIBS)
+bios.elf: linker.ld $(OBJECTS) $(LIBS)
+bios-rescue.elf: linker-rescue.ld $(OBJECTS) $(LIBS)
 
 %.elf:
 	$(LD) $(LDFLAGS) -T $< -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group
