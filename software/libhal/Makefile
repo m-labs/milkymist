@@ -5,7 +5,7 @@ OBJECTS=brd.o dmx.o font8x16.o mem.o pfpu.o snd.o time.o tmu.o ukb.o usb.o vga.o
 
 all: libhal.a
 
-libhal.a: $(OBJECTS)
+libhal.a: $(OBJECTS) softusb-input.h
 	$(AR) clr libhal.a $(OBJECTS)
 	$(RANLIB) libhal.a
 
@@ -13,10 +13,9 @@ $(MMDIR)/softusb-input/softusb-input.bin:
 	$(MAKE) -C $(MMDIR)/softusb-input
 
 softusb-input.h: $(MMDIR)/softusb-input/softusb-input.bin
-	$(MAKE) -C $(MMDIR)/softusb-input
 	cat $(MMDIR)/softusb-input/softusb-input.bin | xxd -i - softusb-input.h
 
-.PHONY: clean depend
+.PHONY: clean depend $(MMDIR)/softusb-input/softusb-input.bin
 
 depend: softusb-input.h
 	makedepend -Y -- $(CFLAGS) -- *.c

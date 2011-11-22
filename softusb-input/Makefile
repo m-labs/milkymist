@@ -5,7 +5,7 @@ all: softusb-input.bin
 %.bin: %.elf
 	avr-objcopy -O binary $< $@
 
-softusb-input.elf: $(SOURCES)
+softusb-input.elf: $(SOURCES) $(wildcard *.h)
 	avr-gcc -o softusb-input.elf -mmcu=avr2 -mno-interrupts -Wall -Os $(SOURCES) $(CFLAGS) -nostdlib -Wl,-T -Wl,navre.ld
 
 .PHONY: clean

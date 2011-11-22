@@ -3,6 +3,8 @@ include $(MMDIR)/software/include.mak
 
 OBJECTS=crt0.o isr.o main.o unlzma.o boot.o boot-helper.o splash.o
 SEGMENTS=-j .text -j .data -j .rodata
+LIBS=$(MMDIR)/software/libhpdmc/libhpdmc.a $(MMDIR)/software/libbase/libbase-light.a \
+     $(MMDIR)/software/libhal/libhal.a     $(MMDIR)/software/libnet/libnet.a
 
 all: bios.bin bios-rescue.bin
 
@@ -13,12 +15,24 @@ all: bios.bin bios-rescue.bin
 	$(MMDIR)/tools/mkmmimg $@ write
 
 # make sure the linker*.ld at the first of depends
-bios.elf: linker.ld $(OBJECTS)
-bios-rescue.elf: linker-rescue.ld $(OBJECTS)
+bios.elf: linker.ld $(OBJECTS) $(wildcard *.h) $(LIBS)
+bios-rescue.elf: linker-rescue.ld $(OBJECTS) $(wildcard *.h) $(LIBS)
 
 %.elf:
 	$(LD) $(LDFLAGS) -T $< -N -o $@ $(OBJECTS) -L$(MMDIR)/software/libhpdmc -L$(MMDIR)/software/libbase -L$(MMDIR)/software/libhal -L$(MMDIR)/software/libnet --start-group -lhpdmc -lbase-light -lhal -lnet --end-group
 	chmod -x $@
+
+$(MMDIR)/software/libhpdmc/libhpdmc.a:
+	make -C $(MMDIR)/software/libhpdmc/
+
+$(MMDIR)/software/libbase/libbase-light.a:
+	make -C $(MMDIR)/software/libbase/
+
+$(MMDIR)/software/libhal/libhal.a:
+	make -C $(MMDIR)/software/libhal/
+
+$(MMDIR)/software/libnet/libnet.a:
+	make -C $(MMDIR)/software/libnet/
 
 .PHONY: clean depend
 
