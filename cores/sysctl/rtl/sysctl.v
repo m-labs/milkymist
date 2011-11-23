@@ -188,7 +188,7 @@ always @(posedge sys_clk) begin
 					5'b10101: begin
 						if(csr_di[0])
 							debug_write_lock <= 1'b1;
-						bus_errors_en = csr_di[1];
+						bus_errors_en <= csr_di[1];
 					end
 
 					// 11101 is clk_freq and is read-only
