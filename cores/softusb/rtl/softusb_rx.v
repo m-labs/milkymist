@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,25 +105,43 @@ always @(*) begin
 end
 
 /* DPLL */
-reg rx_r;
-always @(posedge usb_clk)
-	rx_r <= rx;
-wire transition = (rx != rx_r);
-
-reg [4:0] dpll_counter;
-reg dpll_ce;
+reg [2:0] div8_counter;
+reg div8_ce;
+initial div8_counter <= 3'd0;
 always @(posedge usb_clk) begin
-	if(rxreset) begin
-		dpll_counter <= 5'd0;
-		dpll_ce <= 1'b0;
-	end else begin
-		if(transition)
-			dpll_counter <= 5'd0;
-		else
-			dpll_counter <= dpll_counter + 5'd1;
-		dpll_ce <= low_speed ? (dpll_counter == 5'd13) : (transition|(dpll_counter[1:0] == 2'd3));
-	end
+	div8_counter <= div8_counter + 3'd1;
+	div8_ce <= div8_counter == 3'd0;
 end
+
+wire speed_ce = ~low_speed | div8_ce;
+
+reg [3:0] dpll_state;
+reg [3:0] dpll_next_state;
+
+always @(posedge usb_clk) begin
+	if(rxreset)
+		dpll_state <= 4'h5;
+	else if(speed_ce)
+		dpll_state <= dpll_next_state;
+end
+
+always @(*) begin
+	dpll_next_state = dpll_state;
+	case(dpll_state)
+		4'h5: dpll_next_state = 4'h7;
+		4'h7: if( rx_corrected) dpll_next_state = 4'h6; else dpll_next_state = 4'hb;
+		4'h6: if( rx_corrected) dpll_next_state = 4'h4; else dpll_next_state = 4'h1;
+		4'h4: if( rx_corrected) dpll_next_state = 4'h5; else dpll_next_state = 4'h1;
+		4'h1: dpll_next_state = 4'h3;
+		4'h3: if(~rx_corrected) dpll_next_state = 4'h2; else dpll_next_state = 4'hf;
+		4'h2: if(~rx_corrected) dpll_next_state = 4'h0; else dpll_next_state = 4'h5;
+		4'h0: if(~rx_corrected) dpll_next_state = 4'h1; else dpll_next_state = 4'h5;
+		4'hb: dpll_next_state = 4'h2;
+		4'hf: dpll_next_state = 4'h6;
+	endcase
+end
+
+wire dpll_ce = speed_ce & (dpll_next_state[1] & ~dpll_state[1]);
 
 /* Serial->Parallel converter */
 
