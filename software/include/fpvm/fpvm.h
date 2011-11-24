@@ -51,6 +51,12 @@ struct fpvm_tbinding {
 	char sym[FPVM_MAXSYMLEN];
 };
 
+enum {
+	FPVM_BIND_NONE,
+	FPVM_BIND_SOURCE,
+	FPVM_BIND_ALL
+};
+
 struct fpvm_fragment {
 	char last_error[FPVM_MAXERRLEN];
 	fpvm_bind_callback bind_callback;

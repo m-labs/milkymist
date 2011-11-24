@@ -68,7 +68,7 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 	fragment->next_sur = -3;
 	fragment->ninstructions = 0;
 
-	fragment->bind_mode = 0;
+	fragment->bind_mode = FPVM_BIND_NONE;
 	fragment->vector_mode = vector_mode;
 }
 
@@ -172,14 +172,14 @@ static int rename_reg(struct fpvm_fragment *fragment, const char *sym, int reg)
 	return 1;
 }
 
-static int sym_to_reg(struct fpvm_fragment *fragment, const char *sym, int *created)
+static int sym_to_reg(struct fpvm_fragment *fragment, const char *sym, int dest, int *created)
 {
 	int r;
 	if(created) *created = 0;
 	r = lookup(fragment, sym);
 	if(r == FPVM_INVALID_REG) {
 		if(created) *created = 1;
-		if(fragment->bind_mode)
+		if((fragment->bind_mode == FPVM_BIND_ALL) || ((fragment->bind_mode == FPVM_BIND_SOURCE) && !dest))
 			r = fpvm_bind(fragment, sym);
 		else
 			r = tbind(fragment, sym);
@@ -332,7 +332,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 	if(node->contents.branches.a == NULL) {
 		/* AST node is a variable */
 		if(fragment->bind_mode) {
-			opa = sym_to_reg(fragment, node->label, NULL);
+			opa = sym_to_reg(fragment, node->label, 0, NULL);
 			if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
 		} else {
 			opa = lookup(fragment, node->label);
@@ -537,7 +537,7 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *ex
 		fragment->next_sur--;
 		created = 1;
 	} else
-		dest_reg = sym_to_reg(fragment, dest, &created);
+		dest_reg = sym_to_reg(fragment, dest, 1, &created);
 	if(dest_reg == FPVM_INVALID_REG) {
 		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Failed to allocate register for destination");
 		fpvm_parse_free(n);
