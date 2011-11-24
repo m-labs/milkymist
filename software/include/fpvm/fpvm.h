@@ -49,8 +49,13 @@ struct fpvm_tbinding {
 	char sym[FPVM_MAXSYMLEN];
 };
 
+typedef void (*fpvm_bind_callback)(void *, const char *, int);
+
 struct fpvm_fragment {
 	char last_error[FPVM_MAXERRLEN];
+	fpvm_bind_callback bind_callback;
+	void *bind_callback_user;
+	
 	/* A binding is a link between the FPVM and the user,
 	 * made by permanently allocating a given register for the user.
 	 * Constants fall in this category because they need to be initialized
@@ -93,6 +98,7 @@ struct fpvm_fragment {
 const char *fpvm_version();
 
 void fpvm_init(struct fpvm_fragment *fragment, int vector_mode);
+void fpvm_set_bind_callback(struct fpvm_fragment *fragment, fpvm_bind_callback callback, void *user);
 
 int fpvm_bind(struct fpvm_fragment *fragment, const char *sym);
 void fpvm_set_xin(struct fpvm_fragment *fragment, const char *sym);

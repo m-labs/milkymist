@@ -33,6 +33,8 @@ const char *fpvm_version()
 void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 {
 	fragment->last_error[0] = 0;
+	fragment->bind_callback = NULL;
+	fragment->bind_callback_user = NULL;
 
 	fragment->nbindings = 3;
 	fragment->bindings[0].isvar = 1;
@@ -70,15 +72,26 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 	fragment->vector_mode = vector_mode;
 }
 
+void fpvm_set_bind_callback(struct fpvm_fragment *fragment, fpvm_bind_callback callback, void *user)
+{
+	fragment->bind_callback = callback;
+	fragment->bind_callback_user = user;
+}
+
 int fpvm_bind(struct fpvm_fragment *fragment, const char *sym)
 {
+	int r;
+	
 	if(fragment->nbindings == FPVM_MAXBINDINGS) {
 		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Failed to allocate register for variable: %s", sym);
 		return FPVM_INVALID_REG;
 	}
-	fragment->bindings[fragment->nbindings].isvar = 1;
-	strcpy(fragment->bindings[fragment->nbindings].b.v, sym);
-	return fragment->nbindings++;
+	r = fragment->nbindings++;
+	fragment->bindings[r].isvar = 1;
+	strcpy(fragment->bindings[r].b.v, sym);
+	if(fragment->bind_callback != NULL)
+		fragment->bind_callback(fragment->bind_callback_user, sym, r);
+	return r;
 }
 
 void fpvm_set_xin(struct fpvm_fragment *fragment, const char *sym)
