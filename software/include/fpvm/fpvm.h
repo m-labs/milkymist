@@ -36,6 +36,8 @@
 
 #define FPVM_MAXERRLEN		64
 
+typedef void (*fpvm_bind_callback)(void *, const char *, int);
+
 struct fpvm_binding {
 	int isvar;
 	union {
@@ -48,8 +50,6 @@ struct fpvm_tbinding {
 	int reg;
 	char sym[FPVM_MAXSYMLEN];
 };
-
-typedef void (*fpvm_bind_callback)(void *, const char *, int);
 
 struct fpvm_fragment {
 	char last_error[FPVM_MAXERRLEN];
@@ -98,6 +98,8 @@ struct fpvm_fragment {
 const char *fpvm_version();
 
 void fpvm_init(struct fpvm_fragment *fragment, int vector_mode);
+const char *fpvm_get_last_error(struct fpvm_fragment *fragment);
+void fpvm_set_bind_mode(struct fpvm_fragment *fragment, int bind_mode);
 void fpvm_set_bind_callback(struct fpvm_fragment *fragment, fpvm_bind_callback callback, void *user);
 
 int fpvm_bind(struct fpvm_fragment *fragment, const char *sym);

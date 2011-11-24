@@ -72,10 +72,20 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 	fragment->vector_mode = vector_mode;
 }
 
+const char *fpvm_get_last_error(struct fpvm_fragment *fragment)
+{
+	return fragment->last_error;
+}
+
 void fpvm_set_bind_callback(struct fpvm_fragment *fragment, fpvm_bind_callback callback, void *user)
 {
 	fragment->bind_callback = callback;
 	fragment->bind_callback_user = user;
+}
+
+void fpvm_set_bind_mode(struct fpvm_fragment *fragment, int bind_mode)
+{
+	fragment->bind_mode = bind_mode;
 }
 
 int fpvm_bind(struct fpvm_fragment *fragment, const char *sym)
