@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+`define AUTO_ON
+ 
 module standby(
 	input clk50,
 
@@ -84,6 +86,7 @@ BUFG b1(
 	.O(clk)
 );
 
+`ifndef AUTO_ON
 reg btn1_r0;
 reg btn1_r;
 reg btn2_r0;
@@ -111,6 +114,7 @@ end
 reg [19:0] debounce_r;
 always @(posedge clk) debounce_r <= debounce_r + 20'd1;
 assign debounce = &debounce_r;
+`endif
 
 reg ce_r;
 reg [15:0] d_r;
@@ -179,6 +183,7 @@ always @(posedge clk, negedge locked)
 	else
 		state <= next_state;
 
+`ifndef AUTO_ON
 reg rescue;
 reg next_rescue;
 always @(posedge clk, negedge locked)
@@ -186,20 +191,27 @@ always @(posedge clk, negedge locked)
 		rescue <= 1'b0;
 	else
 		rescue <= next_rescue;
+`endif
 
 always @(*) begin
 	d = 16'hxxxx;
 	icap_en_n = 1'b1;
 
+`ifndef AUTO_ON
 	next_rescue = rescue;
+`endif
 
 	next_state = state;
 
 	case(state)
 		IDLE: begin
+`ifdef AUTO_ON
+			next_state = DUMMY;
+`else
 			next_rescue = btn1_r;
 			if(btn2_r & ~btn2_r2)
 				next_state = DUMMY;
+`endif
 		end
 		DUMMY: begin
 			d = 16'hffff;
@@ -229,7 +241,11 @@ always @(*) begin
 		GENERAL2_C: begin
 			d = 16'h3281;
 			icap_en_n = 1'b0;
+`ifdef AUTO_ON
+			if(btn1)
+`else
 			if(rescue)
+`endif
 				next_state = GENERAL2_D_RESCUE;
 			else
 				next_state = GENERAL2_D_REGULAR;
