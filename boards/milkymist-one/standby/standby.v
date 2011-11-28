@@ -193,6 +193,18 @@ always @(posedge clk, negedge locked)
 		rescue <= next_rescue;
 `endif
 
+`ifdef AUTO_ON
+/* HACK: for some reason, reconfiguring right away fails intermittently.
+ * Work around this with a timer.
+ */
+reg [19:0] timer;
+always @(posedge clk, negedge locked)
+	if(~locked)
+		timer <= 20'd0;
+	else
+		timer <= timer + 20'd1;
+`endif
+
 always @(*) begin
 	d = 16'hxxxx;
 	icap_en_n = 1'b1;
@@ -206,7 +218,8 @@ always @(*) begin
 	case(state)
 		IDLE: begin
 `ifdef AUTO_ON
-			next_state = DUMMY;
+			if(timer[19])
+				next_state = DUMMY;
 `else
 			next_rescue = btn1_r;
 			if(btn2_r & ~btn2_r2)
