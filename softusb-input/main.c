@@ -57,6 +57,7 @@ enum {
 	PORT_STATE_BUS_RESET,
 	PORT_STATE_RESET_WAIT,
 	PORT_STATE_SET_ADDRESS,
+	PORT_STATE_GET_EP0_SIZE,
 	PORT_STATE_GET_DEVICE_DESCRIPTOR,
 	PORT_STATE_GET_CONFIGURATION_DESCRIPTOR,
 	PORT_STATE_SET_CONFIGURATION,
@@ -545,6 +546,23 @@ static int get_device_descriptor(unsigned char *buf, int size,
 	return control_transfer(ADDR, &packet, 0, buf, size, ep0_size);
 }
 
+static char get_ep0_size(struct port_status *p)
+{
+	unsigned char device_descriptor[8];
+	unsigned char size;
+
+	if(get_device_descriptor(device_descriptor, 8, 8) != 8)
+		return 0;
+
+	size = device_descriptor[7];
+	if (size != 8 && size != 16 && size != 32 && size != 64)
+		return 0;
+
+	p->ep0_size = size;
+
+	return 1;
+}
+
 static void port_service(struct port_status *p, char name)
 {
 	if(p->state > PORT_STATE_BUS_RESET)
@@ -614,11 +632,18 @@ static void port_service(struct port_status *p, char name)
 			if(control_transfer(0x00, &packet, 1, NULL, 0,
 			    p->ep0_size) == 0) {
 				p->retry_count = 0;
-				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
+				p->state = PORT_STATE_GET_EP0_SIZE;
 			}
 			check_retry(p);
 			break;
 		}
+		case PORT_STATE_GET_EP0_SIZE:
+			if(get_ep0_size(p)) {
+				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
+				p->retry_count = 0;
+			}
+			check_retry(p);
+			break;
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
 			unsigned char device_descriptor[18];
 			
