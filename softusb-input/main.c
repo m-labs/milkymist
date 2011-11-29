@@ -29,6 +29,18 @@
 
 //#define	TRIGGER
 
+#ifdef TRIGGER
+
+#define	TRIGGER_ON()	wio8(SIE_SEL_TX, 3)
+#define	TRIGGER_OFF()	wio8(SIE_SEL_TX, 2)
+
+#else
+
+#define	TRIGGER_ON()	((void) 0)
+#define	TRIGGER_OFF()	((void) 0)
+
+#endif /* !TRIGGER */
+
 enum {
 	USB_PID_OUT	= 0xe1,
 	USB_PID_IN	= 0x69,
@@ -291,15 +303,15 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 	usb_buffer[0] = USB_PID_DATA0;
 	memcpy(&usb_buffer[1], p, 8);
 	usb_crc16(&usb_buffer[1], 8, &usb_buffer[9]);
-#ifdef TRIGGER
-wio8(SIE_SEL_TX, 3);
-#endif
+
+	TRIGGER_ON();
+
 	/* send them back-to-back */
 	usb_tx(setup, 3);
 	usb_tx(usb_buffer, 11);
-#ifdef TRIGGER
-wio8(SIE_SEL_TX, 2);
-#endif
+
+	TRIGGER_OFF();
+
 	/* get ACK token from device */
 	if(usb_rx_ack() != 1) {
 		print_string(setup_ack);
