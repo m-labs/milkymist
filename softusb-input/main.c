@@ -362,8 +362,8 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 			if(chunklen < ep0_size)
 				break;
 		}
-	} else if(maxlen != 0) {
-		while(1) {
+	} else
+		while(transferred != maxlen) {
 			rxlen = usb_in(addr, expected_data, usb_buffer,
 			    ep0_size+3);
 			if(!rxlen)
@@ -382,7 +382,6 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 			if(chunklen < ep0_size)
 				break;
 		}
-	}
 
 	/* send IN/OUT token in the opposite direction to end transfer */
 retry:
