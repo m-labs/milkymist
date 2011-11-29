@@ -527,6 +527,22 @@ static const char unsupported_device[] PROGMEM = "unsupported device\n";
 static const char mouse[] PROGMEM = "mouse\n";
 static const char keyboard[] PROGMEM = "keyboard\n";
 
+static int get_device_descriptor(unsigned char *buf, int size)
+{
+	struct setup_packet packet;
+			
+	packet.bmRequestType = 0x80;
+	packet.bRequest = 0x06;
+	packet.wValue[0] = 0x00;
+	packet.wValue[1] = 0x01;
+	packet.wIndex[0] = 0x00;
+	packet.wIndex[1] = 0x00;
+	packet.wLength[0] = size;
+	packet.wLength[1] = 0x00;
+
+	return control_transfer(ADDR, &packet, 0, buf, size);
+}
+
 static void port_service(struct port_status *p, char name)
 {
 	if(p->state > PORT_STATE_BUS_RESET)
@@ -600,19 +616,9 @@ static void port_service(struct port_status *p, char name)
 			break;
 		}
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
-			struct setup_packet packet;
 			unsigned char device_descriptor[18];
 			
-			packet.bmRequestType = 0x80;
-			packet.bRequest = 0x06;
-			packet.wValue[0] = 0x00;
-			packet.wValue[1] = 0x01;
-			packet.wIndex[0] = 0x00;
-			packet.wIndex[1] = 0x00;
-			packet.wLength[0] = 18;
-			packet.wLength[1] = 0x00;
-
-			if(control_transfer(ADDR, &packet, 0, device_descriptor, 18) >= 0) {
+			if(get_device_descriptor(device_descriptor, 18) >= 0) {
 				p->retry_count = 0;
 				print_string(vid);
 				print_hex(device_descriptor[9]);
