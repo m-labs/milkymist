@@ -86,6 +86,8 @@ static struct port_status port_b;
 static unsigned int frame_nr;
 
 #define	ADDR_EP(addr, ep)	((addr) | (ep) << 7)
+#define	ADDR	1
+
 
 static void make_usb_token(unsigned char pid, unsigned int elevenbits, unsigned char *out)
 {
@@ -410,7 +412,7 @@ static void poll(struct ep_status *ep, char keyboard)
 	unsigned char m;
 	char i;
 
-	len = usb_in(ADDR_EP(1, ep->ep), ep->expected_data, usb_buffer, 11);
+	len = usb_in(ADDR_EP(ADDR, ep->ep), ep->expected_data, usb_buffer, 11);
 	if(len <= 0)
 		return;
 	ep->expected_data = toggle(ep->expected_data);
@@ -583,7 +585,7 @@ static void port_service(struct port_status *p, char name)
 
 			packet.bmRequestType = 0x00;
 			packet.bRequest = 0x05;
-			packet.wValue[0] = 0x01;
+			packet.wValue[0] = ADDR;
 			packet.wValue[1] = 0x00;
 			packet.wIndex[0] = 0x00;
 			packet.wIndex[1] = 0x00;
@@ -610,7 +612,7 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 18;
 			packet.wLength[1] = 0x00;
 
-			if(control_transfer(0x01, &packet, 0, device_descriptor, 18) >= 0) {
+			if(control_transfer(ADDR, &packet, 0, device_descriptor, 18) >= 0) {
 				p->retry_count = 0;
 				print_string(vid);
 				print_hex(device_descriptor[9]);
@@ -645,7 +647,7 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 127;
 			packet.wLength[1] = 0x00;
 
-			len = control_transfer(0x01, &packet, 0, configuration_descriptor, 127);
+			len = control_transfer(ADDR, &packet, 0, configuration_descriptor, 127);
 			if(len >= 0) {
 				p->retry_count = 0;
 				if(!validate_configuration_descriptor(
@@ -679,7 +681,7 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 0x00;
 			packet.wLength[1] = 0x00;
 
-			if(control_transfer(0x01, &packet, 1, NULL, 0) == 0) {
+			if(control_transfer(ADDR, &packet, 1, NULL, 0) == 0) {
 				p->retry_count = 0;
 				p->state = PORT_STATE_RUNNING;
 			}
