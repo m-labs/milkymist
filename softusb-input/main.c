@@ -76,6 +76,7 @@ struct port_status {
 	char full_speed;
 	char retry_count;
 	unsigned int unreset_frame;
+	unsigned char ep0_size;
 	struct ep_status keyboard;
 	struct ep_status mouse;
 };
@@ -305,10 +306,10 @@ static inline unsigned char toggle(unsigned char old)
 static const char setup_ack[] PROGMEM = "SETUP not ACKed\n";
 
 static int control_transfer(unsigned char addr, struct setup_packet *p,
-    char out, unsigned char *payload, int maxlen)
+    char out, unsigned char *payload, int maxlen, unsigned char ep0_size)
 {
 	unsigned char setup[11];
-	unsigned char usb_buffer[11];
+	unsigned char usb_buffer[64+2+1]; /* DATA + max EP0 size + CRC */
 	unsigned char expected_data = USB_PID_DATA1;
 	char rxlen;
 	char transferred;
@@ -342,8 +343,8 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 			chunklen = maxlen - transferred;
 			if(chunklen == 0)
 				break;
-			if(chunklen > 8)
-				chunklen = 8;
+			if(chunklen > ep0_size)
+				chunklen = ep0_size;
 
 			/* make DATAx packet */
 			usb_buffer[0] = expected_data;
@@ -358,12 +359,13 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 			expected_data = toggle(expected_data);
 			transferred += chunklen;
 			payload += chunklen;
-			if(chunklen < 8)
+			if(chunklen < ep0_size)
 				break;
 		}
 	} else if(maxlen != 0) {
 		while(1) {
-			rxlen = usb_in(addr, expected_data, usb_buffer, 11);
+			rxlen = usb_in(addr, expected_data, usb_buffer,
+			    ep0_size+3);
 			if(!rxlen)
 				continue;
 			if(rxlen <0)
@@ -377,7 +379,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 
 			transferred += chunklen;
 			payload += chunklen;
-			if(chunklen < 8)
+			if(chunklen < ep0_size)
 				break;
 		}
 	}
@@ -527,7 +529,8 @@ static const char unsupported_device[] PROGMEM = "unsupported device\n";
 static const char mouse[] PROGMEM = "mouse\n";
 static const char keyboard[] PROGMEM = "keyboard\n";
 
-static int get_device_descriptor(unsigned char *buf, int size)
+static int get_device_descriptor(unsigned char *buf, int size,
+    unsigned char ep0_size)
 {
 	struct setup_packet packet;
 			
@@ -540,7 +543,7 @@ static int get_device_descriptor(unsigned char *buf, int size)
 	packet.wLength[0] = size;
 	packet.wLength[1] = 0x00;
 
-	return control_transfer(ADDR, &packet, 0, buf, size);
+	return control_transfer(ADDR, &packet, 0, buf, size, ep0_size);
 }
 
 static void port_service(struct port_status *p, char name)
@@ -577,6 +580,7 @@ static void port_service(struct port_status *p, char name)
 				p->state = PORT_STATE_BUS_RESET;
 				p->unreset_frame = (frame_nr + 350) & 0x7ff;
 			}
+			p->ep0_size = 8;
 			break;
 		}
 		case PORT_STATE_BUS_RESET:
@@ -608,7 +612,8 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 0x00;
 			packet.wLength[1] = 0x00;
 
-			if(control_transfer(0x00, &packet, 1, NULL, 0) == 0) {
+			if(control_transfer(0x00, &packet, 1, NULL, 0,
+			    p->ep0_size) == 0) {
 				p->retry_count = 0;
 				p->state = PORT_STATE_GET_DEVICE_DESCRIPTOR;
 			}
@@ -618,7 +623,8 @@ static void port_service(struct port_status *p, char name)
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
 			unsigned char device_descriptor[18];
 			
-			if(get_device_descriptor(device_descriptor, 18) >= 0) {
+			if(get_device_descriptor(device_descriptor, 18,
+			    p->ep0_size) >= 0) {
 				p->retry_count = 0;
 				print_string(vid);
 				print_hex(device_descriptor[9]);
@@ -653,7 +659,8 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 127;
 			packet.wLength[1] = 0x00;
 
-			len = control_transfer(ADDR, &packet, 0, configuration_descriptor, 127);
+			len = control_transfer(ADDR, &packet, 0,
+			    configuration_descriptor, 127, p->ep0_size);
 			if(len >= 0) {
 				p->retry_count = 0;
 				if(!validate_configuration_descriptor(
@@ -687,7 +694,8 @@ static void port_service(struct port_status *p, char name)
 			packet.wLength[0] = 0x00;
 			packet.wLength[1] = 0x00;
 
-			if(control_transfer(ADDR, &packet, 1, NULL, 0) == 0) {
+			if(control_transfer(ADDR, &packet, 1, NULL, 0,
+			    p->ep0_size) == 0) {
 				p->retry_count = 0;
 				p->state = PORT_STATE_RUNNING;
 			}
