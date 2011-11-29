@@ -137,13 +137,17 @@ static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
 #define	WAIT_RX(end)						\
 	do {							\
 		unsigned timeout = 0x200;			\
-		while(!rio8(SIE_RX_PENDING)) {			\
+		unsigned char status;				\
+		while(1) {					\
+			status = rio8(SIE_RX_STATUS); 		\
+			if(status & RX_PENDING)			\
+				break;				\
+			if(!(status & RX_ACTIVE))		\
+				goto end;			\
 			if(!--timeout)				\
 				goto timeout;			\
 			if(rio8(SIE_RX_ERROR))			\
 				goto error;			\
-			if(!rio8(SIE_RX_ACTIVE))		\
-				goto end;			\
 		}						\
 	} while (0)
 

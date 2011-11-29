@@ -33,7 +33,9 @@
 #define SIE_TX_BUSRESET		0x08
 
 #define SIE_RX_DATA		0x09
-#define SIE_RX_PENDING		0x0a
+#define SIE_RX_STATUS		0x0a
+#define		RX_PENDING	0x02
+#define		RX_ACTIVE	0x01
 #define SIE_RX_ACTIVE		0x0b
 #define SIE_RX_ERROR		0x0c
 

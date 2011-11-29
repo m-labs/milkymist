@@ -96,7 +96,7 @@ always @(posedge usb_clk) begin
 				if(io_re)
 					rx_pending <= 1'b0;
 			end
-			6'h0a: io_do <= rx_pending;
+			6'h0a: io_do <= { rx_pending, rx_active };
 			6'h0b: io_do <= rx_active;
 			6'h0c: begin
 				io_do <= rx_error_pending;
