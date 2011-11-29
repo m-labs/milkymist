@@ -123,7 +123,18 @@ static const char ack_error[] PROGMEM = "ACK: ";
 static const char timeout_error[] PROGMEM = "RX timeout error\n";
 static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
 
-#define	WAIT_RX(first, end)					\
+#define	WAIT_ACTIVE()						\
+	do {							\
+		unsigned timeout = 0x200;			\
+		while(!rio8(SIE_RX_ACTIVE)) {			\
+			if(!--timeout)				\
+				goto timeout;			\
+			if(rio8(SIE_RX_ERROR))			\
+				goto error;			\
+		}						\
+	} while (0)
+
+#define	WAIT_RX(end)						\
 	do {							\
 		unsigned timeout = 0x200;			\
 		while(!rio8(SIE_RX_PENDING)) {			\
@@ -131,7 +142,7 @@ static const char bitstuff_error[] PROGMEM = "RX bitstuff error\n";
 				goto timeout;			\
 			if(rio8(SIE_RX_ERROR))			\
 				goto error;			\
-			if(!first && !rio8(SIE_RX_ACTIVE))	\
+			if(!rio8(SIE_RX_ACTIVE))		\
 				goto end;			\
 		}						\
 	} while (0)
@@ -143,10 +154,10 @@ static char usb_rx_ack(void)
 	unsigned char i;
 
 	/* SYNC */
-	WAIT_RX(1, nothing);
+	WAIT_ACTIVE();
 
 	/* PID */
-	WAIT_RX(0, nothing);
+	WAIT_RX(nothing);
 	pid = rio8(SIE_RX_DATA);
 
 	/* wait for idle, or simply time out and fall foward */
@@ -160,7 +171,7 @@ static char usb_rx_ack(void)
 		return 0;
 
 	for(i = 200; i; i--)
-		WAIT_RX(0,out);
+		WAIT_RX(out);
 out:
 	print_string(ack_error);
 	print_hex(pid);
@@ -191,10 +202,10 @@ static int usb_in(unsigned addr, unsigned char expected_data,
 	usb_tx(in, 3);
 
 	/* SYNC */
-	WAIT_RX(1, nothing);
+	WAIT_ACTIVE();
 
 	/* PID */
-	WAIT_RX(0, nothing);
+	WAIT_RX(nothing);
 	buf[0] = rio8(SIE_RX_DATA);
 
 	if(buf[0] == expected_data)
@@ -207,7 +218,7 @@ static int usb_in(unsigned addr, unsigned char expected_data,
 	/* unknown packet: try to receive for debug purposes, then dump */
 
 	while(len != maxlen) {
-		WAIT_RX(0, fail);
+		WAIT_RX(fail);
 		buf[len++] = rio8(SIE_RX_DATA);
 	}
 fail:
@@ -219,7 +230,7 @@ fail:
 
 ignore:
 	for(i = 200; i; i--)
-		WAIT_RX(0, ignore_eop);
+		WAIT_RX(ignore_eop);
 	goto complain; /* this doesn't stop - just quit silently */
 ignore_eop:
 	usb_ack();
@@ -231,7 +242,7 @@ complain:
 
 receive:
 	while(1) {
-		WAIT_RX(0, eop);
+		WAIT_RX(eop);
 		if(len == maxlen)
 			goto discard;
 		buf[len++] = rio8(SIE_RX_DATA);
@@ -242,7 +253,7 @@ eop:
 
 discard:
 	for(i = 200; i; i--)
-		WAIT_RX(0, nothing);
+		WAIT_RX(nothing);
 nothing:
 	return 0;
 
