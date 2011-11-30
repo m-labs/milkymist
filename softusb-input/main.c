@@ -60,11 +60,16 @@ enum {
 };
 
 enum {
+	USB_CLASS_AUDIO		= 1,
 	USB_CLASS_HID		= 3,
 };
 
 enum {
 	USB_SUBCLASS_BOOT	= 1,	/* HID */
+};
+
+enum {
+	USB_SUBCLASS_MIDISTREAMING = 3,	/* AUDIO */
 };
 
 enum {
@@ -100,6 +105,7 @@ struct port_status {
 	unsigned char ep0_size;
 	struct ep_status keyboard;
 	struct ep_status mouse;
+	struct ep_status midi;
 };
 
 static struct port_status port_a;
@@ -496,7 +502,7 @@ static void check_discon(struct port_status *p, char name)
 	if(discon) {
 		print_string(disconnect); print_char(name); print_char('\n');
 		p->state = PORT_STATE_DISCONNECTED;
-		p->keyboard.ep = p->mouse.ep = 0;
+		p->keyboard.ep = p->mouse.ep = p->midi.ep = 0;
 	}
 }
 
@@ -514,6 +520,8 @@ static struct ep_status *identify_protocol(const unsigned char *itf,
 				/* unknown protocol, fail */
 				return NULL;
 		}
+	if (itf[5] == USB_CLASS_AUDIO && itf[6] == USB_SUBCLASS_MIDISTREAMING)
+		return &p->midi;
 
 	return NULL;
 }
@@ -522,6 +530,7 @@ static const char found[] PROGMEM = "Found ";
 static const char unsupported_device[] PROGMEM = "unsupported device\n";
 static const char mouse[] PROGMEM = "mouse\n";
 static const char keyboard[] PROGMEM = "keyboard\n";
+static const char midi[] PROGMEM = "MIDI\n";
 
 static char validate_configuration_descriptor(const unsigned char *descriptor,
     char len, struct port_status *p)
@@ -550,7 +559,11 @@ static char validate_configuration_descriptor(const unsigned char *descriptor,
 		print_string(found);
 		print_string(mouse);
 	}
-	return p->keyboard.ep || p->mouse.ep;
+	if(p->midi.ep) {
+		print_string(found);
+		print_string(midi);
+	}
+	return p->keyboard.ep || p->mouse.ep || p->midi.ep;
 }
 
 static void unsupported(struct port_status *p)
