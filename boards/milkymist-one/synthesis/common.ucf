@@ -338,6 +338,7 @@ TIMESPEC "TSsdramout" = FROM FFS TO "GRPsdramout" 10 ns;
 NET "vga/vga_iclk" TNM_NET = "GRPvga";
 TIMESPEC "TSvga_async1" = FROM "GRPsys" TO "GRPvga" TIG;
 TIMESPEC "TSvga_async2" = FROM "GRPvga" TO "GRPsys" TIG;
+OFFSET = OUT 5 ns AFTER "vga_clk";
 
 TIMESPEC "TSac97_async1" = FROM "GRPsys" TO "GRPac97_clk" TIG;
 TIMESPEC "TSac97_async2" = FROM "GRPac97_clk" TO "GRPsys" TIG;
