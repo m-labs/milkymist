@@ -27,5 +27,7 @@
 #define COMLOC_MEVT(offset)	COMLOC(0x1102+(offset))
 #define COMLOC_KEVT_PRODUCE	COMLOC(0x1142)
 #define COMLOC_KEVT(offset)	COMLOC(0x1143+(offset))
+#define COMLOC_MIDI_PRODUCE	COMLOC(0x1183)
+#define COMLOC_MIDI(offset)	COMLOC(0x1184+(offset))
 
 #endif /* __COMLOC_H */

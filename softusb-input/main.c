@@ -481,10 +481,26 @@ static char process_mouse(unsigned char *buf, unsigned char len)
 	return 1;
 }
 
+static char process_midi(unsigned char *buf, unsigned char len)
+{
+	unsigned char end = len & ~3;
+	unsigned char i, m, j;
+
+	for(i = 0; i != end; i += 4) {
+		if((buf[i] & 0xf) != 0xb) /* not a control change */
+			continue;
+		m = COMLOC_MIDI_PRODUCE;
+		for(j = 0; j != 4; j++)
+			COMLOC_MIDI(4*m+j) = buf[i+j];
+		COMLOC_MIDI_PRODUCE = (m + 1) & 15;
+	}
+	return 0;
+}
+
 static void poll(struct ep_status *ep,
     char (*process)(unsigned char *buf, unsigned char len))
 {
-	unsigned char usb_buffer[11];
+	unsigned char usb_buffer[1+64+2]; /* DATAx + payload + CRC */
 	int len;
 
 	len = usb_in(ADDR_EP(ADDR, ep->ep), ep->expected_data, usb_buffer, 11);
@@ -787,6 +803,8 @@ static void port_service(struct port_status *p, char name)
 				poll(&p->keyboard, process_keyboard);
 			if(p->mouse.ep)
 				poll(&p->mouse, process_mouse);
+			if(p->midi.ep)
+				poll(&p->midi, process_midi);
 			break;
 		case PORT_STATE_UNSUPPORTED:
 			break;
