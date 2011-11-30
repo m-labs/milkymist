@@ -917,7 +917,7 @@ sysctl #(
 	.ninputs(7),
 	.noutputs(2),
 	.clk_freq(`CLOCK_FREQUENCY),
-	.systemid(32'h11004D31) /* 1.1.0 final (0) on M1 */
+	.systemid(32'h12004D31) /* 1.2.0 final (0) on M1 */
 ) sysctl (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
