@@ -555,7 +555,7 @@ static int get_device_descriptor(unsigned char *buf, int size,
     unsigned char ep0_size)
 {
 	struct setup_packet packet;
-			
+
 	packet.bmRequestType = 0x80;
 	packet.bRequest = 0x06;
 	packet.wValue[0] = 0x00;
@@ -668,7 +668,7 @@ static void port_service(struct port_status *p, char name)
 			break;
 		case PORT_STATE_GET_DEVICE_DESCRIPTOR: {
 			unsigned char device_descriptor[18];
-			
+
 			if(get_device_descriptor(device_descriptor, 18,
 			    p->ep0_size) >= 0) {
 				p->retry_count = 0;
@@ -766,7 +766,7 @@ static void sof()
 {
 	unsigned char mask;
 	unsigned char usb_buffer[3];
-	
+
 	mask = 0;
 #ifndef TRIGGER
 	if(port_a.full_speed && (port_a.state > PORT_STATE_BUS_RESET))
@@ -785,7 +785,7 @@ static void sof()
 static void keepalive()
 {
 	unsigned char mask;
-	
+
 	mask = 0;
 #ifndef TRIGGER
 	if(!port_a.full_speed && (port_a.state == PORT_STATE_RESET_WAIT))
@@ -804,7 +804,7 @@ static void keepalive()
 static void set_rx_speed()
 {
 	unsigned char mask;
-	
+
 	mask = 0;
 	if(!port_a.full_speed) mask |= 0x01;
 	if(!port_b.full_speed) mask |= 0x02;
@@ -833,7 +833,7 @@ int main()
 		 */
 		for(i=0;i<128;i++)
 			asm("nop");
-		
+
 #ifndef TRIGGER
 		wio8(SIE_SEL_RX, 0);
 		wio8(SIE_SEL_TX, 0x01);
@@ -843,7 +843,7 @@ int main()
 		wio8(SIE_SEL_RX, 1);
 		wio8(SIE_SEL_TX, 0x02);
 		port_service(&port_b, 'B');
-		
+
 		/* set RX speed for new detected devices */
 		set_rx_speed();
 
