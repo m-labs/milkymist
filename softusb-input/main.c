@@ -119,7 +119,7 @@ static void make_usb_token(unsigned char pid, unsigned int elevenbits, unsigned 
 	out[2] |= usb_crc5(out[1], out[2]) << 3;
 }
 
-static void usb_tx(const unsigned char *buf, unsigned char len)
+static void usb_tx_nowait(const unsigned char *buf, unsigned char len)
 {
 	unsigned char i;
 
@@ -130,8 +130,14 @@ static void usb_tx(const unsigned char *buf, unsigned char len)
 	}
 	while(rio8(SIE_TX_PENDING));
 	wio8(SIE_TX_VALID, 0);
+}
+
+static void usb_tx(const unsigned char *buf, unsigned char len)
+{
+	usb_tx_nowait(buf, len);
 	while(rio8(SIE_TX_BUSY));
 }
+
 
 static inline void usb_ack(void)
 {
@@ -302,7 +308,7 @@ static char usb_out(unsigned addr, const unsigned char *buf, unsigned char len)
 
 	/* send OUT */
 	make_usb_token(USB_PID_OUT, addr, out);
-	usb_tx(out, 3);
+	usb_tx_nowait(out, 3);
 
 	/* send DATAx */
 	usb_tx(buf, len);
@@ -346,7 +352,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 	TRIGGER_ON();
 
 	/* send them back-to-back */
-	usb_tx(setup, 3);
+	usb_tx_nowait(setup, 3);
 	usb_tx(usb_buffer, 11);
 
 	TRIGGER_OFF();
