@@ -494,7 +494,25 @@ static void check_discon(struct port_status *p, char name)
 	}
 }
 
-static char validate_configuration_descriptor(unsigned char *descriptor,
+static struct ep_status *identify_protocol(const unsigned char *itf,
+    struct port_status *p)
+{
+	/* check for bInterfaceClass=3 and bInterfaceSubClass=1 (HID) */
+	if (itf[5] == USB_CLASS_HID && itf[6] == USB_SUBCLASS_BOOT)
+		switch(itf[7]) { /* check bInterfaceProtocol */
+			case USB_PROTO_KEYBOARD:
+				return &p->keyboard;
+			case USB_PROTO_MOUSE:
+				return &p->mouse;
+			default:
+				/* unknown protocol, fail */
+				return NULL;
+		}
+
+	return NULL;
+}
+
+static char validate_configuration_descriptor(const unsigned char *descriptor,
     char len, struct port_status *p)
 {
 	struct ep_status *ep = NULL;
@@ -503,25 +521,7 @@ static char validate_configuration_descriptor(unsigned char *descriptor,
 	offset = 0;
 	while(offset < len) {
 		if(descriptor[offset+1] == USB_DT_INTERFACE) {
-			/* got an interface descriptor */
-			/* check for bInterfaceClass=3 and bInterfaceSubClass=1 (HID) */
-			if(descriptor[offset+5] != USB_CLASS_HID)
-				break;
-			if(descriptor[offset+6] != USB_SUBCLASS_BOOT)
-				break;
-			/* check bInterfaceProtocol */
-			switch(descriptor[offset+7]) {
-				case USB_PROTO_KEYBOARD:
-					ep = &p->keyboard;
-					break;
-				case USB_PROTO_MOUSE:
-					ep = &p->mouse;
-					break;
-				default:
-					/* unknown protocol, fail */
-					ep = NULL;
-					break;
-			}
+			ep = identify_protocol(descriptor+offset, p);
 		} else if(descriptor[offset+1] == USB_DT_ENDPOINT &&
 		    (descriptor[offset+2] & 0x80) && ep) {
 				ep->ep = descriptor[offset+2] & 0x7f;
