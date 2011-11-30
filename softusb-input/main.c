@@ -53,6 +53,26 @@ enum {
 };
 
 enum {
+	USB_DT_DEVICE		= 1,
+	USB_DT_CONFIG		= 2,
+	USB_DT_INTERFACE	= 4,
+	USB_DT_ENDPOINT		= 5,
+};
+
+enum {
+	USB_CLASS_HID		= 3,
+};
+
+enum {
+	USB_SUBCLASS_BOOT	= 1,	/* HID */
+};
+
+enum {
+	USB_PROTO_KEYBOARD	= 1,	/* HID */
+	USB_PROTO_MOUSE		= 2,
+};
+
+enum {
 	PORT_STATE_DISCONNECTED = 0,
 	PORT_STATE_BUS_RESET,
 	PORT_STATE_RESET_WAIT,
@@ -482,17 +502,19 @@ static char validate_configuration_descriptor(unsigned char *descriptor,
 
 	offset = 0;
 	while(offset < len) {
-		if(descriptor[offset+1] == 0x04) {
+		if(descriptor[offset+1] == USB_DT_INTERFACE) {
 			/* got an interface descriptor */
 			/* check for bInterfaceClass=3 and bInterfaceSubClass=1 (HID) */
-			if((descriptor[offset+5] != 0x03) || (descriptor[offset+6] != 0x01))
+			if(descriptor[offset+5] != USB_CLASS_HID)
+				break;
+			if(descriptor[offset+6] != USB_SUBCLASS_BOOT)
 				break;
 			/* check bInterfaceProtocol */
 			switch(descriptor[offset+7]) {
-				case 0x01:
+				case USB_PROTO_KEYBOARD:
 					ep = &p->keyboard;
 					break;
-				case 0x02:
+				case USB_PROTO_MOUSE:
 					ep = &p->mouse;
 					break;
 				default:
@@ -500,7 +522,7 @@ static char validate_configuration_descriptor(unsigned char *descriptor,
 					ep = NULL;
 					break;
 			}
-		} else if(descriptor[offset+1] == 0x05 &&
+		} else if(descriptor[offset+1] == USB_DT_ENDPOINT &&
 		    (descriptor[offset+2] & 0x80) && ep) {
 				ep->ep = descriptor[offset+2] & 0x7f;
 				ep->expected_data = USB_PID_DATA0;
@@ -537,7 +559,7 @@ static int get_device_descriptor(unsigned char *buf, int size,
 	packet.bmRequestType = 0x80;
 	packet.bRequest = 0x06;
 	packet.wValue[0] = 0x00;
-	packet.wValue[1] = 0x01;
+	packet.wValue[1] = USB_DT_DEVICE;
 	packet.wIndex[0] = 0x00;
 	packet.wIndex[1] = 0x00;
 	packet.wLength[0] = size;
@@ -677,7 +699,7 @@ static void port_service(struct port_status *p, char name)
 			packet.bmRequestType = 0x80;
 			packet.bRequest = 0x06;
 			packet.wValue[0] = 0x00;
-			packet.wValue[1] = 0x02;
+			packet.wValue[1] = USB_DT_CONFIG;
 			packet.wIndex[0] = 0x00;
 			packet.wIndex[1] = 0x00;
 			packet.wLength[0] = 127;
