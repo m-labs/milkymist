@@ -439,52 +439,63 @@ retry:
 	return transferred;
 }
 
-static void poll(struct ep_status *ep, char keyboard)
+static char process_keyboard(unsigned char *buf, unsigned char len)
+{
+	unsigned char m, i;
+
+	if(len < 6)
+		return 0;
+	m = COMLOC_KEVT_PRODUCE;
+	for(i = 0; i < 8; i++)
+		COMLOC_KEVT(8*m+i) = buf[i];
+	COMLOC_KEVT_PRODUCE = (m + 1) & 0x07;
+	return 1;
+}
+
+static char process_mouse(unsigned char *buf, unsigned char len)
+{
+	unsigned char m, i;
+
+	if(len < 3)
+		return 0;
+	/*
+	 * HACK: The Rii RF mini-keyboard sends ten byte messages with
+	 * a report ID and 16 bit coordinates. We're too lazy to parse
+	 * report descriptors, so we just hard-code that report layout.
+	 */
+	if(len == 7) {
+		buf[0] = buf[1];	/* buttons */
+		buf[1] = buf[2];	/* X LSB */
+		buf[2] = buf[4];	/* Y LSB */
+	}
+	if(len > 4)
+		len = 4;
+	m = COMLOC_MEVT_PRODUCE;
+	for(i = 0; i < len; i++)
+		COMLOC_MEVT(4*m+i) = buf[i];
+	while(i < 4) {
+		COMLOC_MEVT(4*m+i) = 0;
+		i++;
+	}
+	COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
+	return 1;
+}
+
+static void poll(struct ep_status *ep,
+    char (*process)(unsigned char *buf, unsigned char len))
 {
 	unsigned char usb_buffer[11];
 	int len;
-	unsigned char m;
-	char i;
 
 	len = usb_in(ADDR_EP(ADDR, ep->ep), ep->expected_data, usb_buffer, 11);
 	if(len <= 0)
 		return;
 	ep->expected_data = toggle(ep->expected_data);
 
-	/* send to host */
-	if(keyboard) {
-		if(len < 9)
-			return;
-		m = COMLOC_KEVT_PRODUCE;
-		for(i=0;i<8;i++)
-			COMLOC_KEVT(8*m+i) = usb_buffer[i+1];
-		COMLOC_KEVT_PRODUCE = (m + 1) & 0x07;
-	} else {
-		if(len < 6)
-			return;
-		/*
-		 * HACK: The Rii RF mini-keyboard sends ten byte messages with
-		 * a report ID and 16 bit coordinates. We're too lazy to parse
-		 * report descriptors, so we just hard-code that report layout.
-		 */
-		if(len == 10) {
-			usb_buffer[1] = usb_buffer[2];	/* buttons */
-			usb_buffer[2] = usb_buffer[3];	/* X LSB */
-			usb_buffer[3] = usb_buffer[5];	/* Y LSB */
-		}
-		if(len > 7)
-			len = 7;
-		m = COMLOC_MEVT_PRODUCE;
-		for(i=0;i<len-3;i++)
-			COMLOC_MEVT(4*m+i) = usb_buffer[i+1];
-		while(i < 4) {
-			COMLOC_MEVT(4*m+i) = 0;
-			i++;
-		}
-		COMLOC_MEVT_PRODUCE = (m + 1) & 0x0f;
-	}
-	/* trigger host IRQ */
-	wio8(HOST_IRQ, 1);
+	if(len <= 3)
+		return;
+	if(process(usb_buffer+1, len-3))	/* send to host */
+		wio8(HOST_IRQ, 1);		/* trigger host IRQ */
 }
 
 static const char connect_fs[] PROGMEM = "Full speed device on port ";
@@ -773,9 +784,9 @@ static void port_service(struct port_status *p, char name)
 		}
 		case PORT_STATE_RUNNING:
 			if(p->keyboard.ep)
-				poll(&p->keyboard, 1);
+				poll(&p->keyboard, process_keyboard);
 			if(p->mouse.ep)
-				poll(&p->mouse, 0);
+				poll(&p->mouse, process_mouse);
 			break;
 		case PORT_STATE_UNSUPPORTED:
 			break;
