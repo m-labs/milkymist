@@ -518,6 +518,11 @@ static struct ep_status *identify_protocol(const unsigned char *itf,
 	return NULL;
 }
 
+static const char found[] PROGMEM = "Found ";
+static const char unsupported_device[] PROGMEM = "unsupported device\n";
+static const char mouse[] PROGMEM = "mouse\n";
+static const char keyboard[] PROGMEM = "keyboard\n";
+
 static char validate_configuration_descriptor(const unsigned char *descriptor,
     char len, struct port_status *p)
 {
@@ -537,7 +542,22 @@ static char validate_configuration_descriptor(const unsigned char *descriptor,
 		}
 		offset += descriptor[offset+0];
 	}
+	if(p->keyboard.ep) {
+		print_string(found);
+		print_string(keyboard);
+	}
+	if(p->mouse.ep) {
+		print_string(found);
+		print_string(mouse);
+	}
 	return p->keyboard.ep || p->mouse.ep;
+}
+
+static void unsupported(struct port_status *p)
+{
+	print_string(found);
+	print_string(unsupported_device);
+	p->state = PORT_STATE_UNSUPPORTED;
 }
 
 static const char retry_exceed[] PROGMEM = "Retry count exceeded, disabling device.\n";
@@ -551,11 +571,6 @@ static void check_retry(struct port_status *p)
 
 static const char vid[] PROGMEM = "VID: ";
 static const char pid[] PROGMEM = ", PID: ";
-
-static const char found[] PROGMEM = "Found ";
-static const char unsupported_device[] PROGMEM = "unsupported device\n";
-static const char mouse[] PROGMEM = "mouse\n";
-static const char keyboard[] PROGMEM = "keyboard\n";
 
 static int get_device_descriptor(unsigned char *buf, int size,
     unsigned char ep0_size)
@@ -688,10 +703,9 @@ static void port_service(struct port_status *p, char name)
 				/* check for bDeviceClass=0 and bDeviceSubClass=0.
 				 * HID devices have those.
 				 */
-				if((device_descriptor[4] != 0) || (device_descriptor[5] != 0)) {
-					print_string(found); print_string(unsupported_device);
-					p->state = PORT_STATE_UNSUPPORTED;
-				} else
+				if((device_descriptor[4] != 0) || (device_descriptor[5] != 0))
+					unsupported(p);
+				else
 					p->state = PORT_STATE_GET_CONFIGURATION_DESCRIPTOR;
 			}
 			check_retry(p);
@@ -716,20 +730,10 @@ static void port_service(struct port_status *p, char name)
 			if(len >= 0) {
 				p->retry_count = 0;
 				if(!validate_configuration_descriptor(
-				    configuration_descriptor, len, p)) {
-					print_string(found); print_string(unsupported_device);
-					p->state = PORT_STATE_UNSUPPORTED;
-				} else {
-					if(p->keyboard.ep) {
-						print_string(found);
-						print_string(keyboard);
-					}
-					if(p->mouse.ep) {
-						print_string(found);
-						print_string(mouse);
-					}
+				    configuration_descriptor, len, p))
+					unsupported(p);
+				else
 					p->state = PORT_STATE_SET_CONFIGURATION;
-				}
 			}
 			check_retry(p);
 			break;
