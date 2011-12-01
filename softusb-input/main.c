@@ -485,6 +485,7 @@ static char process_midi(unsigned char *buf, unsigned char len)
 {
 	unsigned char end = len & ~3;
 	unsigned char i, m, j;
+	char sent_something = 0;
 
 	/*
 	 * In theory, control changes should be heralded by a CIN of 0xB,
@@ -502,8 +503,9 @@ static char process_midi(unsigned char *buf, unsigned char len)
 		for(j = 0; j != 4; j++)
 			COMLOC_MIDI(4*m+j) = buf[i+j];
 		COMLOC_MIDI_PRODUCE = (m + 1) & 15;
+		sent_something = 1;
 	}
-	return 0;
+	return sent_something;
 }
 
 static void poll(struct ep_status *ep,
