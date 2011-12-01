@@ -503,7 +503,8 @@ static void poll(struct ep_status *ep,
 	unsigned char usb_buffer[1+64+2]; /* DATAx + payload + CRC */
 	int len;
 
-	len = usb_in(ADDR_EP(ADDR, ep->ep), ep->expected_data, usb_buffer, 11);
+	len = usb_in(ADDR_EP(ADDR, ep->ep), ep->expected_data, usb_buffer,
+	    sizeof(usb_buffer));
 	if(len <= 0)
 		return;
 	ep->expected_data = toggle(ep->expected_data);
