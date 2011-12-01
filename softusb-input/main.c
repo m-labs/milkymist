@@ -486,8 +486,17 @@ static char process_midi(unsigned char *buf, unsigned char len)
 	unsigned char end = len & ~3;
 	unsigned char i, m, j;
 
+	/*
+	 * In theory, control changes should be heralded by a CIN of 0xB,
+	 * i.e., (buf[0] & 0x0f) == 0x0b.
+	 * Faderfox and Korg do indeed work like this, but iCON choose to
+	 * differ. Instead, they send everything with a CIN of 0x9, meaning
+	 * "Note-on". To err on the compatible side, we thus simply ignore
+	 * the CIN and only look at the first byte of the MIDI message.
+	 */
+	
 	for(i = 0; i != end; i += 4) {
-		if((buf[i] & 0xf) != 0xb) /* not a control change */
+		if((buf[i+1] & 0xf0) != 0xb0) /* not a control change */
 			continue;
 		m = COMLOC_MIDI_PRODUCE;
 		for(j = 0; j != 4; j++)
