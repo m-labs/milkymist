@@ -497,7 +497,10 @@ static char process_midi(unsigned char *buf, unsigned char len)
 	 */
 	
 	for(i = 0; i != end; i += 4) {
-		if((buf[i+1] & 0xf0) != 0xb0) /* not a control change */
+		unsigned char type = buf[i+1] & 0xf0;
+
+		/* ignore non-MIDI and all system messages */
+		if(type < 0x80 || type == 0xf0)
 			continue;
 		m = COMLOC_MIDI_PRODUCE;
 		for(j = 0; j != 4; j++)
