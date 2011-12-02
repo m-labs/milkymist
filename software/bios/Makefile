@@ -33,7 +33,7 @@ $(MMDIR)/software/libhal/libhal.a:
 $(MMDIR)/software/libnet/libnet.a:
 	make -C $(MMDIR)/software/libnet/
 
-.PHONY: clean depend
+.PHONY: clean depend $(LIBS)
 
 depend:
 	makedepend -Y -- $(CFLAGS) -- *.c
