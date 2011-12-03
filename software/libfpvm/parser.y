@@ -53,11 +53,8 @@ node(N) ::= TOK_IDENT(I). {
 	N->contents.branches.c = NULL;
 }
 
-%left TOK_PLUS.
-%left TOK_MINUS.
-%left TOK_MULTIPLY.
-%left TOK_DIVIDE.
-%left TOK_PERCENT.
+%left TOK_PLUS TOK_MINUS.
+%left TOK_MULTIPLY TOK_DIVIDE TOK_PERCENT.
 %left TOK_NOT.
 
 node(N) ::= node(A) TOK_PLUS node(B). {
