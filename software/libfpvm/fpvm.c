@@ -286,6 +286,11 @@ static int operator2opcode(const char *operator)
 			return FPVM_INVALID_REG;	\
 	} while (0)
 
+#define	COMPILE(reg, node)				\
+	({ int tmp = compile(fragment, reg, node);	\
+	    if(tmp == FPVM_INVALID_REG) return tmp;	\
+	    tmp; })
+
 #define	REG_ALLOC(reg) \
 	reg = fragment->next_sur--
 
@@ -405,19 +410,15 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		 * We must compute the other parameters first, as they may
 		 * clobber R2.
 		 */
-		opa = compile(fragment, FPVM_INVALID_REG, node->contents.branches.b);
-		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
-		opb = compile(fragment, FPVM_INVALID_REG, node->contents.branches.c);
-		if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
-		if(compile(fragment, FPVM_REG_IFB, node->contents.branches.a) == FPVM_INVALID_REG)
-			return FPVM_INVALID_REG;
+		opa = COMPILE(FPVM_INVALID_REG, node->contents.branches.b);
+		opb = COMPILE(FPVM_INVALID_REG, node->contents.branches.c);
+		COMPILE(FPVM_REG_IFB, node->contents.branches.a);
 	} else {
-		opa = compile(fragment, FPVM_INVALID_REG, node->contents.branches.a);
-		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		opa = COMPILE(FPVM_INVALID_REG, node->contents.branches.a);
 		opb = 0;
 		if(node->contents.branches.b != NULL) {
-			opb = compile(fragment, FPVM_INVALID_REG, node->contents.branches.b);
-			if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+			opb = COMPILE(FPVM_INVALID_REG,
+			    node->contents.branches.b);
 		}
 	}
 
