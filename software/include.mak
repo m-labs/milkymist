@@ -1,12 +1,34 @@
 # Mico32 toolchain
 #
-AS=lm32-rtems4.11-as
-CC=lm32-rtems4.11-gcc
-LD=lm32-rtems4.11-ld
-OBJCOPY=lm32-rtems4.11-objcopy
-AR=lm32-rtems4.11-ar
-RANLIB=lm32-rtems4.11-ranlib
+CROSS_COMPILER=lm32-rtems4.11-
+CC_normal := $(CROSS_COMPILER)gcc
+AR_normal := $(CROSS_COMPILER)ar
+AS_normal := $(CROSS_COMPILER)as
+LD_normal := $(CROSS_COMPILER)ld
+OBJCOPY_normal := $(CROSS_COMPILER)objcopy
+RANLIB_normal  := $(CROSS_COMPILER)ranlib
+CC_quiet = @echo " CC " $@ && $(CROSS_COMPILER)gcc
+AR_quiet = @echo " AR " $@ && $(CROSS_COMPILER)ar
+AS_quiet = @echo " AS " $@ && $(CROSS_COMPILER)as
+LD_quiet = @echo " LD " $@ && $(CROSS_COMPILER)ld
+OBJCOPY_quiet = @echo " OBJCOPY " $@ && $(CROSS_COMPILER)objcopy
+RANLIB_quiet  = @echo " RANLIB  " $@ && $(CROSS_COMPILER)ranlib
 
+ifeq ($(V),1)
+    CC = $(CC_normal)
+    AR = $(AR_normal)
+    AS = $(AS_normal)
+    LD = $(LD_normal)
+    OBJCOPY = $(OBJCOPY_normal)
+    RANLIB  = $(RANLIB_normal)
+else
+    CC = $(CC_quiet)
+    AR = $(AR_quiet)
+    AS = $(AS_quiet)
+    LD = $(LD_quiet)
+    OBJCOPY = $(OBJCOPY_quiet)
+    RANLIB  = $(RANLIB_quiet)
+endif
 
 # Toolchain options
 #
