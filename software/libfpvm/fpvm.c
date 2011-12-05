@@ -265,6 +265,15 @@ static int operator2opcode(const char *operator)
 	else return -1;
 }
 
+#define	ADD_ISN_RET(op, opa, opb, dest) \
+	if(!add_isn(fragment, op, opa, opb, dest)) return
+
+#define	ADD_ISN_0(op, opa, opb, dest) \
+	do { ADD_ISN_RET(op, opa, opb, dest) 0; } while (0)
+
+#define	ADD_ISN(op, opa, opb, dest) \
+	do { ADD_ISN_RET(op, opa, opb, dest) FPVM_INVALID_REG; } while (0)
+
 static int add_inv_sqrt_step(struct fpvm_fragment *fragment,
     int reg_y, int reg_x, int reg_out)
 {
@@ -285,11 +294,11 @@ static int add_inv_sqrt_step(struct fpvm_fragment *fragment,
 	reg_twohalf = const_to_reg(fragment, 1.5f);
 	if(reg_twohalf == FPVM_INVALID_REG) return 0;
 
-	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_y, reg_y, reg_yy)) return 0;
-	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_onehalf, reg_x, reg_hx)) return 0;
-	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_hx, reg_yy, reg_hxyy)) return 0;
-	if(!add_isn(fragment, FPVM_OPCODE_FSUB, reg_twohalf, reg_hxyy, reg_sub)) return 0;
-	if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_sub, reg_y, reg_out)) return 0;
+	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_y, reg_y, reg_yy);
+	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_onehalf, reg_x, reg_hx);
+	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_hx, reg_yy, reg_hxyy);
+	ADD_ISN_0(FPVM_OPCODE_FSUB, reg_twohalf, reg_hxyy, reg_sub);
+	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_sub, reg_y, reg_out);
 
 	return 1;
 }
@@ -301,7 +310,7 @@ static int add_inv_sqrt(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 	reg_y = fragment->next_sur--;
 	reg_y2 = fragment->next_sur--;
 
-	if(!add_isn(fragment, FPVM_OPCODE_QUAKE, reg_in, 0, reg_y)) return 0;
+	ADD_ISN_0(FPVM_OPCODE_QUAKE, reg_in, 0, reg_y);
 	if(!add_inv_sqrt_step(fragment, reg_y, reg_in, reg_y2)) return 0;
 	if(!add_inv_sqrt_step(fragment, reg_y2, reg_in, reg_out)) return 0;
 
@@ -313,10 +322,8 @@ static int add_int(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 	int reg_i;
 
 	reg_i = fragment->next_sur--;
-	if(!add_isn(fragment, FPVM_OPCODE_F2I, reg_in, 0, reg_i))
-		return FPVM_INVALID_REG;
-	if(!add_isn(fragment, FPVM_OPCODE_I2F, reg_i, 0, reg_out))
-		return FPVM_INVALID_REG;
+	ADD_ISN(FPVM_OPCODE_F2I, reg_in, 0, reg_i);
+	ADD_ISN(FPVM_OPCODE_I2F, reg_i, 0, reg_out);
 	return 1;
 }
 
@@ -336,10 +343,9 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		/* AST node is a constant */
 		opa = const_to_reg(fragment, node->contents.constant);
 		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
-		if(reg != FPVM_INVALID_REG) {
-			if(!add_isn(fragment, FPVM_OPCODE_COPY, opa, 0, reg))
-				return FPVM_INVALID_REG;
-		} else
+		if(reg != FPVM_INVALID_REG)
+			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
+		else
 			reg = opa;
 		return reg;
 	}
@@ -358,10 +364,9 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 				return FPVM_INVALID_REG;
 			}
 		}
-		if(reg != FPVM_INVALID_REG) {
-			if(!add_isn(fragment, FPVM_OPCODE_COPY, opa, 0, reg))
-			    return FPVM_INVALID_REG;
-		} else
+		if(reg != FPVM_INVALID_REG)
+			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
+		else
 			reg = opa;
 		return reg;
 	}
@@ -373,10 +378,9 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		n = node->contents.branches.a;
 		opa = const_to_reg(fragment, -n->contents.constant);
 		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
-		if(reg != FPVM_INVALID_REG) {
-			if(!add_isn(fragment, FPVM_OPCODE_COPY, opa, 0, reg))
-			    return FPVM_INVALID_REG;
-		} else
+		if(reg != FPVM_INVALID_REG)
+			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
+		else
 			reg = opa;
 		return reg;
 	}
@@ -411,7 +415,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		/*
 		 * "below" is like "above", but with reversed operands.
 		 */
-		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opb, opa, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_ABOVE, opb, opa, reg);
 	} else if((strcmp(node->label, "sin") == 0)||(strcmp(node->label, "cos") == 0)) {
 		/*
 		 * Trigo functions are implemented with several instructions.
@@ -432,9 +436,9 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		reg_mul = fragment->next_sur--;
 		reg_f2i = fragment->next_sur--;
 
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_const, opa, reg_mul)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_F2I, reg_mul, 0, reg_f2i)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, opcode, reg_f2i, 0, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_FMUL, reg_const, opa, reg_mul);
+		ADD_ISN(FPVM_OPCODE_F2I, reg_mul, 0, reg_f2i);
+		ADD_ISN(opcode, reg_f2i, 0, reg);
 	} else if(strcmp(node->label, "sqrt") == 0) {
 		/*
 		 * Square root is implemented with a variant of the Quake III algorithm.
@@ -444,7 +448,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		int reg_invsqrt;
 		reg_invsqrt = fragment->next_sur--;
 		if(!add_inv_sqrt(fragment, opa, reg_invsqrt)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, opa, reg_invsqrt, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_FMUL, opa, reg_invsqrt, reg);
 	} else if(strcmp(node->label, "invsqrt") == 0) {
 		if(!add_inv_sqrt(fragment, opa, reg)) return FPVM_INVALID_REG;
 	} else if(strcmp(node->label, "/") == 0) {
@@ -463,12 +467,13 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		reg_invsqrt2 = fragment->next_sur--;
 
 		/* Transfer the sign of the result to a and make b positive */
-		if(!add_isn(fragment, FPVM_OPCODE_TSIGN, opa, opb, reg_a2)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FABS, opb, 0, reg_b2)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_TSIGN, opa, opb, reg_a2);
+		ADD_ISN(FPVM_OPCODE_FABS, opb, 0, reg_b2);
 
 		if(!add_inv_sqrt(fragment, reg_b2, reg_invsqrt)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt,
+		    reg_invsqrt2);
+		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg);
 	} else if(strcmp(node->label, "%") == 0) {
 		int reg_invsqrt;
 		int reg_invsqrt2;
@@ -483,25 +488,26 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		reg_bidiv = fragment->next_sur--;
 
 		if(!add_inv_sqrt(fragment, opb, reg_invsqrt)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, reg_invsqrt2, opa, reg_div)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt,
+		    reg_invsqrt2);
+		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt2, opa, reg_div);
 		if(!add_int(fragment, reg_div, reg_idiv)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, opb, reg_idiv, reg_bidiv)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_FSUB, opa, reg_bidiv, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_FMUL, opb, reg_idiv, reg_bidiv);
+		ADD_ISN(FPVM_OPCODE_FSUB, opa, reg_bidiv, reg);
 	} else if(strcmp(node->label, "min") == 0) {
-		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_IF, opb, opa, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB);
+		ADD_ISN(FPVM_OPCODE_IF, opb, opa, reg);
 	} else if(strcmp(node->label, "max") == 0) {
-		if(!add_isn(fragment, FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB)) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_IF, opa, opb, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB);
+		ADD_ISN(FPVM_OPCODE_IF, opa, opb, reg);
 	} else if(strcmp(node->label, "sqr") == 0) {
-		if(!add_isn(fragment, FPVM_OPCODE_FMUL, opa, opa, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_FMUL, opa, opa, reg);
 	} else if(strcmp(node->label, "int") == 0) {
 		if(!add_int(fragment, opa, reg)) return FPVM_INVALID_REG;
 	} else if(strcmp(node->label, "!") == 0) {
 		opb = find_negative_constant(fragment);
 		if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
-		if(!add_isn(fragment, FPVM_OPCODE_TSIGN, opa, opb, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_TSIGN, opa, opb, reg);
 	} else {
 		/* Normal case */
 		opcode = operator2opcode(node->label);
@@ -509,7 +515,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 			snprintf(fragment->last_error, FPVM_MAXERRLEN, "Operation not supported: %s", node->label);
 			return FPVM_INVALID_REG;
 		}
-		if(!add_isn(fragment, opcode, opa, opb, reg)) return FPVM_INVALID_REG;
+		ADD_ISN(opcode, opa, opb, reg);
 	}
 
 	return reg;
