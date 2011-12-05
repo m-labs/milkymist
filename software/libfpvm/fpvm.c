@@ -277,20 +277,26 @@ static int operator2opcode(const char *operator)
 #define	REG_ALLOC(reg) \
 	reg = fragment->next_sur--
 
+#define	REG_CONST_RET(reg, val, ret)				\
+	reg = ({ int tmp = const_to_reg(fragment, val);		\
+		 if(tmp == FPVM_INVALID_REG) return ret; 	\
+		 tmp; })
+
+#define	REG_CONST_0(reg, val) \
+	REG_CONST_RET(reg, val, 0)
+
+#define	REG_CONST(reg, val) \
+	REG_CONST_RET(reg, val, FPVM_INVALID_REG)
+
 static int add_inv_sqrt_step(struct fpvm_fragment *fragment,
     int reg_y, int reg_x, int reg_out)
 {
-	int reg_onehalf;
-	int reg_twohalf;
+	int REG_CONST_0(reg_onehalf, 0.5f);
+	int REG_CONST(reg_twohalf, 1.5f);
 	int REG_ALLOC(reg_yy);
 	int REG_ALLOC(reg_hx);
 	int REG_ALLOC(reg_hxyy);
 	int REG_ALLOC(reg_sub);
-
-	reg_onehalf = const_to_reg(fragment, 0.5f);
-	if(reg_onehalf == FPVM_INVALID_REG) return 0;
-	reg_twohalf = const_to_reg(fragment, 1.5f);
-	if(reg_twohalf == FPVM_INVALID_REG) return 0;
 
 	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_y, reg_y, reg_yy);
 	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_onehalf, reg_x, reg_hx);
@@ -336,8 +342,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 
 	if(node->label[0] == 0) {
 		/* AST node is a constant */
-		opa = const_to_reg(fragment, node->contents.constant);
-		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		REG_CONST(opa, node->contents.constant);
 		if(reg != FPVM_INVALID_REG)
 			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
 		else
@@ -371,8 +376,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		struct ast_node *n;
 
 		n = node->contents.branches.a;
-		opa = const_to_reg(fragment, -n->contents.constant);
-		if(opa == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		REG_CONST(opa, -n->contents.constant);
 		if(reg != FPVM_INVALID_REG)
 			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
 		else
@@ -417,7 +421,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		 * We must convert the floating point argument in radians
 		 * to an integer expressed in 1/8192 turns for FPVM.
 		 */
-		int reg_const;
+		int REG_CONST(reg_const, FPVM_TRIG_CONV);
 		int REG_ALLOC(reg_mul);
 		int REG_ALLOC(reg_f2i);
 
@@ -425,9 +429,6 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 			opcode = FPVM_OPCODE_SIN;
 		else
 			opcode = FPVM_OPCODE_COS;
-
-		reg_const = const_to_reg(fragment, FPVM_TRIG_CONV);
-		if(reg_const == FPVM_INVALID_REG) return FPVM_INVALID_REG;
 
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_const, opa, reg_mul);
 		ADD_ISN(FPVM_OPCODE_F2I, reg_mul, 0, reg_f2i);
