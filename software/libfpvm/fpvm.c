@@ -274,6 +274,18 @@ static int operator2opcode(const char *operator)
 #define	ADD_ISN(op, opa, opb, dest) \
 	do { ADD_ISN_RET(op, opa, opb, dest) FPVM_INVALID_REG; } while (0)
 
+#define	ADD_INV_SQRT(in, out)				\
+	do {						\
+		if(!add_inv_sqrt(fragment, in, out))	\
+			return FPVM_INVALID_REG;	\
+	} while (0)
+
+#define	ADD_INT(in, out)				\
+	do {						\
+		if(!add_int(fragment, in, out))		\
+			return FPVM_INVALID_REG;	\
+	} while (0)
+
 #define	REG_ALLOC(reg) \
 	reg = fragment->next_sur--
 
@@ -441,10 +453,10 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		 */
 		int REG_ALLOC(reg_invsqrt);
 
-		if(!add_inv_sqrt(fragment, opa, reg_invsqrt)) return FPVM_INVALID_REG;
+		ADD_INV_SQRT(opa, reg_invsqrt);
 		ADD_ISN(FPVM_OPCODE_FMUL, opa, reg_invsqrt, reg);
 	} else if(strcmp(node->label, "invsqrt") == 0) {
-		if(!add_inv_sqrt(fragment, opa, reg)) return FPVM_INVALID_REG;
+		ADD_INV_SQRT(opa, reg);
 	} else if(strcmp(node->label, "/") == 0) {
 		/*
 		 * Floating point division is implemented as
@@ -459,7 +471,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		ADD_ISN(FPVM_OPCODE_TSIGN, opa, opb, reg_a2);
 		ADD_ISN(FPVM_OPCODE_FABS, opb, 0, reg_b2);
 
-		if(!add_inv_sqrt(fragment, reg_b2, reg_invsqrt)) return FPVM_INVALID_REG;
+		ADD_INV_SQRT(reg_b2, reg_invsqrt);
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt,
 		    reg_invsqrt2);
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg);
@@ -470,11 +482,11 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		int REG_ALLOC(reg_idiv);
 		int REG_ALLOC(reg_bidiv);
 
-		if(!add_inv_sqrt(fragment, opb, reg_invsqrt)) return FPVM_INVALID_REG;
+		ADD_INV_SQRT(opb, reg_invsqrt);
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt,
 		    reg_invsqrt2);
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt2, opa, reg_div);
-		if(!add_int(fragment, reg_div, reg_idiv)) return FPVM_INVALID_REG;
+		ADD_INT(reg_div, reg_idiv);
 		ADD_ISN(FPVM_OPCODE_FMUL, opb, reg_idiv, reg_bidiv);
 		ADD_ISN(FPVM_OPCODE_FSUB, opa, reg_bidiv, reg);
 	} else if(strcmp(node->label, "min") == 0) {
@@ -486,7 +498,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 	} else if(strcmp(node->label, "sqr") == 0) {
 		ADD_ISN(FPVM_OPCODE_FMUL, opa, opa, reg);
 	} else if(strcmp(node->label, "int") == 0) {
-		if(!add_int(fragment, opa, reg)) return FPVM_INVALID_REG;
+		ADD_INT(opa, reg);
 	} else if(strcmp(node->label, "!") == 0) {
 		opb = find_negative_constant(fragment);
 		if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
