@@ -22,6 +22,11 @@
 
 #define IDENTIFIER_SIZE 24
 
+struct id {
+	int token;
+	char label[IDENTIFIER_SIZE];
+};
+
 /* maximum supported arity is 3 */
 struct ast_branches {
 	struct ast_node *a;
@@ -30,6 +35,7 @@ struct ast_branches {
 };
 
 struct ast_node {
+	int token;
 	/*
 	 * label is an empty string:
 	 *   node is a constant
@@ -47,6 +53,6 @@ struct ast_node {
 
 void *ParseAlloc(void *(*mallocProc)(size_t));
 void ParseFree(void *p, void (*freeProc)(void*));
-void Parse(void *yyp, int yymajor, void *yyminor, struct ast_node **p);
+void Parse(void *yyp, int yymajor, struct id *yyminor, struct ast_node **p);
 
 #endif /* __AST_H */

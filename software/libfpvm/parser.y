@@ -22,14 +22,16 @@
 	#include <malloc.h>
 	#include <math.h>
 	#include "ast.h"
+	#include "parser.h"
 
 
-	struct ast_node *node(const char *id, struct ast_node *a,
+	struct ast_node *node(int token, const char *id, struct ast_node *a,
 	     struct ast_node *b, struct ast_node *c)
 	{
 		struct ast_node *n;
 
 		n = malloc(sizeof(struct ast_node));
+		n->token = token;
 		strncpy(n->label, id, sizeof(n->label));
 		n->label[sizeof(n->label)-1] = 0;
 		n->contents.branches.a = a;
@@ -41,10 +43,11 @@
 
 %start_symbol start
 %extra_argument {struct ast_node **parseout}
-%token_type {void *}
+%token_type {struct id *}
 
 %token_destructor { free($$); }
 
+%type start {struct ast_node *}
 %type node {struct ast_node *}
 %destructor node { free($$); }
 
@@ -54,12 +57,12 @@ start(S) ::= node(N). {
 }
 
 node(N) ::= TOK_CONSTANT(C). {
-	N = node("", NULL, NULL, NULL);
-	N->contents.constant = atof(C);
+	N = node(TOK_CONSTANT, "", NULL, NULL, NULL);
+	N->contents.constant = atof(C->label);
 }
 
 node(N) ::= ident(I). {
-	N = node(I, NULL, NULL, NULL);
+	N = node(I->token, I->label, NULL, NULL, NULL);
 }
 
 %left TOK_PLUS TOK_MINUS.
@@ -67,40 +70,40 @@ node(N) ::= ident(I). {
 %left TOK_NOT.
 
 node(N) ::= node(A) TOK_PLUS node(B). {
-	N = node("+", A, B, NULL);
+	N = node(TOK_PLUS, "+", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_MINUS node(B). {
-	N = node("-", A, B, NULL);
+	N = node(TOK_MINUS, "-", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_MULTIPLY node(B). {
-	N = node("*", A, B, NULL);
+	N = node(TOK_MULTIPLY, "*", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_DIVIDE node(B). {
-	N = node("/", A, B, NULL);
+	N = node(TOK_DIVIDE, "/", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_PERCENT node(B). {
-	N = node("%", A, B, NULL);
+	N = node(TOK_PERCENT, "%", A, B, NULL);
 }
 
 node(N) ::= TOK_MINUS node(A). [TOK_NOT] {
-	N = node("!", A, NULL, NULL);
+	N = node(TOK_NOT, "!", A, NULL, NULL);
 }
 
 node(N) ::= unary(I) TOK_LPAREN node(A) TOK_RPAREN. {
-	N = node(I, A, NULL, NULL);
+	N = node(I->token, I->label, A, NULL, NULL);
 }
 
 node(N) ::= binary(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_RPAREN. {
-	N = node(I, A, B, NULL);
+	N = node(I->token, I->label, A, B, NULL);
 }
 
 node(N) ::= ternary(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_COMMA node(C)
     TOK_RPAREN. {
-	N = node(I, A, B, C);
+	N = node(I->token, I->label, A, B, C);
 }
 
 node(N) ::= TOK_LPAREN node(A) TOK_RPAREN. {
