@@ -23,6 +23,7 @@
 #include <fpvm/fpvm.h>
 
 #include "ast.h"
+#include "unique.h"
 #include "parser_helper.h"
 #include "parser.h"
 
@@ -39,30 +40,18 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 
 	fragment->nbindings = 3;
 	fragment->bindings[0].isvar = 1;
-	fragment->bindings[0].b.v[0] = '_';
-	fragment->bindings[0].b.v[1] = 'X';
-	fragment->bindings[0].b.v[2] = 'i';
-	fragment->bindings[0].b.v[3] = 0;
+	fragment->bindings[0].b.v = unique("_Xi");
 	fragment->bindings[1].isvar = 1;
-	fragment->bindings[1].b.v[0] = '_';
-	fragment->bindings[1].b.v[1] = 'Y';
-	fragment->bindings[1].b.v[2] = 'i';
-	fragment->bindings[1].b.v[3] = 0;
+	fragment->bindings[1].b.v = unique("_Yi");
 	/* Prevent binding of R2 (we need it for "if") */
 	fragment->bindings[2].isvar = 1;
-	fragment->bindings[2].b.v[0] = 0;
+	fragment->bindings[2].b.v = "";
 
 	fragment->ntbindings = 2;
 	fragment->tbindings[0].reg = -1;
-	fragment->tbindings[0].sym[0] = '_';
-	fragment->tbindings[0].sym[1] = 'X';
-	fragment->tbindings[0].sym[2] = 'o';
-	fragment->tbindings[0].sym[3] = 0;
+	fragment->tbindings[0].sym = unique("_Xo");
 	fragment->tbindings[1].reg = -2;
-	fragment->tbindings[1].sym[0] = '_';
-	fragment->tbindings[1].sym[1] = 'Y';
-	fragment->tbindings[1].sym[2] = 'o';
-	fragment->tbindings[1].sym[3] = 0;
+	fragment->tbindings[1].sym = unique("_Yo");
 
 	fragment->nrenamings = 0;
 
@@ -101,7 +90,7 @@ int fpvm_bind(struct fpvm_fragment *fragment, const char *sym)
 	}
 	r = fragment->nbindings++;
 	fragment->bindings[r].isvar = 1;
-	strcpy(fragment->bindings[r].b.v, sym);
+	fragment->bindings[r].b.v = sym;
 	if(fragment->bind_callback != NULL)
 		fragment->bind_callback(fragment->bind_callback_user, sym, r);
 	return r;
@@ -109,22 +98,22 @@ int fpvm_bind(struct fpvm_fragment *fragment, const char *sym)
 
 void fpvm_set_xin(struct fpvm_fragment *fragment, const char *sym)
 {
-	strcpy(fragment->bindings[0].b.v, sym);
+	fragment->bindings[0].b.v = sym;
 }
 
 void fpvm_set_yin(struct fpvm_fragment *fragment, const char *sym)
 {
-	strcpy(fragment->bindings[1].b.v, sym);
+	fragment->bindings[1].b.v = sym;
 }
 
 void fpvm_set_xout(struct fpvm_fragment *fragment, const char *sym)
 {
-	strcpy(fragment->tbindings[0].sym, sym);
+	fragment->tbindings[0].sym = sym;
 }
 
 void fpvm_set_yout(struct fpvm_fragment *fragment, const char *sym)
 {
-	strcpy(fragment->tbindings[1].sym, sym);
+	fragment->tbindings[1].sym = sym;
 }
 
 static int lookup(struct fpvm_fragment *fragment, const char *sym)
@@ -152,7 +141,7 @@ static int tbind(struct fpvm_fragment *fragment, const char *sym)
 		return FPVM_INVALID_REG;
 	}
 	fragment->tbindings[fragment->ntbindings].reg = fragment->next_sur;
-	strcpy(fragment->tbindings[fragment->ntbindings].sym, sym);
+	fragment->tbindings[fragment->ntbindings].sym = sym;
 	fragment->ntbindings++;
 	return fragment->next_sur--;
 }
@@ -173,7 +162,7 @@ static int rename_reg(struct fpvm_fragment *fragment, const char *sym, int reg)
 		return 0;
 	}
 	fragment->renamings[fragment->nrenamings].reg = reg;
-	strcpy(fragment->renamings[fragment->nrenamings].sym, sym);
+	fragment->renamings[fragment->nrenamings].sym = sym;
 	fragment->nrenamings++;
 	return 1;
 }

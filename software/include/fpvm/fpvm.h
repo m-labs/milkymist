@@ -42,13 +42,13 @@ struct fpvm_binding {
 	int isvar;
 	union {
 		float c;
-		char v[FPVM_MAXSYMLEN];
+		const char *v;
 	} b;
 };
 
 struct fpvm_tbinding {
 	int reg;
-	char sym[FPVM_MAXSYMLEN];
+	const char *sym;
 };
 
 enum {
