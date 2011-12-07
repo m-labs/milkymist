@@ -22,6 +22,21 @@
 	#include <malloc.h>
 	#include <math.h>
 	#include "ast.h"
+
+
+	struct ast_node *node(const char *id, struct ast_node *a,
+	     struct ast_node *b, struct ast_node *c)
+	{
+		struct ast_node *n;
+
+		n = malloc(sizeof(struct ast_node));
+		strncpy(n->label, id, sizeof(n->label));
+		n->label[sizeof(n->label)-1] = 0;
+		n->contents.branches.a = a;
+		n->contents.branches.b = b;
+		n->contents.branches.c = c;
+		return n;
+	}
 }
 
 %start_symbol start
@@ -39,18 +54,12 @@ start(S) ::= node(N). {
 }
 
 node(N) ::= TOK_CONSTANT(C). {
-	N = malloc(sizeof(struct ast_node));
-	N->label[0] = 0;
+	N = node("", NULL, NULL, NULL);
 	N->contents.constant = atof(C);
 }
 
 node(N) ::= ident(I). {
-	N = malloc(sizeof(struct ast_node));
-	strncpy(N->label, I, sizeof(N->label));
-	N->label[sizeof(N->label)-1] = 0;
-	N->contents.branches.a = NULL;
-	N->contents.branches.b = NULL;
-	N->contents.branches.c = NULL;
+	N = node(I, NULL, NULL, NULL);
 }
 
 %left TOK_PLUS TOK_MINUS.
@@ -58,85 +67,40 @@ node(N) ::= ident(I). {
 %left TOK_NOT.
 
 node(N) ::= node(A) TOK_PLUS node(B). {
-	N = malloc(sizeof(struct ast_node));
-	N->label[0] = '+';
-	N->label[1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = B;
-	N->contents.branches.c = NULL;
+	N = node("+", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_MINUS node(B). {
-	N = malloc(sizeof(struct ast_node));
-	N->label[0] = '-';
-	N->label[1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = B;
-	N->contents.branches.c = NULL;
+	N = node("-", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_MULTIPLY node(B). {
-	N = malloc(sizeof(struct ast_node));
-	N->label[0] = '*';
-	N->label[1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = B;
-	N->contents.branches.c = NULL;
+	N = node("*", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_DIVIDE node(B). {
-	N = malloc(sizeof(struct ast_node));
-	N->label[0] = '/';
-	N->label[1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = B;
-	N->contents.branches.c = NULL;
+	N = node("/", A, B, NULL);
 }
 
 node(N) ::= node(A) TOK_PERCENT node(B). {
-	N = malloc(sizeof(struct ast_node));
-	N->label[0] = '%';
-	N->label[1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = B;
-	N->contents.branches.c = NULL;
+	N = node("%", A, B, NULL);
 }
 
 node(N) ::= TOK_MINUS node(A). [TOK_NOT] {
-	N = malloc(sizeof(struct ast_node));
-	N->label[0] = '!';
-	N->label[1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = NULL;
-	N->contents.branches.c = NULL;
+	N = node("!", A, NULL, NULL);
 }
 
 node(N) ::= unary(I) TOK_LPAREN node(A) TOK_RPAREN. {
-	N = malloc(sizeof(struct ast_node));
-	strncpy(N->label, I, sizeof(N->label));
-	N->label[sizeof(N->label)-1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = NULL;
-	N->contents.branches.c = NULL;
+	N = node(I, A, NULL, NULL);
 }
 
 node(N) ::= binary(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_RPAREN. {
-	N = malloc(sizeof(struct ast_node));
-	strncpy(N->label, I, sizeof(N->label));
-	N->label[sizeof(N->label)-1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = B;
-	N->contents.branches.c = NULL;
+	N = node(I, A, B, NULL);
 }
 
 node(N) ::= ternary(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_COMMA node(C)
     TOK_RPAREN. {
-	N = malloc(sizeof(struct ast_node));
-	strncpy(N->label, I, sizeof(N->label));
-	N->label[sizeof(N->label)-1] = 0;
-	N->contents.branches.a = A;
-	N->contents.branches.b = B;
-	N->contents.branches.c = C;
+	N = node(I, A, B, C);
 }
 
 node(N) ::= TOK_LPAREN node(A) TOK_RPAREN. {
