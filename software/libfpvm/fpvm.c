@@ -291,29 +291,29 @@ static int operator2opcode(const char *operator)
 	    if(tmp == FPVM_INVALID_REG) return tmp;	\
 	    tmp; })
 
-#define	REG_ALLOC(reg) \
-	reg = fragment->next_sur--
+#define	REG_ALLOC() \
+	(fragment->next_sur--)
 
-#define	REG_CONST_RET(reg, val, ret)				\
-	reg = ({ int tmp = const_to_reg(fragment, val);		\
-		 if(tmp == FPVM_INVALID_REG) return ret; 	\
-		 tmp; })
+#define	REG_CONST_RET(val, ret)			\
+	({ int tmp = const_to_reg(fragment, val);	\
+	   if(tmp == FPVM_INVALID_REG) return ret; 	\
+	   tmp; })
 
-#define	REG_CONST_0(reg, val) \
-	REG_CONST_RET(reg, val, 0)
+#define	REG_CONST_0(val) \
+	REG_CONST_RET(val, 0)
 
-#define	REG_CONST(reg, val) \
-	REG_CONST_RET(reg, val, FPVM_INVALID_REG)
+#define	REG_CONST(val) \
+	REG_CONST_RET(val, FPVM_INVALID_REG)
 
 static int add_inv_sqrt_step(struct fpvm_fragment *fragment,
     int reg_y, int reg_x, int reg_out)
 {
-	int REG_CONST_0(reg_onehalf, 0.5f);
-	int REG_CONST(reg_twohalf, 1.5f);
-	int REG_ALLOC(reg_yy);
-	int REG_ALLOC(reg_hx);
-	int REG_ALLOC(reg_hxyy);
-	int REG_ALLOC(reg_sub);
+	int reg_onehalf = REG_CONST_0(0.5f);
+	int reg_twohalf = REG_CONST(1.5f);
+	int reg_yy = REG_ALLOC();
+	int reg_hx = REG_ALLOC();
+	int reg_hxyy = REG_ALLOC();
+	int reg_sub = REG_ALLOC();
 
 	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_y, reg_y, reg_yy);
 	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_onehalf, reg_x, reg_hx);
@@ -326,8 +326,8 @@ static int add_inv_sqrt_step(struct fpvm_fragment *fragment,
 
 static int add_inv_sqrt(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 {
-	int REG_ALLOC(reg_y);
-	int REG_ALLOC(reg_y2);
+	int reg_y = REG_ALLOC();
+	int reg_y2 = REG_ALLOC();
 
 	ADD_ISN_0(FPVM_OPCODE_QUAKE, reg_in, 0, reg_y);
 	if(!add_inv_sqrt_step(fragment, reg_y, reg_in, reg_y2)) return 0;
@@ -338,7 +338,7 @@ static int add_inv_sqrt(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 
 static int add_int(struct fpvm_fragment *fragment, int reg_in, int reg_out)
 {
-	int REG_ALLOC(reg_i);
+	int reg_i = REG_ALLOC();
 
 	ADD_ISN(FPVM_OPCODE_F2I, reg_in, 0, reg_i);
 	ADD_ISN(FPVM_OPCODE_I2F, reg_i, 0, reg_out);
@@ -359,7 +359,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 
 	if(node->label[0] == 0) {
 		/* AST node is a constant */
-		REG_CONST(opa, node->contents.constant);
+		opa = REG_CONST(node->contents.constant);
 		if(reg != FPVM_INVALID_REG)
 			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
 		else
@@ -393,7 +393,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		struct ast_node *n;
 
 		n = node->contents.branches.a;
-		REG_CONST(opa, -n->contents.constant);
+		opa = REG_CONST(-n->contents.constant);
 		if(reg != FPVM_INVALID_REG)
 			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
 		else
@@ -434,9 +434,9 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		 * We must convert the floating point argument in radians
 		 * to an integer expressed in 1/8192 turns for FPVM.
 		 */
-		int REG_CONST(reg_const, FPVM_TRIG_CONV);
-		int REG_ALLOC(reg_mul);
-		int REG_ALLOC(reg_f2i);
+		int reg_const = REG_CONST(FPVM_TRIG_CONV);
+		int reg_mul = REG_ALLOC();
+		int reg_f2i = REG_ALLOC();
 
 		if(strcmp(node->label, "sin") == 0)
 			opcode = FPVM_OPCODE_SIN;
@@ -452,7 +452,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		 * See http://en.wikipedia.org/wiki/Fast_inverse_square_root
 		 * sqrt(x) = x*(1/sqrt(x))
 		 */
-		int REG_ALLOC(reg_invsqrt);
+		int reg_invsqrt = REG_ALLOC();
 
 		ADD_INV_SQRT(opa, reg_invsqrt);
 		ADD_ISN(FPVM_OPCODE_FMUL, opa, reg_invsqrt, reg);
@@ -463,10 +463,10 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		 * Floating point division is implemented as
 		 * a/b = a*(1/sqrt(b))*(1/sqrt(b))
 		 */
-		int REG_ALLOC(reg_a2);
-		int REG_ALLOC(reg_b2);
-		int REG_ALLOC(reg_invsqrt);
-		int REG_ALLOC(reg_invsqrt2);
+		int reg_a2 = REG_ALLOC();
+		int reg_b2 = REG_ALLOC();
+		int reg_invsqrt = REG_ALLOC();
+		int reg_invsqrt2 = REG_ALLOC();
 
 		/* Transfer the sign of the result to a and make b positive */
 		ADD_ISN(FPVM_OPCODE_TSIGN, opa, opb, reg_a2);
@@ -477,11 +477,11 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		    reg_invsqrt2);
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg);
 	} else if(strcmp(node->label, "%") == 0) {
-		int REG_ALLOC(reg_invsqrt);
-		int REG_ALLOC(reg_invsqrt2);
-		int REG_ALLOC(reg_div);
-		int REG_ALLOC(reg_idiv);
-		int REG_ALLOC(reg_bidiv);
+		int reg_invsqrt = REG_ALLOC();
+		int reg_invsqrt2 = REG_ALLOC();
+		int reg_div = REG_ALLOC();
+		int reg_idiv = REG_ALLOC();
+		int reg_bidiv = REG_ALLOC();
 
 		ADD_INV_SQRT(opb, reg_invsqrt);
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt,
