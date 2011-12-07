@@ -32,8 +32,7 @@
 
 		n = malloc(sizeof(struct ast_node));
 		n->token = token;
-		strncpy(n->label, id, sizeof(n->label));
-		n->label[sizeof(n->label)-1] = 0;
+		n->label = id;
 		n->contents.branches.a = a;
 		n->contents.branches.b = b;
 		n->contents.branches.c = c;

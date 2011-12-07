@@ -45,7 +45,7 @@ struct ast_node {
 	 * label is not an empty string and branch A is not null:
 	 *   node is function/operator "label"
 	 */
-	char label[IDENTIFIER_SIZE];
+	const char *label;
 	union {
 		struct ast_branches branches;
 		float constant;
