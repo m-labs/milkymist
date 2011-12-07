@@ -361,7 +361,8 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 	int opa, opb;
 	int opcode;
 
-	if(node->label[0] == 0) {
+	switch(node->token) {
+	case TOK_CONSTANT:
 		/* AST node is a constant */
 		opa = REG_CONST(node->contents.constant);
 		if(reg != FPVM_INVALID_REG)
@@ -369,8 +370,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		else
 			reg = opa;
 		return reg;
-	}
-	if(node->contents.branches.a == NULL) {
+	case TOK_IDENT:
 		/* AST node is a variable */
 		if(fragment->bind_mode) {
 			opa = sym_to_reg(fragment, node->label, 0, NULL);
@@ -390,22 +390,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		else
 			reg = opa;
 		return reg;
-	}
-	if((strcmp(node->label, "!") == 0) &&
-	    (node->contents.branches.a->label[0] == 0)) {
-		/* Node is a negative constant */
-		struct ast_node *n;
-
-		n = node->contents.branches.a;
-		opa = REG_CONST(-n->contents.constant);
-		if(reg != FPVM_INVALID_REG)
-			ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
-		else
-			reg = opa;
-		return reg;
-	}
-	/* AST node is an operator or function */
-	if(strcmp(node->label, "if") == 0) {
+	case TOK_IF:
 		/*
 		 * "if" must receive a special treatment.
 		 * It is implemented as a ternary function,
@@ -417,7 +402,23 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		opa = COMPILE(FPVM_INVALID_REG, node->contents.branches.b);
 		opb = COMPILE(FPVM_INVALID_REG, node->contents.branches.c);
 		COMPILE(FPVM_REG_IFB, node->contents.branches.a);
-	} else {
+		break;
+	case TOK_NOT:
+		if(node->contents.branches.a->token == TOK_CONSTANT) {
+			/* Node is a negative constant */
+			struct ast_node *n;
+
+			n = node->contents.branches.a;
+			opa = REG_CONST(-n->contents.constant);
+			if(reg != FPVM_INVALID_REG)
+				ADD_ISN(FPVM_OPCODE_COPY, opa, 0, reg);
+			else
+				reg = opa;
+			return reg;
+		}
+		/* fall through */
+	default:
+		/* AST node is an operator or function */
 		opa = COMPILE(FPVM_INVALID_REG, node->contents.branches.a);
 		opb = 0;
 		if(node->contents.branches.b != NULL) {
@@ -426,13 +427,18 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		}
 	}
 
-	if(reg == FPVM_INVALID_REG) reg = fragment->next_sur--;
-	if(strcmp(node->label, "below") == 0) {
+	if(reg == FPVM_INVALID_REG)
+		reg = fragment->next_sur--;
+
+	switch(node->token) {
+	case TOK_BELOW:
 		/*
 		 * "below" is like "above", but with reversed operands.
 		 */
 		ADD_ISN(FPVM_OPCODE_ABOVE, opb, opa, reg);
-	} else if((strcmp(node->label, "sin") == 0)||(strcmp(node->label, "cos") == 0)) {
+		break;
+	case TOK_SIN:
+	case TOK_COS: {
 		/*
 		 * Trigo functions are implemented with several instructions.
 		 * We must convert the floating point argument in radians
@@ -442,7 +448,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		int reg_mul = REG_ALLOC();
 		int reg_f2i = REG_ALLOC();
 
-		if(strcmp(node->label, "sin") == 0)
+		if(node->token == TOK_SIN)
 			opcode = FPVM_OPCODE_SIN;
 		else
 			opcode = FPVM_OPCODE_COS;
@@ -450,9 +456,12 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_const, opa, reg_mul);
 		ADD_ISN(FPVM_OPCODE_F2I, reg_mul, 0, reg_f2i);
 		ADD_ISN(opcode, reg_f2i, 0, reg);
-	} else if(strcmp(node->label, "sqrt") == 0) {
+		break;
+	}
+	case TOK_SQRT: {
 		/*
-		 * Square root is implemented with a variant of the Quake III algorithm.
+		 * Square root is implemented with a variant of the Quake III
+		 * algorithm.
 		 * See http://en.wikipedia.org/wiki/Fast_inverse_square_root
 		 * sqrt(x) = x*(1/sqrt(x))
 		 */
@@ -460,9 +469,12 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 
 		ADD_INV_SQRT(opa, reg_invsqrt);
 		ADD_ISN(FPVM_OPCODE_FMUL, opa, reg_invsqrt, reg);
-	} else if(strcmp(node->label, "invsqrt") == 0) {
+		break;
+	}
+	case TOK_INVSQRT:
 		ADD_INV_SQRT(opa, reg);
-	} else if(strcmp(node->label, "/") == 0) {
+		break;
+	case TOK_DIVIDE: {
 		/*
 		 * Floating point division is implemented as
 		 * a/b = a*(1/sqrt(b))*(1/sqrt(b))
@@ -480,7 +492,9 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt,
 		    reg_invsqrt2);
 		ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt2, reg_a2, reg);
-	} else if(strcmp(node->label, "%") == 0) {
+		break;
+	}
+	case TOK_PERCENT: {
 		int reg_invsqrt = REG_ALLOC();
 		int reg_invsqrt2 = REG_ALLOC();
 		int reg_div = REG_ALLOC();
@@ -494,28 +508,38 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		ADD_INT(reg_div, reg_idiv);
 		ADD_ISN(FPVM_OPCODE_FMUL, opb, reg_idiv, reg_bidiv);
 		ADD_ISN(FPVM_OPCODE_FSUB, opa, reg_bidiv, reg);
-	} else if(strcmp(node->label, "min") == 0) {
+		break;
+	}
+	case TOK_MIN:
 		ADD_ISN(FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB);
 		ADD_ISN(FPVM_OPCODE_IF, opb, opa, reg);
-	} else if(strcmp(node->label, "max") == 0) {
+		break;
+	case TOK_MAX:
 		ADD_ISN(FPVM_OPCODE_ABOVE, opa, opb, FPVM_REG_IFB);
 		ADD_ISN(FPVM_OPCODE_IF, opa, opb, reg);
-	} else if(strcmp(node->label, "sqr") == 0) {
+		break;
+	case TOK_SQR:
 		ADD_ISN(FPVM_OPCODE_FMUL, opa, opa, reg);
-	} else if(strcmp(node->label, "int") == 0) {
+		break;
+	case TOK_INT:
 		ADD_INT(opa, reg);
-	} else if(strcmp(node->label, "!") == 0) {
+		break;
+	case TOK_NOT:
 		opb = find_negative_constant(fragment);
-		if(opb == FPVM_INVALID_REG) return FPVM_INVALID_REG;
+		if(opb == FPVM_INVALID_REG)
+			return FPVM_INVALID_REG;
 		ADD_ISN(FPVM_OPCODE_TSIGN, opa, opb, reg);
-	} else {
+		break;
+	default:
 		/* Normal case */
 		opcode = operator2opcode(node->token);
 		if(opcode < 0) {
-			snprintf(fragment->last_error, FPVM_MAXERRLEN, "Operation not supported: %s", node->label);
+			snprintf(fragment->last_error, FPVM_MAXERRLEN,
+			    "Operation not supported: %s", node->label);
 			return FPVM_INVALID_REG;
 		}
 		ADD_ISN(opcode, opa, opb, reg);
+		break;
 	}
 
 	return reg;
