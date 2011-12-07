@@ -40,5 +40,7 @@ int scan(struct scanner *s);
  */
 const char *get_token(struct scanner *s);
 
+float get_constant(struct scanner *s);
+
 #endif /* __SCANNER_H */
 

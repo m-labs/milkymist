@@ -25,6 +25,7 @@
 struct id {
 	int token;
 	const char *label;
+	float constant;
 };
 
 /* maximum supported arity is 3 */

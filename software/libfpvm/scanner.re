@@ -99,3 +99,24 @@ const char *get_token(struct scanner *s)
 	return unique_n((const char *) s->old_cursor,
 	    s->cursor - s->old_cursor);
 }
+
+float get_constant(struct scanner *s)
+{
+	const unsigned char *p;
+	float v = 0;
+	float m = 1;
+
+	for(p = s->old_cursor; p != s->cursor; p++) {
+		if(*p == '.')
+			goto dot;
+		v = v*10+(*p-'0');
+	}
+	return v;
+
+dot:
+	for(p++; p != s->cursor; p++) {
+		m /= 10;
+		v += m*(*p-'0');
+	}
+	return v;
+}

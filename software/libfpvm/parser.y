@@ -58,7 +58,7 @@ start(S) ::= node(N). {
 
 node(N) ::= TOK_CONSTANT(C). {
 	N = node(TOK_CONSTANT, "", NULL, NULL, NULL);
-	N->contents.constant = atof(C->label);
+	N->contents.constant = C->constant;
 }
 
 node(N) ::= ident(I). {
