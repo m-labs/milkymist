@@ -24,6 +24,7 @@
 
 #include "ast.h"
 #include "parser_helper.h"
+#include "parser.h"
 
 const char *fpvm_version()
 {
@@ -247,22 +248,25 @@ static int add_isn(struct fpvm_fragment *fragment, int opcode,
 	return 1;
 }
 
-static int operator2opcode(const char *operator)
+static int operator2opcode(int token)
 {
-	if(strcmp(operator, "+") == 0) return FPVM_OPCODE_FADD;
-	if(strcmp(operator, "-") == 0) return FPVM_OPCODE_FSUB;
-	if(strcmp(operator, "*") == 0) return FPVM_OPCODE_FMUL;
-	if(strcmp(operator, "abs") == 0) return FPVM_OPCODE_FABS;
-	if(strcmp(operator, "isin") == 0) return FPVM_OPCODE_SIN;
-	if(strcmp(operator, "icos") == 0) return FPVM_OPCODE_COS;
-	if(strcmp(operator, "above") == 0) return FPVM_OPCODE_ABOVE;
-	if(strcmp(operator, "equal") == 0) return FPVM_OPCODE_EQUAL;
-	if(strcmp(operator, "i2f") == 0) return FPVM_OPCODE_I2F;
-	if(strcmp(operator, "f2i") == 0) return FPVM_OPCODE_F2I;
-	if(strcmp(operator, "if") == 0) return FPVM_OPCODE_IF;
-	if(strcmp(operator, "tsign") == 0) return FPVM_OPCODE_TSIGN;
-	if(strcmp(operator, "quake") == 0) return FPVM_OPCODE_QUAKE;
-	else return -1;
+	switch (token) {
+	case TOK_PLUS:		return FPVM_OPCODE_FADD;
+	case TOK_MINUS:		return FPVM_OPCODE_FSUB;
+	case TOK_MULTIPLY:	return FPVM_OPCODE_FMUL;
+	case TOK_ABS:		return FPVM_OPCODE_FABS;
+	case TOK_ISIN:		return FPVM_OPCODE_SIN;
+	case TOK_ICOS:		return FPVM_OPCODE_COS;
+	case TOK_ABOVE:		return FPVM_OPCODE_ABOVE;
+	case TOK_EQUAL:		return FPVM_OPCODE_EQUAL;
+	case TOK_I2F:		return FPVM_OPCODE_I2F;
+	case TOK_F2I:		return FPVM_OPCODE_F2I;
+	case TOK_IF:		return FPVM_OPCODE_IF;
+	case TOK_TSIGN:		return FPVM_OPCODE_TSIGN;
+	case TOK_QUAKE:		return FPVM_OPCODE_QUAKE;
+	default:
+		return -1;
+	}
 }
 
 #define	ADD_ISN_RET(op, opa, opb, dest) \
@@ -506,7 +510,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		ADD_ISN(FPVM_OPCODE_TSIGN, opa, opb, reg);
 	} else {
 		/* Normal case */
-		opcode = operator2opcode(node->label);
+		opcode = operator2opcode(node->token);
 		if(opcode < 0) {
 			snprintf(fragment->last_error, FPVM_MAXERRLEN, "Operation not supported: %s", node->label);
 			return FPVM_INVALID_REG;

@@ -34,7 +34,7 @@ fpvm.o: ../../software/include/base/stdlib.h
 fpvm.o: ../../software/include/base/stdio.h
 fpvm.o: ../../software/include/base/version.h
 fpvm.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
-fpvm.o: ast.h parser_helper.h
+fpvm.o: ast.h parser_helper.h parser.h
 gfpus.o: ../../software/include/base/stdio.h
 gfpus.o: ../../software/include/base/stdlib.h
 gfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
@@ -54,7 +54,7 @@ parser.o: ../../software/include/base/stdlib.h
 parser.o: ../../software/include/base/assert.h
 parser.o: ../../software/include/base/string.h
 parser.o: ../../software/include/base/malloc.h
-parser.o: ../../software/include/base/math.h ast.h
+parser.o: ../../software/include/base/math.h ast.h parser.h
 parser_helper.o: ../../software/include/base/stdio.h
 parser_helper.o: ../../software/include/base/stdlib.h
 parser_helper.o: ../../software/include/base/malloc.h scanner.h parser.h
