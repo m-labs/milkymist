@@ -37,8 +37,7 @@ struct ast_node *fpvm_parse(const char *expr)
 	while(tok != TOK_EOF) {
 		identifier = malloc(sizeof(struct id));
 		identifier->token = tok;
-		get_token(s, (unsigned char *) identifier->label,
-		    IDENTIFIER_SIZE);
+		identifier->label = get_token(s);
 		Parse(p, tok, identifier, &ast);
 		if(tok == TOK_ERROR) {
 			printf("FPVM: scan error\n");

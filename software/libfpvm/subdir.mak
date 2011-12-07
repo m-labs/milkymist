@@ -1,4 +1,5 @@
-OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o
+OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o \
+	unique.o
 
 all: libfpvm.a
 
@@ -11,11 +12,18 @@ all: libfpvm.a
 
 ../parser_helper.c: ../parser.h
 
+../fpvm.c: ../parser.h
+
+../unique.c: fnp.inc
+
 %.c: %.y
 	lemon $<
 
 %.o: ../%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -I. -c -o $@ $<
+
+%.h %.inc: ../%.ids
+	../idgen $<
 
 libfpvm.a: $(OBJECTS)
 	$(AR) clr libfpvm.a $(OBJECTS)
@@ -25,3 +33,4 @@ libfpvm.a: $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) ../scanner.c ../parser.c ../parser.h ../parser.out libfpvm.a test .*~ *~ Makefile.bak
+	rm -f fnp.h fnp.inc

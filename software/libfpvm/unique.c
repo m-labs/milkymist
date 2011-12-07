@@ -26,6 +26,23 @@ static const char **vars = NULL;
 static int num_vars = 0, allocated = 0;
 
 
+/*
+ * "a" is not NUL-terminated and its length "a" is determined by "n".
+ * "b" is NUL-terminated.
+ */
+
+static int strcmp_n(const char *a, const char *b, int n)
+{
+	int diff;
+
+	diff = strncmp(a, b, n);
+	if (diff)
+		return diff;
+	/* handle implicit NUL in string "a" */
+	return b[n];
+}
+
+
 /* We don't have bsearch, so here's our own version. */
 
 static const char *search(const char *s)
@@ -56,7 +73,7 @@ static const char *search_n(const char *s, int n)
 
 	while(low <= high) {
 		mid = (low+high)/2;
-		res = strncmp(s, well_known[mid], n+1);
+		res = strcmp_n(s, well_known[mid], n);
 		if(!res)
 			return well_known[mid];
 		if(res < 0)
@@ -134,7 +151,7 @@ const char *unique_n(const char *s, int n)
 	if(res)
 		return res;
 	for(walk = vars; walk != vars+num_vars; walk++)
-		if(!strncmp(*walk, s, n+1))
+		if(!strcmp_n(s, *walk, n))
 			return *walk;
 	grow_table();
 	return vars[num_vars++] = my_strdup_n(s, n);

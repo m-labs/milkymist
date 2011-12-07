@@ -19,6 +19,7 @@
 #include <string.h>
 #include <malloc.h>
 
+#include "unique.h"
 #include "scanner.h"
 
 #define YYCTYPE     unsigned char
@@ -93,17 +94,8 @@ int scan(struct scanner *s)
 	*/
 }
 
-int get_token(struct scanner *s, unsigned char *buffer, int length)
+const char *get_token(struct scanner *s)
 {
-	int total_length;
-	int copy_length;
-	int i;
-	
-	total_length = copy_length = s->cursor - s->old_cursor;
-	if(copy_length >= length)
-		copy_length = length - 1;
-	for(i=0;i<copy_length;i++)
-		buffer[i] = s->old_cursor[i];
-	buffer[copy_length] = 0;
-	return total_length;
+	return unique_n((const char *) s->old_cursor,
+	    s->cursor - s->old_cursor);
 }

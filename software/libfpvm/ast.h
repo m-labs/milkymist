@@ -24,7 +24,7 @@
 
 struct id {
 	int token;
-	char label[IDENTIFIER_SIZE];
+	const char *label;
 };
 
 /* maximum supported arity is 3 */

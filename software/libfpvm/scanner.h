@@ -36,13 +36,9 @@ void delete_scanner(struct scanner *s);
 /* get to the next token and return its type */
 int scan(struct scanner *s);
 
-/* get the string comprising the current token
- * length is the size of the passed buffer, counting
- * the terminating NUL character.
- * returns the number of characters actually written
- * to the buffer, not counting the NUL character.
+/* get the unique string comprising the current token
  */
-int get_token(struct scanner *s, unsigned char *buffer, int length);
+const char *get_token(struct scanner *s);
 
 #endif /* __SCANNER_H */
 
