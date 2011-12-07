@@ -44,7 +44,7 @@ node(N) ::= TOK_CONSTANT(C). {
 	N->contents.constant = atof(C);
 }
 
-node(N) ::= TOK_IDENT(I). {
+node(N) ::= ident(I). {
 	N = malloc(sizeof(struct ast_node));
 	strncpy(N->label, I, sizeof(N->label));
 	N->label[sizeof(N->label)-1] = 0;
@@ -111,7 +111,7 @@ node(N) ::= TOK_MINUS node(A). [TOK_NOT] {
 	N->contents.branches.c = NULL;
 }
 
-node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_RPAREN. {
+node(N) ::= unary(I) TOK_LPAREN node(A) TOK_RPAREN. {
 	N = malloc(sizeof(struct ast_node));
 	strncpy(N->label, I, sizeof(N->label));
 	N->label[sizeof(N->label)-1] = 0;
@@ -120,7 +120,7 @@ node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_RPAREN. {
 	N->contents.branches.c = NULL;
 }
 
-node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_RPAREN. {
+node(N) ::= binary(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_RPAREN. {
 	N = malloc(sizeof(struct ast_node));
 	strncpy(N->label, I, sizeof(N->label));
 	N->label[sizeof(N->label)-1] = 0;
@@ -129,7 +129,8 @@ node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_RPAREN. {
 	N->contents.branches.c = NULL;
 }
 
-node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_COMMA node(C) TOK_RPAREN. {
+node(N) ::= ternary(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_COMMA node(C)
+    TOK_RPAREN. {
 	N = malloc(sizeof(struct ast_node));
 	strncpy(N->label, I, sizeof(N->label));
 	N->label[sizeof(N->label)-1] = 0;
@@ -141,3 +142,30 @@ node(N) ::= TOK_IDENT(I) TOK_LPAREN node(A) TOK_COMMA node(B) TOK_COMMA node(C) 
 node(N) ::= TOK_LPAREN node(A) TOK_RPAREN. {
 	N = A;
 }
+
+ident(O) ::= TOK_IDENT(I).	{ O = I; }
+ident(O) ::= unary(I).		{ O = I; }
+ident(O) ::= binary(I).		{ O = I; }
+ident(O) ::= ternary(I).	{ O = I; }
+
+unary(O) ::= TOK_ABS(I).	{ O = I; }
+unary(O) ::= TOK_COS(I).	{ O = I; }
+unary(O) ::= TOK_F2I(I).	{ O = I; }
+unary(O) ::= TOK_ICOS(I).	{ O = I; }
+unary(O) ::= TOK_I2F(I).	{ O = I; }
+unary(O) ::= TOK_INT(I).	{ O = I; }
+unary(O) ::= TOK_INVSQRT(I).	{ O = I; }
+unary(O) ::= TOK_ISIN(I).	{ O = I; }
+unary(O) ::= TOK_QUAKE(I).	{ O = I; }
+unary(O) ::= TOK_SIN(I).	{ O = I; }
+unary(O) ::= TOK_SQR(I).	{ O = I; }
+unary(O) ::= TOK_SQRT(I).	{ O = I; }
+
+binary(O) ::= TOK_ABOVE(I).	{ O = I; }
+binary(O) ::= TOK_BELOW(I).	{ O = I; }
+binary(O) ::= TOK_EQUAL(I).	{ O = I; }
+binary(O) ::= TOK_MAX(I).	{ O = I; }
+binary(O) ::= TOK_MIN(I).	{ O = I; }
+binary(O) ::= TOK_TSIGN(I).	{ O = I; }
+
+ternary(O) ::= TOK_IF(I).	{ O = I; }

@@ -56,19 +56,40 @@ int scan(struct scanner *s)
 	s->old_cursor = s->cursor;
 	
 	/*!re2c
-		[\x20\r\t]				{ goto std; }
-		[0-9]+					{ return TOK_CONSTANT; }
-		[0-9]* "." [0-9]*			{ return TOK_CONSTANT; }
-		[a-zA-Z_0-9]+				{ return TOK_IDENT; }
-		"+"					{ return TOK_PLUS; }
-		"-"					{ return TOK_MINUS; }
-		"*"					{ return TOK_MULTIPLY; }
-		"/"					{ return TOK_DIVIDE; }
-		"%"					{ return TOK_PERCENT; }
-		"("					{ return TOK_LPAREN; }
-		")"					{ return TOK_RPAREN; }
-		","					{ return TOK_COMMA; }
-		[\x00-\xff]				{ return TOK_ERROR; }
+		[\x20\r\t]		{ goto std; }
+		[0-9]+			{ return TOK_CONSTANT; }
+		[0-9]* "." [0-9]*	{ return TOK_CONSTANT; }
+
+		"above"			{ return TOK_ABOVE; }
+		"abs"			{ return TOK_ABS; }
+		"below"			{ return TOK_BELOW; }
+		"cos"			{ return TOK_COS; }
+		"equal"			{ return TOK_EQUAL; }
+		"f2i"			{ return TOK_F2I; }
+		"icos"			{ return TOK_ICOS; }
+		"i2f"			{ return TOK_I2F; }
+		"if"			{ return TOK_IF; }
+		"int"			{ return TOK_INT; }
+		"invsqrt"		{ return TOK_INVSQRT; }
+		"isin"			{ return TOK_ISIN; }
+		"max"			{ return TOK_MAX; }
+		"min"			{ return TOK_MIN; }
+		"quake"			{ return TOK_QUAKE; }
+		"sin"			{ return TOK_SIN; }
+		"sqr"			{ return TOK_SQR; }
+		"sqrt"			{ return TOK_SQRT; }
+		"tsign"			{ return TOK_TSIGN; }
+
+		[a-zA-Z_0-9]+		{ return TOK_IDENT; }
+		"+"			{ return TOK_PLUS; }
+		"-"			{ return TOK_MINUS; }
+		"*"			{ return TOK_MULTIPLY; }
+		"/"			{ return TOK_DIVIDE; }
+		"%"			{ return TOK_PERCENT; }
+		"("			{ return TOK_LPAREN; }
+		")"			{ return TOK_RPAREN; }
+		","			{ return TOK_COMMA; }
+		[\x00-\xff]		{ return TOK_ERROR; }
 	*/
 }
 
