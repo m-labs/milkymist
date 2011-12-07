@@ -1,7 +1,8 @@
 MMDIR=../..
 include $(MMDIR)/software/include.mak
 
-OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o
+OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o \
+	unique.o
 
 all: libfpvm.a
 
@@ -15,6 +16,9 @@ parser.h: parser.c
 %.c: %.y
 	lemon $<
 
+%.h %.inc: %.ids
+	./idgen $<
+
 libfpvm.a: $(OBJECTS)
 	$(AR) clr libfpvm.a $(OBJECTS)
 	$(RANLIB) libfpvm.a
@@ -26,6 +30,7 @@ depend: parser.c scanner.c
 
 clean:
 	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out libfpvm.a .*~ *~ Makefile.bak
+	rm -f fnp.h fnp.inc
 
 # DO NOT DELETE
 
@@ -67,3 +72,5 @@ scanner.o: ../../software/include/base/stdio.h
 scanner.o: ../../software/include/base/stdlib.h
 scanner.o: ../../software/include/base/string.h
 scanner.o: ../../software/include/base/malloc.h scanner.h parser.h
+unique.o: ../../software/include/base/stdlib.h
+unique.o: ../../software/include/base/string.h unique.h fnp.inc
