@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
 #include <stdio.h>
 #include <base/version.h>
 
@@ -121,14 +120,14 @@ static int lookup(struct fpvm_fragment *fragment, const char *sym)
 	int i;
 
 	for(i=0;i<fragment->nrenamings;i++)
-		if(strcmp(sym, fragment->renamings[i].sym) == 0)
+		if(sym == fragment->renamings[i].sym)
 			return fragment->renamings[i].reg;
 	for(i=0;i<fragment->nbindings;i++)
 		if(fragment->bindings[i].isvar &&
-			(strcmp(sym, fragment->bindings[i].b.v) == 0))
+			(sym == fragment->bindings[i].b.v))
 			return i;
 	for(i=0;i<fragment->ntbindings;i++)
-		if(strcmp(sym, fragment->tbindings[i].sym) == 0)
+		if(sym == fragment->tbindings[i].sym)
 			return fragment->tbindings[i].reg;
 	return FPVM_INVALID_REG;
 }
@@ -151,7 +150,7 @@ static int rename_reg(struct fpvm_fragment *fragment, const char *sym, int reg)
 	int i;
 
 	for(i=0;i<fragment->nrenamings;i++)
-		if(strcmp(sym, fragment->renamings[i].sym) == 0) {
+		if(sym == fragment->renamings[i].sym) {
 			fragment->renamings[i].reg = reg;
 			return 1;
 		}
@@ -573,10 +572,12 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest,
 
 	fragment_backup(fragment, &backup);
 
+	dest = unique(dest);
+
 	/* do not rename output X and Y */
 	use_renaming = fragment->vector_mode
-		&& (strcmp(dest, fragment->tbindings[0].sym) != 0)
-		&& (strcmp(dest, fragment->tbindings[1].sym) != 0);
+		&& (dest == fragment->tbindings[0].sym)
+		&& (dest == fragment->tbindings[1].sym);
 	if(use_renaming) {
 		dest_reg = fragment->next_sur;
 		fragment->next_sur--;
