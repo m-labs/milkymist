@@ -39,7 +39,7 @@ static int strcmp_n(const char *a, const char *b, int n)
 	if (diff)
 		return diff;
 	/* handle implicit NUL in string "a" */
-	return b[n];
+	return -b[n];
 }
 
 
@@ -123,6 +123,7 @@ static void grow_table(void)
 	new = malloc(allocate*sizeof(*vars));
 	memcpy(new, vars, allocated*sizeof(*vars));
 	vars = new;
+	allocated = allocate;
 }
 
 
