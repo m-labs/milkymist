@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "unique.h"
 
@@ -132,6 +133,8 @@ const char *unique(const char *s)
 	const char *res;
 	const char **walk;
 
+	if(!isalnum(*s) && *s != '_')
+		return s;
 	res = search(s);
 	if(res)
 		return res;
@@ -148,6 +151,8 @@ const char *unique_n(const char *s, int n)
 	const char *res;
 	const char **walk;
 
+	if(!isalnum(*s) && *s != '_')
+		return s;
 	res = search_n(s, n);
 	if(res)
 		return res;
