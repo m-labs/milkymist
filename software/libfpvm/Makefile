@@ -1,8 +1,11 @@
 MMDIR=../..
+INCLUDES_NOLIBC=-DPRINTF_FLOAT 
 include $(MMDIR)/software/include.mak
 
 OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o \
 	unique.o
+
+.PHONY: all clean depend install
 
 all: libfpvm.a
 
@@ -23,54 +26,38 @@ libfpvm.a: $(OBJECTS)
 	$(AR) clr libfpvm.a $(OBJECTS)
 	$(RANLIB) libfpvm.a
 
-.PHONY: clean depend
+install: all
+	test -n "$(RTEMS_MAKEFILE_PATH)"
+	cp libfpvm.a $(RTEMS_MAKEFILE_PATH)/lib
+	mkdir -p $(RTEMS_MAKEFILE_PATH)/lib/include/fpvm
+	cp ../include/fpvm/* $(RTEMS_MAKEFILE_PATH)/lib/include/fpvm
 
 depend: parser.c scanner.c
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
-	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out libfpvm.a .*~ *~ Makefile.bak
+	rm -f $(OBJECTS) scanner.c parser.c parser.h parser.out libfpvm.a
+	rm -f .*~ *~ Makefile.bak
 	rm -f fnp.h fnp.inc
 
 # DO NOT DELETE
 
-fpvm.o: ../../software/include/base/string.h
-fpvm.o: ../../software/include/base/stdlib.h
-fpvm.o: ../../software/include/base/stdio.h
 fpvm.o: ../../software/include/base/version.h
 fpvm.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
-fpvm.o: ast.h parser_helper.h parser.h
-gfpus.o: ../../software/include/base/stdio.h
-gfpus.o: ../../software/include/base/stdlib.h
+fpvm.o: ast.h unique.h parser_helper.h parser.h
 gfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
 gfpus.o: ../../software/include/fpvm/pfpu.h
 gfpus.o: ../../software/include/fpvm/schedulers.h
 gfpus.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
-lnfpus.o: ../../software/include/base/stdlib.h
-lnfpus.o: ../../software/include/base/stdio.h
-lnfpus.o: ../../software/include/base/string.h
-lnfpus.o: ../../software/include/base/assert.h
 lnfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
 lnfpus.o: ../../software/include/fpvm/pfpu.h
 lnfpus.o: ../../software/include/fpvm/schedulers.h
 lnfpus.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
-parser.o: ../../software/include/base/stdio.h
-parser.o: ../../software/include/base/stdlib.h
-parser.o: ../../software/include/base/assert.h
-parser.o: ../../software/include/base/string.h
-parser.o: ../../software/include/base/malloc.h
-parser.o: ../../software/include/base/math.h ast.h parser.h
-parser_helper.o: ../../software/include/base/stdio.h
-parser_helper.o: ../../software/include/base/stdlib.h
-parser_helper.o: ../../software/include/base/malloc.h scanner.h parser.h
-parser_helper.o: ast.h parser_helper.h
-pfpu.o: ../../software/include/base/stdio.h
-pfpu.o: ../../software/include/base/stdlib.h ../../software/include/hw/pfpu.h
-pfpu.o: ../../software/include/hw/common.h ../../software/include/fpvm/fpvm.h
-pfpu.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/pfpu.h
-scanner.o: ../../software/include/base/stdio.h
-scanner.o: ../../software/include/base/stdlib.h
-scanner.o: ../../software/include/base/string.h
-scanner.o: ../../software/include/base/malloc.h scanner.h parser.h
-unique.o: ../../software/include/base/stdlib.h
-unique.o: ../../software/include/base/string.h unique.h fnp.inc
+parser.o: ast.h parser.h
+parser_helper.o: scanner.h parser.h ast.h parser_helper.h
+pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
+pfpu.o: ../../software/include/fpvm/fpvm.h ../../software/include/fpvm/is.h
+pfpu.o: ../../software/include/fpvm/pfpu.h
+scanner.o: unique.h scanner.h parser.h
+test.o: fnp.h unique.h
+unique.o: unique.h fnp.inc

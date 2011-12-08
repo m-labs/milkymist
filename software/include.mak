@@ -32,7 +32,10 @@ endif
 
 # Toolchain options
 #
-INCLUDES=-I$(MMDIR)/software/include -I$(MMDIR)/software/include/base -I$(MMDIR)/tools
-ASFLAGS=$(INCLUDES) -nostdinc
-CFLAGS=-O9 -nostdinc -Wall -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled -msign-extend-enabled -fno-builtin -fsigned-char -fsingle-precision-constant $(INCLUDES)
-LDFLAGS=-nostdlib -nodefaultlibs
+INCLUDES_NOLIBC ?= -nostdinc -I$(MMDIR)/software/include/base
+INCLUDES = $(INCLUDES_NOLIBC) -I$(MMDIR)/software/include -I$(MMDIR)/tools
+ASFLAGS = $(INCLUDES) -nostdinc
+CFLAGS = -O9 -Wall -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled \
+	 -msign-extend-enabled -fno-builtin -fsigned-char \
+	 -fsingle-precision-constant $(INCLUDES)
+LDFLAGS = -nostdlib -nodefaultlibs
