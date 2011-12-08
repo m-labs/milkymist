@@ -19,6 +19,11 @@
 #define	INITIAL_ALLOC	64
 
 
+struct key_n {
+	const char *s;
+	int n;
+};
+
 const char *well_known[] = {
 #include "fnp.inc"
 };
@@ -44,63 +49,7 @@ static int strcmp_n(const char *a, const char *b, int n)
 }
 
 
-/* We don't have bsearch, so here's our own version. */
-
-static const char *search(const char *s)
-{
-	int low = 0;
-	int high = sizeof(well_known)/sizeof(*well_known)-1;
-	int mid, res;
-
-	while(low <= high) {
-		mid = (low+high)/2;
-		res = strcmp(s, well_known[mid]);
-		if(!res)
-			return well_known[mid];
-		if(res < 0)
-			high = mid-1;
-		else
-			low = mid+1;
-	}
-	return NULL;
-}
-
-
-static const char *search_n(const char *s, int n)
-{
-	int low = 0;
-	int high = sizeof(well_known)/sizeof(*well_known)-1;
-	int mid, res;
-
-	while(low <= high) {
-		mid = (low+high)/2;
-		res = strcmp_n(s, well_known[mid], n);
-		if(!res)
-			return well_known[mid];
-		if(res < 0)
-			high = mid-1;
-		else
-			low = mid+1;
-	}
-	return NULL;
-}
-
-
-/* We don't have strdup either. */
-
-static char *my_strdup(const char *s)
-{
-	size_t len;
-	char *new;
-
-	len = strlen(s)+1;
-	new = malloc(len);
-	memcpy(new, s, len);
-	return new;
-}
-
-
-static char *my_strdup_n(const char *s, int n)
+static char *strdup_n(const char *s, int n)
 {
 	char *new;
 
@@ -113,54 +62,67 @@ static char *my_strdup_n(const char *s, int n)
 
 static void grow_table(void)
 {
-	int allocate;
-	const char **new;
-
 	if(num_vars != allocated)
 		return;
 
-	/* There's no realloc, so we roll our own.  */
-	allocate = allocated ? allocated*2 : INITIAL_ALLOC;
-	new = malloc(allocate*sizeof(*vars));
-	memcpy(new, vars, allocated*sizeof(*vars));
-	vars = new;
-	allocated = allocate;
+	allocated = allocated ? allocated*2 : INITIAL_ALLOC;
+	vars = realloc(vars, allocated*sizeof(*vars));
+}
+
+
+static int cmp(const void *a, const void *b)
+{
+	return strcmp(a, *(const char **) b);
+}
+
+
+static int cmp_n(const void *a, const void *b)
+{
+	const struct key_n *key = a;
+
+	return strcmp_n(key->s, *(const char **) b, key->n);
 }
 
 
 const char *unique(const char *s)
 {
-	const char *res;
+	const char **res;
 	const char **walk;
 
 	if(!isalnum(*s) && *s != '_')
 		return s;
-	res = search(s);
+	res = bsearch(s, well_known, sizeof(well_known)/sizeof(*well_known),
+	    sizeof(s), cmp);
 	if(res)
-		return res;
+		return *res;
 	for(walk = vars; walk != vars+num_vars; walk++)
 		if(!strcmp(*walk, s))
 			return *walk;
 	grow_table();
-	return vars[num_vars++] = my_strdup(s);
+	return vars[num_vars++] = strdup(s);
 }
 
 
 const char *unique_n(const char *s, int n)
 {
-	const char *res;
+	struct key_n key = {
+		.s = s,
+		.n = n,
+	};
+	const char **res;
 	const char **walk;
 
 	if(!isalnum(*s) && *s != '_')
 		return s;
-	res = search_n(s, n);
+	res = bsearch(&key, well_known, sizeof(well_known)/sizeof(*well_known),
+	    sizeof(s), cmp_n);
 	if(res)
-		return res;
+		return *res;
 	for(walk = vars; walk != vars+num_vars; walk++)
 		if(!strcmp_n(s, *walk, n))
 			return *walk;
 	grow_table();
-	return vars[num_vars++] = my_strdup_n(s, n);
+	return vars[num_vars++] = strdup_n(s, n);
 }
 
 
