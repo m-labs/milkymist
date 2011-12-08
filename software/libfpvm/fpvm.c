@@ -576,8 +576,8 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest,
 
 	/* do not rename output X and Y */
 	use_renaming = fragment->vector_mode
-		&& (dest == fragment->tbindings[0].sym)
-		&& (dest == fragment->tbindings[1].sym);
+		&& (dest != fragment->tbindings[0].sym)
+		&& (dest != fragment->tbindings[1].sym);
 	if(use_renaming) {
 		dest_reg = fragment->next_sur;
 		fragment->next_sur--;
