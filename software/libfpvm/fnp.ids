@@ -1,4 +1,41 @@
 #
+# fnp.ids - Identifiers we already know Flickernoise will use
+#
+# We sort this list at compile time and can then perform a quick O(M*log N)
+# search on it, with M being the average length of an identifier and N the
+# number of identifiers in this list.
+#
+# User-defined identifiers and identifiers omitted from fnp.ids for any
+# other reason currently go to a linear list where they're searched in
+# O(M*N) time.
+#
+
+#
+# Built-in functions
+#
+
+above
+abs
+below
+cos
+equal
+f2i
+icos
+i2f
+if
+int
+invsqrt
+isin
+max
+min
+quake
+sin
+sqr
+sqrt
+tsign
+
+#
+#
 # Per-Frame Variables
 #
 
@@ -191,3 +228,57 @@ midi5
 midi6
 midi7
 midi8
+
+#
+# FPVM internal variables
+#
+
+_Xo
+_Yo
+_Xi
+_Yi
+
+#
+# PVV internal variables
+#
+
+# Initialization
+
+x
+y
+rad
+
+# Zoom
+
+_invzoom
+_xy
+_yz
+
+# Scale
+
+_xs
+_ys
+
+# Warp
+
+_warptime
+_invwarpscale
+_f0
+_f1
+_f2
+_f3
+_ox2
+_oy2
+_xw
+_yw
+
+# Rotate
+
+_cosr
+_sinr
+_u
+_v
+_xr
+_yr
+_xd
+_yd
