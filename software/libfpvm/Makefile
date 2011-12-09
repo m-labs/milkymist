@@ -3,7 +3,7 @@ INCLUDES_NOLIBC=-DPRINTF_FLOAT
 include $(MMDIR)/software/include.mak
 
 OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o \
-	unique.o
+	unique.o fpvm-export.o
 
 .PHONY: all clean depend install
 
@@ -42,9 +42,12 @@ clean:
 
 # DO NOT DELETE
 
+fpvm-emigree.o: ../../software/include/fpvm/fpvm.h
+fpvm-emigree.o: ../../software/include/fpvm/is.h ast.h unique.h
+fpvm-emigree.o: parser_helper.h
 fpvm.o: ../../software/include/base/version.h
 fpvm.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
-fpvm.o: ast.h unique.h parser_helper.h parser.h
+fpvm.o: ast.h
 gfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
 gfpus.o: ../../software/include/fpvm/pfpu.h
 gfpus.o: ../../software/include/fpvm/schedulers.h

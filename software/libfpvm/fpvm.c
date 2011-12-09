@@ -22,15 +22,17 @@
 #include <fpvm/fpvm.h>
 
 #include "ast.h"
-#include "unique.h"
-#include "parser_helper.h"
+
+
+const char *_Xi, *_Yi, *_Xo, *_Yo; /* unique, provided by user of libfpvm */
+
 
 const char *fpvm_version()
 {
 	return VERSION;
 }
 
-void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
+void fpvm_do_init(struct fpvm_fragment *fragment, int vector_mode)
 {
 	fragment->last_error[0] = 0;
 	fragment->bind_callback = NULL;
@@ -38,18 +40,18 @@ void fpvm_init(struct fpvm_fragment *fragment, int vector_mode)
 
 	fragment->nbindings = 3;
 	fragment->bindings[0].isvar = 1;
-	fragment->bindings[0].b.v = unique("_Xi");
+	fragment->bindings[0].b.v = _Xi;
 	fragment->bindings[1].isvar = 1;
-	fragment->bindings[1].b.v = unique("_Yi");
+	fragment->bindings[1].b.v = _Yi;
 	/* Prevent binding of R2 (we need it for "if") */
 	fragment->bindings[2].isvar = 1;
 	fragment->bindings[2].b.v = "";
 
 	fragment->ntbindings = 2;
 	fragment->tbindings[0].reg = -1;
-	fragment->tbindings[0].sym = unique("_Xo");
+	fragment->tbindings[0].sym = _Xo;
 	fragment->tbindings[1].reg = -2;
-	fragment->tbindings[1].sym = unique("_Yo");
+	fragment->tbindings[1].sym = _Yo;
 
 	fragment->nrenamings = 0;
 
@@ -554,24 +556,15 @@ static void fragment_restore(struct fpvm_fragment *fragment,
 	fragment->ninstructions = backup->ninstructions;
 }
 
-int fpvm_assign(struct fpvm_fragment *fragment, const char *dest,
-    const char *expr)
+int fpvm_do_assign(struct fpvm_fragment *fragment, const char *dest,
+    struct ast_node *n)
 {
-	struct ast_node *n;
 	int dest_reg;
 	struct fpvm_backup backup;
 	int created;
 	int use_renaming;
 
-	n = fpvm_parse(expr);
-	if(n == NULL) {
-		snprintf(fragment->last_error, FPVM_MAXERRLEN, "Parse error");
-		return 0;
-	}
-
 	fragment_backup(fragment, &backup);
-
-	dest = unique(dest);
 
 	/* do not rename output X and Y */
 	use_renaming = fragment->vector_mode
@@ -586,7 +579,6 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest,
 	if(dest_reg == FPVM_INVALID_REG) {
 		snprintf(fragment->last_error, FPVM_MAXERRLEN,
 		    "Failed to allocate register for destination");
-		fpvm_parse_free(n);
 		fragment_restore(fragment, &backup);
 		return 0;
 	}
@@ -596,19 +588,16 @@ int fpvm_assign(struct fpvm_fragment *fragment, const char *dest,
 	else
 		fragment->final_dest = FPVM_INVALID_REG;
 	if(compile(fragment, dest_reg, n) == FPVM_INVALID_REG) {
-		fpvm_parse_free(n);
 		fragment_restore(fragment, &backup);
 		return 0;
 	}
 	if(use_renaming) {
 		if(!rename_reg(fragment, dest, dest_reg)) {
-			fpvm_parse_free(n);
 			fragment_restore(fragment, &backup);
 			return 0;
 		}
 	}
 
-	fpvm_parse_free(n);
 	return 1;
 }
 

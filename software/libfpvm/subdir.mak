@@ -1,5 +1,5 @@
 OBJECTS=fpvm.o parser_helper.o scanner.o parser.o gfpus.o lnfpus.o pfpu.o \
-	unique.o
+	unique.o fpvm-export.o
 
 all: libfpvm.a
 

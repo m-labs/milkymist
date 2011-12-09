@@ -101,6 +101,8 @@ struct fpvm_fragment {
 	int vector_mode;
 };
 
+extern const char *_Xi, *_Yi, *_Xo, *_Yo;
+
 const char *fpvm_version();
 
 void fpvm_init(struct fpvm_fragment *fragment, int vector_mode);
