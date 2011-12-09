@@ -20,7 +20,36 @@
 
 #define NDEBUG
 
-#define IDENTIFIER_SIZE 24
+enum ast_op {
+	op_trouble,	/* null value */
+	op_ident,
+	op_constant,
+	op_plus,
+	op_minus,
+	op_multiply,
+	op_divide,
+	op_percent,
+	op_abs,
+	op_isin,
+	op_icos,
+	op_sin,
+	op_cos,
+	op_above,
+	op_below,
+	op_equal,
+	op_i2f,
+	op_f2i,
+	op_if,
+	op_tsign,
+	op_quake,
+	op_not,
+	op_sqr,
+	op_sqrt,
+	op_invsqrt,
+	op_min,
+	op_max,
+	op_int,
+};
 
 struct id {
 	int token;
@@ -36,7 +65,7 @@ struct ast_branches {
 };
 
 struct ast_node {
-	int token;
+	enum ast_op op;
 	/*
 	 * label is an empty string:
 	 *   node is a constant

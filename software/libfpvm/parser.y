@@ -25,13 +25,44 @@
 	#include "parser.h"
 
 
+	const enum ast_op tok2op[] = {
+		[TOK_IDENT]	= op_ident,
+		[TOK_CONSTANT]	= op_constant,
+		[TOK_PLUS]	= op_plus,
+		[TOK_MINUS]	= op_minus,
+		[TOK_MULTIPLY]	= op_multiply,
+		[TOK_DIVIDE]	= op_divide,
+		[TOK_PERCENT]	= op_percent,
+		[TOK_ABS]	= op_abs,
+		[TOK_ISIN]	= op_isin,
+		[TOK_ICOS]	= op_icos,
+		[TOK_SIN]	= op_sin,
+		[TOK_COS]	= op_cos,
+		[TOK_ABOVE]	= op_above,
+		[TOK_BELOW]	= op_below,
+		[TOK_EQUAL]	= op_equal,
+		[TOK_I2F]	= op_i2f,
+		[TOK_F2I]	= op_f2i,
+		[TOK_IF]	= op_if,
+		[TOK_TSIGN]	= op_tsign,
+		[TOK_QUAKE]	= op_quake,
+		[TOK_NOT]	= op_not,
+		[TOK_SQR]	= op_sqr,
+		[TOK_SQRT]	= op_sqrt,
+		[TOK_INVSQRT]	= op_invsqrt,
+		[TOK_MIN]	= op_min,
+		[TOK_MAX]	= op_max,
+		[TOK_INT]	= op_int,
+		
+	};
+
 	struct ast_node *node(int token, const char *id, struct ast_node *a,
 	     struct ast_node *b, struct ast_node *c)
 	{
 		struct ast_node *n;
 
 		n = malloc(sizeof(struct ast_node));
-		n->token = token;
+		n->op = tok2op[token];
 		n->label = id;
 		n->contents.branches.a = a;
 		n->contents.branches.b = b;
