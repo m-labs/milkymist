@@ -15,10 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __AST_H
-#define __AST_H
-
-#define NDEBUG
+#ifndef __FPVM_AST_H
+#define __FPVM_AST_H
 
 enum ast_op {
 	op_trouble,	/* null value */
@@ -51,12 +49,6 @@ enum ast_op {
 	op_int,
 };
 
-struct id {
-	int token;
-	const char *label;
-	float constant;
-};
-
 /* maximum supported arity is 3 */
 struct ast_branches {
 	struct ast_node *a;
@@ -81,8 +73,4 @@ struct ast_node {
 	} contents;
 };
 
-void *ParseAlloc(void *(*mallocProc)(size_t));
-void ParseFree(void *p, void (*freeProc)(void*));
-void Parse(void *yyp, int yymajor, struct id *yyminor, struct ast_node **p);
-
-#endif /* __AST_H */
+#endif /* __FPVM_AST_H */

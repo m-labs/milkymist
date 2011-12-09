@@ -42,12 +42,12 @@ clean:
 
 # DO NOT DELETE
 
-fpvm-emigree.o: ../../software/include/fpvm/fpvm.h
-fpvm-emigree.o: ../../software/include/fpvm/is.h ast.h unique.h
-fpvm-emigree.o: parser_helper.h
+fpvm-export.o: ../../software/include/fpvm/fpvm.h
+fpvm-export.o: ../../software/include/fpvm/is.h
+fpvm-export.o: ../../software/include/fpvm/ast.h unique.h parser_helper.h
 fpvm.o: ../../software/include/base/version.h
 fpvm.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
-fpvm.o: ast.h
+fpvm.o: ../../software/include/fpvm/ast.h
 gfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
 gfpus.o: ../../software/include/fpvm/pfpu.h
 gfpus.o: ../../software/include/fpvm/schedulers.h
@@ -56,8 +56,9 @@ lnfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
 lnfpus.o: ../../software/include/fpvm/pfpu.h
 lnfpus.o: ../../software/include/fpvm/schedulers.h
 lnfpus.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
-parser.o: ast.h parser.h
-parser_helper.o: scanner.h parser.h ast.h parser_helper.h
+parser.o: ../../software/include/fpvm/ast.h parser_itf.h parser.h
+parser_helper.o: ../../software/include/fpvm/ast.h scanner.h parser.h
+parser_helper.o: parser_itf.h parser_helper.h
 pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 pfpu.o: ../../software/include/fpvm/fpvm.h ../../software/include/fpvm/is.h
 pfpu.o: ../../software/include/fpvm/pfpu.h

@@ -17,9 +17,10 @@
 
 #include <stdio.h>
 #include <malloc.h>
+#include <fpvm/ast.h>
 
 #include "scanner.h"
-#include "ast.h"
+#include "parser_itf.h"
 #include "parser_helper.h"
 
 struct ast_node *fpvm_parse(const char *expr)

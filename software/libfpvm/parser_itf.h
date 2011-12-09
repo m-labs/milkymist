@@ -15,12 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PARSER_HELPER_H
-#define __PARSER_HELPER_H
+#ifndef __PARSER_ITF_H
+#define __PARSER_ITF_H
 
-#include <fpvm/ast.h>
+#define NDEBUG
 
-struct ast_node *fpvm_parse(const char *expr);
-void fpvm_parse_free(struct ast_node *node);
+struct id {
+	int token;
+	const char *label;
+	float constant;
+};
 
-#endif /* __PARSER_HELPER_H */
+void *ParseAlloc(void *(*mallocProc)(size_t));
+void ParseFree(void *p, void (*freeProc)(void*));
+void Parse(void *yyp, int yymajor, struct id *yyminor, struct ast_node **p);
+
+#endif /* __PARSER_ITF_H */

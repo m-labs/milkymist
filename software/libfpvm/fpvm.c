@@ -20,8 +20,7 @@
 
 #include <fpvm/is.h>
 #include <fpvm/fpvm.h>
-
-#include "ast.h"
+#include <fpvm/ast.h>
 
 
 const char *_Xi, *_Yi, *_Xo, *_Yo; /* unique, provided by user of libfpvm */

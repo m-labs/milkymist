@@ -18,8 +18,8 @@
 #include <stdio.h>
 
 #include <fpvm/fpvm.h>
+#include <fpvm/ast.h>
 
-#include "ast.h"
 #include "unique.h"
 #include "parser_helper.h"
 
