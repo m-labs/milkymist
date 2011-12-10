@@ -25,6 +25,7 @@
 #define __FPVM_FPVM_H
 
 #include <fpvm/is.h>
+#include <fpvm/ast.h>
 
 #define FPVM_MAXBINDINGS	128
 #define FPVM_MAXTBINDINGS	128
@@ -105,7 +106,7 @@ extern const char *_Xi, *_Yi, *_Xo, *_Yo;
 
 const char *fpvm_version();
 
-void fpvm_init(struct fpvm_fragment *fragment, int vector_mode);
+void fpvm_do_init(struct fpvm_fragment *fragment, int vector_mode);
 const char *fpvm_get_last_error(struct fpvm_fragment *fragment);
 void fpvm_set_bind_mode(struct fpvm_fragment *fragment, int bind_mode);
 void fpvm_set_bind_callback(struct fpvm_fragment *fragment, fpvm_bind_callback callback, void *user);
@@ -116,7 +117,8 @@ void fpvm_set_yin(struct fpvm_fragment *fragment, const char *sym);
 void fpvm_set_xout(struct fpvm_fragment *fragment, const char *sym);
 void fpvm_set_yout(struct fpvm_fragment *fragment, const char *sym);
 
-int fpvm_assign(struct fpvm_fragment *fragment, const char *dest, const char *expr);
+int fpvm_do_assign(struct fpvm_fragment *fragment, const char *dest,
+    struct ast_node *n);
 
 void fpvm_get_references(struct fpvm_fragment *fragment, int *references);
 
