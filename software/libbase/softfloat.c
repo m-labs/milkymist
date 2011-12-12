@@ -750,7 +750,7 @@ float32 float32_rem( float32 a, float32 b )
     flag aSign, bSign, zSign;
     int16 aExp, bExp, expDiff;
     bits32 aSig, bSig;
-    bits32 q, allZero, alternateASig;
+    bits32 q, alternateASig;
     sbits32 sigMean;
 
     aSig = extractFloat32Frac( a );
@@ -985,7 +985,6 @@ IEC/IEEE Standard for Binary Floating-point Arithmetic.
 flag float32_le_quiet( float32 a, float32 b )
 {
     flag aSign, bSign;
-    int16 aExp, bExp;
 
     if (    ( ( extractFloat32Exp( a ) == 0xFF ) && extractFloat32Frac( a ) )
          || ( ( extractFloat32Exp( b ) == 0xFF ) && extractFloat32Frac( b ) )
