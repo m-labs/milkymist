@@ -27,7 +27,7 @@ static char rx_buf[UKB_RINGBUFFER_SIZE_RX];
 static volatile unsigned int rx_produce;
 static volatile unsigned int rx_consume;
 
-char ukb_readchar(void)
+static char ukb_readchar(void)
 {
 	char c;
 
@@ -37,7 +37,7 @@ char ukb_readchar(void)
 	return c;
 }
 
-int ukb_readchar_nonblock(void)
+static int ukb_readchar_nonblock(void)
 {
 	return (rx_consume != rx_produce);
 }
