@@ -198,7 +198,6 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 				int m;
 				float f;
 				int integer;
-				int i;
 				
 				/* until I sort out how to disable this stupid promotion to double ... */
 				f = *(va_arg(args, float *));
