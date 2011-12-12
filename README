@@ -26,27 +26,9 @@ You will need:
  - Xilinx ISE for synthesizing the FPGA bitstream (WebPack is enough),
  - LatticeMico32 toolchain for building the SoC software,
  - AVR toolchain for building the USB firmware,
- - SRecord,
  - xxd,
  - native Clang/LLVM toolchain,
- - libGD,
- - RE2C,
- - Lemon parser generator.
-
-To regenerate the FIR filter coefficients (only if you touch it):
- - Scilab.
-
-NB. Before switching synthesis tools, don't forget to run "make clean" in the
-synthesis directory.
-
-
-[> Output files
- /boards/xxx/synthesis/build/system.bit build_bitstream.sh FPGA bitstream.
- /software/bios/bios.bin                build_bios.sh      BIOS image.
- /software/demo/boot.bin                build_demo.sh      Demonstration firmware image.
- /boards/xxx/flash/yyy.fpg              use Makefile       Flash images.
- /doc/xxx.pdf                           build_doc.sh       System-wide documentation.
- /cores/xxx/doc/xxx.pdf                 build_doc.sh       Core-specific documentation.
+ - libGD.
 
 
 [> Development
