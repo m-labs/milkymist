@@ -20,6 +20,6 @@
 
 extern const struct board_desc *brd_desc;
 
-void brd_init();
+void brd_init(void);
 
 #endif /* __HAL_BRD_H */

@@ -29,7 +29,7 @@ const struct board_desc *brd_desc;
 
 #define display_capability(cap, val) if(val) printf("BRD: "cap": Yes\n"); else printf("BRD: "cap": No\n")
 
-static void display_capabilities()
+static void display_capabilities(void)
 {
 	unsigned int cap;
 

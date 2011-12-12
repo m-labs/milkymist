@@ -49,8 +49,8 @@ char *number(char *buf, char *end, unsigned long num, int base, int size, int pr
 long strtol(const char *nptr, char **endptr, int base);
 float atof(const char *s);
 
-unsigned int rand();
-void abort();
+unsigned int rand(void);
+void abort(void);
 
 void *malloc(size_t size);
 void free(void *p);

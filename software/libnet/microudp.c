@@ -120,7 +120,7 @@ static ethernet_buffer *rxbuffer1;
 static int txlen;
 static ethernet_buffer *txbuffer;
 
-static void send_packet()
+static void send_packet(void)
 {
 	unsigned int crc;
 	
@@ -142,7 +142,7 @@ static unsigned int my_ip;
 static unsigned char cached_mac[6];
 static unsigned int cached_ip;
 
-static void process_arp()
+static void process_arp(void)
 {
 	if(rxlen < 68) return;
 	if(rxbuffer->frame.contents.arp.hwtype != ARP_HWTYPE_ETHERNET) return;
@@ -253,7 +253,7 @@ static unsigned short ip_checksum(unsigned int r, void *buffer, unsigned int len
 	return r;
 }
 
-void *microudp_get_tx_buffer()
+void *microudp_get_tx_buffer(void)
 {
 	return txbuffer->frame.contents.udp.payload;
 }
@@ -318,7 +318,7 @@ int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int
 
 static udp_callback rx_callback;
 
-static void process_ip()
+static void process_ip(void)
 {
 	if(rxlen < (sizeof(struct ethernet_header)+sizeof(struct udp_frame))) return;
 	/* We don't verify UDP and IP checksums and rely on the Ethernet checksum solely */
@@ -341,7 +341,7 @@ void microudp_set_callback(udp_callback callback)
 	rx_callback = callback;
 }
 
-static void process_frame()
+static void process_frame(void)
 {
 	int i;
 	unsigned int received_crc;
@@ -388,7 +388,7 @@ void microudp_start(unsigned char *macaddr, unsigned int ip)
 	CSR_MINIMAC_SETUP = 0;
 }
 
-void microudp_service()
+void microudp_service(void)
 {
 	if(irq_pending() & IRQ_ETHRX) {
 		if(CSR_MINIMAC_STATE0 == MINIMAC_STATE_PENDING) {

@@ -18,10 +18,10 @@
 #ifndef __SYSTEM_H
 #define __SYSTEM_H
 
-void flush_cpu_icache();
-void flush_cpu_dcache();
-void flush_bridge_cache();
-__attribute__((noreturn)) void reboot();
-__attribute__((noreturn)) void reconf();
+void flush_cpu_icache(void);
+void flush_cpu_dcache(void);
+void flush_bridge_cache(void);
+__attribute__((noreturn)) void reboot(void);
+__attribute__((noreturn)) void reconf(void);
 
 #endif /* __SYSTEM_H */

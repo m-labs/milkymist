@@ -18,7 +18,7 @@
 #include <hw/minimac.h>
 #include <net/mdio.h>
 
-static void delay()
+static void delay(void)
 {
 	volatile int i;
 	for(i=0;i<1000;i++);
@@ -44,7 +44,7 @@ static void raw_write(unsigned int word, int bitcount)
 	}
 }
 
-static unsigned int raw_read()
+static unsigned int raw_read(void)
 {
 	unsigned int word;
 	unsigned int i;
@@ -62,7 +62,7 @@ static unsigned int raw_read()
 	return word;
 }
 
-static void raw_turnaround()
+static void raw_turnaround(void)
 {
 	CSR_MINIMAC_MDIO = MINIMAC_MDIO_CLK;
 	delay();

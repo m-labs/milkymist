@@ -21,11 +21,11 @@
 typedef void (*mouse_event_cb)(unsigned char buttons, char dx, char dy, unsigned char wheel);
 typedef void (*keyboard_event_cb)(unsigned char modifiers, unsigned char key);
 
-void usb_init();
+void usb_init(void);
 void usb_debug_enable(int en);
 void usb_set_mouse_cb(mouse_event_cb cb);
 void usb_set_keyboard_cb(keyboard_event_cb cb);
 
-void usb_isr();
+void usb_isr(void);
 
 #endif /* __HAL_USB_H */

@@ -51,8 +51,8 @@ struct tmu_td {
 
 int tmu_ready;
 
-void tmu_init();
-void tmu_isr();
+void tmu_init(void);
+void tmu_isr(void);
 int tmu_submit_task(struct tmu_td *td);
 
 #endif /* __HAL_TMU_H */

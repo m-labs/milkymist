@@ -42,7 +42,7 @@ unsigned char previous_keys[5];
 static keyboard_event_cb keyboard_cb;
 static int keyboard_consume;
 
-void usb_init()
+void usb_init(void)
 {
 	int nwords;
 	int i;
@@ -86,7 +86,7 @@ void usb_debug_enable(int en)
 	debug_enable = en;
 }
 
-static void flush_debug_buffer()
+static void flush_debug_buffer(void)
 {
 	char debug_buffer_fmt[266];
 	int i;
@@ -112,7 +112,7 @@ void usb_set_keyboard_cb(keyboard_event_cb cb)
 	keyboard_cb = cb;
 }
 
-void usb_isr()
+void usb_isr(void)
 {
 	char c;
 

@@ -23,19 +23,19 @@
 
 //#define MEMCARD_DEBUG
 
-static void memcard_start_cmd_tx()
+static void memcard_start_cmd_tx(void)
 {
 	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_TX;
 }
 
-static void memcard_start_cmd_rx()
+static void memcard_start_cmd_rx(void)
 {
 	CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX;
 	CSR_MEMCARD_START = MEMCARD_START_CMD_RX;
 	CSR_MEMCARD_ENABLE = MEMCARD_ENABLE_CMD_RX;
 }
 
-static void memcard_start_cmd_dat_rx()
+static void memcard_start_cmd_dat_rx(void)
 {
 	CSR_MEMCARD_PENDING = MEMCARD_PENDING_CMD_RX|MEMCARD_PENDING_DAT_RX;
 	CSR_MEMCARD_START = MEMCARD_START_CMD_RX|MEMCARD_START_DAT_RX;
@@ -80,7 +80,7 @@ static void memcard_send_command(unsigned char cmd, unsigned int arg)
 	}
 }
 
-static void memcard_send_dummy()
+static void memcard_send_dummy(void)
 {
 	CSR_MEMCARD_CMD = 0xff;
 	while(CSR_MEMCARD_PENDING & MEMCARD_PENDING_CMD_TX);
@@ -170,7 +170,7 @@ static int memcard_receive_command_data(unsigned char *command, unsigned int *da
 	return 1;
 }
 
-static int memcard_init()
+static int memcard_init(void)
 {
 	unsigned char b[17];
 	unsigned int rca;

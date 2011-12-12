@@ -27,7 +27,7 @@
 
 static int sec;
 
-void time_init()
+void time_init(void)
 {
 	unsigned int mask;
 	
@@ -43,7 +43,7 @@ void time_init()
 	printf("TIM: system timer started\n");
 }
 
-void time_isr()
+void time_isr(void)
 {
 	irq_ack(IRQ_TIMER0);
 	sec++;

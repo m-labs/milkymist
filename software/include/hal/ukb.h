@@ -18,6 +18,6 @@
 #ifndef __HAL_UKB_H
 #define __HAL_UKB_H
 
-void ukb_init();
+void ukb_init(void);
 
 #endif /* __HAL_UKB_H */

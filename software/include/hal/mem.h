@@ -20,6 +20,6 @@
 
 #define BANK_SDRAM	(0)
 
-void mem_init();
+void mem_init(void);
 
 #endif /* __HAL_MEM_H */

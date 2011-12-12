@@ -21,7 +21,7 @@
 
 static int i2c_started;
 
-static int i2c_init()
+static int i2c_init(void)
 {
 	unsigned int timeout;
 
@@ -34,7 +34,7 @@ static int i2c_init()
 	return timeout;
 }
 
-static void i2c_delay()
+static void i2c_delay(void)
 {
 	unsigned int i;
 
@@ -42,7 +42,7 @@ static void i2c_delay()
 }
 
 /* I2C bit-banging functions from http://en.wikipedia.org/wiki/I2c */
-static unsigned int i2c_read_bit()
+static unsigned int i2c_read_bit(void)
 {
 	unsigned int bit;
 
@@ -71,7 +71,7 @@ static void i2c_write_bit(unsigned int bit)
 	CSR_BT656CAP_I2C &= ~BT656CAP_I2C_SDC;
 }
 
-static void i2c_start_cond()
+static void i2c_start_cond(void)
 {
 	if(i2c_started) {
 		/* set SDA to 1 */
@@ -86,7 +86,7 @@ static void i2c_start_cond()
 	i2c_started = 1;
 }
 
-static void i2c_stop_cond()
+static void i2c_stop_cond(void)
 {
 	/* set SDA to 0 */
 	CSR_BT656CAP_I2C = BT656CAP_I2C_SDAOE;
@@ -133,7 +133,7 @@ static const char vreg_dat[] = {
 	0x00, 0x41, 0x40, 0x40, 0x16, 0xC3, 0xE4, 0x04, 0x05, 0x80, 0x80, 0x20, 0x18, 0xED, 0xC5, 0x93, 0x00, 0xC9, 0x40, 0x3C, 0xCA, 0xD5, 0x50, 0x4E, 0xDD, 0x51, 0xA0, 0xEA, 0x3E, 0x0F, 0x3E, 0x00
 };
 
-void vin_init()
+void vin_init(void)
 {
 	int i;
 	

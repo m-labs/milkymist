@@ -20,28 +20,28 @@
 
 #include <hw/ac97.h>
 
-void snd_init();
-void snd_isr_crrequest();
-void snd_isr_crreply();
-void snd_isr_dmar();
-void snd_isr_dmaw();
+void snd_init(void);
+void snd_isr_crrequest(void);
+void snd_isr_crreply(void);
+void snd_isr_dmar(void);
+void snd_isr_dmaw(void);
 
 unsigned int snd_ac97_read(unsigned int addr);
 void snd_ac97_write(unsigned int addr, unsigned int value);
 
 typedef void (*snd_callback)(short *buffer, void *user);
 
-void snd_play_empty();
+void snd_play_empty(void);
 int snd_play_refill(short *buffer);
 void snd_play_start(snd_callback callback, unsigned int nsamples, void *user);
-void snd_play_stop();
-int snd_play_active();
+void snd_play_stop(void);
+int snd_play_active(void);
 
-void snd_record_empty();
+void snd_record_empty(void);
 int snd_record_refill(short *buffer);
 void snd_record_start(snd_callback callback, unsigned int nsamples, void *user);
-void snd_record_stop();
-int snd_record_active();
+void snd_record_stop(void);
+int snd_record_active(void);
 
 /*
  * Each sample has 2 channels and 16 bits per channel

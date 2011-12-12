@@ -18,7 +18,7 @@
 #ifndef __HAL_VIN_H
 #define __HAL_VIN_H
 
-void vin_init();
+void vin_init(void);
 unsigned char vin_read_reg(unsigned char addr);
 void vin_write_reg(unsigned char addr, unsigned char val);
 

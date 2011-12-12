@@ -37,8 +37,8 @@ struct pfpu_td {
 	void *user; /* < for application use */
 };
 
-void pfpu_init();
-void pfpu_isr();
+void pfpu_init(void);
+void pfpu_isr(void);
 int pfpu_submit_task(struct pfpu_td *td);
 
 #endif /* __HAL_PFPU_H */

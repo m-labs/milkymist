@@ -26,9 +26,9 @@ typedef void (*udp_callback)(unsigned int src_ip, unsigned short src_port, unsig
 
 void microudp_start(unsigned char *macaddr, unsigned int ip);
 int microudp_arp_resolve(unsigned int ip);
-void *microudp_get_tx_buffer();
+void *microudp_get_tx_buffer(void);
 int microudp_send(unsigned short src_port, unsigned short dst_port, unsigned int length);
 void microudp_set_callback(udp_callback callback);
-void microudp_service();
+void microudp_service(void);
 
 #endif /* __NET_MICROUDP_H */

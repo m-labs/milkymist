@@ -32,11 +32,11 @@ enum {
 };
 
 void vga_init(int blanked);
-void vga_blank();
-void vga_unblank();
-void vga_swap_buffers();
+void vga_blank(void);
+void vga_unblank(void);
+void vga_swap_buffers(void);
 void vga_set_console(int console);
-int vga_get_console();
+int vga_get_console(void);
 int vga_read_edid(char *buffer);
 void vga_set_mode(int mode);
 

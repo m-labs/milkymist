@@ -23,14 +23,14 @@ struct timestamp {
 	int usec;
 };
 
-void time_init();
-void time_isr();
+void time_init(void);
+void time_isr(void);
 
 void time_get(struct timestamp *ts);
 
 void time_add(struct timestamp *dest, struct timestamp *delta);
 void time_diff(struct timestamp *dest, struct timestamp *t1, struct timestamp *t0);
 
-void time_tick(); /* provided by app */
+void time_tick(void); /* provided by app */
 
 #endif /* __HAL_TIME_H */

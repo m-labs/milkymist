@@ -18,7 +18,7 @@
 #ifndef __HAL_DMX_H
 #define __HAL_DMX_H
 
-void dmx_init();
+void dmx_init(void);
 void dmx_thru_mode(int thru);
 void dmx_set(int channel, int value);
 int dmx_get(int channel);

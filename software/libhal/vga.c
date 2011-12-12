@@ -46,7 +46,7 @@ unsigned short int *vga_frontbuffer; /* < buffer currently displayed (or request
 unsigned short int *vga_backbuffer;  /* < buffer currently drawn to, never read by HW */
 unsigned short int *vga_lastbuffer;  /* < buffer displayed just before (or HW finishing last scan) */
 
-static int i2c_init();
+static int i2c_init(void);
 
 /* Text mode framebuffer */
 static unsigned short int framebuffer_text[1024*768] __attribute__((aligned(32)));
@@ -78,7 +78,7 @@ void vga_init(int blanked)
 	console_set_write_hook(write_hook);
 }
 
-void vga_blank()
+void vga_blank(void)
 {
 	if(!vga_blanked) {
 		CSR_VGA_RESET = VGA_RESET;
@@ -86,7 +86,7 @@ void vga_blank()
 	}
 }
 
-void vga_unblank()
+void vga_unblank(void)
 {
 	if(vga_blanked) {
 		CSR_VGA_RESET = 0;
@@ -94,7 +94,7 @@ void vga_unblank()
 	}
 }
 
-void vga_swap_buffers()
+void vga_swap_buffers(void)
 {
 	unsigned short int *p;
 
@@ -123,7 +123,7 @@ void vga_set_console(int console)
 		CSR_VGA_BASEADDRESS = (unsigned int)vga_frontbuffer;
 }
 
-int vga_get_console()
+int vga_get_console(void)
 {
 	return console_mode;
 }
@@ -131,7 +131,7 @@ int vga_get_console()
 /* DDC */
 int i2c_started;
 
-static int i2c_init()
+static int i2c_init(void)
 {
 	unsigned int timeout;
 
@@ -144,7 +144,7 @@ static int i2c_init()
 	return timeout;
 }
 
-static void i2c_delay()
+static void i2c_delay(void)
 {
 	unsigned int i;
 
@@ -152,7 +152,7 @@ static void i2c_delay()
 }
 
 /* I2C bit-banging functions from http://en.wikipedia.org/wiki/I2c */
-static unsigned int i2c_read_bit()
+static unsigned int i2c_read_bit(void)
 {
 	unsigned int bit;
 
@@ -181,7 +181,7 @@ static void i2c_write_bit(unsigned int bit)
 	CSR_VGA_DDC &= ~VGA_DDC_SDC;
 }
 
-static void i2c_start_cond()
+static void i2c_start_cond(void)
 {
 	if(i2c_started) {
 		/* set SDA to 1 */
@@ -197,7 +197,7 @@ static void i2c_start_cond()
 	i2c_started = 1;
 }
 
-static void i2c_stop_cond()
+static void i2c_stop_cond(void)
 {
 	/* set SDA to 0 */
 	CSR_VGA_DDC = VGA_DDC_SDAOE;
@@ -382,7 +382,7 @@ static void scroll_callback(struct tmu_td *td)
 	irq_setmask(oldmask);
 }
 
-static void scroll()
+static void scroll(void)
 {
 	if(tmu_ready) {
 		/* Hardware-accelerated scrolling */		
