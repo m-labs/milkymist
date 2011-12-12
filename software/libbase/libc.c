@@ -564,13 +564,13 @@ int sprintf(char * buf, const char *fmt, ...)
  */
 
 static unsigned int seed;
-unsigned int rand()
+unsigned int rand(void)
 {
 	seed = 129 * seed + 907633385;
 	return seed;
 }
 
-void abort()
+void abort(void)
 {
 	printf("Aborted.");
 	while(1);

@@ -38,7 +38,7 @@
 static volatile int snd_cr_request;
 static volatile int snd_cr_reply;
 
-void snd_init()
+void snd_init(void)
 {
 	unsigned int codec_id;
 	unsigned int mask;
@@ -86,13 +86,13 @@ void snd_init()
 	printf("SND: initialization complete\n");
 }
 
-void snd_isr_crrequest()
+void snd_isr_crrequest(void)
 {
 	snd_cr_request = 1;
 	irq_ack(IRQ_AC97CRREQUEST);
 }
 
-void snd_isr_crreply()
+void snd_isr_crreply(void)
 {
 	snd_cr_reply = 1;
 	irq_ack(IRQ_AC97CRREPLY);
@@ -140,7 +140,7 @@ static void play_start(short *buffer)
 	CSR_AC97_DCTL = AC97_SCTL_EN;
 }
 
-void snd_isr_dmar()
+void snd_isr_dmar(void)
 {
 	/* NB. the callback can give us buffers by calling snd_play_refill() */
 	play_callback(play_queue[play_consume], play_user);
@@ -158,7 +158,7 @@ void snd_isr_dmar()
 	}
 }
 
-void snd_play_empty()
+void snd_play_empty(void)
 {
 	play_produce = 0;
 	play_consume = 0;
@@ -212,7 +212,7 @@ void snd_play_start(snd_callback callback, unsigned int nsamples, void *user)
 	}
 }
 
-void snd_play_stop()
+void snd_play_stop(void)
 {
 	unsigned int oldmask;
 
@@ -224,7 +224,7 @@ void snd_play_stop()
 	irq_setmask(oldmask);
 }
 
-int snd_play_active()
+int snd_play_active(void)
 {
 	return(CSR_AC97_DCTL & AC97_SCTL_EN);
 }
@@ -254,7 +254,7 @@ static void record_start(short *buffer)
 	CSR_AC97_UCTL = AC97_SCTL_EN;
 }
 
-void snd_isr_dmaw()
+void snd_isr_dmaw(void)
 {
 	flush_cpu_dcache();
 
@@ -277,7 +277,7 @@ void snd_isr_dmaw()
 		record_overrun = 1;
 }
 
-void snd_record_empty()
+void snd_record_empty(void)
 {
 	record_produce = 0;
 	record_consume = 0;
@@ -329,7 +329,7 @@ void snd_record_start(snd_callback callback, unsigned int nsamples, void *user)
 		record_overrun = 1;
 }
 
-void snd_record_stop()
+void snd_record_stop(void)
 {
 	unsigned int oldmask;
 
@@ -341,7 +341,7 @@ void snd_record_stop()
 	irq_setmask(oldmask);
 }
 
-int snd_record_active()
+int snd_record_active(void)
 {
 	return(CSR_AC97_UCTL & AC97_SCTL_EN);
 }

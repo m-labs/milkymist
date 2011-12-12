@@ -22,7 +22,7 @@
 
 #include <system.h>
 
-void flush_cpu_icache()
+void flush_cpu_icache(void)
 {
 	asm volatile(
 		"wcsr ICC, r0\n"
@@ -33,7 +33,7 @@ void flush_cpu_icache()
 	);
 }
 
-void flush_cpu_dcache()
+void flush_cpu_dcache(void)
 {
 	asm volatile(
 		"wcsr DCC, r0\n"
@@ -41,7 +41,7 @@ void flush_cpu_dcache()
 	);
 }
 
-void flush_bridge_cache()
+void flush_bridge_cache(void)
 {
 	volatile char *flushbase = (char *)FMLBRG_FLUSH_BASE;
 	int i, offset;
@@ -53,7 +53,7 @@ void flush_bridge_cache()
 	}
 }
 
-__attribute__((noreturn)) void reboot()
+__attribute__((noreturn)) void reboot(void)
 {
 	uart_force_sync(1); /* flush UART buffers */
 	irq_setmask(0);
@@ -70,7 +70,7 @@ static void icap_write(int val, unsigned int w)
 	CSR_ICAP = w;
 }
 
-__attribute__((noreturn)) void reconf()
+__attribute__((noreturn)) void reconf(void)
 {
 	uart_force_sync(1); /* flush UART buffers */
 	irq_setmask(0);

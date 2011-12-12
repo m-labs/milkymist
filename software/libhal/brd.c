@@ -48,7 +48,7 @@ static void display_capabilities(void)
 	display_capability("Memtester ", cap & CAP_MEMTEST);
 }
 
-void brd_init()
+void brd_init(void)
 {
 	int rev;
 	char soc_version[13];

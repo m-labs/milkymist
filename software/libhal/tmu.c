@@ -37,7 +37,7 @@ static unsigned int consume;
 static unsigned int level;
 static int cts;
 
-void tmu_init()
+void tmu_init(void)
 {
 	unsigned int mask;
 	
@@ -90,7 +90,7 @@ static void tmu_start(struct tmu_td *td)
 	CSR_TMU_CTL = td->flags|TMU_CTL_START;
 }
 
-void tmu_isr()
+void tmu_isr(void)
 {
 	if(queue[consume]->callback)
 		queue[consume]->callback(queue[consume]);

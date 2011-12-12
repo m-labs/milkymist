@@ -39,12 +39,12 @@ const struct board_desc *get_board_desc_id(unsigned short int id)
 	return NULL;
 }
 
-const struct board_desc *get_board_desc()
+const struct board_desc *get_board_desc(void)
 {
 	return get_board_desc_id(CSR_SYSTEM_ID & 0xffff);
 }
 
-int get_pcb_revision()
+int get_pcb_revision(void)
 {
 	int r;
 	unsigned int io;

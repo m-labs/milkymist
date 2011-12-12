@@ -434,7 +434,7 @@ int fatfs_load(const char *filename, char *buffer, int size, int *realsize)
 	return n*cluster_size;
 }
 
-void fatfs_done()
+void fatfs_done(void)
 {
 	bd_done();
 }

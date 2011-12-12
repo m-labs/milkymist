@@ -32,7 +32,7 @@ static unsigned int consume;
 static unsigned int level;
 static int cts;
 
-void pfpu_init()
+void pfpu_init(void)
 {
 	unsigned int mask;
 
@@ -98,7 +98,7 @@ static void pfpu_start(struct pfpu_td *td)
 	CSR_PFPU_CTL = PFPU_CTL_START;
 }
 
-void pfpu_isr()
+void pfpu_isr(void)
 {
 	if(queue[consume]->update)
 		update_registers(queue[consume]->registers);

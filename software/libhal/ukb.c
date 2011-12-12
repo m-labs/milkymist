@@ -133,7 +133,7 @@ static void keyboard_cb(unsigned char modifiers, unsigned char key)
 	}
 }
 
-void ukb_init()
+void ukb_init(void)
 {
 	rx_produce = 0;
 	rx_consume = 0;

@@ -44,7 +44,7 @@ static void writechar(char c)
 		write_hook(c);
 }
 
-char readchar()
+char readchar(void)
 {
 	while(1) {
 		if(uart_read_nonblock())
@@ -54,7 +54,7 @@ char readchar()
 	}
 }
 
-int readchar_nonblock()
+int readchar_nonblock(void)
 {
 	return (uart_read_nonblock()
 		|| ((read_nonblock_hook != NULL) && read_nonblock_hook()));

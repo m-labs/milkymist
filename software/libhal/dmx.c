@@ -20,7 +20,7 @@
 
 #include <hal/dmx.h>
 
-void dmx_init()
+void dmx_init(void)
 {
 	int i;
 

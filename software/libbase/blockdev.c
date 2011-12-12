@@ -263,7 +263,7 @@ int bd_readblock(unsigned int block, void *buffer)
 	return memcard_readblock(block, buffer);
 }
 
-void bd_done()
+void bd_done(void)
 {
 }
 

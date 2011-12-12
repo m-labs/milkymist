@@ -29,7 +29,7 @@ struct malloc_bank banks[1] = {
 	}
 };
 
-void mem_init()
+void mem_init(void)
 {
 	int i, n;
 	
