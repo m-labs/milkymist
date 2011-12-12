@@ -26,7 +26,7 @@
 const char *_Xi, *_Yi, *_Xo, *_Yo; /* unique, provided by user of libfpvm */
 
 
-const char *fpvm_version()
+const char *fpvm_version(void)
 {
 	return VERSION;
 }

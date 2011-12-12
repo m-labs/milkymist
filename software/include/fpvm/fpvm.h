@@ -104,7 +104,7 @@ struct fpvm_fragment {
 
 extern const char *_Xi, *_Yi, *_Xo, *_Yo;
 
-const char *fpvm_version();
+const char *fpvm_version(void);
 
 void fpvm_do_init(struct fpvm_fragment *fragment, int vector_mode);
 const char *fpvm_get_last_error(struct fpvm_fragment *fragment);
