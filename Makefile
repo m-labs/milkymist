@@ -10,7 +10,7 @@ BASEDIR=${CURDIR}
 SYNTOOL?=xst
 BOARD?=milkymist-one
 
-SDK_DIRS=libbase libmath libhal libfpvm libnet
+SDK_DIRS=libbase libhal libfpvm libnet
 SW_DIRS=${SDK_DIRS} libhpdmc libfpvm libfpvm/x86-linux libfpvm/lm32-linux bios
 
 CORE_DIRS=ac97 bt656cap conbus dmx fmlbrg fmlmeter hpdmc_ddr32 \
