@@ -389,7 +389,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		 */
 		opa = COMPILE(FPVM_INVALID_REG, node->contents.branches.b);
 		opb = COMPILE(FPVM_INVALID_REG, node->contents.branches.c);
-		COMPILE(FPVM_REG_IFB, node->contents.branches.a);
+		(void) COMPILE(FPVM_REG_IFB, node->contents.branches.a);
 		break;
 	case op_not:
 		if(node->contents.branches.a->op == op_constant) {
