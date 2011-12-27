@@ -27,26 +27,18 @@ clean:
 
 # DO NOT DELETE
 
-fpvm-export.o: ../../software/include/fpvm/fpvm.h
-fpvm-export.o: ../../software/include/fpvm/is.h
-fpvm-export.o: ../../software/include/fpvm/ast.h unique.h parser_helper.h
 fpvm.o: ../../software/include/base/version.h
 fpvm.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
 fpvm.o: ../../software/include/fpvm/ast.h
 gfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
-gfpus.o: ../../software/include/fpvm/pfpu.h
+gfpus.o: ../../software/include/fpvm/ast.h ../../software/include/fpvm/pfpu.h
 gfpus.o: ../../software/include/fpvm/schedulers.h
 gfpus.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 lnfpus.o: ../../software/include/fpvm/is.h ../../software/include/fpvm/fpvm.h
+lnfpus.o: ../../software/include/fpvm/ast.h
 lnfpus.o: ../../software/include/fpvm/pfpu.h
 lnfpus.o: ../../software/include/fpvm/schedulers.h
 lnfpus.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
-parser.o: ../../software/include/fpvm/ast.h parser_itf.h parser.h
-parser_helper.o: ../../software/include/fpvm/ast.h scanner.h parser.h
-parser_helper.o: parser_itf.h parser_helper.h
 pfpu.o: ../../software/include/hw/pfpu.h ../../software/include/hw/common.h
 pfpu.o: ../../software/include/fpvm/fpvm.h ../../software/include/fpvm/is.h
-pfpu.o: ../../software/include/fpvm/pfpu.h
-scanner.o: unique.h scanner.h parser.h
-test.o: fnp.h unique.h
-unique.o: unique.h fnp.inc
+pfpu.o: ../../software/include/fpvm/ast.h ../../software/include/fpvm/pfpu.h
