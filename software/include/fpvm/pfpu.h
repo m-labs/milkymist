@@ -22,6 +22,6 @@
 #define pfpu_to_fpvm(x) (x)
 
 int pfpu_get_latency(int opcode);
-void pfpu_dump(unsigned int *code, unsigned int n);
+void pfpu_dump(const unsigned int *code, unsigned int n);
 
 #endif /* __FPVM_PFPU_H */
