@@ -40,7 +40,7 @@ enum ast_op {
 	op_if,
 	op_tsign,
 	op_quake,
-	op_not,
+	op_negate,
 	op_sqr,
 	op_sqrt,
 	op_invsqrt,

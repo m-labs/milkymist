@@ -391,7 +391,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		opb = COMPILE(FPVM_INVALID_REG, node->contents.branches.c);
 		(void) COMPILE(FPVM_REG_IFB, node->contents.branches.a);
 		break;
-	case op_not:
+	case op_negate:
 		if(node->contents.branches.a->op == op_constant) {
 			/* Node is a negative constant */
 			struct ast_node *n;
@@ -512,7 +512,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 	case op_int:
 		ADD_INT(opa, reg);
 		break;
-	case op_not:
+	case op_negate:
 		opb = find_negative_constant(fragment);
 		if(opb == FPVM_INVALID_REG)
 			return FPVM_INVALID_REG;
