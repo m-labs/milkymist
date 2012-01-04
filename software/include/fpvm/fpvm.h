@@ -26,6 +26,7 @@
 
 #include <fpvm/is.h>
 #include <fpvm/ast.h>
+#include <fpvm/symbol.h>
 
 #define FPVM_MAXBINDINGS	128
 #define FPVM_MAXTBINDINGS	128
@@ -37,19 +38,19 @@
 
 #define FPVM_MAXERRLEN		64
 
-typedef void (*fpvm_bind_callback)(void *, const char *, int);
+typedef void (*fpvm_bind_callback)(void *, struct sym *, int);
 
 struct fpvm_binding {
 	int isvar;
 	union {
 		float c;
-		const char *v;
+		struct sym *v;
 	} b;
 };
 
 struct fpvm_tbinding {
 	int reg;
-	const char *sym;
+	struct sym *sym;
 };
 
 enum {
@@ -102,7 +103,7 @@ struct fpvm_fragment {
 	int vector_mode;
 };
 
-extern const char *_Xi, *_Yi, *_Xo, *_Yo;
+extern struct sym *_Xi, *_Yi, *_Xo, *_Yo;
 
 const char *fpvm_version(void);
 
@@ -111,13 +112,13 @@ const char *fpvm_get_last_error(struct fpvm_fragment *fragment);
 void fpvm_set_bind_mode(struct fpvm_fragment *fragment, int bind_mode);
 void fpvm_set_bind_callback(struct fpvm_fragment *fragment, fpvm_bind_callback callback, void *user);
 
-int fpvm_bind(struct fpvm_fragment *fragment, const char *sym);
-void fpvm_set_xin(struct fpvm_fragment *fragment, const char *sym);
-void fpvm_set_yin(struct fpvm_fragment *fragment, const char *sym);
-void fpvm_set_xout(struct fpvm_fragment *fragment, const char *sym);
-void fpvm_set_yout(struct fpvm_fragment *fragment, const char *sym);
+int fpvm_bind(struct fpvm_fragment *fragment, struct sym *sym);
+void fpvm_set_xin(struct fpvm_fragment *fragment, struct sym *sym);
+void fpvm_set_yin(struct fpvm_fragment *fragment, struct sym *sym);
+void fpvm_set_xout(struct fpvm_fragment *fragment, struct sym *sym);
+void fpvm_set_yout(struct fpvm_fragment *fragment, struct sym *sym);
 
-int fpvm_do_assign(struct fpvm_fragment *fragment, const char *dest,
+int fpvm_do_assign(struct fpvm_fragment *fragment, struct sym *dest,
     struct ast_node *n);
 
 void fpvm_get_references(struct fpvm_fragment *fragment, int *references);

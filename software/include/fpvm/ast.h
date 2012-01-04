@@ -59,18 +59,7 @@ struct ast_branches {
 
 struct ast_node {
 	enum ast_op op;
-	/*
-	 * NOTE: don't use the old convention below. Use node->op and/or
-	 * node_is_op.
-	 *
-	 * label is an empty string:
-	 *   node is a constant
-	 * label is not an empty string and branch A is null:
-	 *   node is variable "label"
-	 * label is not an empty string and branch A is not null:
-	 *   node is function/operator "label"
-	 */
-	const char *label;
+	struct sym *sym;
 	union {
 		struct ast_branches branches;
 		float constant;
