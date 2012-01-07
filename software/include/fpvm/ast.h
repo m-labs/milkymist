@@ -60,6 +60,9 @@ struct ast_branches {
 struct ast_node {
 	enum ast_op op;
 	/*
+	 * NOTE: don't use the old convention below. Use node->op and/or
+	 * node_is_op.
+	 *
 	 * label is an empty string:
 	 *   node is a constant
 	 * label is not an empty string and branch A is null:
@@ -73,5 +76,10 @@ struct ast_node {
 		float constant;
 	} contents;
 };
+
+static inline int node_is_op(const struct ast_node *n)
+{
+	return n->op >= op_plus;
+}
 
 #endif /* __FPVM_AST_H */

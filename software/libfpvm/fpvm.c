@@ -523,7 +523,7 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		opcode = operator2opcode(node->op);
 		if(opcode < 0) {
 			snprintf(fragment->last_error, FPVM_MAXERRLEN,
-			    "Operation not supported: %s", node->label);
+			    "Operation not supported: %d", node->op);
 			return FPVM_INVALID_REG;
 		}
 		ADD_ISN(opcode, opa, opb, reg);
