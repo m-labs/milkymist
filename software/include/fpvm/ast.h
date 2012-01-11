@@ -59,7 +59,7 @@ struct ast_branches {
 
 struct ast_node {
 	enum ast_op op;
-	struct sym *sym;
+	struct fpvm_sym *sym;
 	union {
 		struct ast_branches branches;
 		float constant;

@@ -11,7 +11,7 @@
 #ifndef __FPVM_SYMBOL_H
 #define __FPVM_SYMBOL_H
 
-struct sym {
+struct fpvm_sym {
 	const char *name;
 };
 

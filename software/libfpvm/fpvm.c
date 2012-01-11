@@ -24,9 +24,10 @@
 #include <fpvm/ast.h>
 
 
-struct sym *_Xi, *_Yi, *_Xo, *_Yo; /* unique, provided by user of libfpvm */
+struct fpvm_sym *_Xi, *_Yi, *_Xo, *_Yo;
+	/* unique, provided by user of libfpvm */
 
-static struct sym dummy_sym = { .name = "" };
+static struct fpvm_sym dummy_sym = { .name = "" };
 
 const char *fpvm_version(void)
 {
@@ -80,7 +81,7 @@ void fpvm_set_bind_mode(struct fpvm_fragment *fragment, int bind_mode)
 	fragment->bind_mode = bind_mode;
 }
 
-int fpvm_bind(struct fpvm_fragment *fragment, struct sym *sym)
+int fpvm_bind(struct fpvm_fragment *fragment, struct fpvm_sym *sym)
 {
 	int r;
 	
@@ -97,27 +98,27 @@ int fpvm_bind(struct fpvm_fragment *fragment, struct sym *sym)
 	return r;
 }
 
-void fpvm_set_xin(struct fpvm_fragment *fragment, struct sym *sym)
+void fpvm_set_xin(struct fpvm_fragment *fragment, struct fpvm_sym *sym)
 {
 	fragment->bindings[0].b.v = sym;
 }
 
-void fpvm_set_yin(struct fpvm_fragment *fragment, struct sym *sym)
+void fpvm_set_yin(struct fpvm_fragment *fragment, struct fpvm_sym *sym)
 {
 	fragment->bindings[1].b.v = sym;
 }
 
-void fpvm_set_xout(struct fpvm_fragment *fragment, struct sym *sym)
+void fpvm_set_xout(struct fpvm_fragment *fragment, struct fpvm_sym *sym)
 {
 	fragment->tbindings[0].sym = sym;
 }
 
-void fpvm_set_yout(struct fpvm_fragment *fragment, struct sym *sym)
+void fpvm_set_yout(struct fpvm_fragment *fragment, struct fpvm_sym *sym)
 {
 	fragment->tbindings[1].sym = sym;
 }
 
-static int lookup(struct fpvm_fragment *fragment, struct sym *sym)
+static int lookup(struct fpvm_fragment *fragment, struct fpvm_sym *sym)
 {
 	int i;
 
@@ -134,7 +135,7 @@ static int lookup(struct fpvm_fragment *fragment, struct sym *sym)
 	return FPVM_INVALID_REG;
 }
 
-static int tbind(struct fpvm_fragment *fragment, struct sym *sym)
+static int tbind(struct fpvm_fragment *fragment, struct fpvm_sym *sym)
 {
 	if(fragment->ntbindings == FPVM_MAXTBINDINGS) {
 		snprintf(fragment->last_error, FPVM_MAXERRLEN,
@@ -147,7 +148,8 @@ static int tbind(struct fpvm_fragment *fragment, struct sym *sym)
 	return fragment->next_sur--;
 }
 
-static int rename_reg(struct fpvm_fragment *fragment, struct sym *sym, int reg)
+static int rename_reg(struct fpvm_fragment *fragment, struct fpvm_sym *sym,
+    int reg)
 {
 	int i;
 
@@ -168,7 +170,7 @@ static int rename_reg(struct fpvm_fragment *fragment, struct sym *sym, int reg)
 	return 1;
 }
 
-static int sym_to_reg(struct fpvm_fragment *fragment, struct sym *sym,
+static int sym_to_reg(struct fpvm_fragment *fragment, struct fpvm_sym *sym,
     int dest, int *created)
 {
 	int r;
@@ -557,7 +559,7 @@ static void fragment_restore(struct fpvm_fragment *fragment,
 	fragment->ninstructions = backup->ninstructions;
 }
 
-int fpvm_do_assign(struct fpvm_fragment *fragment, struct sym *dest,
+int fpvm_do_assign(struct fpvm_fragment *fragment, struct fpvm_sym *dest,
     struct ast_node *n)
 {
 	int dest_reg;
