@@ -522,6 +522,12 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 			return FPVM_INVALID_REG;
 		ADD_ISN(FPVM_OPCODE_TSIGN, opa, opb, reg);
 		break;
+	case op_not:
+		opb = REG_CONST(0);
+		if(opb == FPVM_INVALID_REG)
+			return FPVM_INVALID_REG;
+		ADD_ISN(FPVM_OPCODE_EQUAL, opa, opb, reg);
+		break;
 	default:
 		/* Normal case */
 		opcode = operator2opcode(node->op);

@@ -47,7 +47,7 @@ enum ast_op {
 	op_min,
 	op_max,
 	op_int,
-	op_vops,	/* virtual operations start here */
+	op_not,
 };
 
 /* maximum supported arity is 3 */
