@@ -1,6 +1,6 @@
 #!/bin/sh
 reg="sed 's/^[^#]*# R[0-9]* = //'"
-[ "$1" = -i ] && reg=cat
+[ "$1" = -i ] && { reg=cat; shift; }
 trap "rm -f _out$$" 0
 ./pfpuasm "$@" >_out$$ || exit
 nc -i 1 -C -t -v ${M1_HOST:-m1} telnet <<EOF
