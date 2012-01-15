@@ -1,0 +1,10 @@
+#!/bin/sh
+reg="sed 's/^[^#]*# R[0-9]* = //'"
+[ "$1" = -i ] && reg=cat
+trap "rm -f _out$$" 0
+./pfpuasm "$@" >_out$$ || exit
+nc -i 1 -C -t -v ${M1_HOST:-m1} telnet <<EOF
+${M1_USER:-foo}
+${M1_PW:-bar}
+pfpu `eval $reg _out$$ | sed 's/#.*//' | tr '\012' ' '`
+EOF
