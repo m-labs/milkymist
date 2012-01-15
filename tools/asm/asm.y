@@ -27,14 +27,24 @@
 
 static void emit(int opcode, int opa, int opb, int dest, int latency)
 {
-	*pc++ |= opcode << OPCODE_SHIFT | opb << OPB_SHIFT | opa << OPA_SHIFT;
+	*pc |= opcode << OPCODE_SHIFT | opb << OPB_SHIFT | opa << OPA_SHIFT;
 
-	if (dest <= 0)
+	if (dest <= 0) {
+		pc++;
 		return;
+	}
 
-	if (pc[latency-1] & (DEST_MASK << DEST_SHIFT))
-		yyerror("destination conflict");
-	pc[latency-1] |= dest << DEST_SHIFT;
+	if (auto_nop) {
+		pc += latency;
+		if (*pc & (DEST_MASK << DEST_SHIFT))
+			yyerror("destination conflict");
+		*pc |= dest << DEST_SHIFT;
+		pc++;
+	} else {
+		if (pc[latency-1] & (DEST_MASK << DEST_SHIFT))
+			yyerror("destination conflict");
+		pc[latency-1] |= dest << DEST_SHIFT;
+	}
 }
 
 %}
@@ -56,21 +66,20 @@ static void emit(int opcode, int opa, int opb, int dest, int latency)
 %token	<reg>	REG
 
 %type	<i>	value
+%type	<reg>	reg
 
 %%
 
 all:
-	regs ops;
+	initials ops;
 
-regs:
-	| reg regs;
+initials:
+	| initial initials;
 
-reg:
+initial:
 	REG '=' value
 		{
 			regs[$1] = $3;
-			if ($1 > max_reg)
-				max_reg = $1;
 		}
 	;
 
@@ -93,64 +102,73 @@ op:
 		{
 			emit(PFPU_OPCODE_NOP, 0, 0, 0, -1);
 		}
-	| TOK_FADD REG ',' REG ARROW REG
+	| TOK_FADD reg ',' reg ARROW reg
 		{
 			BINARY(FADD, $2, $4, $6);
 		}
-	| TOK_FSUB REG ',' REG ARROW REG
+	| TOK_FSUB reg ',' reg ARROW reg
 		{
 			BINARY(FSUB, $2, $4, $6);
 		}
-	| TOK_FMUL REG ',' REG ARROW REG
+	| TOK_FMUL reg ',' reg ARROW reg
 		{
 			BINARY(FMUL, $2, $4, $6);
 		}
-	| TOK_FABS REG ARROW REG
+	| TOK_FABS reg ARROW reg
 		{
 			UNARY(FABS, $2, $4);
 		}
-	| TOK_F2I REG ARROW REG
+	| TOK_F2I reg ARROW reg
 		{
 			UNARY(F2I, $2, $4);
 		}
-	| TOK_I2F REG ARROW REG
+	| TOK_I2F reg ARROW reg
 		{
 			UNARY(I2F, $2, $4);
 		}
-	| TOK_VECTOUT REG ',' REG ARROW REG
+	| TOK_VECTOUT reg ',' reg
 		{
-			BINARY(VECTOUT, $2, $4, $6);
+			BINARY(VECTOUT, $2, $4, 0);
 		}
-	| TOK_SIN REG ARROW REG
+	| TOK_SIN reg ARROW reg
 		{
 			UNARY(SIN, $2, $4);
 		}
-	| TOK_COS REG ARROW REG
+	| TOK_COS reg ARROW reg
 		{
 			UNARY(COS, $2, $4);
 		}
-	| TOK_ABOVE REG ',' REG ARROW REG
+	| TOK_ABOVE reg ',' reg ARROW REG
 		{
 			BINARY(ABOVE, $2, $4, $6);
 		}
-	| TOK_EQUAL REG ',' REG ARROW REG
+	| TOK_EQUAL reg ',' reg ARROW reg
 		{
 			BINARY(EQUAL, $2, $4, $6);
 		}
-	| TOK_COPY REG ARROW REG
+	| TOK_COPY reg ARROW reg
 		{
 			UNARY(COPY, $2, $4);
 		}
-	| TOK_IF REG ',' REG ARROW REG
+	| TOK_IF reg ',' reg ARROW reg
 		{
 			BINARY(IF, $2, $4, $6);
 		}
-	| TOK_TSIGN REG ',' REG ARROW REG
+	| TOK_TSIGN reg ',' reg ARROW reg
 		{
 			BINARY(TSIGN, $2, $4, $6);
 		}
-	| TOK_QUAKE REG ',' REG ARROW REG
+	| TOK_QUAKE reg ARROW reg
 		{
-			BINARY(QUAKE, $2, $4, $6);
+			UNARY(QUAKE, $2, $4);
+		}
+	;
+
+reg:
+	REG
+		{
+			$$ = $1;
+			if ($1 > max_reg)
+				max_reg = $1;
 		}
 	;

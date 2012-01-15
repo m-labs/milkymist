@@ -44,6 +44,8 @@ extern uint32_t *pc;
 extern uint32_t regs[PFPU_REG_COUNT];
 extern int max_reg;
 
+extern int auto_nop;
+
 
 union u_f2i {
 	float f;

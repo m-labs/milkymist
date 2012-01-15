@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #include <signal.h>
 
 #include "hw/pfpu.h"
@@ -29,6 +30,8 @@ uint32_t *pc = prog;
 uint32_t regs[PFPU_REG_COUNT];
 int max_reg = 0;
 
+int auto_nop = 0;
+
 
 int yyparse(void);
 
@@ -43,10 +46,18 @@ static void kill_cpp(void)
 }
 
 
-static void cpp(char *const *argv)
+static void cpp(int n_args, char *const *args)
 {
+	char **argv;
 	int fds[2];
 
+	argv = malloc((n_args+2)*sizeof(const char *));
+	if (!argv) {
+		perror("malloc");
+		exit(1);
+	}
+	argv[0] = CPP;
+	memcpy(argv+1, args, sizeof(const char *)*(n_args+1));
 	if (pipe(fds) < 0) {
 		perror("pipe");
 		exit(1);
@@ -104,16 +115,32 @@ static struct attr {
 	ATTR(COPY, 2),
 	ATTR(IF, 2),
 	ATTR(TSIGN, 2),
-	ATTR(QUAKE, 2),
+	ATTR(QUAKE, 1),
 };
+
+
+static void usage(const char *name)
+{
+	fprintf(stderr, "usage: %s [-a] [cpp_options] [file]\n", name);
+	exit(1);
+}
 
 
 int main(int argc, char *const *argv)
 {
 	const uint32_t *p;
 	const uint32_t *r;
+	int c;
 
-	cpp(argv);
+	while ((c = getopt(argc, argv, "a")) != EOF)
+		switch (c) {
+		case 'a':
+			auto_nop = 1;
+			break;
+		default:
+			usage(*argv);
+		}
+	cpp(argc-optind, argv+optind);
 	(void) yyparse();
 
 	for (r = regs+PFPU_SPREG_COUNT; r <= regs+max_reg; r++)
