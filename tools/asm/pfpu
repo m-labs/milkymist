@@ -1,9 +1,36 @@
 #!/bin/sh
+#
+# pfpu - pfpu remote execution wrapper
+#
+# Copyright 2012 by Werner Almesberger
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+
+#
+# usage: pfpu [-i] [-v] [pfpuasm_arg ...]
+#
+# -i  pass numbers in internal binary format instead of floats
+# -v  display the whole session instea of just the results
+#
+
 reg="sed 's/^[^#]*# R[0-9]* = //'"
-[ "$1" = -i ] && { reg=cat; shift; }
+filter="sed '1,/^1:/d;q' | tr -d '\015'"
+
+while [ "$1" ]; do
+	case "$1" in
+	-i) reg=cat; shift;;
+	-v) filter=cat; shift;;
+	*) break;;
+	esac
+done
+
 trap "rm -f _out$$" 0
 ./pfpuasm "$@" >_out$$ || exit
-nc -i 1 -C -t -v ${M1_HOST:-m1} telnet <<EOF
+nc -i 1 -C -t -v ${M1_HOST:-m1} telnet <<EOF 2>&1 | eval $filter
 ${M1_USER:-foo}
 ${M1_PW:-bar}
 pfpu `eval $reg _out$$ | sed 's/#.*//' | tr '\012' ' '`
