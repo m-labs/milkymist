@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# fpvm - fpvm-like execution engine
+#
+# Copyright 2012 by Werner Almesberger
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+
+
+trace=false
+debug=false
+
+
+step()
+{
+	$trace && echo "# $1" 1>&2
+	t=$1
+	set - `echo "$1" | sed 's/->/:/' | sed 's/\(,\|:\|=\)/ & /g'`
+	c=
+	case "$*" in
+	*=*)	eval r_$1=$3
+		eval p_$1=$3
+		regs="$regs $1"
+		;;
+	*,*:*)	c="r2=`eval echo \\$r_$2`"
+		c="$c r3=`eval echo \\$r_$4`"
+		c="$c $1 r2,r3 -> r2"
+		r=$6
+		regs="$regs $2 $4 $6"
+		;;
+	*:*)	c="r2=`eval echo \\$r_$2`"
+		c="$c $1 r2 -> r2"
+		r=$4
+		regs="$regs $2 $4"
+		;;
+	*)	echo "don't grok \"$t\"" 1>&2
+		exit 1;;
+	esac
+
+	if [ "$c" ]; then
+		$debug && echo "## $c" 2>&1
+		set - `echo "$c" vectout r0, r0 | ./pfpu -i -a`
+		[ "$1" ] || exit
+		eval r_$r=$1
+		eval p_$r=$2
+		$debug && echo "## $*" 1>&2
+		$trace && echo "#    " $r = $2 "("$1")" 1>&2
+	fi
+}
+
+
+usage()
+{
+	echo "usage: $0 [-d] [-x] [cpp_arg ...]" 1>&2
+	exit 1
+}
+
+
+while [ "$1" ]; do
+	case "$1" in
+	-d)	debug=true;;
+	-x)	trace=true;;
+	-*)	usage;;
+	*)	break;;
+	esac
+	shift
+done
+
+cpp "$@" | sed '/^#/d;/^ *$/d' | {
+	while read s; do
+		step "$s"
+	done
+	for n in `echo $regs | tr ' ' '\012' | sort | uniq`; do
+		eval echo $n = \$p_$n "\("\$r_$n"\)"
+	done
+}
