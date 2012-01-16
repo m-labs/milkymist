@@ -1,0 +1,86 @@
+/*
+ * "fpvm" example: modulo calculation
+ *
+ * The example below, 10 % 2, yields the incorrect result 2.
+ */
+
+opa = 10
+opb = 2
+onehalf = 0.5
+twohalf = 1.5
+
+/*
+ * invsqrt = 1/sqrt(opb)
+ *
+ * ADD_INV_SQRT(opb, reg_invsqrt);
+ *   ADD_ISN_0(FPVM_OPCODE_QUAKE, reg_in, 0, reg_y);
+ *   add_inv_sqrt_step(fragment, reg_y, reg_in, reg_y2)
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_y, reg_y, reg_yy);
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_onehalf, reg_x, reg_hx);
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_hx, reg_yy, reg_hxyy);
+ *	ADD_ISN_0(FPVM_OPCODE_FSUB, reg_twohalf, reg_hxyy, reg_sub);
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_sub, reg_y, reg_out);
+ *   add_inv_sqrt_step(fragment, reg_y2, reg_in, reg_out)
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_y, reg_y, reg_yy);
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_onehalf, reg_x, reg_hx);
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_hx, reg_yy, reg_hxyy);
+ *	ADD_ISN_0(FPVM_OPCODE_FSUB, reg_twohalf, reg_hxyy, reg_sub);
+ *	ADD_ISN_0(FPVM_OPCODE_FMUL, reg_sub, reg_y, reg_out);
+ */
+
+	quake	opb -> y
+
+	fmul	y,y -> yy
+	fmul	onehalf, opb -> hx
+	fmul	hx, yy -> hxyy
+	fsub	twohalf, hxyy -> sub
+	fmul	sub, y -> y2
+
+	fmul	y2,y2 -> yy
+	fmul	onehalf, opb -> hx
+	fmul	hx, yy -> hxyy
+	fsub	twohalf, hxyy -> sub
+	fmul	sub, y2 -> invsqrt
+
+/*
+ * invsqrt2 = invsqrt^2 = 1/opb
+ *
+ * ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt, reg_invsqrt, reg_invsqrt2);
+ */
+
+	fmul	invsqrt, invsqrt ->invsqrt2
+
+/*
+ * div = invsqrt2*opa = opa/opb
+ *
+ * ADD_ISN(FPVM_OPCODE_FMUL, reg_invsqrt2, opa, reg_div);
+ */
+
+	fmul	invsqrt2, opa -> div
+
+/*
+ * idiv = int(div) = int(opa/opb)
+ *
+ * ADD_INT(reg_div, reg_idiv);
+ *   ADD_ISN(FPVM_OPCODE_F2I, reg_in, 0, reg_i);
+ *   ADD_ISN(FPVM_OPCODE_I2F, reg_i, 0, reg_out);
+ */
+
+	f2i	div -> i
+	i2f	i -> idiv
+
+/*
+ * bidiv = idiv*opb
+ *
+ * ADD_ISN(FPVM_OPCODE_FMUL, opb, reg_idiv, reg_bidiv);
+ */
+
+	fmul	opb, idiv -> bidiv
+
+/*
+ * result = opa-bidiv
+ *
+ * ADD_ISN(FPVM_OPCODE_FSUB, opa, reg_bidiv, reg);
+ */
+
+	fsub	opa, bidiv -> result
