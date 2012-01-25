@@ -395,6 +395,11 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 		opb = COMPILE(FPVM_INVALID_REG, node->contents.branches.c);
 		(void) COMPILE(FPVM_REG_IFB, node->contents.branches.a);
 		break;
+	case op_band:
+	case op_bor:
+		opa = opb = 0;
+		(void) COMPILE(FPVM_REG_IFB, node->contents.branches.a);
+		break;
 	case op_negate:
 		if(node->contents.branches.a->op == op_constant) {
 			/* Node is a negative constant */
@@ -528,6 +533,26 @@ static int compile(struct fpvm_fragment *fragment, int reg, struct ast_node *nod
 			return FPVM_INVALID_REG;
 		ADD_ISN(FPVM_OPCODE_EQUAL, opa, opb, reg);
 		break;
+	case op_band: {
+		int reg_zero = REG_CONST(0);
+		int reg_one = REG_CONST(1);
+		int reg_tmp = REG_ALLOC();
+
+		ADD_ISN(FPVM_OPCODE_IF, reg_one, reg_zero, reg_tmp);
+		(void) COMPILE(FPVM_REG_IFB, node->contents.branches.b);
+		ADD_ISN(FPVM_OPCODE_IF, reg_tmp, reg_zero, reg);
+		break;
+	}
+	case op_bor: {
+		int reg_zero = REG_CONST(0);
+		int reg_one = REG_CONST(1);
+		int reg_tmp = REG_ALLOC();
+
+		ADD_ISN(FPVM_OPCODE_IF, reg_one, reg_zero, reg_tmp);
+		(void) COMPILE(FPVM_REG_IFB, node->contents.branches.b);
+		ADD_ISN(FPVM_OPCODE_IF, reg_one, reg_tmp, reg);
+		break;
+	}
 	default:
 		/* Normal case */
 		opcode = operator2opcode(node->op);

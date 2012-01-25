@@ -48,6 +48,8 @@ enum ast_op {
 	op_max,
 	op_int,
 	op_bnot,
+	op_band,
+	op_bor,
 };
 
 /* maximum supported arity is 3 */
