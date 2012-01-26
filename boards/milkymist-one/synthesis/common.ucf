@@ -297,22 +297,30 @@ NET "ir_rx" LOC = C16 | IOSTANDARD = LVCMOS33;
 
 # ==== Expansion connector ====
 NET "exp(0)" LOC = A20;
-NET "exp(1)" LOC = F16;
+#NET "exp(1)" LOC = F16;
 NET "exp(2)" LOC = A21;
-NET "exp(3)" LOC = F17;
-NET "exp(4)" LOC = B21;
-NET "exp(5)" LOC = H16;
-NET "exp(6)" LOC = B22;
+#NET "exp(3)" LOC = F17;
+#NET "exp(4)" LOC = B21;
+#NET "exp(5)" LOC = H16;
+#NET "exp(6)" LOC = B22;
 NET "exp(7)" LOC = H17;
-NET "exp(8)" LOC = G16;
+#NET "exp(8)" LOC = G16;
 NET "exp(9)" LOC = J16;
-NET "exp(10)" LOC = G17;
+#NET "exp(10)" LOC = G17;
 NET "exp(11)" LOC = K16;
 
 NET "exp(*)" IOSTANDARD = LVCMOS33;
 
 # avoid floating signals
 NET "exp(*)" PULLDOWN;
+
+NET "ledr(0)" LOC = H16 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 24;
+NET "ledr(1)" LOC = F17 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 24;
+NET "ledr(2)" LOC = F16 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 24;
+NET "ledc(0)" LOC = B21 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 6;
+NET "ledc(1)" LOC = B22 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 6;
+NET "ledc(2)" LOC = G16 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 6;
+NET "ledc(3)" LOC = G17 | IOSTANDARD = LVCMOS33 | SLEW = QUIETIO | DRIVE = 6;
 
 # ==== PCB revision ====
 NET "pcb_revision(0)" LOC = AA10;

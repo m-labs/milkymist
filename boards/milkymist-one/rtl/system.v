@@ -137,6 +137,10 @@ module system(
 	// Expansion connector
 	input [11:0] exp,
 
+	// LED matrix
+	inout [2:0] ledr,
+	inout [3:0] ledc,
+
 	// PCB revision
 	input [3:0] pcb_revision
 );
@@ -508,6 +512,7 @@ wire [31:0]	csr_dr_uart,
 		csr_dr_tmu,
 		csr_dr_ethernet,
 		csr_dr_fmlmeter,
+		csr_dr_ledm,
 		csr_dr_videoin,
 		csr_dr_midi,
 		csr_dr_dmx_tx,
@@ -670,6 +675,7 @@ csrbrg csrbrg(
 		|csr_dr_tmu
 		|csr_dr_ethernet
 		|csr_dr_fmlmeter
+		|csr_dr_ledm
 		|csr_dr_videoin
 		|csr_dr_midi
 		|csr_dr_dmx_tx
@@ -1338,8 +1344,29 @@ fmlmeter #(
 	.fml_we(fml_we),
 	.fml_adr(fml_adr)
 );
+assign csr_dr_ledm = 32'd0;
 `else
+//---------------------------------------------------------------------------
+// LED matrix
+//---------------------------------------------------------------------------
 assign csr_dr_fmlmeter = 32'd0;
+
+ledm #(
+	.csr_addr(4'h9),
+	.clk_freq(`CLOCK_FREQUENCY)
+) ledm (
+	.sys_clk(sys_clk),
+	.sys_rst(sys_rst),
+
+	.csr_a(csr_a),
+	.csr_we(csr_we),
+	.csr_di(csr_dw),
+	.csr_do(csr_dr_ledm),
+
+	.ledr(ledr),
+	.ledc(ledc)
+);
+
 `endif
 
 //---------------------------------------------------------------------------

@@ -28,7 +28,7 @@
 `define ENABLE_AC97
 `define ENABLE_PFPU
 `define ENABLE_TMU
-`define ENABLE_FMLMETER
+/*`define ENABLE_FMLMETER*/
 `define ENABLE_VIDEOIN
 `define ENABLE_MIDI
 `define ENABLE_DMX
