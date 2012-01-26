@@ -100,10 +100,10 @@ always @(posedge sys_clk) begin: _
 		end
 	end
 
-	if (pre_count < prescaler) begin
-		pre_count <= pre_count+1'd1;
+	if (pre_count) begin
+		pre_count <= pre_count-1'd1;
 	end else begin
-		pre_count <= 0;
+		pre_count <= prescaler;
 		if (pwm_count)
 			tick();
 		else
