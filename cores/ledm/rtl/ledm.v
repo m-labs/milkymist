@@ -52,8 +52,22 @@ wire csr_selected = csr_a[13:10] == csr_addr;
  * Register address:
  * 9 8 7 6 5 4 3 2 1 0
  * x 0 x x x R R C C D  LED at row R, column C, direction D
- * x 1 x x x x x x x x  prescaler
+ * x 1 x x x x x 0 0 0  prescaler (0: stop scanning;, N: divide clock by N+1)
+ * x 1 x x x x x 0 0 1  force row tristate (0: no change; 1: Z)
+ * x 1 x x x x x 0 1 0  force row zero (0: no change; 1: 0)
+ * x 1 x x x x x 0 1 1  force row set (0: no change; 1: 1)
+ * x 1 x x x x x 1 0 0  reserved
+ * x 1 x x x x x 1 0 1  force column tristate (0: no change; 1: Z)
+ * x 1 x x x x x 1 1 0  force column zero (0: no change; 1: 0)
+ * x 1 x x x x x 1 1 1  force column  set (0: no change; 1: 1)
  *
+ * Notes about the row/coumn overrides:
+ *
+ * - they are meant for testing and debugging and thus don't have overly
+ *   "nice" properties
+ * - they only have a lasting effect if prescaler = 0
+ * - the overrides cannot be read back. A read should not be attempted.
+ *   The current implementation returns the prescaler setting.
  */
 
 reg [pwm_bits-1:0] led[0:rows-1][0:1][0:cols-1];
@@ -96,9 +110,12 @@ always @(posedge sys_clk) begin: _
 		if (ps_sel) begin
 			csr_do <= prescaler;
 			if (csr_we)
-				prescaler <= csr_di[prescaler_bits-1:0];
+				configure();
 		end
 	end
+
+	if(!prescaler)
+		disable _;
 
 	if (pre_count) begin
 		pre_count <= pre_count-1'd1;
@@ -118,10 +135,10 @@ begin: _
 	integer r, d, c;
 
 	/*
-	 * System clock / PWM steps / directions / rows / refresh
-	 * 80 MHz / 256 / 2 / 3 / 1 kHz = 52
+	 * System clock / PWM steps / directions / rows / refresh - 1
+	 * 80 MHz / 256 / 2 / 3 / 1 kHz - 1 = 51
 	 */
-	prescaler <= (clk_freq >> pwm_bits)/2/rows/refresh;
+	prescaler <= (clk_freq >> pwm_bits)/2/rows/refresh-1;
 	pre_count <= 0;
 	pwm_count <= 0;
 	row <= 0;
@@ -136,6 +153,28 @@ begin: _
 		for (d = 0; d != 2; d = d+1)
 			for (c = 0; c != cols; c = c+1)
 				led[r][d][c] <= 0;
+end
+endtask
+
+
+`define ITERATE(r, n, v)		\
+	for (i = 0; i != n; i = i+1)	\
+		if (csr_di[i])		\
+			r[i] <= v
+
+task configure;
+begin: _
+	integer i;
+
+	case(csr_a[2:0])
+		3'b000:	prescaler <= csr_di[prescaler_bits-1:0];
+		3'b001:	`ITERATE(ledr_reg, rows, 1'bz);
+		3'b010:	`ITERATE(ledr_reg, rows, 0);
+		3'b011:	`ITERATE(ledr_reg, rows, 1);
+		3'b101:	`ITERATE(ledc_reg, cols, 1'bz);
+		3'b110:	`ITERATE(ledc_reg, cols, 0);
+		3'b111:	`ITERATE(ledc_reg, cols, 1);
+	endcase
 end
 endtask
 
