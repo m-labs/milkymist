@@ -439,7 +439,8 @@ retry:
 	return transferred;
 }
 
-static char process_keyboard(unsigned char *buf, unsigned char len)
+static char process_keyboard(struct ep_status *ep,
+			     unsigned char *buf, unsigned char len)
 {
 	unsigned char m, i;
 
@@ -452,7 +453,8 @@ static char process_keyboard(unsigned char *buf, unsigned char len)
 	return 1;
 }
 
-static char process_mouse(unsigned char *buf, unsigned char len)
+static char process_mouse(struct ep_status *ep, unsigned char *buf,
+			  unsigned char len)
 {
 	unsigned char m, i;
 
@@ -481,7 +483,8 @@ static char process_mouse(unsigned char *buf, unsigned char len)
 	return 1;
 }
 
-static char process_midi(unsigned char *buf, unsigned char len)
+static char process_midi(struct ep_status *ep, unsigned char *buf,
+			 unsigned char len)
 {
 	unsigned char end = len & ~3;
 	unsigned char i, m, j;
@@ -512,7 +515,8 @@ static char process_midi(unsigned char *buf, unsigned char len)
 }
 
 static void poll(struct ep_status *ep,
-    char (*process)(unsigned char *buf, unsigned char len))
+	char (*process)(struct ep_status *ep, unsigned char *buf,
+			unsigned char len))
 {
 	unsigned char usb_buffer[1+64+2]; /* DATAx + payload + CRC */
 	int len;
@@ -525,7 +529,7 @@ static void poll(struct ep_status *ep,
 
 	if(len <= 3)
 		return;
-	if(process(usb_buffer+1, len-3))	/* send to host */
+	if(process(ep, usb_buffer+1, len-3))	/* send to host */
 		wio8(HOST_IRQ, 1);		/* trigger host IRQ */
 }
 
