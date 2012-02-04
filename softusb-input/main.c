@@ -566,7 +566,7 @@ static struct ep_status *identify_protocol(const unsigned char *itf,
     struct port_status *p)
 {
 	/* check for bInterfaceClass=3 and bInterfaceSubClass=1 (HID) */
-	if (itf[5] == USB_CLASS_HID && itf[6] == USB_SUBCLASS_BOOT)
+	if(itf[5] == USB_CLASS_HID && itf[6] == USB_SUBCLASS_BOOT)
 		switch(itf[7]) { /* check bInterfaceProtocol */
 			case USB_PROTO_KEYBOARD:
 				p->keyboard.itf = itf[2];
@@ -578,7 +578,7 @@ static struct ep_status *identify_protocol(const unsigned char *itf,
 				/* unknown protocol, fail */
 				return NULL;
 		}
-	if (itf[5] == USB_CLASS_AUDIO && itf[6] == USB_SUBCLASS_MIDISTREAMING)
+	if(itf[5] == USB_CLASS_AUDIO && itf[6] == USB_SUBCLASS_MIDISTREAMING)
 		return &p->midi;
 
 	return NULL;
@@ -602,7 +602,7 @@ static char validate_report_descriptor(const unsigned char *descriptor,
 	p->mouse.report_id = 0;
 	for (i = 0; i < len; i+=2) {
 		/* See 6.2.2.2 Short Items */
-		if ((descriptor[i] & 0xfc) == 0x84) {
+		if((descriptor[i] & 0xfc) == 0x84) {
 			p->mouse.report_id = 1;
 			break;
 		}
@@ -707,7 +707,7 @@ static char get_ep0_size(struct port_status *p)
 		return 0;
 
 	size = device_descriptor[7];
-	if (size != 8 && size != 16 && size != 32 && size != 64)
+	if(size != 8 && size != 16 && size != 32 && size != 64)
 		return 0;
 
 	p->ep0_size = size;
