@@ -475,11 +475,9 @@ static char process_mouse(struct ep_status *ep, unsigned char *buf,
 	 * a report ID and 16 bit coordinates. We're too lazy to parse
 	 * report descriptors, so we just hard-code that report layout.
 	 */
-	if(len == 7) {
-		buf[0] = buf[1];	/* buttons */
-		buf[1] = buf[2];	/* X LSB */
-		buf[2] = buf[4];	/* Y LSB */
-	}
+	if(len == 6)
+		buf[2] = buf[3];	/* Y LSB */
+
 	if(len > 4)
 		len = 4;
 	m = COMLOC_MEVT_PRODUCE;
