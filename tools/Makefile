@@ -10,8 +10,8 @@ makeraw: makeraw.c
 	$(CC) -O2 -Wall -s -o $@ $< -lgd
 
 install: mkmmimg flterm
-	cp mkmmimg /usr/bin
-	cp flterm /usr/bin
+	install -d /usr/local/bin
+	install -m755 -t /usr/local/bin $^
 
 .PHONY: clean install
 
