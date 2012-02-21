@@ -88,9 +88,9 @@ always @(posedge sys_clk) begin
 		hscan <= 10'd799;
 		
 		vres <= 10'd480;
-		vsync_start <= 10'd491;
-		vsync_end <= 10'd493;
-		vscan <= 10'd523;
+		vsync_start <= 10'd492;
+		vsync_end <= 10'd494;
+		vscan <= 10'd524;
 		
 		baseaddress <= {fml_depth{1'b0}};
 		
