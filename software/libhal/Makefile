@@ -5,19 +5,16 @@ OBJECTS=brd.o dmx.o font8x16.o mem.o pfpu.o snd.o time.o tmu.o ukb.o usb.o vga.o
 
 all: libhal.a
 
-libhal.a: $(OBJECTS) softusb-input.h
+libhal.a: $(OBJECTS)
 	$(AR) clr libhal.a $(OBJECTS)
 	$(RANLIB) libhal.a
 
-$(MMDIR)/softusb-input/softusb-input.bin:
+$(MMDIR)/softusb-input/softusb-input.h:
 	$(MAKE) -C $(MMDIR)/softusb-input
-
-softusb-input.h: $(MMDIR)/softusb-input/softusb-input.bin
-	cat $(MMDIR)/softusb-input/softusb-input.bin | xxd -i - softusb-input.h
 
 .PHONY: clean depend $(MMDIR)/softusb-input/softusb-input.bin
 
-depend: softusb-input.h
+depend: $(MMDIR)/softusb-input/softusb-input.h
 	makedepend -Y -- $(CFLAGS) -- *.c
 
 clean:
@@ -59,7 +56,7 @@ time.o: ../../software/include/base/stdlib.h
 time.o: ../../software/include/base/irq.h ../../software/include/base/board.h
 time.o: ../../software/include/hw/sysctl.h ../../software/include/hw/common.h
 time.o: ../../software/include/hw/interrupts.h
-time.o: ../../software/include/hal/brd.h ../../software/include/hal/time.h
+time.o: ../../software/include/hal/time.h
 tmu.o: ../../software/include/base/stdio.h
 tmu.o: ../../software/include/base/stdlib.h ../../software/include/base/irq.h
 tmu.o: ../../software/include/base/board.h
@@ -79,7 +76,7 @@ usb.o: ../../software/include/hw/interrupts.h
 usb.o: ../../software/include/base/uart.h ../../software/include/base/irq.h
 usb.o: ../../software/include/base/stdio.h
 usb.o: ../../software/include/base/stdlib.h ../../software/include/hal/usb.h
-usb.o: input-comloc.h softusb-input.h
+usb.o: input-comloc.h ../../softusb-input/softusb-input.h
 vga.o: ../../software/include/base/stdio.h
 vga.o: ../../software/include/base/stdlib.h
 vga.o: ../../software/include/base/string.h
