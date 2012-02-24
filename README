@@ -10,13 +10,11 @@ For the latest releases, documentation, more information, or to buy a Milkymist 
 
 [> Directory Structure
  /cores/         Cores library, with Verilog sources, test benches and documentation.
- /boards/        Top-level design files, constraint files and Makefiles
-                 for supported FPGA boards.
- /software/      Software for the SoC: libraries, bootloader and proof-of-concept renderer.
+ /boards/        Top-level design files, constraint files and glue logic.
+ /software/      Basic software for the SoC: libraries + BIOS.
  /softusb-input/ AVR firmware to implement input device support on the softusb core.
  /doc/           System documentation.
  /tools/         Small tools for developers.
- /patches/       Example patches.
 
 
 [> Building tools
