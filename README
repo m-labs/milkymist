@@ -45,9 +45,9 @@ loading over the serial line (SFL boot) is provided in the /tools/ directory.
 
 
 [> Credits
-Most of the work is (C) Copyright 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq.
+Most of the work is (C) Copyright 2007-2012 Sebastien Bourdeauducq.
 For this work:
- - The hardware design is licensed under GNU GPLv3.
+ - The gateware design is licensed under GNU GPLv3.
    See the LICENSE.GPL file for more information.
  - The software (software/*) is licensed under GNU GPLv3, except the SDRAM
    initialization runtime (libHPDMC) which is under GNU LGPLv3.
@@ -64,15 +64,14 @@ The SoC design uses:
 The directory organization and build scripts were inspired by soc-lm32 by the German
 hackerspace Das Labor. Some of the UART and timer code also comes from there.
 
-The software and software library include:
- - the SoftFloat IEC/IEEE Floating-point Arithmetic Package, Release 2,
-   written by John R. Hauser. See source files headers for license.
- - fundamental functions library by Jesus Calvino-Fraga. See the LICENSE.LGPL file.
- - line drawing code from the GD library. See the LICENSE.GD file.
+The software and software library include the SoftFloat IEC/IEEE Floating-point
+Arithmetic Package, Release 2, written by John R. Hauser.
+See source files headers for license.
 
 Special thanks to the people who did significant things which made this project possible:
  - Wolfgang Spraul and Adam Wang for the manufacturing,
- - Michael Walle for QEMU, UrJTAG and OpenOCD,
+ - Werner Almesberger for USB, MIDI and many other improvements, 
+ - Michael Walle for QEMU, UrJTAG and OCD,
  - Joachim Steiger for the case design,
  - Yanjun Luo for the JTAG daughterboard design,
  - Yann Sionneau for his work on RTEMS,
@@ -89,47 +88,3 @@ Special thanks to the people who did significant things which made this project 
 The mailing list devel at lists dot milkymist dot org is the preferred means of contact.
 However, if you wish to contact privately the founder of this project:
 E-mail: sebastien at milkymist daaht org
-Phone:  +33(0)606644335
-PGP:    0x9277FCF2
-
------BEGIN PGP PUBLIC KEY BLOCK-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-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
-lRHoJGwiAJ9JnmgPtl71/XVNcFxNQqUxVTOvjg==
-=NnZi
------END PGP PUBLIC KEY BLOCK-----
