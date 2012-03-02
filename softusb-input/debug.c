@@ -18,6 +18,7 @@
 #include "progmem.h"
 #include "host.h"
 #include "comloc.h"
+#include "debug.h"
 
 void print_char(char c)
 {

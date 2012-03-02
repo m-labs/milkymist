@@ -6,7 +6,10 @@ INCLUDES=comloc.h crc.h debug.h host.h io.h libc.h progmem.h sie.h timer.h
 all:	softusb-input.h
 
 softusb-input.elf: $(SOURCES) $(INCLUDES)
-	avr-gcc -o $@ -mmcu=avr2 -mno-interrupts -Wall -Os \
+	avr-gcc -o $@ -mmcu=avr2 -mno-interrupts -Os \
+	    -Wall -Wstrict-prototypes -Wmissing-prototypes \
+	    -Wold-style-declaration -Wold-style-definition \
+	    -Wno-char-subscripts \
 	    $(SOURCES) $(CFLAGS) -nostdlib -Wl,-T -Wl,navre.ld
 
 %.bin: %.elf

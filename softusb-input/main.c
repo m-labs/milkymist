@@ -829,7 +829,7 @@ static void port_service(struct port_status *p, char name)
 
 static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 
-static void sof()
+static void sof(void)
 {
 	unsigned char mask;
 	unsigned char usb_buffer[3];
@@ -849,7 +849,7 @@ static void sof()
 	}
 }
 
-static void keepalive()
+static void keepalive(void)
 {
 	unsigned char mask;
 
@@ -868,7 +868,7 @@ static void keepalive()
 	}
 }
 
-static void set_rx_speed()
+static void set_rx_speed(void)
 {
 	unsigned char mask;
 
@@ -878,7 +878,7 @@ static void set_rx_speed()
 	wio8(SIE_LOW_SPEED, mask);
 }
 
-int main()
+int main(void)
 {
 	unsigned char i;
 
