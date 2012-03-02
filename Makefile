@@ -37,6 +37,7 @@ docs:
 
 sdk-install: sdk
 	make -C ${BASEDIR}/software/libfpvm install
+	make -C ${BASEDIR}/softusb-input install
 
 tools-install: tools
 	make -C ${BASEDIR}/tools install
