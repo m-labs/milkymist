@@ -35,7 +35,9 @@ module softusb_navre #(
 	output reg io_we,
 	output [5:0] io_a,
 	output [7:0] io_do,
-	input [7:0] io_di
+	input [7:0] io_di,
+
+	output reg [pmem_width-1:0] dbg_pc
 );
 
 /* Register file */
@@ -195,6 +197,7 @@ always @(posedge clk) begin
 			PC_SEL_Z: PC <= pZ - 1;
 		endcase
 	end
+	dbg_pc <= PC;
 end
 reg pmem_selz;
 assign pmem_a = rst ?

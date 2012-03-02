@@ -76,8 +76,11 @@ softusb_timer timer(
 	.io_do(io_dr_timer)
 );
 
+wire [pmem_width-1:0] dbg_pc;
+
 softusb_hostif #(
-	.csr_addr(csr_addr)
+	.csr_addr(csr_addr),
+	.pmem_width(pmem_width)
 ) hostif (
 	.sys_clk(sys_clk),
 	.sys_rst(sys_rst),
@@ -93,7 +96,9 @@ softusb_hostif #(
 	.irq(irq),
 
 	.io_we(io_we),
-	.io_a(io_a)
+	.io_a(io_a),
+
+	.dbg_pc(dbg_pc)
 );
 
 softusb_sie sie(
@@ -178,7 +183,9 @@ softusb_navre #(
 	.io_we(io_we),
 	.io_a(io_a),
 	.io_do(io_dw),
-	.io_di(io_dr_sie|io_dr_timer)
+	.io_di(io_dr_sie|io_dr_timer),
+
+	.dbg_pc(dbg_pc)
 );
 
 endmodule
