@@ -298,7 +298,7 @@ nothing:
 	return 0;
 
 timeout:
-	print_string(timeout_error);
+//	print_string(timeout_error);
 	return 0;
 
 error:
