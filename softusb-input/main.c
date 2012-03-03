@@ -836,10 +836,10 @@ static void sof(void)
 
 	mask = 0;
 #ifndef TRIGGER
-	if(port_a.full_speed && (port_a.state > PORT_STATE_BUS_RESET))
+	if(port_a.full_speed && (port_a.state > PORT_STATE_RESET_WAIT))
 		mask |= 0x01;
 #endif
-	if(port_b.full_speed && (port_b.state > PORT_STATE_BUS_RESET))
+	if(port_b.full_speed && (port_b.state > PORT_STATE_RESET_WAIT))
 		mask |= 0x02;
 	if(mask != 0) {
 		wio8(SIE_TX_LOW_SPEED, 0);
