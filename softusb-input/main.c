@@ -27,6 +27,11 @@
 #include "host.h"
 #include "crc.h"
 
+#define	SETUP_DATA_RETRIES	250	/* <= 255 */
+#define	SETUP_END_RETRIES	100	/* <= 255 */
+#define	ENUM_RETRIES		  4	/* <= 127 */
+#define	ENUM_RESETS		  3	/* <= 127 */
+
 //#define	TRIGGER
 
 #ifdef TRIGGER
@@ -373,7 +378,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 
 	/* data phase */
 	transferred = 0;
-	retry = 250;
+	retry = SETUP_DATA_RETRIES;
 	if(out) {
 		while(1) {
 			chunklen = maxlen - transferred;
@@ -420,7 +425,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 		}
 
 	/* send IN/OUT token in the opposite direction to end transfer */
-	retry = 100;
+	retry = SETUP_END_RETRIES;
 retry:
 	if(out) {
 		rxlen = usb_in(addr, USB_PID_DATA1, usb_buffer, 11);
@@ -627,9 +632,9 @@ static const char retry_exceed[] PROGMEM =
 
 static void check_retry(struct port_status *p)
 {
-	if(p->retry_count++ <= 4)
+	if(p->retry_count++ <= ENUM_RETRIES)
 		return;
-	if(p->reset_count++ <= 3) {
+	if(p->reset_count++ <= ENUM_RESETS) {
 		print_string(retry_reset);
 		p->state = PORT_STATE_DISCONNECTED;
 		return;
