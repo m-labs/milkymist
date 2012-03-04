@@ -401,7 +401,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 			    ep0_size+3);
 			if(!rxlen)
 				continue;
-			if(rxlen <0)
+			if(rxlen < 0)
 				return rxlen;
 
 			expected_data = toggle(expected_data);
@@ -432,7 +432,7 @@ retry:
 		rxlen = usb_out(addr, usb_buffer, 3);
 		if(!rxlen)
 			goto retry;
-		if(!rxlen < 0)
+		if(rxlen < 0)
 			return -1;
 	}
 
