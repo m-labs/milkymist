@@ -347,6 +347,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 	char rxlen;
 	char transferred;
 	char chunklen;
+	unsigned char retry;
 
 	/* generate SETUP token */
 	make_usb_token(USB_PID_SETUP, addr, setup);
@@ -371,6 +372,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 
 	/* data phase */
 	transferred = 0;
+	retry = 250;
 	if(out) {
 		while(1) {
 			chunklen = maxlen - transferred;
@@ -384,9 +386,9 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 			memcpy(&usb_buffer[1], payload, chunklen);
 			usb_crc16(&usb_buffer[1], chunklen, &usb_buffer[chunklen+1]);
 			rxlen = usb_out(addr, usb_buffer, chunklen+3);
-			if(!rxlen)
+			if(!rxlen && retry--)
 				continue;
-			if(rxlen < 0)
+			if(rxlen <= 0)
 				return -1;
 
 			expected_data = toggle(expected_data);
@@ -399,10 +401,10 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 		while(transferred != maxlen) {
 			rxlen = usb_in(addr, expected_data, usb_buffer,
 			    ep0_size+3);
-			if(!rxlen)
+			if(!rxlen && retry--)
 				continue;
-			if(rxlen < 0)
-				return rxlen;
+			if(rxlen <= 0)
+				return -1;
 
 			expected_data = toggle(expected_data);
 			chunklen = rxlen - 3; /* strip token and CRC */
@@ -417,12 +419,13 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 		}
 
 	/* send IN/OUT token in the opposite direction to end transfer */
+	retry = 100;
 retry:
 	if(out) {
 		rxlen = usb_in(addr, USB_PID_DATA1, usb_buffer, 11);
-		if(!rxlen)
+		if(!rxlen && retry--)
 			goto retry;
-		if(rxlen < 0)
+		if(rxlen <= 0)
 			return -1;
 	} else {
 		/* make DATA1 packet */
@@ -430,9 +433,9 @@ retry:
 		usb_buffer[1] = usb_buffer[2] = 0x00; /* CRC is 0x0000 without data */
 
 		rxlen = usb_out(addr, usb_buffer, 3);
-		if(!rxlen)
+		if(!rxlen && retry--)
 			goto retry;
-		if(rxlen < 0)
+		if(rxlen <= 0)
 			return -1;
 	}
 
