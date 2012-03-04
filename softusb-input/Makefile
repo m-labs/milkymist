@@ -1,14 +1,23 @@
 SOURCES=crt0.S main.c debug.c crc.c libc.c
+INCLUDES=comloc.h crc.h debug.h host.h io.h libc.h progmem.h sie.h timer.h
 
-all: softusb-input.bin
+all: softusb-input.h
+
+softusb-input.elf: $(SOURCES) $(INCLUDES)
+	avr-gcc -o $@ -mmcu=avr2 -mno-interrupts -Wall -Os $(SOURCES) $(CFLAGS) -nostdlib -Wl,-T -Wl,navre.ld
 
 %.bin: %.elf
 	avr-objcopy -O binary $< $@
 
-softusb-input.elf: $(SOURCES) $(wildcard *.h)
-	avr-gcc -o softusb-input.elf -mmcu=avr2 -mno-interrupts -Wall -Os $(SOURCES) $(CFLAGS) -nostdlib -Wl,-T -Wl,navre.ld
+softusb-input.h: softusb-input.bin
+	cat $< | xxd -i - $@
+
+install: softusb-input.h
+	test -n "$(RTEMS_MAKEFILE_PATH)"
+	mkdir -p $(RTEMS_MAKEFILE_PATH)/lib/include
+	cp $< $(RTEMS_MAKEFILE_PATH)/lib/include
 
 .PHONY: clean
 
 clean:
-	rm -f softusb-input.bin softusb-input.elf
+	rm -f softusb-input.elf softusb-input.bin softusb-input.h

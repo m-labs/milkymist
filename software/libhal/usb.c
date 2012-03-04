@@ -1,6 +1,6 @@
 /*
  * Milkymist SoC (Software)
- * Copyright (C) 2007, 2008, 2009, 2010 Sebastien Bourdeauducq
+ * Copyright (C) 2007, 2008, 2009, 2010, 2012 Sebastien Bourdeauducq
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include "input-comloc.h"
 
 static const unsigned char input_firmware[] = {
-#include "softusb-input.h"
+#include <softusb-input/softusb-input.h>
 };
 
 static int debug_enable;
@@ -173,4 +173,3 @@ void usb_isr(void)
 		keyboard_consume = (keyboard_consume + 1) & 0x07;
 	}
 }
-

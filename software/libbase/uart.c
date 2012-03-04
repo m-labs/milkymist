@@ -48,6 +48,7 @@ static int force_sync;
 void uart_isr(void)
 {
 	unsigned int stat = CSR_UART_STAT;
+	CSR_UART_STAT = stat;
 
 	if(stat & UART_STAT_RX_EVT) {
 		rx_buf[rx_produce] = CSR_UART_RXTX;
@@ -62,7 +63,6 @@ void uart_isr(void)
 			tx_cts = 1;
 	}
 
-	CSR_UART_STAT = stat;
 	irq_ack(IRQ_UART);
 }
 
