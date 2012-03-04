@@ -101,6 +101,7 @@ struct port_status {
 	char state;
 	char full_speed;
 	char retry_count;
+	char reset_count;
 	unsigned int unreset_frame;
 	unsigned char ep0_size;
 	struct ep_status keyboard;
@@ -547,6 +548,7 @@ static void check_discon(struct port_status *p, char name)
 	if(discon) {
 		print_string(disconnect); print_char(name); print_char('\n');
 		p->state = PORT_STATE_DISCONNECTED;
+		p->reset_count = 0;
 		p->keyboard.ep = p->mouse.ep = p->midi.ep = 0;
 	}
 }
@@ -618,13 +620,22 @@ static void unsupported(struct port_status *p)
 	p->state = PORT_STATE_UNSUPPORTED;
 }
 
-static const char retry_exceed[] PROGMEM = "Retry count exceeded, disabling device.\n";
+static const char retry_reset[] PROGMEM =
+    "Retry count exceeded, resetting device.\n";
+static const char retry_exceed[] PROGMEM =
+    "Retry count exceeded, disabling device.\n";
+
 static void check_retry(struct port_status *p)
 {
-	if(p->retry_count++ > 4) {
-		print_string(retry_exceed);
-		p->state = PORT_STATE_UNSUPPORTED;
+	if(p->retry_count++ <= 4)
+		return;
+	if(p->reset_count++ <= 3) {
+		print_string(retry_reset);
+		p->state = PORT_STATE_DISCONNECTED;
+		return;
 	}
+	print_string(retry_exceed);
+	p->state = PORT_STATE_UNSUPPORTED;
 }
 
 static const char vid[] PROGMEM = "VID: ";
