@@ -60,13 +60,11 @@ void dump_hex(unsigned char *buf, unsigned char len)
 	} else {
 		for(i=0;i<len;i++) {
 			print_hex(buf[i]);
-			if(((i & 0x0f) == 0) && (i != 0))
+			if((i & 0x0f) == 0xf)
 				print_char('\n');
 			else
 				print_char(' ');
 		}
-		if(i & 0x0f)
-			print_char('\n');
 	}
 }
 
