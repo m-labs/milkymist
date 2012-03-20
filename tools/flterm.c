@@ -705,7 +705,10 @@ int main(int argc, char *argv[])
 				break;
 			case OPTION_SPEED:
 				baud = strtoul(optarg, &endptr, 0);
-				if(*endptr != 0) baud = 115200;
+				if(*endptr != 0) {
+					fprintf(stderr, "[FLTERM] Couldn't parse baudrate\n");
+					return 1;
+				}
 				break;
 			case OPTION_DEBUG:
 				debug = 1;
@@ -719,7 +722,10 @@ int main(int argc, char *argv[])
 				break;
 			case OPTION_KERNELADR:
 				kernel_address = strtoul(optarg, &endptr, 0);
-				if(*endptr != 0) kernel_address = 0;
+				if(*endptr != 0) {
+					fprintf(stderr, "[FLTERM] Couldn't parse kernel address\n");
+					return 1;
+				}
 				break;
 			case OPTION_CMDLINE:
 				free(cmdline);
@@ -727,7 +733,10 @@ int main(int argc, char *argv[])
 				break;
 			case OPTION_CMDLINEADR:
 				cmdline_address = strtoul(optarg, &endptr, 0);
-				if(*endptr != 0) cmdline_address = 0;
+				if(*endptr != 0) {
+					fprintf(stderr, "[FLTERM] Couldn't parse cmdline address\n");
+					return 1;
+				}
 				break;
 			case OPTION_INITRD:
 				free(initrd_image);
@@ -735,7 +744,10 @@ int main(int argc, char *argv[])
 				break;
 			case OPTION_INITRDADR:
 				initrd_address = strtoul(optarg, &endptr, 0);
-				if(*endptr != 0) initrd_address = 0;
+				if(*endptr != 0) {
+					fprintf(stderr, "[FLTERM] Couldn't parse initrd address\n");
+					return 1;
+				}
 				break;
 			case OPTION_LOG:
 				free(log_path);
@@ -745,7 +757,7 @@ int main(int argc, char *argv[])
 	}
 
 	if(serial_port == NULL) {
-		print_usage();
+		fprintf(stderr, "[FLTERM] No port given\n");
 		return 1;
 	}
 
