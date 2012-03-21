@@ -645,7 +645,7 @@ static const struct option options[] = {
 
 static void print_usage()
 {
-	fprintf(stderr, "Serial boot program for Milkymist SoC - v. 2.2\n");
+	fprintf(stderr, "Serial boot program for Milkymist SoC - v. 2.3\n");
 	fprintf(stderr, "Copyright (C) 2007, 2008, 2009, 2010, 2011 Sebastien Bourdeauducq\n");
 	fprintf(stderr, "Copyright (C) 2011 Michael Walle\n");
 	fprintf(stderr, "Copyright (C) 2004 MontaVista Software, Inc\n\n");
