@@ -16,16 +16,16 @@ SW_DIRS=${SDK_DIRS} libhpdmc libfpvm libfpvm/x86-linux libfpvm/lm32-linux bios
 CORE_DIRS=ac97 bt656cap conbus dmx fmlbrg fmlmeter hpdmc_ddr32 \
 	 memcard pfpu rc5 softusb sysctl tmu2 uart vgafb
 
-host:
+tools:
 	make -C ${BASEDIR}/tools
 
-bios: host
+bios: tools
 	make -C ${BASEDIR}/software/bios
 
-bitstream: host
+bitstream: tools
 	make -C ${BASEDIR}/boards/${BOARD}/synthesis -f Makefile.${SYNTOOL}
 
-sdk: host
+sdk: tools
 	for d in $(SDK_DIRS); do make -C ${BASEDIR}/software/$$d || exit 1; done
 
 load-bitstream: bitstream
@@ -35,7 +35,14 @@ docs:
 	make -C ${BASEDIR}/doc
 	for d in $(CORE_DIRS); do make -C ${BASEDIR}/cores/$$d/doc || exit 1; done
 
-.PHONY: clean load-bitstream
+sdk-install: sdk
+	make -C ${BASEDIR}/software/libfpvm install
+	make -C ${BASEDIR}/softusb-input install
+
+tools-install: tools
+	make -C ${BASEDIR}/tools install
+
+.PHONY: clean load-bitstream tools
 clean:
 	make -C ${BASEDIR}/boards/milkymist-one/synthesis -f common.mak clean
 	make -C ${BASEDIR}/boards/milkymist-one/standby clean

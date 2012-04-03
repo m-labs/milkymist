@@ -16,7 +16,8 @@
  */
 
 module softusb_hostif #(
-	parameter csr_addr = 4'h0
+	parameter csr_addr = 4'h0,
+	parameter pmem_width = 12
 ) (
 	input sys_clk,
 	input sys_rst,
@@ -32,7 +33,9 @@ module softusb_hostif #(
 	output irq,
 
 	input io_we,
-	input [5:0] io_a
+	input [5:0] io_a,
+
+	input [pmem_width-1:0] dbg_pc
 );
 
 wire csr_selected = csr_a[13:10] == csr_addr;
@@ -48,7 +51,7 @@ always @(posedge sys_clk) begin
 		if(csr_selected) begin
 			if(csr_we)
 				usb_rst0 <= csr_di[0];
-			csr_do <= usb_rst0;
+			csr_do <= { dbg_pc, 1'b0 };
 		end
 	end
 end

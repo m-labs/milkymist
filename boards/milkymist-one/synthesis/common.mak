@@ -18,7 +18,7 @@ load: $(BUILDDIR)/system.bit
 
 # Sometimes different options are needed to meet timing
 build/system.ncd: build/system.ngd
-	cd build && map -ol high -t 2 -w system.ngd
+	cd build && map -ol high -t 20 -w system.ngd
 
 build/system-routed.ncd: build/system.ncd
 	cd build && par -ol high -w system.ncd system-routed.ncd
