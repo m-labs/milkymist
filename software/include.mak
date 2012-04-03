@@ -2,7 +2,10 @@
 #
 CROSS_COMPILER=lm32-rtems4.11-
 
+# Choose a compiler - gcc or clang
+#CC_normal := clang -march=mico32 -ccc-host-triple mico32-elf -ccc-gcc-name lm32-rtems4.11-gcc
 CC_normal := $(CROSS_COMPILER)gcc
+
 AR_normal := $(CROSS_COMPILER)ar
 AS_normal := $(CROSS_COMPILER)as
 LD_normal := $(CROSS_COMPILER)ld
