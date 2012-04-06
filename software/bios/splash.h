@@ -18,6 +18,6 @@
 #ifndef __SPLASH_H
 #define __SPLASH_H
 
-void splash_display();
+void splash_display(void);
 
 #endif /* __SPLASH_H */

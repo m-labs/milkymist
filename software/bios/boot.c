@@ -57,7 +57,7 @@ static void __attribute__((noreturn)) boot(unsigned int r1, unsigned int r2, uns
 /* Note that we do not use the hw timer so that this function works
  * even if the system controller does not.
  */
-static int check_ack()
+static int check_ack(void)
 {
 	int timeout;
 	int recognized;
@@ -87,7 +87,7 @@ static int check_ack()
 
 #define MAX_FAILED 5
 
-void serialboot()
+void serialboot(void)
 {
 	struct sfl_frame frame;
 	int failed;
@@ -230,7 +230,7 @@ static int tftp_get_v(unsigned int ip, const char *filename, char *buffer)
 	return r;
 }
 
-void netboot()
+void netboot(void)
 {
 	int size;
 	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
@@ -332,7 +332,7 @@ static void lzma_error(char *x)
 	printf("LZMA error: %s\n", x);
 }
 
-void flashboot()
+void flashboot(void)
 {
 	unsigned int *flashbase;
 	unsigned int length;

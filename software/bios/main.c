@@ -391,7 +391,7 @@ static void mdiow(char *reg, char *value)
 
 /* Init + command line */
 
-static void help()
+static void help(void)
 {
 	puts("Milkymist(tm) BIOS (bootloader)");
 	puts("Don't know what to do? Try 'flashboot'.\n");
@@ -470,7 +470,7 @@ static void do_command(char *c)
 		printf("Command not found\n");
 }
 
-static int test_user_abort()
+static int test_user_abort(void)
 {
 	char c;
 
@@ -500,7 +500,7 @@ int rescue;
 
 extern unsigned int _edata;
 
-static void crcbios()
+static void crcbios(void)
 {
 	unsigned int offset_bios;
 	unsigned int length;
@@ -525,7 +525,7 @@ static void crcbios()
 	}
 }
 
-static void print_mac()
+static void print_mac(void)
 {
 	unsigned char *macadr = (unsigned char *)FLASH_OFFSET_MAC_ADDRESS;
 
@@ -539,7 +539,7 @@ static const char banner[] =
 	"it under the terms of the GNU General Public License as published by\n"
 	"the Free Software Foundation, version 3 of the License.\n\n";
 
-static void boot_sequence()
+static void boot_sequence(void)
 {
 	if(test_user_abort()) {
 		if(rescue) {
@@ -593,7 +593,7 @@ static void readstr(char *s, int size)
 	}
 }
 
-static void ethreset_delay()
+static void ethreset_delay(void)
 {
 	CSR_TIMER0_COUNTER = 0;
 	CSR_TIMER0_COMPARE = CSR_FREQUENCY >> 2;
@@ -601,7 +601,7 @@ static void ethreset_delay()
 	while(CSR_TIMER0_CONTROL & TIMER_ENABLE);
 }
 
-static void ethreset()
+static void ethreset(void)
 {
 	CSR_MINIMAC_SETUP = MINIMAC_SETUP_PHYRST;
 	ethreset_delay();

@@ -23,7 +23,7 @@
 
 extern int rescue;
 
-void splash_display()
+void splash_display(void)
 {
 	int i;
 	unsigned short *splash_src = rescue ? (unsigned short *)FLASH_OFFSET_RESCUE_SPLASH : (unsigned short *)FLASH_OFFSET_REGULAR_SPLASH;
