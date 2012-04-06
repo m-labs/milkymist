@@ -9,7 +9,7 @@ LIBS=$(MMDIR)/software/libhpdmc/libhpdmc.a $(MMDIR)/software/libbase/libbase-lig
 all: bios.bin bios-rescue.bin
 
 %.bin: %.elf
-	$(MAKE) -C $(MMDIR)/tools
+	$(MAKE) -C $(MMDIR)/tools mkmmimg
 	$(OBJCOPY) $(SEGMENTS) -O binary $< $@
 	chmod -x $@
 	$(MMDIR)/tools/mkmmimg $@ write
