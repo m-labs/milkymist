@@ -151,49 +151,49 @@ reg lastrx;
 reg startrx;
 always @(posedge usb_clk) begin
 	if(rxreset) begin
-		rx_active = 1'b0;
-		rx_valid = 1'b0;
-		rx_error = 1'b0;
+		rx_active <= 1'b0;
+		rx_valid <= 1'b0;
+		rx_error <= 1'b0;
 	end else begin
-		rx_valid = 1'b0;
-		rx_error = 1'b0;
+		rx_valid <= 1'b0;
+		rx_error <= 1'b0;
 		if(eop_detected)
-			rx_active = 1'b0;
+			rx_active <= 1'b0;
 		else if(dpll_ce) begin
 			if(rx_active & ~se0) begin
 				if(onecount == 3'd6) begin
 					/* skip stuffed bits */
-					onecount = 3'd0;
+					onecount <= 3'd0;
 					if((lastrx & rx_corrected)|(~lastrx & ~rx_corrected)) begin
 						/* no transition? bitstuff error */
-						rx_active = 1'b0;
-						rx_error = 1'b1;
+						rx_active <= 1'b0;
+						rx_error <= 1'b1;
 					end
-					lastrx = ~lastrx;
+					lastrx <= ~lastrx;
 				end else begin
 					if(rx_corrected) begin
-						rx_data = {lastrx, rx_data[7:1]};
+						rx_data <= {lastrx, rx_data[7:1]};
 						if(lastrx)
-							onecount = onecount + 3'd1;
+							onecount <= onecount + 3'd1;
 						else
-							onecount = 3'd0;
-						lastrx = 1'b1;
+							onecount <= 3'd0;
+						lastrx <= 1'b1;
 					end else begin
-						rx_data = {~lastrx, rx_data[7:1]};
+						rx_data <= {~lastrx, rx_data[7:1]};
 						if(~lastrx)
-							onecount = onecount + 3'd1;
+							onecount <= onecount + 3'd1;
 						else
-							onecount = 3'd0;
-						lastrx = 1'b0;
+							onecount <= 3'd0;
+						lastrx <= 1'b0;
 					end
-					rx_valid = bitcount == 3'd7;
-					bitcount = bitcount + 3'd1;
+					rx_valid <= bitcount == 3'd7;
+					bitcount <= bitcount + 3'd1;
 				end
 			end else if(startrx) begin
-				rx_active = 1'b1;
-				bitcount = 3'd0;
-				onecount = 3'd1;
-				lastrx = 1'b0;
+				rx_active <= 1'b1;
+				bitcount <= 3'd0;
+				onecount <= 3'd1;
+				lastrx <= 1'b0;
 			end
 		end
 	end
