@@ -42,7 +42,7 @@ INCLUDES_NOLIBC ?= -nostdinc -I$(MMDIR)/software/include/base
 INCLUDES = $(INCLUDES_NOLIBC) -I$(MMDIR) -I$(MMDIR)/software/include -I$(MMDIR)/tools
 ASFLAGS = $(INCLUDES) -nostdinc
 # later: -Wmissing-prototypes
-CFLAGS = -O9 -Wall -Wstrict-prototypes -Wold-style-definition -Wshadow \
+CFLAGS = -O9 -Wall -Werror -Wstrict-prototypes -Wold-style-definition -Wshadow \
 	 -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled \
 	 -msign-extend-enabled -fno-builtin -fsigned-char \
 	 -fsingle-precision-constant $(INCLUDES)
