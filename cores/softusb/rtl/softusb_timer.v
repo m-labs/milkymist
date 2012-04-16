@@ -29,9 +29,9 @@ reg [31:0] counter;
 always @(posedge usb_clk) begin
 	if(usb_rst) begin
 		counter <= 32'd0;
-		io_do <= 32'd0;
+		io_do <= 8'd0;
 	end else begin
-		io_do <= 32'd0;
+		io_do <= 8'd0;
 		case(io_a)
 			6'h20: io_do <= counter[7:0];
 			6'h21: io_do <= counter[15:8];
