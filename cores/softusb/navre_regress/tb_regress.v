@@ -97,7 +97,9 @@ softusb_navre #(
 	.io_we(io_we),
 	.io_a(io_a),
 	.io_do(io_do),
-	.io_di(io_di)
+	.io_di(io_di),
+
+	.dbg_pc()
 );
 
 initial begin
