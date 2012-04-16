@@ -1,8 +1,8 @@
 # ==== Clock input ====
-NET "clk50" LOC = AB11 | IOSTANDARD = LVCMOS33;
+NET "clkin50" LOC = AB11 | IOSTANDARD = LVCMOS33;
 
-NET "clk50" TNM_NET = "GRPclk50";
-TIMESPEC "TSclk50" = PERIOD "GRPclk50" 20 ns HIGH 50%;
+NET "clkin50" TNM_NET = "GRPclkin50";
+TIMESPEC "TSclkin50" = PERIOD "GRPclkin50" 20 ns HIGH 50%;
 
 # ==== Flash ====
 NET "flash_adr(0)" LOC = L22;
@@ -350,6 +350,6 @@ NET "usb_clk" TNM_NET = "GRPusb";
 TIMESPEC "TSusb_async1" = FROM "GRPsys" TO "GRPusb" TIG;
 TIMESPEC "TSusb_async2" = FROM "GRPusb" TO "GRPsys" TIG;
 
-NET "clk50_IBUFG" TNM_NET = "GRPinput";
+NET "clkin50_b" TNM_NET = "GRPinput";
 TIMESPEC "TSusb_async3" = FROM "GRPinput" TO "GRPusb" TIG;
 TIMESPEC "TSusb_async4" = FROM "GRPusb" TO "GRPinput" TIG;

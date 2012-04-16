@@ -19,7 +19,7 @@
 `include "lm32_include.v"
 
 module system(
-	input clk50,
+	input clkin50,
 
 	// Boot ROM
 	output [23:0] flash_adr,
@@ -106,7 +106,7 @@ module system(
 	input phy_irq_n,
 	output phy_mii_clk,
 	inout phy_mii_data,
-	output reg phy_clk,
+	output phy_clk,
 
 	// Video Input
 	input [7:0] videoin_p,
@@ -144,58 +144,135 @@ module system(
 //------------------------------------------------------------------
 // Clock and Reset Generation
 //------------------------------------------------------------------
-wire sys_clk;
-wire sys_clk_n;
 wire hard_reset;
 wire reset_button = btn1 & btn2 & btn3;
 
 `ifndef SIMULATION
-wire sys_clk_dcm;
-wire sys_clk_n_dcm;
-
-DCM_SP #(
-	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
-
-	.CLKFX_DIVIDE(5),		// 1 to 32
-	.CLKFX_MULTIPLY(8),		// 2 to 32
-
-	.CLKIN_DIVIDE_BY_2("FALSE"),
-	.CLKIN_PERIOD(20.0),
-	.CLKOUT_PHASE_SHIFT("NONE"),
-	.CLK_FEEDBACK("NONE"),
-	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
-	.DUTY_CYCLE_CORRECTION("TRUE"),
-	.PHASE_SHIFT(0),
-	.STARTUP_WAIT("TRUE")
-) clkgen_sys (
-	.CLK0(),
-	.CLK90(),
-	.CLK180(),
-	.CLK270(),
-
-	.CLK2X(),
-	.CLK2X180(),
-
-	.CLKDV(),
-	.CLKFX(sys_clk_dcm),
-	.CLKFX180(sys_clk_n_dcm),
-	.LOCKED(),
-	.CLKFB(),
-	.CLKIN(clk50),
-	.RST(1'b0),
-	.PSEN(1'b0)
+wire clkin50_b;
+IBUFG clk50_ibuf(
+	.I(clkin50),
+	.O(clkin50_b)
 );
-BUFG b1(
-	.I(sys_clk_dcm),
+
+wire clk24_pll;
+wire phy_clk_pll;
+wire clkgen600_fb;
+PLL_BASE #(
+	.COMPENSATION("INTERNAL"),
+	.BANDWIDTH("OPTIMIZED"),
+	.CLKOUT0_DIVIDE(25),	// 24 MHz
+	.CLKOUT1_DIVIDE(24),	// 25 MHz
+	.CLKOUT2_DIVIDE(1),
+	.CLKOUT3_DIVIDE(1),
+	.CLKOUT4_DIVIDE(1),
+	.CLKOUT5_DIVIDE(1),
+	.CLKOUT0_PHASE(0.0),
+	.CLKOUT1_PHASE(0.0),
+	.CLKOUT2_PHASE(0.0),
+	.CLKOUT3_PHASE(0.0),
+	.CLKOUT4_PHASE(0.0),
+	.CLKOUT5_PHASE(0.0),
+	.CLKOUT0_DUTY_CYCLE(0.50),
+	.CLKOUT1_DUTY_CYCLE(0.50),
+	.CLKOUT2_DUTY_CYCLE(0.50),
+	.CLKOUT3_DUTY_CYCLE(0.50),
+	.CLKOUT4_DUTY_CYCLE(0.50),
+	.CLKOUT5_DUTY_CYCLE(0.50),
+	.CLKFBOUT_MULT(12),		// 600 MHz
+	.DIVCLK_DIVIDE(1),
+	.CLKFBOUT_PHASE(0.0),
+	.REF_JITTER(0.100),
+	.CLKIN_PERIOD(0.000)
+) clkgen600 (
+	.CLKOUT0(clk24_pll),
+	.CLKOUT1(phy_clk_pll),
+	.CLKOUT2(),
+	.CLKOUT3(),
+	.CLKOUT4(),
+	.CLKOUT5(),
+	.CLKFBOUT(clkgen600_fb),
+	.CLKIN(clkin50_b),
+	.CLKFBIN(clkgen600_fb),
+	.LOCKED(),
+	.RST(1'b0)
+);
+
+wire clk24;
+BUFG clk24_buf(
+	.I(clk24_pll),
+	.O(clk24)
+);
+
+OBUF phy_clk_obuf(
+	.I(phy_clk_pll),
+	.O(phy_clk)
+);
+
+wire usb_clk_pll;
+wire sys_clk_pll;
+wire sys_clk_n_pll;
+wire clkgen720_fb;
+PLL_BASE #(
+	.COMPENSATION("INTERNAL"),
+	.BANDWIDTH("OPTIMIZED"),
+	.CLKOUT0_DIVIDE(15),	// 48 MHz
+	.CLKOUT1_DIVIDE(9),		// 80 MHz
+	.CLKOUT2_DIVIDE(9),		// 80 MHz, 180deg phase shift
+	.CLKOUT3_DIVIDE(1),
+	.CLKOUT4_DIVIDE(1),
+	.CLKOUT5_DIVIDE(1),
+	.CLKOUT0_PHASE(0.0),
+	.CLKOUT1_PHASE(0.0),
+	.CLKOUT2_PHASE(180.0),
+	.CLKOUT3_PHASE(0.0),
+	.CLKOUT4_PHASE(0.0),
+	.CLKOUT5_PHASE(0.0),
+	.CLKOUT0_DUTY_CYCLE(0.50),
+	.CLKOUT1_DUTY_CYCLE(0.50),
+	.CLKOUT2_DUTY_CYCLE(0.50),
+	.CLKOUT3_DUTY_CYCLE(0.50),
+	.CLKOUT4_DUTY_CYCLE(0.50),
+	.CLKOUT5_DUTY_CYCLE(0.50),
+	.CLKFBOUT_MULT(30),		// 720 MHz
+	.DIVCLK_DIVIDE(1),
+	.CLKFBOUT_PHASE(0.0),
+	.REF_JITTER(0.100),
+	.CLKIN_PERIOD(0.000)
+) clkgen720 (
+	.CLKOUT0(usb_clk_pll),
+	.CLKOUT1(sys_clk_pll),
+	.CLKOUT2(sys_clk_n_pll),
+	.CLKOUT3(),
+	.CLKOUT4(),
+	.CLKOUT5(),
+	.CLKFBOUT(clkgen720_fb),
+	.CLKIN(clk24),
+	.CLKFBIN(clkgen720_fb),
+	.LOCKED(),
+	.RST(1'b0)
+);
+
+wire usb_clk;
+BUFG clkgen720_b1(
+	.I(usb_clk_pll),
+	.O(usb_clk)
+);
+
+wire sys_clk;
+BUFG clkgen720_b2(
+	.I(sys_clk_pll),
 	.O(sys_clk)
 );
-BUFG b2(
-	.I(sys_clk_n_dcm),
+
+wire sys_clk_n;
+BUFG clkgen720_b3(
+	.I(sys_clk_n_pll),
 	.O(sys_clk_n)
 );
+
 `else
-assign sys_clk = clkin;
-assign sys_clk_n = ~clkin;
+wire sys_clk = clkin;
+wire sys_clk_n = ~clkin;
 `endif
 
 reg trigger_reset;
@@ -990,7 +1067,7 @@ vga #(
 	.fml_depth(`SDRAM_DEPTH)
 ) vga (
 	.sys_clk(sys_clk),
-	.clk50(clk50),
+	.clk50(clkin50_b),
 	.sys_rst(sys_rst),
 
 	.csr_a(csr_a),
@@ -1315,8 +1392,6 @@ assign phy_mii_data = 1'bz;
 assign phy_rst_n = 1'b0;
 `endif
 
-always @(posedge clk50) phy_clk <= ~phy_clk;
-
 //---------------------------------------------------------------------------
 // FastMemoryLink usage and performance meter
 //---------------------------------------------------------------------------
@@ -1489,45 +1564,6 @@ assign ir_irq = 1'b0;
 //---------------------------------------------------------------------------
 // USB
 //---------------------------------------------------------------------------
-wire usb_clk_dcm;
-wire usb_clk;
-DCM_SP #(
-	.CLKDV_DIVIDE(2.0),		// 1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5
-
-	.CLKFX_DIVIDE(25),		// 1 to 32
-	.CLKFX_MULTIPLY(24),		// 2 to 32
-
-	.CLKIN_DIVIDE_BY_2("FALSE"),
-	.CLKIN_PERIOD(20.0),
-	.CLKOUT_PHASE_SHIFT("NONE"),
-	.CLK_FEEDBACK("NONE"),
-	.DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"),
-	.DUTY_CYCLE_CORRECTION("TRUE"),
-	.PHASE_SHIFT(0),
-	.STARTUP_WAIT("TRUE")
-) clkgen_usb (
-	.CLK0(),
-	.CLK90(),
-	.CLK180(),
-	.CLK270(),
-
-	.CLK2X(),
-	.CLK2X180(),
-
-	.CLKDV(),
-	.CLKFX(usb_clk_dcm),
-	.CLKFX180(),
-	.LOCKED(),
-	.CLKFB(),
-	.CLKIN(clk50),
-	.RST(1'b0),
-
-	.PSEN(1'b0)
-);
-BUFG usb_b_p(
-	.I(usb_clk_dcm),
-	.O(usb_clk)
-);
 `ifdef ENABLE_USB
 softusb #(
 	.csr_addr(4'hf)

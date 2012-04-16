@@ -1,5 +1,3 @@
-INST "b1" LOC = BUFGMUX_X3Y6;
-INST "b2" LOC = BUFGMUX_X2Y1;
 INST "b_videoin" LOC = BUFGMUX_X3Y15;
 INST "vga/b" LOC = BUFGMUX_X2Y9;
 INST "b_phy_rx_clk" LOC = BUFGMUX_X3Y5;
@@ -7,8 +5,8 @@ INST "b_phy_tx_clk" LOC = BUFGMUX_X2Y3;
 INST "bio_ac97" LOC = BUFIO2_X4Y26;
 INST "b_ac97" LOC = BUFGMUX_X3Y7;
 
-INST "clkgen_sys" LOC = DCM_X0Y0;
-INST "clkgen_usb" LOC = DCM_X0Y3;
+INST "clkgen600" LOC = PLL_ADV_X0Y1;
+INST "clkgen720" LOC = PLL_ADV_X0Y2;
 INST "vga/clkgen_vga" LOC = DCM_X0Y1;
 
 CONFIG STEPPING = "ES";
