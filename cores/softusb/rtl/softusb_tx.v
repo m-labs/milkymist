@@ -43,14 +43,18 @@ end
 
 /* Clock 'divider' */
 reg gce; /* global clock enable */
-reg [4:0] gce_counter;
+reg [5:0] gce_counter;
 always @(posedge usb_clk) begin
 	if(usb_rst) begin
 		gce <= 1'b0;
-		gce_counter <= 5'd0;
+		gce_counter <= 6'd0;
 	end else begin
-		gce <= low_speed ? (gce_counter == 5'd31) : (gce_counter[1:0] == 2'd3);
-		gce_counter <= gce_counter + 5'd1;
+		gce <= 1'b0;
+		gce_counter <= gce_counter + 6'd1;
+		if((low_speed & gce_counter == 6'd47) | (~low_speed & gce_counter == 6'd5)) begin
+			gce <= 1'b1;
+			gce_counter <= 6'd0;
+		end
 	end
 end
 

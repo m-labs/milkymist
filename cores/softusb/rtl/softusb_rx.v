@@ -87,16 +87,28 @@ always @(*) begin
 		end
 		3'd3: begin
 			if(se0)
-				eop_next_state = 3'd3;
+				eop_next_state = 3'd4;
+			else
+				eop_next_state = 3'd0;
+		end
+		3'd4: begin
+			if(se0)
+				eop_next_state = 3'd5;
+			else
+				eop_next_state = 3'd0;
+		end
+		3'd5: begin
+			if(se0)
+				eop_next_state = 3'd5;
 			else begin
 				if(rx_corrected) begin
 					eop_detected = 1'b1;
 					eop_next_state = 3'd0;
 				end else
-					eop_next_state = 3'd4;
+					eop_next_state = 3'd6;
 			end
 		end
-		3'd4: begin
+		3'd6: begin
 			if(rx_corrected)
 				eop_detected = 1'b1;
 			eop_next_state = 3'd0;
@@ -128,16 +140,20 @@ end
 always @(*) begin
 	dpll_next_state = dpll_state;
 	case(dpll_state)
-		4'h5: dpll_next_state = 4'h7;
-		4'h7: if( rx_corrected) dpll_next_state = 4'h6; else dpll_next_state = 4'hb;
+		4'h5: dpll_next_state = 4'hd;
+		4'hd: dpll_next_state = 4'h7;
+		4'h7: if( rx_corrected) dpll_next_state = 4'he; else dpll_next_state = 4'hb;
+		4'he: dpll_next_state = 4'h6;
 		4'h6: if( rx_corrected) dpll_next_state = 4'h4; else dpll_next_state = 4'h1;
 		4'h4: if( rx_corrected) dpll_next_state = 4'h5; else dpll_next_state = 4'h1;
-		4'h1: dpll_next_state = 4'h3;
-		4'h3: if(~rx_corrected) dpll_next_state = 4'h2; else dpll_next_state = 4'hf;
+		4'h1: dpll_next_state = 4'h9;
+		4'h9: dpll_next_state = 4'h3;
+		4'h3: if(~rx_corrected) dpll_next_state = 4'ha; else dpll_next_state = 4'hf;
+		4'ha: dpll_next_state = 4'h2;
 		4'h2: if(~rx_corrected) dpll_next_state = 4'h0; else dpll_next_state = 4'h5;
 		4'h0: if(~rx_corrected) dpll_next_state = 4'h1; else dpll_next_state = 4'h5;
-		4'hb: dpll_next_state = 4'h2;
-		4'hf: dpll_next_state = 4'h6;
+		4'hb: dpll_next_state = 4'ha;
+		4'hf: dpll_next_state = 4'he;
 	endcase
 end
 
@@ -214,21 +230,21 @@ parameter K5		= 4'h8;
 reg [3:0] fs_state;
 reg [3:0] fs_next_state;
 
-reg [5:0] fs_timeout_counter;
+reg [6:0] fs_timeout_counter;
 reg fs_timeout;
 always @(posedge usb_clk) begin
 	if(rxreset|eop_detected) begin
-		fs_timeout_counter <= 6'd0;
+		fs_timeout_counter <= 7'd0;
 		fs_timeout <= 1'b0;
 	end else begin
 		if((fs_state != fs_next_state) | (fs_state == FS_IDLE))
-			fs_timeout_counter <= 6'd0;
+			fs_timeout_counter <= 7'd0;
 		else
-			fs_timeout_counter <= fs_timeout_counter + 6'd1;
+			fs_timeout_counter <= fs_timeout_counter + 7'd1;
 		if(low_speed)
-			fs_timeout <= fs_timeout_counter == 6'd63;
+			fs_timeout <= fs_timeout_counter == 7'd95;
 		else
-			fs_timeout <= fs_timeout_counter == 6'd7;
+			fs_timeout <= fs_timeout_counter == 7'd11;
 	end
 end
 
