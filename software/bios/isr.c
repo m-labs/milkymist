@@ -22,7 +22,7 @@
 #include <hal/usb.h>
 #include <hal/tmu.h>
 
-void isr()
+void isr(void)
 {
 	unsigned int irqs;
 

@@ -17,6 +17,11 @@
 # -v  display the whole session instea of just the results
 #
 
+if [ -z "$MM_HOST" -o -z "$MM_USER" -o -z "$MM_PW" ]; then
+	echo "please define MM_HOST, MM_USER, and MM_PW" 1>&2
+	exit 1
+fi
+
 reg="sed 's/^[^#]*# R[0-9]* = //'"
 filter="sed '1,/^1:/d;q' | tr -d '\015'"
 
@@ -30,8 +35,8 @@ done
 
 trap "rm -f _out$$" 0
 ./pfpuasm "$@" >_out$$ || exit
-nc -i 1 -C -t -v ${M1_HOST:-m1} telnet <<EOF 2>&1 | eval $filter
-${M1_USER:-foo}
-${M1_PW:-bar}
+nc -i 1 -C -t -v $MM_HOST telnet <<EOF 2>&1 | eval $filter
+$MM_USER
+$MM_PW
 pfpu `eval $reg _out$$ | sed 's/#.*//' | tr '\012' ' '`
 EOF

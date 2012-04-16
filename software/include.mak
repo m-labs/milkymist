@@ -2,7 +2,11 @@
 #
 CROSS_COMPILER=lm32-rtems4.11-
 
+# Choose a compiler - gcc or clang
+#CC_normal := clang -march=mico32 -ccc-host-triple mico32-elf \
+#	     -ccc-gcc-name lm32-rtems4.11-gcc
 CC_normal := $(CROSS_COMPILER)gcc
+
 AR_normal := $(CROSS_COMPILER)ar
 AS_normal := $(CROSS_COMPILER)as
 LD_normal := $(CROSS_COMPILER)ld
@@ -38,7 +42,7 @@ INCLUDES_NOLIBC ?= -nostdinc -I$(MMDIR)/software/include/base
 INCLUDES = $(INCLUDES_NOLIBC) -I$(MMDIR) -I$(MMDIR)/software/include -I$(MMDIR)/tools
 ASFLAGS = $(INCLUDES) -nostdinc
 # later: -Wmissing-prototypes
-CFLAGS = -O9 -Wall -Wstrict-prototypes -Wold-style-definition -Wshadow \
+CFLAGS = -O9 -Wall -Werror -Wstrict-prototypes -Wold-style-definition -Wshadow \
 	 -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled \
 	 -msign-extend-enabled -fno-builtin -fsigned-char \
 	 -fsingle-precision-constant $(INCLUDES)

@@ -27,6 +27,11 @@
 #include "host.h"
 #include "crc.h"
 
+#define	SETUP_DATA_RETRIES	250	/* <= 255 */
+#define	SETUP_END_RETRIES	100	/* <= 255 */
+#define	ENUM_RETRIES		  4	/* <= 127 */
+#define	ENUM_RESETS		  3	/* <= 127 */
+
 //#define	TRIGGER
 
 #ifdef TRIGGER
@@ -106,6 +111,7 @@ struct port_status {
 	char state;
 	char full_speed;
 	char retry_count;
+	char reset_count;
 	unsigned int unreset_frame;
 	unsigned char ep0_size;
 	struct ep_status keyboard;
@@ -303,7 +309,7 @@ nothing:
 	return 0;
 
 timeout:
-	print_string(timeout_error);
+//	print_string(timeout_error);
 	return 0;
 
 error:
@@ -352,6 +358,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 	char rxlen;
 	char transferred;
 	char chunklen;
+	unsigned char retry;
 
 	/* generate SETUP token */
 	make_usb_token(USB_PID_SETUP, addr, setup);
@@ -376,6 +383,7 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 
 	/* data phase */
 	transferred = 0;
+	retry = SETUP_DATA_RETRIES;
 	if(out) {
 		while(1) {
 			chunklen = maxlen - transferred;
@@ -389,9 +397,9 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 			memcpy(&usb_buffer[1], payload, chunklen);
 			usb_crc16(&usb_buffer[1], chunklen, &usb_buffer[chunklen+1]);
 			rxlen = usb_out(addr, usb_buffer, chunklen+3);
-			if(!rxlen)
+			if(!rxlen && retry--)
 				continue;
-			if(rxlen < 0)
+			if(rxlen <= 0)
 				return -1;
 
 			expected_data = toggle(expected_data);
@@ -404,10 +412,10 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 		while(transferred != maxlen) {
 			rxlen = usb_in(addr, expected_data, usb_buffer,
 			    ep0_size+3);
-			if(!rxlen)
+			if(!rxlen && retry--)
 				continue;
-			if(rxlen <0)
-				return rxlen;
+			if(rxlen <= 0)
+				return -1;
 
 			expected_data = toggle(expected_data);
 			chunklen = rxlen - 3; /* strip token and CRC */
@@ -422,12 +430,13 @@ static int control_transfer(unsigned char addr, struct setup_packet *p,
 		}
 
 	/* send IN/OUT token in the opposite direction to end transfer */
+	retry = SETUP_END_RETRIES;
 retry:
 	if(out) {
 		rxlen = usb_in(addr, USB_PID_DATA1, usb_buffer, 11);
-		if(!rxlen)
+		if(!rxlen && retry--)
 			goto retry;
-		if(rxlen < 0)
+		if(rxlen <= 0)
 			return -1;
 	} else {
 		/* make DATA1 packet */
@@ -435,9 +444,9 @@ retry:
 		usb_buffer[1] = usb_buffer[2] = 0x00; /* CRC is 0x0000 without data */
 
 		rxlen = usb_out(addr, usb_buffer, 3);
-		if(!rxlen)
+		if(!rxlen && retry--)
 			goto retry;
-		if(!rxlen < 0)
+		if(rxlen <= 0)
 			return -1;
 	}
 
@@ -556,6 +565,7 @@ static void check_discon(struct port_status *p, char name)
 	if(discon) {
 		print_string(disconnect); print_char(name); print_char('\n');
 		p->state = PORT_STATE_DISCONNECTED;
+		p->reset_count = 0;
 		p->keyboard.ep = p->mouse.ep = p->midi.ep = 0;
 	}
 }
@@ -667,13 +677,22 @@ static void unsupported(struct port_status *p)
 	p->state = PORT_STATE_UNSUPPORTED;
 }
 
-static const char retry_exceed[] PROGMEM = "Retry count exceeded, disabling device.\n";
+static const char retry_reset[] PROGMEM =
+    "Retry count exceeded, resetting device.\n";
+static const char retry_exceed[] PROGMEM =
+    "Retry count exceeded, disabling device.\n";
+
 static void check_retry(struct port_status *p)
 {
-	if(p->retry_count++ > 4) {
-		print_string(retry_exceed);
-		p->state = PORT_STATE_UNSUPPORTED;
+	if(p->retry_count++ <= ENUM_RETRIES)
+		return;
+	if(p->reset_count++ <= ENUM_RESETS) {
+		print_string(retry_reset);
+		p->state = PORT_STATE_DISCONNECTED;
+		return;
 	}
+	print_string(retry_exceed);
+	p->state = PORT_STATE_UNSUPPORTED;
 }
 
 static const char vid[] PROGMEM = "VID: ";
@@ -916,17 +935,17 @@ static void port_service(struct port_status *p, char name)
 
 static const char banner[] PROGMEM = "softusb-input v"VERSION"\n";
 
-static void sof()
+static void sof(void)
 {
 	unsigned char mask;
 	unsigned char usb_buffer[3];
 
 	mask = 0;
 #ifndef TRIGGER
-	if(port_a.full_speed && (port_a.state > PORT_STATE_BUS_RESET))
+	if(port_a.full_speed && (port_a.state > PORT_STATE_RESET_WAIT))
 		mask |= 0x01;
 #endif
-	if(port_b.full_speed && (port_b.state > PORT_STATE_BUS_RESET))
+	if(port_b.full_speed && (port_b.state > PORT_STATE_RESET_WAIT))
 		mask |= 0x02;
 	if(mask != 0) {
 		wio8(SIE_TX_LOW_SPEED, 0);
@@ -936,7 +955,7 @@ static void sof()
 	}
 }
 
-static void keepalive()
+static void keepalive(void)
 {
 	unsigned char mask;
 
@@ -955,7 +974,7 @@ static void keepalive()
 	}
 }
 
-static void set_rx_speed()
+static void set_rx_speed(void)
 {
 	unsigned char mask;
 
@@ -965,7 +984,7 @@ static void set_rx_speed()
 	wio8(SIE_LOW_SPEED, mask);
 }
 
-int main()
+int main(void)
 {
 	unsigned char i;
 
