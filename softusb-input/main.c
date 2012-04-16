@@ -906,7 +906,7 @@ int main(void)
 	wio8(TIMER0, 0);
 	while(1) {
 		/* wait for the next frame */
-		while((rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70));
+		while((rio8(TIMER2) < 0x01) || (rio8(TIMER1) < 0xbb) || (rio8(TIMER0) < 0x70));
 		wio8(TIMER0, 0);
 
 		sof();
