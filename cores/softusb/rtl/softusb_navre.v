@@ -238,14 +238,17 @@ integer i_rst_regf;
 // synthesis translate_on
 reg [7:0] R;
 reg writeback;
-reg update_nsz;
+reg update_svnz;
 reg change_z;
 reg [15:0] R16;
 reg mode16;
+reg _N;
+reg _V;
+reg _C;
 always @(posedge clk) begin
 	R = 8'hxx;
 	writeback = 1'b0;
-	update_nsz = 1'b0;
+	update_svnz = 1'b0;
 	change_z = 1'b1;
 	R16 = 16'hxxxx;
 	mode16 = 1'b0;
@@ -257,37 +260,42 @@ always @(posedge clk) begin
 		 */
 		// synthesis translate_off
 		for(i_rst_regf=0;i_rst_regf<24;i_rst_regf=i_rst_regf+1)
-			GPR[i_rst_regf] = 8'd0;
-		U = 16'd0;
-		pX = 16'd0;
-		pY = 16'd0;
-		pZ = 16'd0;
+			GPR[i_rst_regf] <= 8'd0;
+		U <= 16'd0;
+		pX <= 16'd0;
+		pY <= 16'd0;
+		pZ <= 16'd0;
 		// synthesis translate_on
-		T = 1'b0;
-		H = 1'b0;
-		S = 1'b0;
-		V = 1'b0;
-		N = 1'b0;
-		Z = 1'b0;
-		C = 1'b0;
+		T <= 1'b0;
+		H <= 1'b0;
+		S <= 1'b0;
+		V <= 1'b0;
+		N <= 1'b0;
+		Z <= 1'b0;
+		C <= 1'b0;
+		_V = 1'b0;
+		_N = 1'b0;
+		_C = 1'b0;
 `endif
 	end else begin
 		if(normal_en) begin
 			writeback = 1'b1;
-			update_nsz = 1'b1;
+			update_svnz = 1'b1;
 			casex(pmem_d)
 				16'b000x_11xx_xxxx_xxxx: begin
 					/* ADD - ADC */
-					{C, R} = GPR_Rd + GPR_Rr + (pmem_d[12] & C);
-					H = (GPR_Rd[3] & GPR_Rr[3])|(GPR_Rr[3] & ~R[3])|(~R[3] & GPR_Rd[3]);
-					V = (GPR_Rd[7] & GPR_Rr[7] & ~R[7])|(~GPR_Rd[7] & ~GPR_Rr[7] & R[7]);
+					{_C, R} = GPR_Rd + GPR_Rr + (pmem_d[12] & C);
+					C <= _C;
+					H <= (GPR_Rd[3] & GPR_Rr[3])|(GPR_Rr[3] & ~R[3])|(~R[3] & GPR_Rd[3]);
+					_V = (GPR_Rd[7] & GPR_Rr[7] & ~R[7])|(~GPR_Rd[7] & ~GPR_Rr[7] & R[7]);
 				end
 				16'b000x_10xx_xxxx_xxxx, /* subtract */
 				16'b000x_01xx_xxxx_xxxx: /* compare  */ begin
 					/* SUB - SBC / CP - CPC */
-					{C, R} = GPR_Rd - GPR_Rr - (~pmem_d[12] & C);
-					H = (~GPR_Rd[3] & GPR_Rr[3])|(GPR_Rr[3] & R[3])|(R[3] & ~GPR_Rd[3]);
-					V = (GPR_Rd[7] & ~GPR_Rr[7] & ~R[7])|(~GPR_Rd[7] & GPR_Rr[7] & R[7]);
+					{_C, R} = GPR_Rd - GPR_Rr - (~pmem_d[12] & C);
+					C <= _C;
+					H <= (~GPR_Rd[3] & GPR_Rr[3])|(GPR_Rr[3] & R[3])|(R[3] & ~GPR_Rd[3]);
+					_V = (GPR_Rd[7] & ~GPR_Rr[7] & ~R[7])|(~GPR_Rd[7] & GPR_Rr[7] & R[7]);
 					if(~pmem_d[12])
 						change_z = 1'b0;
 					writeback = pmem_d[11];
@@ -295,9 +303,10 @@ always @(posedge clk) begin
 				16'b010x_xxxx_xxxx_xxxx, /* subtract */
 				16'b0011_xxxx_xxxx_xxxx: /* compare  */ begin
 					/* SUBI - SBCI / CPI */
-					{C, R} = GPR_Rd - K - (~pmem_d[12] & C);
-					H = (~GPR_Rd[3] & K[3])|(K[3] & R[3])|(R[3] & ~GPR_Rd[3]);
-					V = (GPR_Rd[7] & ~K[7] & ~R[7])|(~GPR_Rd[7] & K[7] & R[7]);
+					{_C, R} = GPR_Rd - K - (~pmem_d[12] & C);
+					C <= _C;
+					H <= (~GPR_Rd[3] & K[3])|(K[3] & R[3])|(R[3] & ~GPR_Rd[3]);
+					_V = (GPR_Rd[7] & ~K[7] & ~R[7])|(~GPR_Rd[7] & K[7] & R[7]);
 					if(~pmem_d[12])
 						change_z = 1'b0;
 					writeback = pmem_d[14];
@@ -305,98 +314,101 @@ always @(posedge clk) begin
 				16'b0010_00xx_xxxx_xxxx: begin
 					/* AND */
 					R = GPR_Rd & GPR_Rr;
-					V = 1'b0;
+					_V = 1'b0;
 				end
 				16'b0111_xxxx_xxxx_xxxx: begin
 					/* ANDI */
 					R = GPR_Rd & K;
-					V = 1'b0;
+					_V = 1'b0;
 				end
 				16'b0010_10xx_xxxx_xxxx: begin
 					/* OR */
 					R = GPR_Rd | GPR_Rr;
-					V = 1'b0;
+					_V = 1'b0;
 				end
 				16'b0110_xxxx_xxxx_xxxx: begin
 					/* ORI */
 					R = GPR_Rd | K;
-					V = 1'b0;
+					_V = 1'b0;
 				end
 				16'b0010_01xx_xxxx_xxxx: begin
 					/* EOR */
 					R = GPR_Rd ^ GPR_Rr;
-					V = 1'b0;
+					_V = 1'b0;
 				end
 				16'b1001_010x_xxxx_0000: begin
 					/* COM */
 					R = ~GPR_Rd;
-					V = 1'b0;
-					C = 1'b1;
+					_V = 1'b0;
+					C <= 1'b1;
 				end
 				16'b1001_010x_xxxx_0001: begin
 					/* NEG */
-					{C, R} = 8'h00 - GPR_Rd;
-					H = R[3] | GPR_Rd[3];
-					V = R == 8'h80;
+					{_C, R} = 8'h00 - GPR_Rd;
+					C <= _C;
+					H <= R[3] | GPR_Rd[3];
+					_V = R == 8'h80;
 				end
 				16'b1001_010x_xxxx_0011: begin
 					/* INC */
 					R = GPR_Rd + 8'd1;
-					V = R == 8'h80;
+					_V = R == 8'h80;
 				end
 				16'b1001_010x_xxxx_1010: begin
 					/* DEC */
 					R = GPR_Rd - 8'd1;
-					V = R == 8'h7f;
+					_V = R == 8'h7f;
 				end
 				16'b1001_010x_xxxx_011x: begin
 					/* LSR - ROR */
 					R = {pmem_d[0] & C, GPR_Rd[7:1]};
-					C = GPR_Rd[0];
-					V = R[7] ^ GPR_Rd[0];
+					C <= GPR_Rd[0];
+					_V = R[7] ^ GPR_Rd[0];
 				end
 				16'b1001_010x_xxxx_0101: begin
 					/* ASR */
 					R = {GPR_Rd[7], GPR_Rd[7:1]};
-					C = GPR_Rd[0];
-					V = R[7] ^ GPR_Rd[0];
+					C <= GPR_Rd[0];
+					_V = R[7] ^ GPR_Rd[0];
 				end
 				16'b1001_010x_xxxx_0010: begin
 					/* SWAP */
 					R = {GPR_Rd[3:0], GPR_Rd[7:4]};
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 				end
 				16'b1001_010x_xxxx_1000: begin
 					/* BSET - BCLR */
 					case(pmem_d[7:4])
-						4'b0000: C = 1'b1;
-						4'b0001: Z = 1'b1;
-						4'b0010: N = 1'b1;
-						4'b0011: V = 1'b1;
-						4'b0100: S = 1'b1;
-						4'b0101: H = 1'b1;
-						4'b0110: T = 1'b1;
-						4'b1000: C = 1'b0;
-						4'b1001: Z = 1'b0;
-						4'b1010: N = 1'b0;
-						4'b1011: V = 1'b0;
-						4'b1100: S = 1'b0;
-						4'b1101: H = 1'b0;
-						4'b1110: T = 1'b0;
+						4'b0000: C <= 1'b1;
+						4'b0001: Z <= 1'b1;
+						4'b0010: N <= 1'b1;
+						4'b0011: V <= 1'b1;
+						4'b0100: S <= 1'b1;
+						4'b0101: H <= 1'b1;
+						4'b0110: T <= 1'b1;
+						4'b1000: C <= 1'b0;
+						4'b1001: Z <= 1'b0;
+						4'b1010: N <= 1'b0;
+						4'b1011: V <= 1'b0;
+						4'b1100: S <= 1'b0;
+						4'b1101: H <= 1'b0;
+						4'b1110: T <= 1'b0;
 					endcase
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 					writeback = 1'b0;
 				end
 				16'b1001_011x_xxxx_xxxx: begin
 					mode16 = 1'b1;
 					if(pmem_d[8]) begin
 						/* SBIW */
-						{C, R16} = GPR_Rd16 - K16;
-						V = GPR_Rd16[15] & ~R16[15];
+						{_C, R16} = GPR_Rd16 - K16;
+						C <= _C;
+						_V = GPR_Rd16[15] & ~R16[15];
 					end else begin
 						/* ADIW */
-						{C, R16} = GPR_Rd16 + K16;
-						V = ~GPR_Rd16[15] & R16[15];
+						{_C, R16} = GPR_Rd16 + K16;
+						C <= _C;
+						_V = ~GPR_Rd16[15] & R16[15];
 					end
 				end
 				/* SBR and CBR are replaced with ORI and ANDI */
@@ -405,19 +417,19 @@ always @(posedge clk) begin
 				16'b0010_11xx_xxxx_xxxx: begin
 					/* MOV */
 					R = GPR_Rr;
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 				end
 				16'b1110_xxxx_xxxx_xxxx: begin
 					/* LDI */
 					R = K;
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 				end
 				/* LSL is replaced with ADD */
 				/* ROL is replaced with ADC */
 				16'b1111_10xx_xxxx_0xxx: begin
 					if(pmem_d[9]) begin
 						/* BST */
-						T = GPR_Rd_b;
+						T <= GPR_Rd_b;
 						writeback = 1'b0;
 					end else begin
 						/* BLD */
@@ -432,13 +444,13 @@ always @(posedge clk) begin
 							3'd7: R = {T, GPR_Rd[6:0]};
 						endcase
 					end
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 				end
 				/* SEC, CLC, SEN, CLN, SEZ, CLZ, SEI, CLI, SES, CLS, SEV, CLV, SET, CLT, SEH, CLH
 				 * are replaced with BSET and BCLR */
 				16'b0000_0000_0000_0000: begin
 					/* NOP */
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 					writeback = 1'b0;
 				end
 				/* SLEEP is not implemented */
@@ -456,7 +468,7 @@ always @(posedge clk) begin
 				begin
 					/* LD - POP (run from state WRITEBACK) */
 					R = dmem_di;
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 				end
 				16'b1011_0xxx_xxxx_xxxx: begin
 					/* IN (run from state WRITEBACK) */
@@ -466,7 +478,7 @@ always @(posedge clk) begin
 						IO_SEL_SREG: R = {1'b0, T, H, S, V, N, Z, C};
 						default: R = 8'hxx;
 					endcase
-					update_nsz = 1'b0;
+					update_svnz = 1'b0;
 				end
 			endcase
 		end /* if(normal_en) */
@@ -478,23 +490,25 @@ always @(posedge clk) begin
 			R = pZ[0] ? pmem_d[15:8] : pmem_d[7:0];
 			writeback = 1'b1;
 		end
-		if(update_nsz) begin
-			N = mode16 ? R16[15] : R[7];
-			S = N ^ V;
-			Z = mode16 ? R16 == 16'h0000 : ((R == 8'h00) & (change_z|Z));
+		if(update_svnz) begin
+			_N = mode16 ? R16[15] : R[7];
+			S <= _N ^ _V;
+			V <= _V;
+			N <= _N;
+			Z <= mode16 ? R16 == 16'h0000 : ((R == 8'h00) & (change_z|Z));
 		end
 		if(io_we & (io_a == 6'b111111))
-			{T, H, S, V, N, Z, C} = io_do[6:0];
+			{T, H, S, V, N, Z, C} <= io_do[6:0];
 		if(writeback) begin
 			if(mode16) begin
 				// synthesis translate_off
 				//$display("REG WRITE(16): %d < %d", Rd16, R16);
 				// synthesis translate_on
 				case(Rd16)
-					2'd0: U = R16;
-					2'd1: pX = R16;
-					2'd2: pY = R16;
-					2'd3: pZ = R16;
+					2'd0: U <= R16;
+					2'd1: pX <= R16;
+					2'd2: pY <= R16;
+					2'd3: pZ <= R16;
 				endcase
 			end else begin
 				// synthesis translate_off
@@ -502,24 +516,24 @@ always @(posedge clk) begin
 				// synthesis translate_on
 				case(write_dest)
 					default: GPR[write_dest] = R;
-					5'd24: U[7:0] = R;
-					5'd25: U[15:8] = R;
-					5'd26: pX[7:0] = R;
-					5'd27: pX[15:8] = R;
-					5'd28: pY[7:0] = R;
-					5'd29: pY[15:8] = R;
-					5'd30: pZ[7:0] = R;
-					5'd31: pZ[15:8] = R;
+					5'd24: U[7:0] <= R;
+					5'd25: U[15:8] <= R;
+					5'd26: pX[7:0] <= R;
+					5'd27: pX[15:8] <= R;
+					5'd28: pY[7:0] <= R;
+					5'd29: pY[15:8] <= R;
+					5'd30: pZ[7:0] <= R;
+					5'd31: pZ[15:8] <= R;
 				endcase
 			end
 		end else begin /* if(writeback) */
 			case(dmem_sel)
-				DMEM_SEL_XPLUS:		pX = pX + 16'd1;
-				DMEM_SEL_XMINUS:	pX = pX - 16'd1;
-				DMEM_SEL_YPLUS:		pY = pY + 16'd1;
-				DMEM_SEL_YMINUS:	pY = pY - 16'd1;
-				DMEM_SEL_ZPLUS:		pZ = pZ + 16'd1;
-				DMEM_SEL_ZMINUS:	pZ = pZ - 16'd1;
+				DMEM_SEL_XPLUS:		pX <= pX + 16'd1;
+				DMEM_SEL_XMINUS:	pX <= pX - 16'd1;
+				DMEM_SEL_YPLUS:		pY <= pY + 16'd1;
+				DMEM_SEL_YMINUS:	pY <= pY - 16'd1;
+				DMEM_SEL_ZPLUS:		pZ <= pZ + 16'd1;
+				DMEM_SEL_ZMINUS:	pZ <= pZ - 16'd1;
 				default:;
 			endcase
 		end
