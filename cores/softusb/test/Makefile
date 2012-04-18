@@ -1,16 +1,16 @@
 MMDIR?=../../..
-SOURCES=tb_softusb.v $(wildcard ../rtl/*.v)
+SOURCES=$(wildcard ../rtl/*.v)
 
 all: sim
 
 sim: trx.rom
-	cver $(SOURCES)
+	cver tb_softusb.v $(SOURCES)
 
 isim: runsim trx.rom
 	./runsim
 
-runsim: $(SOURCES)
-	iverilog -o runsim $(SOURCES)
+runsim: tb_softusb.v $(SOURCES)
+	iverilog -o runsim tb_softusb.v $(SOURCES)
 
 trx.elf: trx.S
 	avr-gcc -o trx.elf -mmcu=avr2 -Os trx.S -nostdlib
@@ -30,13 +30,13 @@ fibc.elf: fibc.c fibc_crt.S
 sim-navre: fib.rom fibc.rom
 	cver ../rtl/softusb_navre.v tb_navre.v
 
-isim-sie: runsim-sie
-	./runsim-sie
+isim-%: runsim-%
+	./$<
 
-runsim-sie: ../rtl/softusb_tx.v ../rtl/softusb_rx.v tb_sie.v
-	iverilog -o runsim-sie ../rtl/softusb_tx.v ../rtl/softusb_rx.v tb_sie.v
+runsim-%: tb_%.v $(SOURCES)
+	iverilog -o $@ $(SOURCES) $<
 
 clean:
-	rm -f verilog.log trx.elf trx.bin trx.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim softusb.vcd softusb_sie.vcd runsim-sie
+	rm -f verilog.log trx.elf trx.bin trx.rom fib.elf fib.bin fib.rom fibc.elf fibc.bin fibc.rom runsim runsim-* *.vcd
 
 .PHONY: clean sim sim-navre
