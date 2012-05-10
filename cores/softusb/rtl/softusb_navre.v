@@ -515,7 +515,7 @@ always @(posedge clk) begin
 				//$display("REG WRITE: %d < %d", Rd, R);
 				// synthesis translate_on
 				case(write_dest)
-					default: GPR[write_dest] = R;
+					default: GPR[write_dest] <= R;
 					5'd24: U[7:0] <= R;
 					5'd25: U[15:8] <= R;
 					5'd26: pX[7:0] <= R;
