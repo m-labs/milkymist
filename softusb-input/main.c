@@ -62,6 +62,7 @@ enum {
 	USB_DT_CONFIG		= 2,
 	USB_DT_INTERFACE	= 4,
 	USB_DT_ENDPOINT		= 5,
+	USB_DT_HID		= 33,
 };
 
 enum {
@@ -91,6 +92,7 @@ enum {
 	PORT_STATE_GET_DEVICE_DESCRIPTOR,
 	PORT_STATE_GET_CONFIGURATION_DESCRIPTOR,
 	PORT_STATE_SET_CONFIGURATION,
+	PORT_STATE_GET_HID_REPORT_DESCRIPTOR,
 	PORT_STATE_RUNNING,
 	PORT_STATE_UNSUPPORTED
 };
@@ -99,7 +101,10 @@ enum {
 
 struct ep_status {
 	char ep;
+	char itf;
+	unsigned int report_len;
 	unsigned char expected_data;
+	char report_id;
 };
 
 struct port_status {
@@ -448,7 +453,8 @@ retry:
 	return transferred;
 }
 
-static char process_keyboard(unsigned char *buf, unsigned char len)
+static char process_keyboard(struct ep_status *ep,
+			     unsigned char *buf, unsigned char len)
 {
 	unsigned char m, i;
 
@@ -461,9 +467,15 @@ static char process_keyboard(unsigned char *buf, unsigned char len)
 	return 1;
 }
 
-static char process_mouse(unsigned char *buf, unsigned char len)
+static char process_mouse(struct ep_status *ep, unsigned char *buf,
+			  unsigned char len)
 {
 	unsigned char m, i;
+
+	if(ep->report_id) {
+		buf++;
+		len--;
+	}
 
 	if(len < 3)
 		return 0;
@@ -472,11 +484,9 @@ static char process_mouse(unsigned char *buf, unsigned char len)
 	 * a report ID and 16 bit coordinates. We're too lazy to parse
 	 * report descriptors, so we just hard-code that report layout.
 	 */
-	if(len == 7) {
-		buf[0] = buf[1];	/* buttons */
-		buf[1] = buf[2];	/* X LSB */
-		buf[2] = buf[4];	/* Y LSB */
-	}
+	if(len == 6)
+		buf[2] = buf[3];	/* Y LSB */
+
 	if(len > 4)
 		len = 4;
 	m = COMLOC_MEVT_PRODUCE;
@@ -490,7 +500,8 @@ static char process_mouse(unsigned char *buf, unsigned char len)
 	return 1;
 }
 
-static char process_midi(unsigned char *buf, unsigned char len)
+static char process_midi(struct ep_status *ep, unsigned char *buf,
+			 unsigned char len)
 {
 	unsigned char end = len & ~3;
 	unsigned char i, m, j;
@@ -521,7 +532,8 @@ static char process_midi(unsigned char *buf, unsigned char len)
 }
 
 static void poll(struct ep_status *ep,
-    char (*process)(unsigned char *buf, unsigned char len))
+	char (*process)(struct ep_status *ep, unsigned char *buf,
+			unsigned char len))
 {
 	unsigned char usb_buffer[1+64+2]; /* DATAx + payload + CRC */
 	int len;
@@ -534,7 +546,7 @@ static void poll(struct ep_status *ep,
 
 	if(len <= 3)
 		return;
-	if(process(usb_buffer+1, len-3))	/* send to host */
+	if(process(ep, usb_buffer+1, len-3))	/* send to host */
 		wio8(HOST_IRQ, 1);		/* trigger host IRQ */
 }
 
@@ -562,17 +574,19 @@ static struct ep_status *identify_protocol(const unsigned char *itf,
     struct port_status *p)
 {
 	/* check for bInterfaceClass=3 and bInterfaceSubClass=1 (HID) */
-	if (itf[5] == USB_CLASS_HID && itf[6] == USB_SUBCLASS_BOOT)
+	if(itf[5] == USB_CLASS_HID && itf[6] == USB_SUBCLASS_BOOT)
 		switch(itf[7]) { /* check bInterfaceProtocol */
 			case USB_PROTO_KEYBOARD:
+				p->keyboard.itf = itf[2];
 				return &p->keyboard;
 			case USB_PROTO_MOUSE:
+				p->mouse.itf = itf[2];
 				return &p->mouse;
 			default:
 				/* unknown protocol, fail */
 				return NULL;
 		}
-	if (itf[5] == USB_CLASS_AUDIO && itf[6] == USB_SUBCLASS_MIDISTREAMING)
+	if(itf[5] == USB_CLASS_AUDIO && itf[6] == USB_SUBCLASS_MIDISTREAMING)
 		return &p->midi;
 
 	return NULL;
@@ -584,22 +598,60 @@ static const char mouse[] PROGMEM = "mouse\n";
 static const char keyboard[] PROGMEM = "keyboard\n";
 static const char midi[] PROGMEM = "MIDI\n";
 
+static char validate_report_descriptor(const unsigned char *descriptor,
+    unsigned int len, struct port_status *p)
+{
+	unsigned int i;
+
+	/* We support MAX HID report descriptor length is 512 */
+	if(len > 512)
+		return 0;
+
+	p->mouse.report_id = 0;
+	for (i = 0; i < len; i+=2) {
+		/* See 6.2.2.2 Short Items */
+		if((descriptor[i] & 0xfc) == 0x84) {
+			p->mouse.report_id = 1;
+			break;
+		}
+	}
+
+	return 1;
+}
+
 static char validate_configuration_descriptor(const unsigned char *descriptor,
     char len, struct port_status *p)
 {
 	struct ep_status *ep = NULL;
 	char offset;
 
+	p->keyboard.report_len = 0;
+	p->mouse.report_len = 0;
+
 	offset = 0;
 	while(offset < len) {
-		if(descriptor[offset+1] == USB_DT_INTERFACE) {
-			ep = identify_protocol(descriptor+offset, p);
-		} else if(descriptor[offset+1] == USB_DT_ENDPOINT &&
-		    (descriptor[offset+2] & 0x80) && ep) {
+		switch(descriptor[offset+1]) {
+			case USB_DT_INTERFACE:
+				ep = identify_protocol(descriptor+offset, p);
+				break;
+			case USB_DT_HID:
+				if(!ep)
+					break;
+				ep->report_len = descriptor[offset+8] << 8 |
+					descriptor[offset+7];
+				break;
+			case USB_DT_ENDPOINT:
+				if(!ep)
+					break;
+				if(!(descriptor[offset+2] & 0x80))
+					break;
 				ep->ep = descriptor[offset+2] & 0x7f;
 				ep->expected_data = USB_PID_DATA0;
-				    /* start with DATA0 */
+				/* start with DATA0 */
 				ep = NULL;
+				break;
+			default:
+				break;
 		}
 		offset += descriptor[offset+0];
 	}
@@ -672,7 +724,7 @@ static char get_ep0_size(struct port_status *p)
 		return 0;
 
 	size = device_descriptor[7];
-	if (size != 8 && size != 16 && size != 32 && size != 64)
+	if(size != 8 && size != 16 && size != 32 && size != 64)
 		return 0;
 
 	p->ep0_size = size;
@@ -827,8 +879,43 @@ static void port_service(struct port_status *p, char name)
 			if(control_transfer(ADDR, &packet, 1, NULL, 0,
 			    p->ep0_size) == 0) {
 				p->retry_count = 0;
-				p->state = PORT_STATE_RUNNING;
+				p->state = PORT_STATE_GET_HID_REPORT_DESCRIPTOR;
 			}
+			check_retry(p);
+			break;
+		}
+		case PORT_STATE_GET_HID_REPORT_DESCRIPTOR: {
+			struct setup_packet packet;
+			unsigned char report_descriptor[512];
+			int len;
+
+			/* Only take care mouse for now */
+			if(!p->mouse.ep) {
+				p->state = PORT_STATE_RUNNING;
+				break;
+			}
+
+			packet.bmRequestType = 0x81;
+			packet.bRequest = 0x06;
+			packet.wValue[0] = 0x01;
+			packet.wValue[1] = 0x22;
+			packet.wIndex[0] = p->mouse.itf; /* Interface */
+			packet.wIndex[1] = 0x00;
+			packet.wLength[0] = p->mouse.report_len & 0x00ff;
+			packet.wLength[1] = (p->mouse.report_len & 0xff00) >> 8;
+
+			len = control_transfer(ADDR, &packet, 0,
+					       report_descriptor,
+					       p->mouse.report_len,
+					       p->ep0_size);
+
+			if(len != -1) {
+				if(!validate_report_descriptor(
+				  report_descriptor, p->mouse.report_len, p))
+					unsupported(p);
+			}
+			p->retry_count = 0;
+			p->state = PORT_STATE_RUNNING;;
 			check_retry(p);
 			break;
 		}
