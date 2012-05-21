@@ -92,7 +92,7 @@ void serialboot(void)
 	struct sfl_frame frame;
 	int failed;
 	unsigned int cmdline_adr, initrdstart_adr, initrdend_adr;
-	static const char str[SFL_MAGIC_LEN] = SFL_MAGIC_REQ;
+	static const char str[SFL_MAGIC_LEN+1] = SFL_MAGIC_REQ;
 	const char *c;
 
 	printf("I: Attempting serial firmware loading\n");
