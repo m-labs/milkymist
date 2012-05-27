@@ -222,6 +222,13 @@ void *memcpy(void *to, const void *from, size_t n)
 		from = cfrom;
 		n--;
 	}
+	if((long)from & 1) {
+		char *cto = to;
+		const char *cfrom = from;
+		for (; n; n--)
+			*cto++ = *cfrom++;
+		return xto;
+	}
 	if(n > 2 && (long)to & 2) {
 		short *sto = to;
 		const short *sfrom = from;
@@ -235,7 +242,7 @@ void *memcpy(void *to, const void *from, size_t n)
 		long *lto = to;
 		const long *lfrom = from;
 		for(; temp; temp--)
-		*lto++ = *lfrom++;
+			*lto++ = *lfrom++;
 		to = lto;
 		from = lfrom;
 	}
