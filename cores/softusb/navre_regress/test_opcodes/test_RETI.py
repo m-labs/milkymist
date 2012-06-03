@@ -72,7 +72,7 @@ class base_RETI(base_test.opcode_stack_test):
 				expect, got ))
 
 		# check no SREG flag changed
-		expect = 0x00
+		expect =0x1 << SREG.I
 		got = self.anal_regs[Reg.SREG]
 
 		if got != expect:

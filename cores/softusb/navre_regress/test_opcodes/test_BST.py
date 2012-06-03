@@ -55,7 +55,7 @@ class base_BST(base_test.opcode_test):
 
 		# check that register value is correct
 		if self.T == 0:
-			expect = 0x7f & ~(1 << SREG.T)
+			expect = 0xff & ~(1 << SREG.T)
 		else:
 			expect = (1 << SREG.T)
 

@@ -185,6 +185,8 @@ softusb_navre #(
 	.io_do(io_dw),
 	.io_di(io_dr_sie|io_dr_timer),
 
+	.irq(8'b0),
+
 	.dbg_pc(dbg_pc)
 );
 
