@@ -6,6 +6,9 @@ all: tb_lm32
 sim_%: %.vh tb_lm32
 	@vvp tb_lm32 +prog=$<
 
+trace_%: %.vh tb_lm32
+	@vvp tb_lm32 +trace=trace_$*.txt +prog=$<
+
 hello_world.elf: crt.S hello_world.c
 	lm32-elf-gcc -Tlinker.ld -fno-builtin -o $@ $^
 
@@ -13,7 +16,7 @@ hello_world.elf: crt.S hello_world.c
 	lm32-elf-objcopy -O verilog $< $@
 
 clean:
-	rm -f tb_lm32 *.vcd *.elf *.vh
+	rm -f tb_lm32 *.vcd *.elf *.vh trace*.txt
 
 tb_lm32: $(SOURCES)
 	iverilog -o tb_lm32 $(SOURCES)

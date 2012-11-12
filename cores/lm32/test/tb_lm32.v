@@ -180,4 +180,49 @@ end
 initial $readmemh(prog, dmem);
 initial $readmemh(prog, pmem);
 
+// trace pipeline
+reg [256*8:0] tracefile;
+integer trace_started;
+integer trace_enabled;
+integer cycle;
+integer tracefd;
+initial begin
+	if($value$plusargs("trace=%s", tracefile)) begin
+		trace_enabled = 1;
+		cycle = 0;
+		tracefd = $fopen(tracefile);
+		trace_started = 0;
+	end else
+		trace_enabled = 0;
+end
+assign icache_ready = lm32.cpu.instruction_unit.icache.state != 1;
+assign dcache_ready = lm32.cpu.load_store_unit.dcache.state != 1;
+always @(posedge sys_clk) begin
+	// wait until icache and dcache init is done
+	if(!trace_started && icache_ready && dcache_ready)
+		trace_started = 1;
+	if(trace_enabled && trace_started) begin
+		$fwrite(tracefd, "%-d ", cycle);
+		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_a, 2'b00});
+		$fwrite(tracefd, "%1d ", lm32.cpu.valid_a);
+		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_f, 2'b00});
+		$fwrite(tracefd, "%1d ", lm32.cpu.kill_f);
+		$fwrite(tracefd, "%1d ", lm32.cpu.valid_f);
+		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_d, 2'b00});
+		$fwrite(tracefd, "%1d ", lm32.cpu.kill_d);
+		$fwrite(tracefd, "%1d ", lm32.cpu.valid_d);
+		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_x, 2'b00});
+		$fwrite(tracefd, "%1d ", lm32.cpu.kill_x);
+		$fwrite(tracefd, "%1d ", lm32.cpu.valid_x);
+		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_m, 2'b00});
+		$fwrite(tracefd, "%1d ", lm32.cpu.kill_m);
+		$fwrite(tracefd, "%1d ", lm32.cpu.valid_m);
+		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_w, 2'b00});
+		$fwrite(tracefd, "%1d ", lm32.cpu.kill_w);
+		$fwrite(tracefd, "%1d ", lm32.cpu.valid_w);
+		$fwrite(tracefd, "\n");
+		cycle = cycle + 1;
+	end
+end
+
 endmodule
