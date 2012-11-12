@@ -12,6 +12,9 @@ trace_%: %.vh tb_lm32
 hello_world.elf: crt.S hello_world.c
 	lm32-elf-gcc -Tlinker.ld -fno-builtin -o $@ $^
 
+pipe1.elf: pipe1.S
+	lm32-elf-gcc -Tlinker.ld -fno-builtin -o $@ $^
+
 %.vh: %.elf
 	lm32-elf-objcopy -O verilog $< $@
 
