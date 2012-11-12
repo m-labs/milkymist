@@ -195,16 +195,26 @@ initial begin
 	end else
 		trace_enabled = 0;
 end
+`ifdef CFG_ICACHE_ENABLED
 assign icache_ready = lm32.cpu.instruction_unit.icache.state != 1;
+`else
+assign icache_ready = `TRUE;
+`endif
+`ifdef CFG_DCACHE_ENABLED
 assign dcache_ready = lm32.cpu.load_store_unit.dcache.state != 1;
+`else
+assign dcache_ready = `TRUE;
+`endif
 always @(posedge sys_clk) begin
 	// wait until icache and dcache init is done
 	if(!trace_started && icache_ready && dcache_ready)
 		trace_started = 1;
 	if(trace_enabled && trace_started) begin
 		$fwrite(tracefd, "%-d ", cycle);
+`ifdef CFG_ICACHE_ENABLED
 		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_a, 2'b00});
 		$fwrite(tracefd, "%1d ", lm32.cpu.valid_a);
+`endif
 		$fwrite(tracefd, "%x ", {lm32.cpu.instruction_unit.pc_f, 2'b00});
 		$fwrite(tracefd, "%1d ", lm32.cpu.kill_f);
 		$fwrite(tracefd, "%1d ", lm32.cpu.valid_f);
