@@ -2,6 +2,8 @@
 
 module soc();
 
+integer i;
+
 reg sys_rst;
 reg sys_clk;
 reg [31:0] interrupt;
@@ -72,6 +74,10 @@ wire [31:0] dmem_dat_i;
 reg [31:0] dmem_dat_o;
 wire [13:0] dmem_adr;
 wire [3:0] dmem_we;
+initial begin
+	for(i=0;i<65536;i=i+1)
+		dmem[i] = 8'b0;
+end
 always @(posedge sys_clk) begin
 	if(dmem_we[0]) dmem[{dmem_adr, 2'b11}] <= dmem_dat_i[7:0];
 	if(dmem_we[1]) dmem[{dmem_adr, 2'b10}] <= dmem_dat_i[15:8];
@@ -88,6 +94,10 @@ reg [7:0] pmem[0:65536];
 wire [31:0] pmem_dat_i;
 reg [31:0] pmem_dat_o;
 wire [13:0] pmem_adr;
+initial begin
+	for(i=0;i<65536;i=i+1)
+		pmem[i] = 8'b0;
+end
 always @(posedge sys_clk) begin
 	pmem_dat_o[7:0]   <= pmem[{pmem_adr, 2'b11}];
 	pmem_dat_o[15:8]  <= pmem[{pmem_adr, 2'b10}];
@@ -133,7 +143,7 @@ assign dmem_adr = d_adr[15:2];
 assign dmem_we = {4{d_cyc & d_stb & d_we}} & d_sel;
 
 // interrupts
-initial interrupt <= 32'b0;
+initial interrupt = 32'b0;
 
 // simulation end request
 always @(posedge sys_clk) begin
@@ -166,6 +176,7 @@ initial begin
 		$finish;
 	end
 end
+
 initial $readmemh(prog, dmem);
 initial $readmemh(prog, pmem);
 
