@@ -143,7 +143,7 @@ assign dmem_adr = d_adr[15:2];
 assign dmem_we = {4{d_cyc & d_stb & d_we}} & d_sel;
 
 // interrupts
-initial interrupt = 32'b0;
+initial interrupt <= 32'b0;
 
 // simulation end request
 always @(posedge sys_clk) begin
