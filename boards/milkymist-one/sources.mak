@@ -12,7 +12,7 @@ LM32_SRC=							\
 	$(CORES_DIR)/lm32/rtl/lm32_addsub.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_logic_op.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_shifter.v			\
-	$(CORES_DIR)/lm32/rtl/lm32_multiplier_spartan6.v	\
+	$(CORES_DIR)/lm32/rtl/lm32_multiplier.v	\
 	$(CORES_DIR)/lm32/rtl/lm32_mc_arithmetic.v		\
 	$(CORES_DIR)/lm32/rtl/lm32_interrupt.v			\
 	$(CORES_DIR)/lm32/rtl/lm32_ram.v			\

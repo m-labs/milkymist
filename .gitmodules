@@ -1,0 +1,3 @@
+[submodule "cores/lm32"]
+	path = cores/lm32
+	url = git://github.com/milkymist/lm32.git
