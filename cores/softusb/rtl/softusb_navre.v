@@ -825,31 +825,30 @@ always @(*) begin
 						pc_sel = PC_SEL_INC;
 						pmem_ce = 1'b1;
 					end
-					16'b1001_00xx_xxxx_xxxx: begin
-						if(pmem_d[3:0] == 4'hf) begin
-							if(pmem_d[9]) begin
-								/* PUSH */
-								push = 1'b1;
-								dmem_sel = DMEM_SEL_SP_R;
-								dmem_we = 1'b1;
-								pc_sel = PC_SEL_INC;
-								pmem_ce = 1'b1;
-							end else begin
-								/* POP */
-								pop = 1'b1;
-								dmem_sel = DMEM_SEL_SP_R;
-								next_state = WRITEBACK;
-							end
-						end else if(pmem_d[3:0] == 4'h0) begin
+					16'b1001_00xx_xxxx_1111: begin
+						if(pmem_d[9]) begin
+							/* PUSH */
+							push = 1'b1;
+							dmem_sel = DMEM_SEL_SP_R;
+							dmem_we = 1'b1;
 							pc_sel = PC_SEL_INC;
 							pmem_ce = 1'b1;
-							if(pmem_d[9])
-								/* STS */
-								next_state = STS;
-							else
-								/* LDS */
-								next_state = LDS1;
+						end else begin
+							/* POP */
+							pop = 1'b1;
+							dmem_sel = DMEM_SEL_SP_R;
+							next_state = WRITEBACK;
 						end
+					end
+					16'b1001_00xx_xxxx_0000: begin
+						pc_sel = PC_SEL_INC;
+						pmem_ce = 1'b1;
+						if(pmem_d[9])
+							/* STS */
+							next_state = STS;
+						else
+							/* LDS */
+							next_state = LDS1;
 					end
 					16'b1001_0101_000x_1000: begin
 						/* RET / RETI */
