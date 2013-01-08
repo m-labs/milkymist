@@ -82,9 +82,9 @@ end
 
 /* I/O mapped registers */
 
-parameter IO_SEL_EXT	= 2'd0;
-parameter IO_SEL_STACK	= 2'd1;
-parameter IO_SEL_SREG	= 2'd2;
+localparam IO_SEL_EXT	= 2'd0;
+localparam IO_SEL_STACK	= 2'd1;
+localparam IO_SEL_SREG	= 2'd2;
 
 reg [1:0] io_sel;
 always @(posedge clk) begin
@@ -173,15 +173,15 @@ end
 
 reg [3:0] pc_sel;
 
-parameter PC_SEL_NOP		= 4'd0;
-parameter PC_SEL_INC		= 4'd1;
-parameter PC_SEL_KL		= 4'd2;
-parameter PC_SEL_KS		= 4'd3;
-parameter PC_SEL_DMEML		= 4'd4;
-parameter PC_SEL_DMEMH		= 4'd6;
-parameter PC_SEL_DEC		= 4'd7;
-parameter PC_SEL_Z		= 4'd8;
-parameter PC_SEL_EX		= 4'd9;
+localparam PC_SEL_NOP		= 4'd0;
+localparam PC_SEL_INC		= 4'd1;
+localparam PC_SEL_KL		= 4'd2;
+localparam PC_SEL_KS		= 4'd3;
+localparam PC_SEL_DMEML		= 4'd4;
+localparam PC_SEL_DMEMH		= 4'd6;
+localparam PC_SEL_DEC		= 4'd7;
+localparam PC_SEL_Z		= 4'd8;
+localparam PC_SEL_EX		= 4'd9;
 
 /* Exceptions */
 
@@ -274,20 +274,20 @@ assign pmem_a = rst ?
 /* Load/store operations */
 reg [3:0] dmem_sel;
 
-parameter DMEM_SEL_UNDEFINED	= 3'bxxx;
-parameter DMEM_SEL_X		= 4'd0;
-parameter DMEM_SEL_XPLUS	= 4'd1;
-parameter DMEM_SEL_XMINUS	= 4'd2;
-parameter DMEM_SEL_YPLUS	= 4'd3;
-parameter DMEM_SEL_YMINUS	= 4'd4;
-parameter DMEM_SEL_YQ		= 4'd5;
-parameter DMEM_SEL_ZPLUS	= 4'd6;
-parameter DMEM_SEL_ZMINUS	= 4'd7;
-parameter DMEM_SEL_ZQ		= 4'd8;
-parameter DMEM_SEL_SP_R		= 4'd9;
-parameter DMEM_SEL_SP_PCL	= 4'd10;
-parameter DMEM_SEL_SP_PCH	= 4'd11;
-parameter DMEM_SEL_PMEM		= 4'd12;
+localparam DMEM_SEL_UNDEFINED	= 3'bxxx;
+localparam DMEM_SEL_X		= 4'd0;
+localparam DMEM_SEL_XPLUS	= 4'd1;
+localparam DMEM_SEL_XMINUS	= 4'd2;
+localparam DMEM_SEL_YPLUS	= 4'd3;
+localparam DMEM_SEL_YMINUS	= 4'd4;
+localparam DMEM_SEL_YQ		= 4'd5;
+localparam DMEM_SEL_ZPLUS	= 4'd6;
+localparam DMEM_SEL_ZMINUS	= 4'd7;
+localparam DMEM_SEL_ZQ		= 4'd8;
+localparam DMEM_SEL_SP_R	= 4'd9;
+localparam DMEM_SEL_SP_PCL	= 4'd10;
+localparam DMEM_SEL_SP_PCH	= 4'd11;
+localparam DMEM_SEL_PMEM	= 4'd12;
 
 /* ALU */
 
@@ -678,24 +678,24 @@ end
 reg [4:0] state;
 reg [4:0] next_state;
 
-parameter NORMAL	= 5'd0;
-parameter RCALL		= 5'd1;
-parameter ICALL		= 5'd2;
-parameter STALL		= 5'd3;
-parameter RET1		= 5'd4;
-parameter RET2		= 5'd5;
-parameter RET3		= 5'd6;
-parameter LPM		= 5'd7;
-parameter STS		= 5'd8;
-parameter LDS1		= 5'd9;
-parameter LDS2		= 5'd10;
-parameter SKIP		= 5'd11;
-parameter WRITEBACK	= 5'd12;
-parameter EXCEPTION	= 5'd13;
-parameter RETI1		= 5'd14;
-parameter RETI2		= 5'd15;
-parameter RETI3		= 5'd16;
-parameter RETI4		= 5'd17;
+localparam NORMAL	= 5'd0;
+localparam RCALL	= 5'd1;
+localparam ICALL	= 5'd2;
+localparam STALL	= 5'd3;
+localparam RET1		= 5'd4;
+localparam RET2		= 5'd5;
+localparam RET3		= 5'd6;
+localparam LPM		= 5'd7;
+localparam STS		= 5'd8;
+localparam LDS1		= 5'd9;
+localparam LDS2		= 5'd10;
+localparam SKIP		= 5'd11;
+localparam WRITEBACK	= 5'd12;
+localparam EXCEPTION	= 5'd13;
+localparam RETI1	= 5'd14;
+localparam RETI2	= 5'd15;
+localparam RETI3	= 5'd16;
+localparam RETI4	= 5'd17;
 
 always @(posedge clk) begin
 	if(rst)
