@@ -44,9 +44,9 @@ tools-install: tools
 
 .PHONY: clean load-bitstream tools
 clean:
-	make -C ${BASEDIR}/boards/milkymist-one/synthesis -f common.mak clean
-	make -C ${BASEDIR}/boards/milkymist-one/standby clean
-	make -C ${BASEDIR}/boards/milkymist-one/flash clean
+	make -C ${BASEDIR}/boards/${BOARD}/synthesis -f common.mak clean
+	make -C ${BASEDIR}/boards/${BOARD}/standby clean
+	make -C ${BASEDIR}/boards/${BOARD}/flash clean
 	make -C ${BASEDIR}/doc clean
 	make -C ${BASEDIR}/tools clean
 	make -C ${BASEDIR}/softusb-input clean
