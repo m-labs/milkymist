@@ -4,8 +4,7 @@
 This is the complete core source code and documentation for the opensource
 system-on-chip used in the Milkymist(tm) One video synthesizer.
 
-For the latest releases, documentation, more information, or to buy a Milkymist One:
-  http://www.milkymist.org
+For more information see http://m-labs.hk
 
 
 [> Directory Structure
@@ -80,9 +79,3 @@ Special thanks to the people who did significant things which made this project 
  - Wilson Snyder for Verilator,
  - Henry from Xilinx,
  - Das Labor for providing neat build scripts for SoCs (soc-lm32).
-
-
-[> Contact
-The mailing list devel at lists dot milkymist dot org is the preferred means of contact.
-However, if you wish to contact privately the founder of this project:
-E-mail: sebastien at milkymist daaht org
